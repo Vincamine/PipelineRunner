@@ -4,6 +4,11 @@
 - **Author:** Yiwen Wang
 - **Version:** 1.0
 
+**Revision History**
+|Date|Version|Description|Author|
+|:----:|:----:|:----:|:----:|
+|Jan 31, 2025|1.0|Initial release| Yiwen Wang|
+
 # Design Proposal
 
 ## System Components
@@ -48,7 +53,3 @@ sequenceDiagram
     API ->> UI: Notify user job is done
     API ->> CLI: Notify CLI user job is done
 
-**Revision History**
-|Date|Version|Description|Author|
-|:----:|:----:|:----:|:----:|
-|Jan 31, 2025|1.0|Initial release| Yiwen Wang|
