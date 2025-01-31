@@ -25,7 +25,6 @@ The project is structured across multiple repositories to ensure modular develop
 
 | **Component** | **Description**                                              |
 | ------------- | ------------------------------------------------------------ |
-| **Frontend**  | React-based UI for the CI/CD system.                         |
 | **CLI**       | Command-line interface for running pipelines locally and on servers. |
 | **Backend**   | Java Spring Boot service for handling CI/CD operations.      |
 | **Worker**    | Job execution service for running and managing CI/CD tasks.  |
