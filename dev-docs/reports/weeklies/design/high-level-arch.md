@@ -30,6 +30,8 @@
 5. Error handling and logging modules provide feedback.
 6. Reports are stored and accessible via the CLI.
 
+## Diagram
+
 ### Explanation:
 - The **developer** triggers the pipeline using the **CLI**.
 - The **CLI** fetches pipeline configurations from the **Git repository**.
