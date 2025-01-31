@@ -59,7 +59,9 @@ sequenceDiagram
     Worker ->> DB: Update job status to 'completed'
     API ->> UI: Notify user job is done
     API ->> CLI: Notify CLI user job is done
+```
 
+```mermaid
 graph TD
     A[Developer Machine] -->|Triggers pipeline| B[CLI]
     B -->|Fetch pipeline configuration| C[Git Repository]
