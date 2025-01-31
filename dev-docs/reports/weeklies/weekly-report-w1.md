@@ -38,9 +38,9 @@
 | Task | Weight | Assignee |
 | ---- | ------ | -------- |
 |   [Initialize CLI Project](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/7)  |   2     |    Yiwen Wang      |
-|   [Implement "Run Pipeline" Command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/8)  |   2     |          |
+|   [Implement "Run Pipeline" Command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/8)  |   2     |   Wenxue Fang       |
 |   [Implement "Check Status" Command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/9)  |   2     |    Shenqian Wen      |
-|   [Implement "Retrieve Logs" Command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/10)  |   2     |          |
+|   [Implement "Retrieve Logs" Command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/10)  |   2     |    Mingtianfang Li      |
 
 
 # What worked this week?
