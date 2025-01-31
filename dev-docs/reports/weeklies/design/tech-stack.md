@@ -1,13 +1,13 @@
 # 25Spring CS6510 Team 1 - CI/CD System
 - **Title:** Tech Stack Design file
 - **Date:** Jan 31, 2025
-- **Author:** Yiwen Wang
+- **Author:** Yiwen Wang, Shenqian Wen
 - **Version:** 1.0
 
 **Revision History**
 |Date|Version|Description|Author|
 |:----:|:----:|:----:|:----:|
-|Jan 31, 2025|1.0|Initial release| Yiwen Wang|
+|Jan 31, 2025|1.0|Initial release| Yiwen Wang, Shenqian Wen|
 
 # Tech Stack Proposal for CI/CD System
 

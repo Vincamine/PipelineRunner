@@ -1,13 +1,13 @@
 # 25Spring CS6510 Team 1 - CI/CD System
 - **Title:** High Level Architecture design file
 - **Date:** Jan 31, 2025
-- **Author:** Yiwen Wang
+- **Author:** Yiwen Wang, Mingtianfang Li
 - **Version:** 1.0
 
 **Revision History**
 |Date|Version|Description|Author|
 |:----:|:----:|:----:|:----:|
-|Jan 31, 2025|1.0|Initial release| Yiwen Wang|
+|Jan 31, 2025|1.0|Initial release| Yiwen Wang, Mingtianfang Li|
 
 # Design Proposal
 
@@ -20,6 +20,7 @@
 - **Execution Engine** - Runs jobs in parallel or sequentially based on dependencies.
 - **Error Reporting Module** - Captures syntax errors, missing dependencies, and execution failures.
 - **Logging & Reporting Module** - Stores execution logs and provides reports on past executions.
+
 
 ## Workflow
 
@@ -39,6 +40,26 @@
 - A **Worker** picks up the job, updates its status, and reports progress.
 - The **Backend API** updates the **UI** and **CLI** with logs and final job completion status.
 
+
+### High Level Diagram
+```mermaid
+graph TD
+    A[Developer Machine] -->|Triggers pipeline| B[CLI]
+    B -->|Fetch pipeline configuration| C[Git Repository]
+    B -->|Send pipeline request| D[Backend API]
+    D -->|Store request| E[Database]
+    D -->|Queue job execution| F[Message Queue]
+    F -->|Assign job execution| G[Worker]
+    G -->|Update status to 'running'| E
+    G -->|Send progress updates| D
+    D -->|Update UI with job status| H[Client UI]
+    D -->|Return logs/status| B
+    G -->|Update status to 'completed'| E
+    D -->|Notify user job is done| H
+    D -->|Notify CLI user job is done| B
+```
+
+### Sequence Diagram
 ```mermaid
 sequenceDiagram
     participant UI as Client UI
@@ -63,18 +84,4 @@ sequenceDiagram
     API ->> CLI: Notify CLI user job is done
 ```
 
-```mermaid
-graph TD
-    A[Developer Machine] -->|Triggers pipeline| B[CLI]
-    B -->|Fetch pipeline configuration| C[Git Repository]
-    B -->|Send pipeline request| D[Backend API]
-    D -->|Store request| E[Database]
-    D -->|Queue job execution| F[Message Queue]
-    F -->|Assign job execution| G[Worker]
-    G -->|Update status to 'running'| E
-    G -->|Send progress updates| D
-    D -->|Update UI with job status| H[Client UI]
-    D -->|Return logs/status| B
-    G -->|Update status to 'completed'| E
-    D -->|Notify user job is done| H
-    D -->|Notify CLI user job is done| B
+
