@@ -7,9 +7,14 @@
 > 1. A link to the Issue
 > 2. The total weight (points or T-shirt size) allocated to the issue
 
-| Task | Weight |
-| ---- | ------ |
-|      |        |
+| Task | Weight | Assignee |
+| ---- | ------ | -------- |
+|  [HLD Design Doc](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/2)  |  2      |      Mingtianfang Li    |
+|  [Tech Stack Proposal](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/3)     |  2      |      Shenqian Wen    |
+|  [Team Processe Design Doc](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/4)     |  2      |      Wenxue Fang    |
+|  [Weekly Report, Readme, doc research, check & format](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/5)     |  2      |      Yiwen Wang    |
+
+
 
 # Carry over tasks
 
@@ -18,13 +23,9 @@
 > 1. A link to the Issue
 > 2. The total weight (points or T-shirt size) allocated to the issue
 > 3. The team member assigned to the task. This has to be 1 person!
-
-| Task | Weight | Assignee |
-| ---- | ------ | -------- |
-|  [HLD Design Doc](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/2)  |  2      |      Mingtianfang Li    |
-|  [Tech Stack Proposal](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/3)     |  2      |      Shenqian Wen    |
-|  [Team Processe Design Doc](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/4)     |  2      |      Wenxue Fang    |
-|  [Weekly Report, Readme, doc research, check & format](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/5)     |  2      |      Yiwen Wang    |
+| Task | Weight |
+| ---- | ------ |
+| N/A    |   N/A     |
 
 
 # New tasks
