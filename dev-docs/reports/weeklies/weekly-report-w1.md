@@ -23,6 +23,7 @@
 > 1. A link to the Issue
 > 2. The total weight (points or T-shirt size) allocated to the issue
 > 3. The team member assigned to the task. This has to be 1 person!
+
 | Task | Weight |
 | ---- | ------ |
 | N/A    |   N/A     |
