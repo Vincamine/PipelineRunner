@@ -13,13 +13,32 @@
 
 ## System Components
 
-- **Developer Machines** - A developer triggers the pipeline execution using the CLI.
-- **Git Repository (Local & Remote)** - The CLI interacts with the repository to fetch pipeline configurations stored in `.pipelines/`.
-- **CI/CD Pipeline Runner (CLI)** - Acts as the main interface for executing and managing pipelines.
-- **Configuration & YAML Parser** - Reads and validates the `.yaml` pipeline configurations.
-- **Execution Engine** - Runs jobs in parallel or sequentially based on dependencies.
-- **Error Reporting Module** - Captures syntax errors, missing dependencies, and execution failures.
-- **Logging & Reporting Module** - Stores execution logs and provides reports on past executions.
+### Developer Machines  
+- Workstations where developers trigger the pipeline execution via the CLI tool.
+
+### Git Repository (Local & Remote)  
+- Stores and manages pipeline configurations in `.pipelines/`.  
+- The CLI interacts with these repositories to fetch the necessary configuration files.
+
+### CI/CD Pipeline Runner (CLI)  
+- The primary interface for developers to execute and manage CI/CD pipelines.  
+- Sends pipeline execution requests to the backend.
+
+### Configuration Validation Service  
+- Reads, validates, and ensures correctness of `.yaml` pipeline configurations.  
+- Runs as a service to provide real-time validation feedback.
+
+### Execution Engine  
+- Orchestrates and runs jobs based on defined dependencies.  
+- Supports both parallel and sequential execution.
+
+### Error Monitoring Service  
+- Captures syntax errors, missing dependencies, and execution failures.  
+- Provides error logs and notifications to the CLI.
+
+### Logging & Reporting Service  
+- Stores execution logs and historical pipeline runs.  
+- Provides reports and analytics on past executions.
 
 
 ## Workflow
