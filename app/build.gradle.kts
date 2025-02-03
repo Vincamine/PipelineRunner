@@ -8,6 +8,10 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
+    java
+    jacoco
+    checkstyle
+    pmd
 }
 
 repositories {
@@ -40,4 +44,54 @@ application {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+// jacoco
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+// Checkstyle configuration
+checkstyle {
+    toolVersion = "10.12.3"
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+}
+
+tasks.withType<Checkstyle> {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+// PMD configuration
+pmd {
+    toolVersion = "6.55.0"
+    rulesMinimumPriority.set(5)
+}
+
+tasks.withType<Pmd> {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+// JavaDoc generation
+tasks.javadoc {
+    options.encoding = "UTF-8"
+    isFailOnError = false
 }
