@@ -1,0 +1,71 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  code-style-check:
+    name: Lint and Style Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Run Checkstyle
+        run: ./gradlew checkstyleMain checkstyleTest
+      - name: Run PMD static analysis
+        run: ./gradlew pmdMain pmdTest
+      - name: Upload PMD and Checkstyle Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: style-reports
+          path: build/reports/
+
+  unit-tests:
+    name: Run Unit Tests with Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Run tests with Jacoco coverage
+        run: ./gradlew test jacocoTestReport
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(grep -oP '(?<=<counter type="LINE" missed=")[0-9]+' build/reports/jacoco/test/jacocoTestReport.xml | awk '{s+=$1} END {print 100-(s/NR)}')
+          if [ "$COVERAGE" -lt 70 ]; then
+            echo "Test coverage is below 70%!";
+            exit 1;
+          fi
+      - name: Upload Jacoco Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: build/reports/jacoco/test/
+
+  generate-javadoc:
+    name: Generate JavaDoc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Generate JavaDoc
+        run: ./gradlew javadoc
