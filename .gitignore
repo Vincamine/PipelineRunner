@@ -102,3 +102,4 @@ rm -rf test-results/ coverage/
 
 # Removes tracked files that are in .gitignore
 git rm -r --cached build/ .gradle/ out/ target/ .vscode/ .idea/ test-results/ coverage/
+.gradle/
