@@ -89,16 +89,3 @@ logs/
 *.user
 *.userosscache
 *.sln.docstates
-
-
-# Remove build directories
-rm -rf build/ .gradle/ out/ target/
-
-# Remove IDE-related directories
-rm -rf .vscode/ .idea/
-
-# Remove test reports or other unnecessary files
-rm -rf test-results/ coverage/
-
-# Removes tracked files that are in .gitignore
-git rm -r --cached build/ .gradle/ out/ target/ .vscode/ .idea/ test-results/ coverage/
