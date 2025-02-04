@@ -10,8 +10,8 @@ class LogEntryTest {
    */
   @Test
   void testLogEntryCreation() {
-    long timestamp = System.currentTimeMillis();
-    LogEntry log = new LogEntry("123", LogLevel.INFO, "Pipeline started", timestamp);
+    final long timestamp = System.currentTimeMillis();
+    final LogEntry log = new LogEntry("123", LogLevel.INFO, "Pipeline started", timestamp);
 
     assertEquals("123", log.getPipelineId(), "Pipeline ID should match.");
     assertEquals(LogLevel.INFO, log.getLevel(), "Log level should be INFO.");
@@ -24,8 +24,8 @@ class LogEntryTest {
    */
   @Test
   void testLogEntryWithNullMessage() {
-    long timestamp = System.currentTimeMillis();
-    LogEntry log = new LogEntry("456", LogLevel.WARN, null, timestamp);
+    final long timestamp = System.currentTimeMillis();
+    final LogEntry log = new LogEntry("456", LogLevel.WARN, null, timestamp);
 
     assertEquals("456", log.getPipelineId(), "Pipeline ID should match.");
     assertEquals(LogLevel.WARN, log.getLevel(), "Log level should be WARN.");
@@ -38,8 +38,8 @@ class LogEntryTest {
    */
   @Test
   void testLogEntryWithEmptyMessage() {
-    long timestamp = System.currentTimeMillis();
-    LogEntry log = new LogEntry("789", LogLevel.ERROR, "", timestamp);
+    final long timestamp = System.currentTimeMillis();
+    final LogEntry log = new LogEntry("789", LogLevel.ERROR, "", timestamp);
 
     assertEquals("789", log.getPipelineId(), "Pipeline ID should match.");
     assertEquals(LogLevel.ERROR, log.getLevel(), "Log level should be ERROR.");

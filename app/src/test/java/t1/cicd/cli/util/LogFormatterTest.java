@@ -17,12 +17,12 @@ class LogFormatterTest {
    */
   @Test
   void testFormatInfoLog() {
-    long timestamp = System.currentTimeMillis();
-    LogEntry log = new LogEntry("123", LogLevel.INFO, "Pipeline started", timestamp);
-    String formattedLog = LogFormatter.format(log);
+    final long timestamp = System.currentTimeMillis();
+    final LogEntry log = new LogEntry("123", LogLevel.INFO, "Pipeline started", timestamp);
+    final String formattedLog = LogFormatter.format(log);
 
-    String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
-    String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "INFO", "Pipeline started");
+    final String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
+    final String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "INFO", "Pipeline started");
 
     assertEquals(expectedOutput, formattedLog);
   }
@@ -32,12 +32,12 @@ class LogFormatterTest {
    */
   @Test
   void testFormatErrorLog() {
-    long timestamp = System.currentTimeMillis();
-    LogEntry log = new LogEntry("456", LogLevel.ERROR, "Pipeline failed", timestamp);
-    String formattedLog = LogFormatter.format(log);
+    final long timestamp = System.currentTimeMillis();
+    final LogEntry log = new LogEntry("456", LogLevel.ERROR, "Pipeline failed", timestamp);
+    final String formattedLog = LogFormatter.format(log);
 
-    String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
-    String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "ERROR", "Pipeline failed");
+    final String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
+    final String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "ERROR", "Pipeline failed");
 
     assertEquals(expectedOutput, formattedLog, "ERROR log entry should be formatted correctly.");
   }
@@ -47,12 +47,12 @@ class LogFormatterTest {
    */
   @Test
   void testFormatLogWithNullMessage() {
-    long timestamp = System.currentTimeMillis();
-    LogEntry log = new LogEntry("789", LogLevel.WARN, null, timestamp);
-    String formattedLog = LogFormatter.format(log);
+    final long timestamp = System.currentTimeMillis();
+    final LogEntry log = new LogEntry("789", LogLevel.WARN, null, timestamp);
+    final String formattedLog = LogFormatter.format(log);
 
-    String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
-    String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "WARN", "null");
+    final String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
+    final String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "WARN", "null");
 
     assertEquals(expectedOutput, formattedLog, "Log entry with a null message should handle gracefully.");
   }
