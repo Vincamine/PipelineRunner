@@ -15,11 +15,28 @@ plugins {
 }
 
 repositories {
+
     // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
 
 dependencies {
+    // FasterXML Jackson for JSON processing
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.15.0")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.15.0")
+
+    // HTTP Client (Java 11+)
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.2")
+
+    // Command Line tool
+    implementation("info.picocli:picocli:4.6.1")
+    annotationProcessor("info.picocli:picocli-codegen:4.6.1")
+
+    // Mockito for unit testing
+    testImplementation("org.mockito:mockito-core:5.4.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
+
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -30,6 +47,11 @@ dependencies {
 
     // This dependency is used by the application.
     implementation(libs.guava)
+
+    // json
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
 }
 
 sourceSets {
