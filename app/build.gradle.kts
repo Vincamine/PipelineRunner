@@ -22,11 +22,25 @@ repositories {
 dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
-
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // CLI argument parser
+    implementation("info.picocli:picocli:4.7.4")
+    annotationProcessor("info.picocli:picocli-codegen:4.7.4")
 
     // This dependency is used by the application.
     implementation(libs.guava)
+}
+
+sourceSets {
+    main {
+        java.srcDirs("src/main/java")
+    }
+    test {
+        java.srcDirs("src/test/java")
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
+    }
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
