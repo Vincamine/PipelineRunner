@@ -1,5 +1,8 @@
 package t1.cicd.cli.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Represents a log entry in the CI/CD system.
  * Each log entry contains information about the pipeline,
@@ -11,6 +14,9 @@ public class LogEntry {
   private String message;
   private long timestamp;
 
+  public LogEntry() {
+  }
+
   /**
    * Constructs a new LogEntry instance.
    *
@@ -19,12 +25,18 @@ public class LogEntry {
    * @param message    A description of the event being logged.
    * @param timestamp  The timestamp when the log entry was created, in milliseconds.
    */
-  public LogEntry(String pipelineId, LogLevel level, String message, long timestamp) {
+  @JsonCreator
+  public LogEntry(
+      @JsonProperty("pipelineId") String pipelineId,
+      @JsonProperty("level") LogLevel level,
+      @JsonProperty("message") String message,
+      @JsonProperty("timestamp") long timestamp) {
     this.pipelineId = pipelineId;
     this.level = level;
     this.message = message;
     this.timestamp = timestamp;
   }
+
 
   /**
    * Retrieves the ID of the pipeline associated with this log entry.
