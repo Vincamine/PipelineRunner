@@ -1,57 +1,91 @@
-# Ignore OS-generated files
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+replay_pid*
+
+# Eclipse specific files
+/.classpath
+/.project
+/.settings/
+/.loadpath
+
+# IntelliJ IDEA
+/.idea/
+*.iml
+*.iws
+out/
+
+# NetBeans
+/nbproject/private/
+/build/
+/dist/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+/.vscode/
+
+# Maven
+/target/
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# OS generated files
 .DS_Store
 Thumbs.db
 
-# Ignore build and dependency directories
-node_modules/
-dist/
-build/
-target/
-out/
+# Test output
+/test-output/
 
-# Ignore Python-related files
-__pycache__/
-*.py[cod]
-*.so
-
-# Ignore environment files
+# Environment specific files
 .env
-*.env.local
-*.env.*.local
 
-# Ignore logs and temp files
+# Logs
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# Ignore IDE and editor configuration files
-.vscode/
-.idea/
-*.iml
-
-# Ignore CI/CD generated files
-.pipelines/
-*.lock
-coverage/
-*.test-results/
-
-# Ignore database and generated files
-*.sqlite3
+# Others
+*.class
+*.jar
+*.war
+*.ear
 *.db
+*.sqlite
 
-# Ignore Git-related files
-.git/
-.gitignore
-
-# Ignore Docker files
-docker-compose.override.yml
-.docker/
-
-# Ignore specific file extensions
-*.swp
-*.swo
+# Backup files
+*~
 *.bak
-*.tmp
-*.temp
+
+# JetBrains Rider
+.idea/
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
