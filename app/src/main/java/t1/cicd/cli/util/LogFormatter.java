@@ -6,10 +6,8 @@ import java.util.Date;
 
 /**
  * Utility class for formatting log entries for display.
- * <p>
  * This class provides a method to format log entries into a readable
  * string format, including timestamps, log levels, and messages.
- * </p>
  */
 public class LogFormatter {
   /**
