@@ -2,10 +2,8 @@ package t1.cicd.cli.model;
 
 /**
  * Represents a log entry in the CI/CD system.
- * <p>
  * Each log entry contains information about the pipeline,
  * log level, message, and timestamp.
- * </p>
  */
 public class LogEntry {
   private String pipelineId;
