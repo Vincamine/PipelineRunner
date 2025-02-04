@@ -1,17 +1,22 @@
 # 25Spring CS6510 Team 1 - CI/CD System
+
 - **Title:** Readme file
 - **Date:** Jan 31, 2025
 - **Author:** Yiwen Wang
-- **Version:** 1.0
+- **Version:** 1.1
 
 **Revision History**
-|Date|Version|Description|Author|
-|:----:|:----:|:----:|:----:|
-|Jan 31, 2025|1.0|Initial release| Yiwen Wang|
 
+|     Date     | Version | Description             | Author     |
+| :----------: | :-----: | :---------------------- | :--------- |
+| Jan 31, 2025 |   1.0   | Initial release         | Yiwen Wang |
+| Feb 3, 2025  |   1.1   | Added CLI usage details | Yiwen Wang |
+
+---
 
 # Introduction: Local CI/CD Pipeline Runner
-* Welcome to the repository for our CI/CD system for a small/medium size company. 
+
+Welcome to the repository for our CI/CD system for small/medium-sized companies.
 
 A command-line tool designed to run and manage CI/CD pipelines both on company data centers and locally on developer machines. This tool allows developers to execute, debug, and validate entire or partial pipelines without the need for external modifications, ensuring that all CI/CD configurations reside within the repository and can be tracked via version control.
 
@@ -66,20 +71,10 @@ This project is a CI/CD pipeline runner that:
    cd t1-cicd
    ```
 
-2. **Install Dependencies:**
-
-   Ensure you have the necessary runtime environment and dependencies installed. Refer to the `requirements.txt` or project documentation for specifics. For example:
+2. **Build the Project:**
 
    ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Build/Compile (if needed):**
-
-   If the project requires compilation or build steps, run:
-
-   ```bash
-   make build
+   ./gradlew clean build
    ```
 
 ---
@@ -93,41 +88,45 @@ The CLI must be executed from the root of a Git repository. It provides sub-comm
 #### General Usage
 
 ```bash
-pipeline-runner [sub-command] [options]
+./gradlew run --args="[sub-command] [options]"
 ```
 
 ### Sub-Commands and Options
 
-#### 1. **Checking a Pipeline Configuration**
+#### 1. **Display Help Information**
 
-Use the `--check` flag to validate your pipeline configuration file without running the pipeline:
+Shows all available commands and options:
 
 ```bash
-pipeline-runner --check -f <relative-path-to-config>
+./gradlew run --args="--help"
 ```
 
-#### 2. **Dry Run**
+#### 2. **Display Version**
 
-Perform a dry run to check the configuration validity and print the execution order (stages and jobs) in valid YAML format:
+Displays the current version of the CLI tool:
 
 ```bash
-pipeline-runner --dry-run -f <relative-path-to-config>
+./gradlew run --args="--version"
 ```
 
-#### 3. **Running a Pipeline**
+#### 3. **Logging Messages**
 
-Execute a pipeline based on the provided configuration file:
+Use the `log` sub-command to log messages:
 
 ```bash
-pipeline-runner run -f <relative-path-to-config> [--repo <path>] [--branch <branch-name>] [--commit <commit-hash>]
+./gradlew run --args="log --message 'Deployment started'"
 ```
 
-#### 4. **Reporting**
-
-Retrieve reports on past pipeline executions with the `reports` sub-command:
+If no message is provided, the CLI will display:
 
 ```bash
-pipeline-runner reports [pipeline-name] [execution-id] [stage-name] [job-name]
+./gradlew run --args="log"
+```
+
+Output:
+
+```
+No message provided.
 ```
 
 ---
@@ -209,24 +208,21 @@ Reports can be generated at various levels:
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-
 ---
 
 # Design Documents
 
 ## Tech Stack
 
-Describe the technologies used in the project, including programming languages, frameworks, libraries, and infrastructure components.
-[Tech Steck Design](dev-docs/reports/weeklies/design/tech-stack.md)
+Describe the technologies used in the project, including programming languages, frameworks, libraries, and infrastructure components.  
+[Tech Stack Design](dev-docs/reports/weeklies/design/tech-stack.md)
 
 ## High-Level Design
 
-Provide an architectural overview of the system. Include diagrams if possible, explaining the interaction between different components and the overall flow of the application.
-[High Level Archetecture Design](dev-docs/reports/weeklies/design/high-level-arch.md)
+Provide an architectural overview of the system. Include diagrams if possible, explaining the interaction between different components and the overall flow of the application.  
+[High-Level Architecture Design](dev-docs/reports/weeklies/design/high-level-arch.md)
 
 ## Low-Level Design
 
-Detail the implementation of various components, including algorithms, data structures, database schemas, API endpoints, and business logic.
-
-
-
+Detail the implementation of various components, including algorithms, data structures, database schemas, API endpoints, and business logic.  
+[Low-Level Design](dev-docs/reports/weeklies/design/low-level-design.md)
