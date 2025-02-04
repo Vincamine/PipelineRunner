@@ -18,10 +18,8 @@ public class LogFormatter {
 
   /**
    * Formats a {@link LogEntry} into a human-readable string.
-   * <p>
    * The formatted log entry follows the structure:
    * {@code [timestamp] [log level] message}
-   * </p>
    *
    * @param log The log entry to format.
    * @return A formatted string representation of the log entry.
