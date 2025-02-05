@@ -7,17 +7,18 @@ import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 public class PipelineStatusTest {
-  @Test
-  void testConstructorAndGetters(){
-    String pipelineId = "test-123";
-    PipelineState state = PipelineState.RUNNING;
-    int progress = 50;
-    String currentStage = "Build";
-    Instant startTime = Instant.now();
-    Instant lastUpdated = Instant.now();
 
-    PipelineStatus status = new PipelineStatus(
-      pipelineId, state, progress,currentStage, startTime, lastUpdated
+  @Test
+  void testConstructorAndGetters() {
+    final String pipelineId = "test-123";
+    final PipelineState state = PipelineState.RUNNING;
+    final int progress = 50;
+    final String currentStage = "Build";
+    final Instant startTime = Instant.now();
+    final Instant lastUpdated = Instant.now();
+
+    final PipelineStatus status = new PipelineStatus(
+        pipelineId, state, progress, currentStage, startTime, lastUpdated
     );
 
     assertEquals(pipelineId, status.getPipelineId());
@@ -30,9 +31,9 @@ public class PipelineStatusTest {
   }
 
   @Test
-  void testDefaultConstructor(){
-    String pipelineId = "test-123";
-    PipelineStatus status = new PipelineStatus(pipelineId);
+  void testDefaultConstructor() {
+    final String pipelineId = "test-123";
+    final PipelineStatus status = new PipelineStatus(pipelineId);
     assertEquals(pipelineId, status.getPipelineId());
     assertEquals(PipelineState.UNKNOWN, status.getState());
     assertEquals(0, status.getProgress());
@@ -42,13 +43,13 @@ public class PipelineStatusTest {
 
   @Test
   void testSetters() {
-    PipelineStatus status = new PipelineStatus("test-123");
+    final PipelineStatus status = new PipelineStatus("test-123");
 
     status.setState(PipelineState.RUNNING);
     status.setProgress(75);
     status.setCurrentStage("Test");
     status.setMessage("Running tests");
-    Instant now = Instant.now();
+    final Instant now = Instant.now();
     status.setLastUpdated(now);
 
     assertEquals(PipelineState.RUNNING, status.getState());

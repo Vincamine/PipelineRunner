@@ -30,7 +30,7 @@ public class StatusService {
       Thread.sleep(1000);
 
       // Demo implementation - returns mock data
-      PipelineStatus status = new PipelineStatus(
+      final PipelineStatus status = new PipelineStatus(
           pipelineId,
           PipelineState.RUNNING,
           75,

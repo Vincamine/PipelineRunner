@@ -19,23 +19,28 @@ import t1.cicd.cli.service.StatusService;
 
 @ExtendWith(MockitoExtension.class)
 public class StatusCommandTest {
+
   @Mock
   private StatusService statusService;
   private StatusCommand statusCommand;
   private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+  private final ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
   private final PrintStream originalOut = System.out;
+  private final PrintStream originalErr = System.err;
+
 
   @BeforeEach
-  void setUp(){
+  void setUp() {
     System.setOut(new PrintStream(outputStream));
+    System.setErr(new PrintStream(errorStream));
     statusCommand = new StatusCommand(statusService);
   }
 
 
   @Test
   void testBasicStatusCheck() {
-    String pipelineId = "pipeline-123";
-    PipelineStatus mockStatus = new PipelineStatus(
+    final String pipelineId = "pipeline-123";
+    final PipelineStatus mockStatus = new PipelineStatus(
         pipelineId,
         PipelineState.RUNNING,
         75,
@@ -48,7 +53,7 @@ public class StatusCommandTest {
     statusCommand.setPipelineId(pipelineId);
     statusCommand.run();
 
-    String output = outputStream.toString();
+    final String output = outputStream.toString();
     System.out.println(output);
     assertTrue(output.contains("Pipeline ID: " + pipelineId));
     assertTrue(output.contains("Status: RUNNING"));
@@ -58,8 +63,8 @@ public class StatusCommandTest {
   @Test
   void testVerboseOutput() {
 
-    String pipelineId = "pipeline-123";
-    PipelineStatus mockStatus = new PipelineStatus(
+    final String pipelineId = "pipeline-123";
+    final PipelineStatus mockStatus = new PipelineStatus(
         pipelineId,
         PipelineState.RUNNING,
         75,
@@ -74,7 +79,7 @@ public class StatusCommandTest {
     statusCommand.setVerbose(true);
     statusCommand.run();
 
-    String output = outputStream.toString();
+    final String output = outputStream.toString();
     assertTrue(output.contains("Current Stage: Build"));
     assertTrue(output.contains("Message: Building project"));
     assertTrue(output.contains("Start Time:"));
@@ -84,7 +89,7 @@ public class StatusCommandTest {
   @Test
   void testServiceError() {
 
-    String pipelineId = "pipeline-123";
+    final String pipelineId = "pipeline-123";
     when(statusService.getPipelineStatus(pipelineId))
         .thenThrow(new RuntimeException("Service error"));
 
@@ -92,7 +97,27 @@ public class StatusCommandTest {
     statusCommand.run();
 
     verify(statusService).getPipelineStatus(pipelineId);
-    String output = outputStream.toString();
+    final String output = outputStream.toString();
     assertTrue(output.contains("Error checking pipeline status"));
   }
+  @Test
+  void testVerboseServiceError() {
+    final String pipelineId = "pipeline-123";
+    final RuntimeException testException = new RuntimeException("Service error");
+    when(statusService.getPipelineStatus(pipelineId)).thenThrow(testException);
+
+    statusCommand.setPipelineId(pipelineId);
+    statusCommand.setVerbose(true);
+    statusCommand.run();
+
+    verify(statusService).getPipelineStatus(pipelineId);
+    final String output = outputStream.toString();
+
+    final String error = errorStream.toString();
+
+    assertTrue(output.contains("Error checking pipeline status: Service error"));
+    assertTrue(error.contains("java.lang.RuntimeException: Service error"));
+    assertTrue(error.contains("at t1.cicd.cli.commands.StatusCommandTest"));
+  }
+
 }

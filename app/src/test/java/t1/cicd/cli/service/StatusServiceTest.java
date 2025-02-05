@@ -10,17 +10,18 @@ import t1.cicd.cli.model.PipelineState;
 import t1.cicd.cli.model.PipelineStatus;
 
 public class StatusServiceTest {
+
   private StatusService statusService;
 
   @BeforeEach
-  void setUp(){
+  void setUp() {
     statusService = new StatusService();
   }
 
   @Test
-  void testGetPipelineStatus(){
-    String pipelineId = "test-123";
-    PipelineStatus status = statusService.getPipelineStatus(pipelineId);
+  void testGetPipelineStatus() {
+    final String pipelineId = "test-123";
+    final PipelineStatus status = statusService.getPipelineStatus(pipelineId);
     assertNotNull(status);
     assertEquals(pipelineId, status.getPipelineId());
     assertEquals(PipelineState.RUNNING, status.getState());
@@ -30,19 +31,20 @@ public class StatusServiceTest {
     assertNotNull(status.getStartTime());
     assertNotNull(status.getLastUpdated());
   }
-  @Test
-  void testGetPipelineStatusWithEmptyId(){
-    String emptyId = "";
 
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+  @Test
+  void testGetPipelineStatusWithEmptyId() {
+    final String emptyId = "";
+
+    final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
       statusService.getPipelineStatus(emptyId);
     });
     assertEquals("Pipeline ID cannot be empty", exception.getMessage());
   }
 
   @Test
-  void testGetPipelineStatusWithNullId(){
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+  void testGetPipelineStatusWithNullId() {
+    final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
       statusService.getPipelineStatus(null);
     });
     assertEquals("Pipeline ID cannot be null", exception.getMessage());
