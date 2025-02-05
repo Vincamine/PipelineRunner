@@ -16,6 +16,14 @@ public class StatusService {
    * @throws RuntimeException if there's an error retrieving the status.
    */
   public PipelineStatus getPipelineStatus(String pipelineId) {
+    // Validate pipeline ID
+    if (pipelineId == null) {
+      throw new IllegalArgumentException("Pipeline ID cannot be null");
+    }
+    if (pipelineId.trim().isEmpty()) {
+      throw new IllegalArgumentException("Pipeline ID cannot be empty");
+    }
+
     // TODO: Replace with actual API call to backend
     try {
       // Simulate API call delay
