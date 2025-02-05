@@ -3,6 +3,7 @@ package t1.cicd.cli;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import t1.cicd.cli.commands.LogCommand;
+import t1.cicd.cli.commands.StatusCommand;
 
 /**
  * RootCommand serves as the main entry point for the CI/CD CLI application.
@@ -17,7 +18,8 @@ import t1.cicd.cli.commands.LogCommand;
     description = "A CI/CD Command-Line Tool",
     subcommands = {                         // ✅ Register subcommands here
         LogCommand.class,                   // Example subcommand
-        CommandLineInterface.class          // Main CLI command
+        CommandLineInterface.class,         // Main CLI command
+        StatusCommand.class                 // Check pipeline status
     }
 )
 public class RootCommand implements Runnable {
