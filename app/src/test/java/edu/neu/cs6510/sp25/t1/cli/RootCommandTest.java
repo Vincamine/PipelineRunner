@@ -5,8 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-
-import edu.neu.cs6510.sp25.t1.cli.util.GitValidatorTest;
+import edu.neu.cs6510.sp25.t1.cli.util.GitValidator;
 import picocli.CommandLine;
 
 import java.io.ByteArrayOutputStream;
@@ -45,7 +44,7 @@ class RootCommandTest {
     }
 
     /**
-     * ✅ Tests whether the CLI displays a help message when `--help` is used.
+     * Tests whether the CLI displays a help message when `--help` is used.
      */
     @Test
     @DisplayName("✅ CLI should display help message")
@@ -59,21 +58,23 @@ class RootCommandTest {
     }
 
     /**
-     * 🚀 Tests whether the `--verbose` flag is correctly recognized.
-     * ✅ Uses Mockito to bypass Git repository validation.
+     * Tests whether the `--verbose` flag is correctly recognized.
      */
     @Test
     @DisplayName("🚀 CLI should accept --verbose flag")
     void testVerboseFlag() {
-        try (MockedStatic<GitValidatorTest> mockGitValidator = mockStatic(GitValidatorTest.class)) {
-            // Mock the GitValidator to prevent it from failing the test
-            mockGitValidator.when(GitValidatorTest::validateGitRepo).thenAnswer(invocation -> null);
+        try (MockedStatic<GitValidator> mockGitValidator = mockStatic(GitValidator.class)) {
+            // Mock GitValidator to prevent failure due to missing .git directory
+            mockGitValidator.when(GitValidator::validateGitRepo).thenAnswer(invocation -> null);
+            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);  // ✅ Ensure it returns true
 
             final int exitCode = cmd.execute("--verbose");
+
             assertEquals(0, exitCode, "Expected CLI to return exit code 0 when --verbose is passed.");
 
             final String output = outContent.toString();
             assertTrue(output.contains("✅ Verbose mode enabled."), "Expected verbose message to be printed.");
         }
     }
+
 }

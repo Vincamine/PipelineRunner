@@ -3,14 +3,14 @@ package edu.neu.cs6510.sp25.t1.cli;
 import edu.neu.cs6510.sp25.t1.cli.commands.LogCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.StatusCommand;
-import edu.neu.cs6510.sp25.t1.cli.util.GitValidatorTest;
+import edu.neu.cs6510.sp25.t1.cli.util.GitValidator;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /**
  * Root command for the CI/CD CLI tool.
  * <p>
- * Handles global options such as {@code --verbose} and runs appropriate subcommands.
+ * Handles global options such as {@code --verbose} and executes appropriate subcommands.
  * </p>
  */
 @Command(
@@ -46,7 +46,7 @@ public class RootCommand implements Runnable {
         }
 
         // 🚨 Perform Git validation AFTER verbose flag handling
-        GitValidatorTest.validateGitRepo();
+        GitValidator.validateGitRepo();
 
         if (run) {
             System.out.println("🚀 Running the CI/CD pipeline...");
@@ -57,4 +57,3 @@ public class RootCommand implements Runnable {
         }
     }
 }
-
