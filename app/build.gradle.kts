@@ -7,11 +7,13 @@
 
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
+    kotlin("jvm") version "1.8.0"
     application
     java
     jacoco
     checkstyle
     pmd
+    
 }
 
 repositories {
@@ -52,6 +54,12 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
     implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
+
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
+
+    // Apache Commons CLI
+    // implementation("org.apache.commons:commons-lang3:3.12.0")
+    // implementation("commons-cli:commons-cli:1.5.0")
 }
 
 sourceSets {
@@ -74,7 +82,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "t1.cicd.App"
+    mainClass.set("t1.cicd.App")
 }
 
 tasks.named<Test>("test") {
@@ -119,11 +127,21 @@ pmd {
     rulesMinimumPriority.set(5)
 }
 
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "t1.cicd.App"
+    }
+}
+
 tasks.withType<Pmd> {
     reports {
         xml.required.set(true)
         html.required.set(true)
     }
+}
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-Xlint:deprecation")
 }
 
 // JavaDoc generation

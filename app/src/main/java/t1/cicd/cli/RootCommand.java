@@ -2,6 +2,7 @@ package t1.cicd.cli;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import t1.cicd.cli.commands.RunCommand;
 import t1.cicd.cli.commands.LogCommand;
 import t1.cicd.cli.commands.StatusCommand;
 
@@ -19,7 +20,8 @@ import t1.cicd.cli.commands.StatusCommand;
     subcommands = {                         // ✅ Register subcommands here
         LogCommand.class,                   // Example subcommand
         CommandLineInterface.class,         // Main CLI command
-        StatusCommand.class                 // Check pipeline status
+        StatusCommand.class,                 // Check pipeline status
+        RunCommand.class                    // Run pipeline
     }
 )
 public class RootCommand implements Runnable {
@@ -27,13 +29,20 @@ public class RootCommand implements Runnable {
     @Option(names = {"-v", "--verbose"}, description = "Enable verbose output.")
     boolean verbose;
 
+    @Option(names = {"--run"}, description = "Trigger CI/CD pipeline execution")
+    boolean run;
+
     /**
      * The default action when no subcommands or options are provided.
      */
     @Override
     public void run() {
-        System.out.println("Welcome to the CI/CD CLI Tool!");
-        System.out.println("Use 'cli --help' to view available commands.");
+        if (run) {
+            new RunCommand().run();
+        } else {
+            System.out.println("Welcome to the CI/CD CLI Tool!");
+            System.out.println("Use 'cli --help' to view available commands.");
+        }
     }
 }
 

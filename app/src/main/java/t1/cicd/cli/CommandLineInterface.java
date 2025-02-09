@@ -28,4 +28,5 @@ public class CommandLineInterface implements Runnable {
     public void run() {
         System.out.println("Use 'cli --help' to view available commands.");
     }
+
 }
