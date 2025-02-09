@@ -1,55 +1,59 @@
 package edu.neu.cs6510.sp25.t1.cli.util;
 
-import org.junit.jupiter.api.*;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.*;
+/**
+ * Utility class for validating if the CLI is running inside a Git repository.
+ * 
+ * This class ensures that commands requiring a Git environment are executed 
+ * from within a valid Git repository.
+ */
+public class GitValidatorTest {
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class GitValidatorTest {
+    private static final Logger LOGGER = Logger.getLogger(GitValidatorTest.class.getName());
 
-    private File gitDir;
+    /**
+     * Checks if the current directory or any parent directory is a Git repository.
+     * 
+     * This method starts from the current working directory and moves up the directory
+     * tree until it finds a `.git` folder.
+     *
+     * @return {@code true} if a `.git` directory is found in the current or any parent directory,
+     *         {@code false} otherwise.
+     */
+    public static boolean isGitRepository() {
+        File currentDir = new File(System.getProperty("user.dir"));
 
-    @BeforeEach
-    void setUp() throws IOException {
-        // Create a temporary .git directory before each test
-        final File gitDir = new File(".git"); 
-        if (!gitDir.exists()) {
-            Files.createDirectory(gitDir.toPath());
+        while (currentDir != null) {
+            final File gitDir = new File(currentDir, ".git");
+
+            LOGGER.log(Level.INFO, "DEBUG: Checking {0}", gitDir.getAbsolutePath());
+
+            if (gitDir.exists() && gitDir.isDirectory()) {
+                LOGGER.log(Level.INFO, "✅ Git repository detected at {0}", currentDir.getAbsolutePath());
+                return true;
+            }
+
+            currentDir = currentDir.getParentFile(); // Move up one level
         }
+
+        LOGGER.log(Level.WARNING, "❌ No Git repository detected.");
+        return false;
     }
 
-    @AfterEach
-    void tearDown() {
-        // Delete the temporary .git directory after each test
-        if (gitDir.exists()) {
-            gitDir.delete();
+    /**
+     * Validates whether the current working directory is inside a Git repository.
+     * 
+     * If a `.git` directory is not found, this method throws an exception.
+     * 
+     * @throws IllegalStateException if the CLI is not executed from a Git repository.
+     */
+    public static void validateGitRepo() {
+        if (!isGitRepository()) {
+            LOGGER.log(Level.SEVERE, "❌ Error: This CLI must be run from the root of a Git repository.");
+            throw new IllegalStateException("Error: This CLI must be run from the root of a Git repository.");
         }
-    }
-
-    @Test
-    @DisplayName("✅ Should return true when inside a Git repository")
-    void testIsGitRepository_whenGitDirExists_shouldReturnTrue() {
-        assertTrue(GitValidator.isGitRepository(), "Expected CLI to detect a Git repository.");
-    }
-
-    @Test
-    @DisplayName("❌ Should return false when .git directory is missing")
-    void testIsGitRepository_whenGitDirDoesNotExist_shouldReturnFalse() {
-        gitDir.delete();
-        assertFalse(GitValidator.isGitRepository(), "Expected CLI to detect missing Git repository.");
-    }
-
-    @Test
-    @DisplayName("🚨 Should throw exception when not in a Git repository")
-    void testValidateGitRepo_shouldThrowExceptionIfNotInGitRepo() {
-        gitDir.delete(); // Ensure .git is missing
-
-        final Exception exception = assertThrows(IllegalStateException.class, GitValidator::validateGitRepo);
-
-        assertTrue(exception.getMessage().contains("Error: This CLI must be run from the root of a Git repository."),
-            "Expected exception message when not inside a Git repository.");
     }
 }

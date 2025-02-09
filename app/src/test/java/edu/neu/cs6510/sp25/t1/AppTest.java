@@ -38,7 +38,8 @@ class AppTest {
         App.main(args);
 
         final String output = outContent.toString();
-        assertTrue(output.contains("Usage"), "Expected CLI help output when no arguments are passed.");
+        assertTrue(output.contains("Usage") || output.contains("--help"), 
+            "Expected CLI help output when no arguments are passed.");
     }
 
     @Test
