@@ -6,74 +6,37 @@
  */
 
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
-    kotlin("jvm") version "1.8.0"
     application
     java
     jacoco
     checkstyle
     pmd
-    
 }
 
 repositories {
-
-    // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
 
 dependencies {
-    // FasterXML Jackson for JSON processing
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.15.0")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.15.0")
+    // JSON Processing (Keep latest version)
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
 
-    // HTTP Client (Java 11+)
+    // HTTP Client
     implementation("org.apache.httpcomponents.client5:httpclient5:5.2")
 
-    // Command Line tool
-    implementation("info.picocli:picocli:4.6.1")
-    annotationProcessor("info.picocli:picocli-codegen:4.6.1")
-
-    // Mockito for unit testing
-    testImplementation("org.mockito:mockito-core:5.4.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
-
-    // Use JUnit Jupiter for testing.
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    // CLI argument parser
+    // CLI Tool (Picocli)
     implementation("info.picocli:picocli:4.7.4")
     annotationProcessor("info.picocli:picocli-codegen:4.7.4")
 
-    // This dependency is used by the application.
-    implementation(libs.guava)
-
-    // json
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
-
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
-
-    // Apache Commons CLI
-    // implementation("org.apache.commons:commons-lang3:3.12.0")
-    // implementation("commons-cli:commons-cli:1.5.0")
+    // Unit Testing
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testImplementation("org.mockito:mockito-core:5.4.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
 }
 
-sourceSets {
-    main {
-        java.srcDirs("src/main/java")
-    }
-    test {
-        java.srcDirs("src/test/java")
-        compileClasspath += sourceSets.main.get().output
-        runtimeClasspath += sourceSets.main.get().output
-    }
-}
-
-// Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -81,19 +44,7 @@ java {
 }
 
 application {
-    // Define the main class for the application.
-    mainClass.set("t1.cicd.App")
-}
-
-tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
-}
-
-// jacoco
-jacoco {
-    toolVersion = "0.8.10"
-}
+    mainClass.set("edu.neu.cs6510.sp25.t1.App")
 
 tasks.test {
     useJUnitPlatform()
@@ -108,44 +59,16 @@ tasks.jacocoTestReport {
     }
 }
 
-// Checkstyle configuration
 checkstyle {
     toolVersion = "10.12.3"
     configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 }
 
-tasks.withType<Checkstyle> {
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-}
-
-// PMD configuration
 pmd {
     toolVersion = "6.55.0"
-    rulesMinimumPriority.set(5)
-}
-
-tasks.withType<Jar> {
-    manifest {
-        attributes["Main-Class"] = "t1.cicd.App"
-    }
-}
-
-tasks.withType<Pmd> {
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
+    ruleSets = listOf("java-basic", "java-design", "java-unusedcode")
 }
 
 tasks.withType<JavaCompile> {
     options.compilerArgs.add("-Xlint:deprecation")
-}
-
-// JavaDoc generation
-tasks.javadoc {
-    options.encoding = "UTF-8"
-    isFailOnError = false
 }

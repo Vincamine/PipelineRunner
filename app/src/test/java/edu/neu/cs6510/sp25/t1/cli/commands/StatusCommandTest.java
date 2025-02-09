@@ -25,8 +25,7 @@ public class StatusCommandTest {
   private StatusCommand statusCommand;
   private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
   private final ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-  private final PrintStream originalOut = System.out;
-  private final PrintStream originalErr = System.err;
+
 
 
   @BeforeEach
