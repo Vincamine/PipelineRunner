@@ -117,7 +117,7 @@ public class StatusCommandTest {
 
     assertTrue(output.contains("Error checking pipeline status: Service error"));
     assertTrue(error.contains("java.lang.RuntimeException: Service error"));
-    assertTrue(error.contains("at t1.cicd.cli.commands.StatusCommandTest"));
+    assertTrue(error.contains("at edu.neu.cs6510.sp25.t1.cli.commands.StatusCommandTest"));
   }
 
 }
