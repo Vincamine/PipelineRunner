@@ -2,58 +2,45 @@ package edu.neu.cs6510.sp25.t1.cli.validation;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
+/**
+ * PipelineStructureValidator checks the structure of a pipeline YAML configuration.
+ * It ensures required keys exist and validates pipeline stages.
+ */
 public class PipelineStructureValidator {
-//  private final Set<String> pipelineNames;
 
-  public PipelineStructureValidator(Set<String> pipelineNames) {
-//    this.pipelineNames = pipelineNames;
-  }
-
+  /**
+   * Validates the structure of the pipeline configuration.
+   *
+   * @param data The parsed YAML data.
+   * @return true if the structure is valid, false otherwise.
+   */
   public boolean validate(Map<String, Object> data) {
-    if (!data.containsKey("pipeline") || !(data.get("pipeline") instanceof Map)) {
+    if (!(data.get("pipeline") instanceof Map<?, ?> pipeline)) {
       System.err.println("Error: Missing or invalid 'pipeline' key.");
       return false;
     }
 
-    Map<String, Object> pipeline = (Map<String, Object>) data.get("pipeline");
-
-    if (!pipeline.containsKey("name") || !(pipeline.get("name") instanceof String)) {
+    if (!(pipeline.get("name") instanceof String)) {
       System.err.println("Error: 'pipeline' must have a valid 'name'.");
       return false;
     }
 
-//    String pipelineName = (String) pipeline.get("name");
-//    if (!pipelineNames.add(pipelineName)) {
-//      System.err.println("Error: Pipeline name '" + pipelineName + "' is not unique.");
-//      return false;
-//    }
-
-    if (!pipeline.containsKey("stages") || !(pipeline.get("stages") instanceof List<?> rawStages)) {
+    if (!(pipeline.get("stages") instanceof List<?> rawStages)) {
       System.err.println("Error: 'stages' must be a list.");
       return false;
     }
 
-    try {
-      List<String> stages = rawStages.stream()
-          .filter(item -> item instanceof String)
-          .map(item -> (String) item)
-          .toList();
+    List<String> stages = rawStages.stream()
+        .filter(String.class::isInstance)
+        .map(String.class::cast)
+        .toList();
 
-      // check yml stages
-      if (stages.isEmpty()) {
-        System.err.println("Error: At least one stage must be defined.");
-        return false;
-      }
-      return true;
-
-    } catch (ClassCastException e) {
-      System.err.println("Error: 'stages' contains non-string values.");
+    if (stages.isEmpty()) {
+      System.err.println("Error: At least one stage must be defined.");
       return false;
     }
+
+    return true;
   }
 }
-
-

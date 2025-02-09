@@ -1,16 +1,21 @@
 package edu.neu.cs6510.sp25.t1.cli.validation;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
+/**
+ * JobValidator checks the validity of jobs within the pipeline configuration.
+ * It ensures jobs have required fields, exist in valid stages, and have unique names.
+ */
 public class JobValidator {
   private final List<String> stages;
   private final Map<String, Set<String>> stageJobs;
   private final Map<String, String> jobStages;
 
+  /**
+   * Initializes the validator with known stages.
+   *
+   * @param stages A list of valid stage names.
+   */
   public JobValidator(List<String> stages) {
     this.stages = stages;
     this.stageJobs = new HashMap<>();
@@ -21,6 +26,15 @@ public class JobValidator {
     }
   }
 
+  /**
+   * Validates the jobs and ensures:
+   * - Job names are unique within a stage.
+   * - Jobs reference existing stages.
+   * - Required fields exist.
+   *
+   * @param jobs A list of job definitions.
+   * @return true if all jobs are valid, false otherwise.
+   */
   public boolean validateJobs(List<Map<String, Object>> jobs) {
     for (Map<String, Object> job : jobs) {
       if (!job.containsKey("name") || !(job.get("name") instanceof String jobName)) {
@@ -55,6 +69,11 @@ public class JobValidator {
     return true;
   }
 
+  /**
+   * Returns a map of job names and their corresponding stages.
+   *
+   * @return A map where the key is the job name, and the value is the stage name.
+   */
   public Map<String, String> getJobStages() {
     return jobStages;
   }
