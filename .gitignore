@@ -89,3 +89,5 @@ logs/
 *.user
 *.userosscache
 *.sln.docstates
+
+/bin/

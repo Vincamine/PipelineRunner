@@ -153,6 +153,7 @@ class JobValidatorTest {
    * @param yamlData The parsed YAML data.
    * @return A list of stage names.
    */
+  @SuppressWarnings("unchecked")
   private List<String> getStages(Map<String, Object> yamlData) {
     final Map<String, Object> pipeline = (Map<String, Object>) yamlData.get("pipeline");
     return (List<String>) pipeline.get("stages");
@@ -164,6 +165,7 @@ class JobValidatorTest {
    * @param yamlData The parsed YAML data.
    * @return A list of job configurations.
    */
+  @SuppressWarnings("unchecked")
   private List<Map<String, Object>> getJobs(Map<String, Object> yamlData) {
     return (List<Map<String, Object>>) yamlData.get("job");
   }

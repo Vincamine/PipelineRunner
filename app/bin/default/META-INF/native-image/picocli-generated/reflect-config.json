@@ -1,0 +1,9 @@
+[
+  {
+    "name" : "edu.neu.cs6510.sp25.t1.cli.commands.RunCommand",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  }
+]

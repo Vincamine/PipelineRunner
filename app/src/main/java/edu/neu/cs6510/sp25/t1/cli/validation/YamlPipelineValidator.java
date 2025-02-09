@@ -54,6 +54,7 @@ public class YamlPipelineValidator {
         return false;
       }
 
+      @SuppressWarnings("unchecked")
       final List<Map<String, Object>> jobs = rawJobs.stream()
           .filter(item -> item instanceof Map)
           .map(item -> (Map<String, Object>) item)

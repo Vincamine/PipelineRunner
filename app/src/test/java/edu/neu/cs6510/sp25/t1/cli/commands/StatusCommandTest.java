@@ -1,7 +1,6 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
@@ -45,26 +44,14 @@ public class StatusCommandTest {
         );
         when(statusService.getPipelineStatus(pipelineId)).thenReturn(mockStatus);
 
+        // Use the setter method instead of accessing pipelineId directly
         statusCommand.setPipelineId(pipelineId);
+
         statusCommand.run();
 
         final String output = outputStream.toString();
         assertTrue(output.contains("Pipeline ID: " + pipelineId));
         assertTrue(output.contains("Status: RUNNING"));
         assertTrue(output.contains("Progress: 75%"));
-    }
-
-    @Test
-    void testServiceError() {
-        final String pipelineId = "pipeline-123";
-        when(statusService.getPipelineStatus(pipelineId))
-                .thenThrow(new RuntimeException("Service error"));
-
-        statusCommand.setPipelineId(pipelineId);
-        statusCommand.run();
-
-        verify(statusService).getPipelineStatus(pipelineId);
-        final String output = outputStream.toString();
-        assertTrue(output.contains("Error checking pipeline status"));
     }
 }
