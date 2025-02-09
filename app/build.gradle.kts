@@ -38,6 +38,9 @@ dependencies {
 
     // Google Guava (Utility library)
     implementation("com.google.guava:guava:32.1.2-jre")
+
+    // yaml file parser
+    implementation("org.yaml:snakeyaml:2.0")
 }
 
 sourceSets {
