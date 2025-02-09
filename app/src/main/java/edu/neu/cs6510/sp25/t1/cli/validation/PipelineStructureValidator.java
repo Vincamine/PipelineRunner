@@ -31,7 +31,7 @@ public class PipelineStructureValidator {
       return false;
     }
 
-    List<String> stages = rawStages.stream()
+    final List<String> stages = rawStages.stream()
         .filter(String.class::isInstance)
         .map(String.class::cast)
         .toList();

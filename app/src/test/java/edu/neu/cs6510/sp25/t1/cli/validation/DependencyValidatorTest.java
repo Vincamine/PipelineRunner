@@ -24,11 +24,11 @@ class DependencyValidatorTest {
    */
   @Test
   void testValidDependencies() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/dependencyVal/valid_dependencies.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/dependencyVal/valid_dependencies.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<Map<String, Object>> jobs = getJobs(yamlData);
-    Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
+    final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
 
     dependencyValidator = new DependencyValidator(jobDependencies);
     assertTrue(dependencyValidator.validateDependencies(), "Valid dependencies should pass validation.");
@@ -39,11 +39,11 @@ class DependencyValidatorTest {
    */
   @Test
   void testMissingDependency() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/dependencyVal/missing_dependency.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/dependencyVal/missing_dependency.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<Map<String, Object>> jobs = getJobs(yamlData);
-    Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
+    final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
 
     dependencyValidator = new DependencyValidator(jobDependencies);
     assertFalse(dependencyValidator.validateDependencies(), "Job referencing a non-existent dependency should fail validation.");
@@ -54,11 +54,11 @@ class DependencyValidatorTest {
    */
   @Test
   void testCyclicDependencies() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/dependencyVal/cyclic_dependencies.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/dependencyVal/cyclic_dependencies.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<Map<String, Object>> jobs = getJobs(yamlData);
-    Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
+    final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
 
     dependencyValidator = new DependencyValidator(jobDependencies);
     assertFalse(dependencyValidator.validateDependencies(), "Cyclic dependencies should fail validation.");
@@ -92,18 +92,18 @@ class DependencyValidatorTest {
    * @return A map where each job name is mapped to its dependencies.
    */
   private Map<String, List<String>> extractJobDependencies(List<Map<String, Object>> jobs) {
-    Map<String, List<String>> jobDependencies = new HashMap<>();
+    final Map<String, List<String>> jobDependencies = new HashMap<>();
 
     for (Map<String, Object> job : jobs) {
-      Object jobNameObj = job.get("name");
+      final Object jobNameObj = job.get("name");
       if (!(jobNameObj instanceof String jobName)) {
         System.err.println("Error: Job without a valid 'name'.");
         continue;
       }
 
-      Object needsObj = job.get("needs");
+      final Object needsObj = job.get("needs");
       if (needsObj instanceof List<?> rawNeeds) {
-        List<String> needs = rawNeeds.stream()
+        final List<String> needs = rawNeeds.stream()
             .filter(String.class::isInstance)
             .map(String.class::cast)
             .collect(Collectors.toList());

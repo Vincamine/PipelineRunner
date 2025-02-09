@@ -31,7 +31,7 @@ public class DependencyValidator {
   public boolean validateDependencies() {
     // Check if all dependencies exist
     for (Map.Entry<String, List<String>> entry : jobDependencies.entrySet()) {
-      String jobName = entry.getKey();
+      final String jobName = entry.getKey();
       for (String dependency : entry.getValue()) {
         if (!allJobNames.contains(dependency)) {
           System.err.println("Error: Job '" + jobName + "' has a dependency on non-existent job '" + dependency + "'.");
@@ -50,8 +50,8 @@ public class DependencyValidator {
    * @return true if a cycle is detected, false otherwise.
    */
   private boolean hasCycle() {
-    Set<String> visited = new HashSet<>();
-    Set<String> recursionStack = new HashSet<>();
+    final Set<String> visited = new HashSet<>();
+    final Set<String> recursionStack = new HashSet<>();
 
     for (String job : jobDependencies.keySet()) {
       if (detectCycle(job, visited, recursionStack)) {

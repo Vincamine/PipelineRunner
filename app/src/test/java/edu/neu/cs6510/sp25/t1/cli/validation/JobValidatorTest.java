@@ -31,17 +31,17 @@ class JobValidatorTest {
    */
   @Test
   void testValidJobConfiguration() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/job/valid_jobs.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/job/valid_jobs.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<String> stages = getStages(yamlData);
-    List<Map<String, Object>> jobs = getJobs(yamlData);
+    final List<String> stages = getStages(yamlData);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
 
     jobValidator = new JobValidator(stages);
     assertTrue(jobValidator.validateJobs(jobs), "Valid jobs should pass validation.");
 
     // Validate getJobStages()
-    Map<String, String> jobStages = jobValidator.getJobStages();
+    final Map<String, String> jobStages = jobValidator.getJobStages();
     assertEquals("build", jobStages.get("BuildJob"));
     assertEquals("test", jobStages.get("TestJob"));
   }
@@ -51,11 +51,11 @@ class JobValidatorTest {
    */
   @Test
   void testMissingJobName() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/job/missing_job_name.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/job/missing_job_name.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<String> stages = getStages(yamlData);
-    List<Map<String, Object>> jobs = getJobs(yamlData);
+    final List<String> stages = getStages(yamlData);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
 
     jobValidator = new JobValidator(stages);
     assertFalse(jobValidator.validateJobs(jobs), "Missing job name should fail validation.");
@@ -66,11 +66,11 @@ class JobValidatorTest {
    */
   @Test
   void testMissingJobStage() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/job/missing_job_stage.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/job/missing_job_stage.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<String> stages = getStages(yamlData);
-    List<Map<String, Object>> jobs = getJobs(yamlData);
+    final List<String> stages = getStages(yamlData);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
 
     jobValidator = new JobValidator(stages);
     assertFalse(jobValidator.validateJobs(jobs), "Job missing 'stage' should fail validation.");
@@ -81,11 +81,11 @@ class JobValidatorTest {
    */
   @Test
   void testMissingJobScript() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/job/missing_job_script.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/job/missing_job_script.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<String> stages = getStages(yamlData);
-    List<Map<String, Object>> jobs = getJobs(yamlData);
+    final List<String> stages = getStages(yamlData);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
 
     jobValidator = new JobValidator(stages);
     assertFalse(jobValidator.validateJobs(jobs), "Job missing 'script' should fail validation.");
@@ -96,11 +96,11 @@ class JobValidatorTest {
    */
   @Test
   void testDuplicateJobNames() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/job/duplicate_job_names.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/job/duplicate_job_names.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<String> stages = getStages(yamlData);
-    List<Map<String, Object>> jobs = getJobs(yamlData);
+    final List<String> stages = getStages(yamlData);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
 
     jobValidator = new JobValidator(stages);
     assertFalse(jobValidator.validateJobs(jobs), "Duplicate job names in the same stage should fail validation.");
@@ -111,11 +111,11 @@ class JobValidatorTest {
    */
   @Test
   void testJobWithInvalidStage() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/job/job_with_invalid_stage.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/job/job_with_invalid_stage.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<String> stages = getStages(yamlData);
-    List<Map<String, Object>> jobs = getJobs(yamlData);
+    final List<String> stages = getStages(yamlData);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
 
     jobValidator = new JobValidator(stages);
     assertFalse(jobValidator.validateJobs(jobs), "Job with an invalid stage should fail validation.");
@@ -126,11 +126,11 @@ class JobValidatorTest {
    */
   @Test
   void testJobMissingRequiredFields() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/job/job_missing_required_fields.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/job/job_missing_required_fields.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
-    List<String> stages = getStages(yamlData);
-    List<Map<String, Object>> jobs = getJobs(yamlData);
+    final List<String> stages = getStages(yamlData);
+    final List<Map<String, Object>> jobs = getJobs(yamlData);
 
     jobValidator = new JobValidator(stages);
     assertFalse(jobValidator.validateJobs(jobs), "Job missing required fields should fail validation.");
@@ -154,7 +154,7 @@ class JobValidatorTest {
    * @return A list of stage names.
    */
   private List<String> getStages(Map<String, Object> yamlData) {
-    Map<String, Object> pipeline = (Map<String, Object>) yamlData.get("pipeline");
+    final Map<String, Object> pipeline = (Map<String, Object>) yamlData.get("pipeline");
     return (List<String>) pipeline.get("stages");
   }
 

@@ -21,7 +21,7 @@ public class YamlLoader {
    * @throws IllegalArgumentException If the YAML format is invalid.
    */
   public static Map<String, Object> loadYaml(String filePath) throws IOException {
-    Yaml yaml = new Yaml();
+    final Yaml yaml = new Yaml();
     try (FileInputStream inputStream = new FileInputStream(filePath)) {
       return yaml.load(inputStream);
     } catch (YAMLException e) {

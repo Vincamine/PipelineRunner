@@ -29,7 +29,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testValidPipeline() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/valid_pipeline.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/valid_pipeline.yml");
     assertTrue(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -38,7 +38,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testInvalidPipelineFormat() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/invalid_pipeline_format.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/invalid_pipeline_format.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -47,7 +47,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testInvalidStagesFormat() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/invalid_stages_format.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/invalid_stages_format.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -56,7 +56,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testMissingPipelineKey() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/missing_pipeline.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/missing_pipeline.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -65,7 +65,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testMissingStagesKey() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/missing_stages.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/missing_stages.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -74,7 +74,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testMissingJobsKey() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/missing_jobs.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/missing_jobs.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -83,7 +83,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testMissingJobFields() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/missing_job_fields.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/missing_job_fields.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -92,7 +92,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testJobWithInvalidStage() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/job_with_invalid_stage.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/job_with_invalid_stage.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -101,7 +101,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testJobWithMissingDependency() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/job_with_missing_dependency.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/job_with_missing_dependency.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -110,7 +110,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testJobWithCyclicDependencies() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/pipelineVal/job_with_cyclic_dependencies.yml");
+    final Path yamlPath = getResourcePath("yaml/pipelineVal/job_with_cyclic_dependencies.yml");
     assertFalse(yamlPipelineValidator.validatePipeline(yamlPath.toString()));
   }
 
@@ -119,7 +119,7 @@ class YamlPipelineValidatorTest {
    */
   @Test
   void testYamlFileNotFound() {
-    String fakeFilePath = "src/test/resources/yaml/non_existent.yml";
+    final String fakeFilePath = "src/test/resources/yaml/non_existent.yml";
     assertFalse(yamlPipelineValidator.validatePipeline(fakeFilePath));
   }
 

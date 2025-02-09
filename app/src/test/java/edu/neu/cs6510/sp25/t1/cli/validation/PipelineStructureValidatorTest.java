@@ -27,8 +27,8 @@ class PipelineStructureValidatorTest {
    */
   @Test
   void testValidPipelineStructure() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/structureVal/valid_structure.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/structureVal/valid_structure.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
     assertTrue(validator.validate(yamlData), "Valid pipeline structure should pass validation.");
   }
@@ -38,8 +38,8 @@ class PipelineStructureValidatorTest {
    */
   @Test
   void testMissingPipelineKey() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/structureVal/missing_pipeline.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/structureVal/missing_pipeline.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
     assertFalse(validator.validate(yamlData), "Pipeline key is missing and should fail validation.");
   }
@@ -49,8 +49,8 @@ class PipelineStructureValidatorTest {
    */
   @Test
   void testMissingPipelineName() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/structureVal/missing_name.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/structureVal/missing_name.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
     assertFalse(validator.validate(yamlData), "Missing 'name' key should fail validation.");
   }
@@ -60,8 +60,8 @@ class PipelineStructureValidatorTest {
    */
   @Test
   void testMissingStagesKey() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/structureVal/missing_stages.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/structureVal/missing_stages.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
     assertFalse(validator.validate(yamlData), "Missing 'stages' key should fail validation.");
   }
@@ -71,8 +71,8 @@ class PipelineStructureValidatorTest {
    */
   @Test
   void testEmptyStages() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/structureVal/empty_stages.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/structureVal/empty_stages.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
     assertFalse(validator.validate(yamlData), "Empty 'stages' list should fail validation.");
   }
@@ -82,8 +82,8 @@ class PipelineStructureValidatorTest {
    */
   @Test
   void testInvalidStagesType() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/structureVal/invalid_stages.yml");
-    Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+    final Path yamlPath = getResourcePath("yaml/structureVal/invalid_stages.yml");
+    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
     assertFalse(validator.validate(yamlData), "'stages' should be a list, incorrect type should fail validation.");
   }
