@@ -7,11 +7,11 @@
 
 **Revision History**
 
-|     Date     | Version | Description                            | Author     |
-| :----------: | :-----: | :------------------------------------- | :--------- |
-| Jan 31, 2025 |   1.0   | Initial release                        | Yiwen Wang |
-| Feb 3, 2025  |   1.1   | Added CLI usage details                | Yiwen Wang |
-| Feb 9, 2025  |   1.2   | Added Git repository requirement (#38) | Yiwen Wang |
+|     Date     | Version | Description                                      | Author     |
+| :----------: | :-----: | :----------------------------------------------- | :--------- |
+| Jan 31, 2025 |   1.0   | Initial release                                  | Yiwen Wang |
+| Feb 3, 2025  |   1.1   | Added CLI usage details                          | Yiwen Wang |
+| Feb 9, 2025  |   1.2   | Enhanced Git validation & added status command  | Yiwen Wang |
 
 ---
 
@@ -23,17 +23,35 @@ A command-line tool designed to run and manage CI/CD pipelines both on company d
 
 ---
 
+# Design Documents
+
+## Tech Stack
+
+Describe the technologies used in the project, including programming languages, frameworks, libraries, and infrastructure components.  
+[Tech Stack Design](dev-docs/reports/weeklies/design/tech-stack.md)
+
+## High-Level Design
+
+Provide an architectural overview of the system. Include diagrams if possible, explaining the interaction between different components and the overall flow of the application.  
+[High-Level Architecture Design](dev-docs/reports/weeklies/design/high-level-arch.md)
+
+## Low-Level Design
+
+Detail the implementation of various components, including algorithms, data structures, database schemas, API endpoints, and business logic.  
+[Low-Level Design](dev-docs/reports/weeklies/design/low-level-design.md)
+
 ## Table of Contents
 
 - [Overview](#overview)
-- [Git Repository Requirement](#git-repository-requirement)
 - [Key Features](#key-features)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Command Line Interface (CLI)](#command-line-interface-cli)
   - [Sub-Commands and Options](#sub-commands-and-options)
 - [Pipeline Configuration File](#pipeline-configuration-file)
+- [Execution Flow](#execution-flow)
 - [Error Reporting](#error-reporting)
+- [Reporting on Past Executions](#reporting-on-past-executions)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -47,41 +65,18 @@ This project is a CI/CD pipeline runner that:
 - **Local Pipeline Execution:** Enables developers to run pipelines in full or in part locally for debugging and development.
 - **Repository-Driven Configuration:** All pipeline configurations are stored and tracked within the repository under a designated folder.
 - **Unified CLI:** Provides a command-line client that adheres to best practices, ensuring consistent behavior whether run locally or on server machines.
+- **Enhanced Git Validation:** Ensures the CLI only runs from a valid Git repository.
 
 ---
 
-## 🚨 Git Repository Requirement
+## Key Features
 
-This CLI **must** be executed from the root of a **Git repository**. If not, the tool will fail with the following error:
-
-```
-❌ Error: This CLI must be run from the root of a Git repository.
-```
-
-### **How to Check if You Are in a Git Repository?**
-
-Run the following command:
-
-```bash
-git rev-parse --is-inside-work-tree
-```
-
-If the output is `true`, you are inside a Git repository.
-
-### **How to Initialize a Git Repository?**
-
-If the repository is not initialized, use:
-
-```bash
-git init
-```
-
-Then commit the necessary files:
-
-```bash
-git add .
-git commit -m "Initial commit"
-```
+- **Local and Remote Execution:** Seamlessly run pipelines in both company data centers and local environments.
+- **In-Repo Configuration:** All pipeline configurations reside in a `.pipelines` folder within the repository, ensuring they are versioned and trackable.
+- **Strict Git Repository Integration:** Only committed files are considered; uncommitted local changes are ignored.
+- **CLI-Driven Workflow:** A rich command-line interface (CLI) for running, checking, and reporting pipeline executions.
+- **Flexible Pipeline Definitions:** Pipelines are defined in YAML v1.2 with clear specifications for stages, jobs, dependencies, and scripts.
+- **Enhanced Logging & Debugging:** Added verbose mode and structured logging for debugging CLI operations.
 
 ---
 
@@ -106,12 +101,11 @@ git commit -m "Initial commit"
 
 ### Command Line Interface (CLI)
 
-The CLI **must** be executed from the root of a Git repository. It provides sub-commands and options to validate, simulate, run, and report on pipeline executions.
+The CLI must be executed from the root of a Git repository. It provides sub-commands and options to validate, simulate, run, and report on pipeline executions.
 
 #### General Usage
 
 ```bash
-# Note: This CLI must be executed from the root of a Git repository.
 ./gradlew run --args="[sub-command] [options]"
 ```
 
@@ -153,29 +147,84 @@ Output:
 No message provided.
 ```
 
----
+#### 4. **Checking Pipeline Status**
 
-## Error Reporting
-
-Errors are reported in the following format:
-
-```
-<pipeline-config-filename>:<line-number>:<column-number>: <error-message>
+```bash
+./gradlew run --args="status --pipeline-id 12345"
 ```
 
-### **Common Errors:**
-
-#### **1. Not inside a Git repository**
+If inside a Git repository, the pipeline status is printed. Otherwise, the CLI will return:
 
 ```
 ❌ Error: This CLI must be run from the root of a Git repository.
 ```
 
-#### **2. Invalid Pipeline Configuration**
+---
 
+## Pipeline Configuration File
+
+All CI/CD configuration files must be located in a `.pipelines` folder in the repository root and follow the YAML v1.2 format.
+
+### Basic Structure
+
+```yaml
+pipeline:
+  name: "My Pipeline"
+  stages:
+    - build
+    - test
+    - docs
+
+jobs:
+  - name: compile
+    stage: build
+    image: gradle:8.12-jdk21
+    script:
+      - ./gradlew classes
+
+  - name: unittests
+    stage: test
+    image: gradle:8.12-jdk21
+    script:
+      - ./gradlew test
+
+  - name: javadoc
+    stage: docs
+    image: gradle:8.12-jdk21
+    script:
+      - ./gradlew javadoc
 ```
-pipeline.yaml:10:22: syntax error, wrong type for value `3` in key `name`, expected a String value.
+
+---
+
+## How to Test
+
+### 1️⃣ Run CLI with Verbose Mode
+
+```bash
+./gradlew run --args="--verbose"
 ```
+✅ Expected: Should print `✅ Verbose mode enabled.` before any validation.
+
+### 2️⃣ Test Git Validation with Debug Logging
+
+```bash
+./gradlew run --args="status --pipeline-id 12345"
+```
+✅ Expected:
+- If inside a Git repository, it should print pipeline status.
+- If not inside a Git repository, it should return:
+  
+  ```
+  ❌ Error: This CLI must be run from the root of a Git repository.
+  ```
+
+### 3️⃣ Run Unit Tests
+
+```bash
+./gradlew test
+```
+✅ Expected: All tests should pass.
 
 ---
 
@@ -192,3 +241,7 @@ pipeline.yaml:10:22: syntax error, wrong type for value `3` in key `name`, expec
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+
+---
+
