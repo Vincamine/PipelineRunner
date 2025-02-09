@@ -1,16 +1,17 @@
 # 25Spring CS6510 Team 1 - CI/CD System
 
 - **Title:** Readme file
-- **Date:** Jan 31, 2025
+- **Date:** Feb 9, 2025
 - **Author:** Yiwen Wang
-- **Version:** 1.1
+- **Version:** 1.2
 
 **Revision History**
 
-|     Date     | Version | Description             | Author     |
-| :----------: | :-----: | :---------------------- | :--------- |
-| Jan 31, 2025 |   1.0   | Initial release         | Yiwen Wang |
-| Feb 3, 2025  |   1.1   | Added CLI usage details | Yiwen Wang |
+|     Date     | Version | Description                                      | Author     |
+| :----------: | :-----: | :----------------------------------------------- | :--------- |
+| Jan 31, 2025 |   1.0   | Initial release                                  | Yiwen Wang |
+| Feb 3, 2025  |   1.1   | Added CLI usage details                          | Yiwen Wang |
+| Feb 9, 2025  |   1.2   | Enhanced Git validation & added status command  | Yiwen Wang |
 
 ---
 
@@ -21,6 +22,23 @@ Welcome to the repository for our CI/CD system for small/medium-sized companies.
 A command-line tool designed to run and manage CI/CD pipelines both on company data centers and locally on developer machines. This tool allows developers to execute, debug, and validate entire or partial pipelines without the need for external modifications, ensuring that all CI/CD configurations reside within the repository and can be tracked via version control.
 
 ---
+
+# Design Documents
+
+## Tech Stack
+
+Describe the technologies used in the project, including programming languages, frameworks, libraries, and infrastructure components.  
+[Tech Stack Design](dev-docs/reports/weeklies/design/tech-stack.md)
+
+## High-Level Design
+
+Provide an architectural overview of the system. Include diagrams if possible, explaining the interaction between different components and the overall flow of the application.  
+[High-Level Architecture Design](dev-docs/reports/weeklies/design/high-level-arch.md)
+
+## Low-Level Design
+
+Detail the implementation of various components, including algorithms, data structures, database schemas, API endpoints, and business logic.  
+[Low-Level Design](dev-docs/reports/weeklies/design/low-level-design.md)
 
 ## Table of Contents
 
@@ -47,6 +65,7 @@ This project is a CI/CD pipeline runner that:
 - **Local Pipeline Execution:** Enables developers to run pipelines in full or in part locally for debugging and development.
 - **Repository-Driven Configuration:** All pipeline configurations are stored and tracked within the repository under a designated folder.
 - **Unified CLI:** Provides a command-line client that adheres to best practices, ensuring consistent behavior whether run locally or on server machines.
+- **Enhanced Git Validation:** Ensures the CLI only runs from a valid Git repository.
 
 ---
 
@@ -57,8 +76,7 @@ This project is a CI/CD pipeline runner that:
 - **Strict Git Repository Integration:** Only committed files are considered; uncommitted local changes are ignored.
 - **CLI-Driven Workflow:** A rich command-line interface (CLI) for running, checking, and reporting pipeline executions.
 - **Flexible Pipeline Definitions:** Pipelines are defined in YAML v1.2 with clear specifications for stages, jobs, dependencies, and scripts.
-- **Detailed Error Reporting:** Errors include file name, line, column, and a descriptive message to facilitate quick debugging.
-- **Robust Execution Management:** Handles job dependencies, parallel execution for independent jobs, sequential stages, and duplicate request detection.
+- **Enhanced Logging & Debugging:** Added verbose mode and structured logging for debugging CLI operations.
 
 ---
 
@@ -129,6 +147,18 @@ Output:
 No message provided.
 ```
 
+#### 4. **Checking Pipeline Status**
+
+```bash
+./gradlew run --args="status --pipeline-id 12345"
+```
+
+If inside a Git repository, the pipeline status is printed. Otherwise, the CLI will return:
+
+```
+❌ Error: This CLI must be run from the root of a Git repository.
+```
+
 ---
 
 ## Pipeline Configuration File
@@ -167,30 +197,34 @@ jobs:
 
 ---
 
-## Error Reporting
+## How to Test
 
-Errors are reported in the following format:
+### 1️⃣ Run CLI with Verbose Mode
 
+```bash
+./gradlew run --args="--verbose"
 ```
-<pipeline-config-filename>:<line-number>:<column-number>: <error-message>
+✅ Expected: Should print `✅ Verbose mode enabled.` before any validation.
+
+### 2️⃣ Test Git Validation with Debug Logging
+
+```bash
+./gradlew run --args="status --pipeline-id 12345"
 ```
+✅ Expected:
+- If inside a Git repository, it should print pipeline status.
+- If not inside a Git repository, it should return:
+  
+  ```
+  ❌ Error: This CLI must be run from the root of a Git repository.
+  ```
 
-Example:
+### 3️⃣ Run Unit Tests
 
+```bash
+./gradlew test
 ```
-pipeline.yaml:10:22: syntax error, wrong type for value `3` in key `name`, expected a String value.
-```
-
----
-
-## Reporting on Past Executions
-
-Reports can be generated at various levels:
-
-- **Pipeline Level:** List all available pipelines.
-- **Execution Level:** Summary of all executions for a specified pipeline.
-- **Stage Level:** Detailed report for a particular stage within an execution.
-- **Job Level:** Detailed report for a specific job.
+✅ Expected: All tests should pass.
 
 ---
 
@@ -208,21 +242,6 @@ Reports can be generated at various levels:
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+
 ---
 
-# Design Documents
-
-## Tech Stack
-
-Describe the technologies used in the project, including programming languages, frameworks, libraries, and infrastructure components.  
-[Tech Stack Design](dev-docs/reports/weeklies/design/tech-stack.md)
-
-## High-Level Design
-
-Provide an architectural overview of the system. Include diagrams if possible, explaining the interaction between different components and the overall flow of the application.  
-[High-Level Architecture Design](dev-docs/reports/weeklies/design/high-level-arch.md)
-
-## Low-Level Design
-
-Detail the implementation of various components, including algorithms, data structures, database schemas, API endpoints, and business logic.  
-[Low-Level Design](dev-docs/reports/weeklies/design/low-level-design.md)
