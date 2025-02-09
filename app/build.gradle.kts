@@ -7,7 +7,7 @@
 
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
-    kotlin("jvm") version "1.8.0"
+//    kotlin("jvm") version "1.8.0"
     application
     java
     jacoco
@@ -55,7 +55,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
     implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
+    //    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
+    // yml file parser
+    implementation("org.yaml:snakeyaml:2.0")
 
     // Apache Commons CLI
     // implementation("org.apache.commons:commons-lang3:3.12.0")
