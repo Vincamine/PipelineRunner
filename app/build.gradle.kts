@@ -57,6 +57,10 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.0")
 
+
+    // YAML
+    implementation("org.yaml:snakeyaml:2.2")
+
     // Apache Commons CLI
     // implementation("org.apache.commons:commons-lang3:3.12.0")
     // implementation("commons-cli:commons-cli:1.5.0")
