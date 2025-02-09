@@ -5,10 +5,11 @@ import java.util.*;
 /**
  * DependencyValidator checks job dependencies to ensure:
  * - All dependencies exist.
- * - No circular dependencies exist.
+ * - No cyclic dependencies exist.
  */
 public class DependencyValidator {
   private final Map<String, List<String>> jobDependencies;
+  private final Set<String> allJobNames;
 
   /**
    * Initializes the validator with job dependencies.
@@ -17,28 +18,52 @@ public class DependencyValidator {
    */
   public DependencyValidator(Map<String, List<String>> jobDependencies) {
     this.jobDependencies = jobDependencies;
+    this.allJobNames = new HashSet<>(jobDependencies.keySet());
   }
 
   /**
-   * Validates dependencies, ensuring no cycles exist.
+   * Validates dependencies, ensuring:
+   * - All dependencies reference existing jobs.
+   * - No cycles exist.
    *
-   * @return true if no cycles are found, false otherwise.
+   * @return true if no issues are found, false otherwise.
    */
   public boolean validateDependencies() {
+    // Check if all dependencies exist
+    for (Map.Entry<String, List<String>> entry : jobDependencies.entrySet()) {
+      String jobName = entry.getKey();
+      for (String dependency : entry.getValue()) {
+        if (!allJobNames.contains(dependency)) {
+          System.err.println("Error: Job '" + jobName + "' has a dependency on non-existent job '" + dependency + "'.");
+          return false;
+        }
+      }
+    }
+
+    // Check for cyclic dependencies
+    return !hasCycle();
+  }
+
+  /**
+   * Detects cycles using Depth-First Search (DFS).
+   *
+   * @return true if a cycle is detected, false otherwise.
+   */
+  private boolean hasCycle() {
     Set<String> visited = new HashSet<>();
     Set<String> recursionStack = new HashSet<>();
 
     for (String job : jobDependencies.keySet()) {
       if (detectCycle(job, visited, recursionStack)) {
         System.err.println("Error: Cycle detected in job dependencies.");
-        return false;
+        return true;
       }
     }
-    return true;
+    return false;
   }
 
   /**
-   * Detects cycles using Depth-First Search (DFS).
+   * Recursive helper method to detect cycles in dependencies.
    *
    * @param job The current job being checked.
    * @param visited A set of visited nodes.
@@ -47,10 +72,10 @@ public class DependencyValidator {
    */
   private boolean detectCycle(String job, Set<String> visited, Set<String> recursionStack) {
     if (recursionStack.contains(job)) {
-      return true;
+      return true; // Cycle detected
     }
     if (visited.contains(job)) {
-      return false;
+      return false; // Already processed
     }
 
     visited.add(job);
@@ -68,4 +93,3 @@ public class DependencyValidator {
     return false;
   }
 }
-

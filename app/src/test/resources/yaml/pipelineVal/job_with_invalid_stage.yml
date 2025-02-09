@@ -1,0 +1,10 @@
+pipeline:
+  name: "InvalidStagePipeline"
+  stages:
+    - build
+job:
+  - name: "TestJob"
+    stage: "deploy"
+    image: "python:3.9"
+    script:
+      - "pytest tests/"
