@@ -1,0 +1,18 @@
+pipeline:
+  name: "MissingDependencyPipeline"
+  stages:
+    - build
+    - test
+job:
+  - name: "BuildJob"
+    stage: "build"
+    image: "openjdk:11"
+    script:
+      - "mvn clean install"
+  - name: "TestJob"
+    stage: "test"
+    image: "python:3.9"
+    script:
+      - "pytest tests/"
+    needs:
+      - "NonExistentJob"

@@ -1,0 +1,26 @@
+pipeline:
+  name: "ValidPipeline"
+  stages:
+    - build
+    - test
+    - deploy
+job:
+  - name: "BuildJob"
+    stage: "build"
+    image: "openjdk:11"
+    script:
+      - "mvn clean install"
+  - name: "TestJob"
+    stage: "test"
+    image: "python:3.9"
+    script:
+      - "pytest tests/"
+    needs:
+      - "BuildJob"
+  - name: "DeployJob"
+    stage: "deploy"
+    image: "nginx"
+    script:
+      - "echo Deploying..."
+    needs:
+      - "TestJob"

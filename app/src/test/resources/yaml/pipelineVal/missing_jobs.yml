@@ -1,0 +1,4 @@
+pipeline:
+  name: "NoJobsPipeline"
+  stages:
+    - build
