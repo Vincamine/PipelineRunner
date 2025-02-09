@@ -21,7 +21,7 @@ class YamlLoaderTest {
    */
   @Test
   void testValidYamlFile() throws IOException, URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/valid_pipeline_loader_test.yml");
+    Path yamlPath = getResourcePath("yaml/loader/valid_pipeline_loader_test.yml");
     Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
     assertNotNull(yamlData);
@@ -38,7 +38,7 @@ class YamlLoaderTest {
    */
   @Test
   void testInvalidYamlFile() throws URISyntaxException {
-    Path yamlPath = getResourcePath("yaml/invalid_pipeline_loader_test.yml");
+    Path yamlPath = getResourcePath("yaml/loader/invalid_pipeline_loader_test.yml");
 
     Exception exception = assertThrows(IllegalArgumentException.class, () ->
         YamlLoader.loadYaml(yamlPath.toString()));
