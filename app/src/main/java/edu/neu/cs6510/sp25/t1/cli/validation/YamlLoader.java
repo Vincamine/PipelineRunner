@@ -1,7 +1,9 @@
 package edu.neu.cs6510.sp25.t1.cli.validation;
 
+import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
+import org.yaml.snakeyaml.error.MarkedYAMLException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,7 +27,25 @@ public class YamlLoader {
     try (FileInputStream inputStream = new FileInputStream(filePath)) {
       return yaml.load(inputStream);
     } catch (YAMLException e) {
-      throw new IllegalArgumentException("Invalid YAML format: " + e.getMessage());
+      // Create location for error reporting
+      final ErrorHandler.Location location;
+      if (e instanceof MarkedYAMLException) {
+        final MarkedYAMLException markedE = (MarkedYAMLException) e;
+        location = new ErrorHandler.Location(
+            filePath,
+            markedE.getProblemMark().getLine() + 1,
+            markedE.getProblemMark().getColumn() + 1,
+            "yaml"
+        );
+      } else {
+        location = new ErrorHandler.Location(filePath, 1, 1, "yaml");
+      }
+
+      final String errorMessage = ErrorHandler.formatMissingFieldError(
+          location,
+          "YAML parsing error: " + e.getMessage()
+      );
+      throw new IllegalArgumentException(errorMessage);
     }
   }
 }

@@ -2,6 +2,7 @@ package edu.neu.cs6510.sp25.t1.cli.validation;
 
 import java.io.IOException;
 import java.util.*;
+import org.yaml.snakeyaml.error.Mark;
 
 /**
  * YamlPipelineValidator is responsible for validating a YAML pipeline configuration.
@@ -68,8 +69,11 @@ public class YamlPipelineValidator {
 
       final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
 
+      // Create a Mark for error location tracking
+      final Mark mark = new Mark(filePath, 0, 0, 0, new int[]{}, 0);
+
       // Validate dependencies
-      final DependencyValidator dependencyValidator = new DependencyValidator(jobDependencies);
+      final DependencyValidator dependencyValidator = new DependencyValidator(jobDependencies, mark);
       return dependencyValidator.validateDependencies();
 
     } catch (IOException e) {
