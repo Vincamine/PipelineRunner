@@ -3,7 +3,9 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
@@ -19,7 +21,7 @@ import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
 )
 public class CheckCommand implements Callable<Integer> {
   @Parameters(index = "0", description = "Path to the pipeline YAML file")
-  private Path yamlPath;
+  private String yamlFilePath;
 
   /**
    * Executes the check command to validate a pipeline YAML file.
@@ -28,6 +30,20 @@ public class CheckCommand implements Callable<Integer> {
    */
   @Override
   public Integer call() {
+    Path yamlPath = Paths.get(yamlFilePath);
+
+    // Check if the file actually exists
+    if (!Files.exists(yamlPath)) {
+      System.err.println("Error: YAML file not found: " + yamlFilePath);
+      return 1;
+    }
+
+    // Check if the path contains "pipelines/"
+    if (!isInsidePipelinesFolder(yamlPath)) {
+      System.err.println("Error: YAML file must be inside the 'pipelines/' folder.");
+      return 1;
+    }
+
     try {
       final YamlPipelineValidator pipelineValidator = new YamlPipelineValidator();
 
@@ -45,5 +61,20 @@ public class CheckCommand implements Callable<Integer> {
       System.err.println("Error validating pipeline: " + e.getMessage());
       return 1;
     }
+  }
+
+  private boolean isInsidePipelinesFolder(Path path) {
+    // Normalize path for consistent directory structure
+    Path normalizedPath = path.toAbsolutePath().normalize();
+
+    // Extract parent directory name
+    Path parentDir = normalizedPath.getParent();
+
+    // Ensure parent directory is not null before checking
+    if (parentDir != null && parentDir.getFileName() != null) {
+      return parentDir.getFileName().toString().equals("pipelines");
+    }
+
+    return false;
   }
 }
