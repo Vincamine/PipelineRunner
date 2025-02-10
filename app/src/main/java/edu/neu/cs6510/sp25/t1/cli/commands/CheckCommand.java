@@ -30,7 +30,7 @@ public class CheckCommand implements Callable<Integer> {
    */
   @Override
   public Integer call() {
-    Path yamlPath = Paths.get(yamlFilePath);
+    final Path yamlPath = Paths.get(yamlFilePath);
 
     // Check if the file actually exists
     if (!Files.exists(yamlPath)) {
@@ -63,12 +63,18 @@ public class CheckCommand implements Callable<Integer> {
     }
   }
 
+  /**
+   * Checks whether the given file is inside the 'pipelines/' directory.
+   *
+   * @param path The absolute or relative path to the YAML file.
+   * @return {@code true} if the file is inside 'pipelines/', {@code false} otherwise.
+   */
   private boolean isInsidePipelinesFolder(Path path) {
     // Normalize path for consistent directory structure
-    Path normalizedPath = path.toAbsolutePath().normalize();
+    final Path normalizedPath = path.toAbsolutePath().normalize();
 
     // Extract parent directory name
-    Path parentDir = normalizedPath.getParent();
+    final Path parentDir = normalizedPath.getParent();
 
     // Ensure parent directory is not null before checking
     if (parentDir != null && parentDir.getFileName() != null) {

@@ -96,7 +96,7 @@ class CheckCommandTest {
     yamlFilePathField.set(checkCommand, yamlPath.toString());
 
     // Run validation
-    int result = checkCommand.call();
+    final int result = checkCommand.call();
 
     // Assert that validation fails due to incorrect location
     assertEquals(1, result);
