@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URI;
 import picocli.CommandLine.Command;
 import edu.neu.cs6510.sp25.t1.cli.util.ErrorFormatter;
+import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator; 
 
 /**
  * Command to trigger CI/CD pipeline execution.
@@ -42,6 +43,12 @@ public class RunCommand implements Runnable {
                 return;
             }
 
+            YamlPipelineValidator validator = new YamlPipelineValidator();
+            boolean isValid = validator.validatePipeline(filePath);
+            if (!isValid) {
+                System.err.println("Pipeline validation failed.");
+                return;
+            }
             final ApiResponse apiResponse = sendRequestToApi(pipelineConfig);
             if (apiResponse.isNotFound()) {
                 System.err.println("Error: Resource not found. Response: " + apiResponse.getResponseBody());
