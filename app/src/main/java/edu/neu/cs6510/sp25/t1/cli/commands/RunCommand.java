@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
+import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -8,7 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URI;
 import picocli.CommandLine.Command;
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorFormatter;
+
 
 /**
  * Command to trigger CI/CD pipeline execution.
@@ -22,8 +23,7 @@ public class RunCommand implements Runnable {
             System.out.println("CI/CD pipeline is being executed.");
             execute();
         } catch (Exception e) {
-            final String errorMessage = ErrorFormatter.format("RunCommand.java", 30, 10, e.getMessage());
-            System.err.println(errorMessage);
+            ErrorHandler.reportError(e.getMessage());
         }
     }
 
@@ -35,21 +35,20 @@ public class RunCommand implements Runnable {
         try {
             final String pipelineConfig = readPipelineConfig(".pipelines/pipeline-config.json");
             if (pipelineConfig == null) {
-                System.err.println("Error: Unable to read pipeline configuration file.");
+                ErrorHandler.reportError("Unable to read pipeline configuration file.");
                 return;
             }
 
             final Integer response = sendRequestToApi(pipelineConfig);
             if (response == null || response == 0) {
-                System.err.println("Error: Unable to connect to backend API.");
+                ErrorHandler.reportError("Unable to connect to backend API.");
                 return;
             }
 
             displayMessage(response);
 
         } catch (Exception e) {
-            final String errorMessage = ErrorFormatter.format("RunCommand.java", 45, 15, e.getMessage());
-            System.err.println(errorMessage);
+            ErrorHandler.reportError(e.getMessage());
         }
     }
 

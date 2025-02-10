@@ -1,12 +1,39 @@
 package edu.neu.cs6510.sp25.t1.cli.util;
 
+
+
 import org.yaml.snakeyaml.error.Mark;
 import java.util.List;
 
 /**
  * Enhanced error handler for YAML validation that provides consistent error formatting
  * and detailed context information for all validation errors.
+ *
+ * Usage:
+ * // Create a location for error reporting
+ * Mark mark = ... // from SnakeYAML parsing
+ * Location location = ErrorHandler.createLocation(mark, "jobs[0].steps[1]");
+ *
+ * // Report type mismatch errors
+ * String typeError = ErrorHandler.formatTypeError(
+ *     location,
+ *     "timeout",
+ *     "30s",  // actual value
+ *     Integer.class  // expected type
+ * );
+ * // Output: pipeline.yaml:10:15: Wrong type for value '30s' in key 'timeout', expected Integer but got String
+ *
+ * // Report dependency cycles
+ * List<String> cycle = Arrays.asList("build", "test", "deploy");
+ * String cycleError = ErrorHandler.formatCycleError(location, cycle);
+ * // Output: pipeline.yaml:5:10: Dependency cycle detected: build -> test -> deploy -> build
+ *
+ * // Report missing required fields
+ * String missingError = ErrorHandler.formatMissingFieldError(location, "name");
+ * // Output: pipeline.yaml:8:1: Missing required field 'name'
  */
+
+
 public class ErrorHandler {
   private static final String DEFAULT_FILENAME = "pipeline.yaml";
 
@@ -49,6 +76,11 @@ public class ErrorHandler {
     public String format() {
       return String.format("%s:%d:%d", filename, line, column);
     }
+
+  }
+
+  public static String formatException(Location location, String message) {
+    return String.format("%s: %s", location.format(), message);
   }
 
   /**
@@ -103,4 +135,16 @@ public class ErrorHandler {
     }
     return new Location(DEFAULT_FILENAME, mark.getLine() + 1, mark.getColumn() + 1, path);
   }
+
+  public static void reportError(String message) {
+    StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[1];
+    Location location = new Location(
+        stackTrace.getFileName(),
+        stackTrace.getLineNumber(),
+        1,
+        "pipeline.execute"
+    );
+    System.err.println(formatException(location, message));
+  }
 }
+
