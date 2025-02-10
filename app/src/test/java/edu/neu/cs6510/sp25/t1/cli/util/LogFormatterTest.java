@@ -1,59 +1,57 @@
 package edu.neu.cs6510.sp25.t1.cli.util;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import edu.neu.cs6510.sp25.t1.cli.model.LogEntry;
 import edu.neu.cs6510.sp25.t1.cli.model.LogLevel;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 class LogFormatterTest {
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-  /**
-   * Test formatting of a log entry with an INFO level.
-   */
-  @Test
-  void testFormatInfoLog() {
+  @ParameterizedTest
+  @EnumSource(LogLevel.class)
+  void testFormatLogForDifferentLevels(LogLevel level) {
     final long timestamp = System.currentTimeMillis();
-    final LogEntry log = new LogEntry("123", LogLevel.INFO, "Pipeline started", timestamp);
+    final String message = "Test message";
+    final LogEntry log = new LogEntry("test-id", level, message, timestamp);
+
     final String formattedLog = LogFormatter.format(log);
 
     final String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
-    final String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "INFO", "Pipeline started");
-
+    final String expectedOutput = String.format("[%s] [%s] %s",
+        expectedTimestamp, level.name(), message);
     assertEquals(expectedOutput, formattedLog);
   }
 
-  /**
-   * Test formatting of a log entry with an ERROR level.
-   */
-  @Test
-  void testFormatErrorLog() {
-    final long timestamp = System.currentTimeMillis();
-    final LogEntry log = new LogEntry("456", LogLevel.ERROR, "Pipeline failed", timestamp);
-    final String formattedLog = LogFormatter.format(log);
-
-    final String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
-    final String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "ERROR", "Pipeline failed");
-
-    assertEquals(expectedOutput, formattedLog, "ERROR log entry should be formatted correctly.");
-  }
-
-  /**
-   * Test formatting of a log entry with a null message.
-   */
   @Test
   void testFormatLogWithNullMessage() {
     final long timestamp = System.currentTimeMillis();
-    final LogEntry log = new LogEntry("789", LogLevel.WARN, null, timestamp);
+    final LogEntry log = new LogEntry("test-id", LogLevel.INFO, null, timestamp);
+
     final String formattedLog = LogFormatter.format(log);
 
     final String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
-    final String expectedOutput = String.format("[%s] [%s] %s", expectedTimestamp, "WARN", "null");
+    final String expectedOutput = String.format("[%s] [%s] %s",
+        expectedTimestamp, "INFO", "null");
+    assertEquals(expectedOutput, formattedLog);
+  }
 
-    assertEquals(expectedOutput, formattedLog, "Log entry with a null message should handle gracefully.");
+  @Test
+  void testFormatLogWithLongMessage() {
+    final long timestamp = System.currentTimeMillis();
+    final String longMessage = "A".repeat(1000);
+    final LogEntry log = new LogEntry("test-id", LogLevel.INFO, longMessage, timestamp);
+
+    final String formattedLog = LogFormatter.format(log);
+
+    final String expectedTimestamp = DATE_FORMAT.format(new Date(timestamp));
+    final String expectedOutput = String.format("[%s] [%s] %s",
+        expectedTimestamp, "INFO", longMessage);
+    assertEquals(expectedOutput, formattedLog);
   }
 }
+
