@@ -41,6 +41,7 @@ dependencies {
 
     // yaml file parser
     implementation("org.yaml:snakeyaml:2.0")
+
 }
 
 sourceSets {
