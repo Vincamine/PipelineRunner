@@ -3,6 +3,7 @@
 
 > Fill in the week number (e.g., 1, 2, 3 etc.) for this report.
 
+> **Please fill in the week number for your updates**
 
 # Completed tasks
 
@@ -29,6 +30,7 @@
 |  [initialize CLI project](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/7)    |   2     |
 
 
+> Good throughout from the team. Keep it up!
 
 # Carry over tasks
 
@@ -79,25 +81,33 @@
 
 # What worked this week?
 
-- **We planned earlier in the week.**  
+- **We planned earlier in the week.**
   This gave us more time to discuss tasks, allocate work, and adjust as needed.
 
-- **We created rulesets to allow only PRs with approval to merge into the main branch.**  
+- **We created rulesets to allow only PRs with approval to merge into the main branch.**
   This helped maintain code quality and ensured that every change was reviewed before merging.
 
-- **We fully used issues and PR requests throughout the process.**  
+> Good!
+
+- **We fully used issues and PR requests throughout the process.**
   This improved organization, making it easier to track progress and collaborate efficiently.
 
-- **Communication was smooth.**  
+> Great. It makes it easier for me to follow what the team has completed.
+
+- **Communication was smooth.**
   Everyone stayed aligned, which helped resolve issues quickly and prevented misunderstandings.
 
 # What did not work this week?
 
-- **We had trouble assigning equal weight to everyone.**  
+- **We had trouble assigning equal weight to everyone.**
   Since we are still figuring out the workload, the distribution may not always be even.
 
-- **Although we planned early, we checked the requirements too late.**  
+> For the start of the project this is ok. As the team progresses and more components are completed this will change. Keep a look out to ensure that for each spring team members have about the same amount of work.
+
+- **Although we planned early, we checked the requirements too late.**
   This led to a last-day sprint. We were too confident in our first PR and overlooked some details in the requirements. We should check the requirements earlier next time.
+
+> This happens and expect it to happen even if the team does keep track of reqruirements. Part of agile is exactly this, the ability to realize and adopt to changes.
 
 # Design updates
 
