@@ -1,20 +1,25 @@
 package edu.neu.cs6510.sp25.t1.cli.validation;
 
+import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
+import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler.Location;
+import org.yaml.snakeyaml.error.Mark;
 import java.util.*;
 
 /**
- * Validates the job configurations within a pipeline.
- * This validator ensures that all jobs:
+ * Validates job configurations within a pipeline definition.
+ * This validator ensures that all jobs meet the required criteria and constraints.
+ *
+ * <p>The validator performs the following checks:</p>
  * <ul>
- *   <li>Have required fields (name, stage, image, script)</li>
- *   <li>Use correct data types for each field</li>
- *   <li>Have unique names within their stages</li>
- *   <li>Reference existing stages</li>
+ *   <li>Required fields (name, stage, image, script) are present and have correct types</li>
+ *   <li>Job names are unique within their respective stages</li>
+ *   <li>Referenced stages exist in the pipeline configuration</li>
+ *   <li>Script commands are properly formatted and non-empty</li>
  * </ul>
  *
  * <p>Example job configuration:</p>
  * <pre>
- * job:
+ * jobs:
  *   - name: build-app
  *     stage: build
  *     image: maven:3.8
@@ -29,9 +34,10 @@ public class JobValidator {
   private final Map<String, String> jobStages;
 
   /**
-   * Initializes the validator with a list of valid stage names.
+   * Initializes a new job validator with the specified list of valid stage names.
    *
-   * @param stages The list of valid stage names defined in the pipeline
+   * @param stages The list of valid stage names defined in the pipeline configuration.
+   *              These stages will be used to validate job stage references.
    */
   public JobValidator(List<String> stages) {
     this.stages = stages;
@@ -44,49 +50,49 @@ public class JobValidator {
   }
 
   /**
-   * Validates a list of job configurations.
-   * Checks for:
-   * <ul>
-   *   <li>Required fields presence and correct types</li>
-   *   <li>Job name uniqueness within stages</li>
-   *   <li>Valid stage references</li>
-   *   <li>Valid script commands</li>
-   * </ul>
+   * Validates a list of job configurations against the defined validation rules.
    *
-   * @param jobs List of job configurations to validate
-   * @return true if all jobs are valid, false if any validation fails
+   * @param jobs The list of job configurations to validate, where each job is represented
+   *            as a Map containing the job's properties and their values
+   * @param locations A map containing the source location information (line and column numbers)
+   *                 for each element in the YAML configuration, keyed by their path
+   * @return true if all jobs are valid according to the validation rules,
+   *         false if any validation check fails
    */
-  public boolean validateJobs(List<Map<String, Object>> jobs) {
+  public boolean validateJobs(List<Map<String, Object>> jobs, Map<String, Mark> locations) {
     if (jobs == null || jobs.isEmpty()) {
-      System.err.println("pipeline.yaml:1:1: At least one job must be defined");
+      final Location location = ErrorHandler.createLocation(locations.get("jobs"), "jobs");
+      System.err.println(ErrorHandler.formatMissingFieldError(location, "jobs"));
       return false;
     }
 
-    for (Map<String, Object> job : jobs) {
-      // Validate required fields and their types
-      if (!validateRequiredFields(job)) {
+    for (int i = 0; i < jobs.size(); i++) {
+      final Map<String, Object> job = jobs.get(i);
+      final String jobPath = String.format("jobs[%d]", i);
+      final Location jobLocation = ErrorHandler.createLocation(
+          locations.get(jobPath),
+          jobPath
+      );
+
+      if (!validateRequiredFields(job, jobLocation, locations)) {
         return false;
       }
 
       final String jobName = (String) job.get("name");
       final String jobStage = (String) job.get("stage");
 
-      // Validate stage existence
-      if (!validateStage(jobName, jobStage)) {
+      if (!validateStage(jobName, jobStage, jobLocation)) {
         return false;
       }
 
-      // Validate job name uniqueness within stage
-      if (!validateJobNameUniqueness(jobName, jobStage)) {
+      if (!validateJobNameUniqueness(jobName, jobStage, jobLocation)) {
         return false;
       }
 
-      // Validate script commands
-      if (!validateScript(job)) {
+      if (!validateScript(job, jobLocation, locations)) {
         return false;
       }
 
-      // Store job-stage mapping for future reference
       stageJobs.get(jobStage).add(jobName);
       jobStages.put(jobName, jobStage);
     }
@@ -97,116 +103,44 @@ public class JobValidator {
   /**
    * Validates the presence and types of all required fields in a job configuration.
    *
-   * @param job The job configuration to validate
-   * @return true if all required fields are present and of correct type
+   * @param job The job configuration map to validate
+   * @param jobLocation The location information for the current job in the YAML file
+   * @param locations Map containing source locations for all elements in the configuration
+   * @return true if all required fields are present and of correct type, false otherwise
    */
-  private boolean validateRequiredFields(Map<String, Object> job) {
-    // Validate name field
-    if (!validateFieldType(job, "name", String.class)) {
-      final Object value = job.get("name");
-      System.err.println(String.format("pipeline.yaml:1:1: Wrong type for value '%s' in key 'name', expected String but got %s",
-          value, value != null ? value.getClass().getSimpleName() : "null"));
-      return false;
-    }
+  private boolean validateRequiredFields(
+      Map<String, Object> job,
+      Location jobLocation,
+      Map<String, Mark> locations) {
+    final String[] requiredFields = {"name", "stage", "image", "script"};
+    final Class<?>[] expectedTypes = {String.class, String.class, String.class, List.class};
 
-    // Validate stage field
-    if (!validateFieldType(job, "stage", String.class)) {
-      final Object value = job.get("stage");
-      System.err.println(String.format("pipeline.yaml:1:1: Wrong type for value '%s' in key 'stage', expected String but got %s",
-          value, value != null ? value.getClass().getSimpleName() : "null"));
-      return false;
-    }
+    for (int i = 0; i < requiredFields.length; i++) {
+      final String field = requiredFields[i];
+      final Class<?> expectedType = expectedTypes[i];
 
-    // Validate image field
-    if (!validateFieldType(job, "image", String.class)) {
-      final Object value = job.get("image");
-      System.err.println(String.format("pipeline.yaml:1:1: Wrong type for value '%s' in key 'image', expected String but got %s",
-          value, value != null ? value.getClass().getSimpleName() : "null"));
-      return false;
-    }
+      if (!job.containsKey(field)) {
+        System.err.println(ErrorHandler.formatMissingFieldError(
+            jobLocation,
+            field
+        ));
+        return false;
+      }
 
-    // Validate script field
-    if (!validateFieldType(job, "script", List.class)) {
-      final Object value = job.get("script");
-      System.err.println(String.format("pipeline.yaml:1:1: Wrong type for value '%s' in key 'script', expected List but got %s",
-          value, value != null ? value.getClass().getSimpleName() : "null"));
-      return false;
-    }
+      final Object value = job.get(field);
+      final String fieldPath = jobLocation.getPath() + "." + field;
+      final Location fieldLocation = ErrorHandler.createLocation(
+          locations.get(fieldPath),
+          fieldPath
+      );
 
-    return true;
-  }
-
-  /**
-   * Validates if a field exists and is of the expected type.
-   *
-   * @param job The job configuration map
-   * @param field The field name to validate
-   * @param expectedType The expected class type of the field
-   * @return true if the field exists and is of the correct type
-   */
-  private boolean validateFieldType(Map<String, Object> job, String field, Class<?> expectedType) {
-    if (!job.containsKey(field)) {
-      System.err.println(String.format("pipeline.yaml:1:1: Missing required field '%s'", field));
-      return false;
-    }
-
-    final Object value = job.get(field);
-    return value != null && expectedType.isInstance(value);
-  }
-
-  /**
-   * Validates if a stage exists in the pipeline configuration.
-   *
-   * @param jobName The name of the job being validated
-   * @param stage The stage to validate
-   * @return true if the stage exists
-   */
-  private boolean validateStage(String jobName, String stage) {
-    if (!stages.contains(stage)) {
-      System.err.println(String.format("pipeline.yaml:1:1: Job '%s' references non-existent stage '%s'",
-          jobName, stage));
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Validates that a job name is unique within its stage.
-   *
-   * @param jobName The job name to validate
-   * @param stage The stage containing the job
-   * @return true if the job name is unique within the stage
-   */
-  private boolean validateJobNameUniqueness(String jobName, String stage) {
-    if (stageJobs.get(stage).contains(jobName)) {
-      System.err.println(String.format("pipeline.yaml:1:1: Duplicate job name '%s' in stage '%s'",
-          jobName, stage));
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Validates the script commands of a job.
-   *
-   * @param job The job configuration to validate
-   * @return true if script commands are valid
-   */
-  private boolean validateScript(Map<String, Object> job) {
-    @SuppressWarnings("unchecked")
-    final List<Object> script = (List<Object>) job.get("script");
-
-    if (script.isEmpty()) {
-      System.err.println(String.format("pipeline.yaml:1:1: Job '%s' must have at least one script command",
-          job.get("name")));
-      return false;
-    }
-
-    // Validate each script command is a string
-    for (Object command : script) {
-      if (!(command instanceof String)) {
-        System.err.println(String.format("pipeline.yaml:1:1: Script command '%s' must be a string in job '%s'",
-            command, job.get("name")));
+      if (value == null || !expectedType.isInstance(value)) {
+        System.err.println(ErrorHandler.formatTypeError(
+            fieldLocation,
+            field,
+            value,
+            expectedType
+        ));
         return false;
       }
     }
@@ -215,9 +149,102 @@ public class JobValidator {
   }
 
   /**
-   * Gets the mapping of job names to their stages.
+   * Validates that a job references an existing stage in the pipeline configuration.
    *
-   * @return A map where key is job name and value is stage name
+   * @param jobName The name of the job being validated
+   * @param stage The stage name referenced by the job
+   * @param location The location information for error reporting
+   * @return true if the referenced stage exists, false otherwise
+   */
+  private boolean validateStage(String jobName, String stage, Location location) {
+    if (!stages.contains(stage)) {
+      System.err.println(ErrorHandler.formatException(
+          location,
+          String.format("Job '%s' references non-existent stage '%s'", jobName, stage)
+      ));
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Validates that a job name is unique within its stage.
+   *
+   * @param jobName The name of the job to validate
+   * @param stage The stage containing the job
+   * @param location The location information for error reporting
+   * @return true if the job name is unique within its stage, false otherwise
+   */
+  private boolean validateJobNameUniqueness(String jobName, String stage, Location location) {
+    if (stageJobs.get(stage).contains(jobName)) {
+      System.err.println(ErrorHandler.formatException(
+          location,
+          String.format("Duplicate job name '%s' in stage '%s'", jobName, stage)
+      ));
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Validates the script commands of a job.
+   * Ensures that:
+   * <ul>
+   *   <li>The script section is not empty</li>
+   *   <li>All script commands are strings</li>
+   * </ul>
+   *
+   * @param job The job configuration containing the script to validate
+   * @param jobLocation The location information for the job
+   * @param locations Map containing source locations for all elements
+   * @return true if the script is valid, false otherwise
+   */
+  private boolean validateScript(
+      Map<String, Object> job,
+      Location jobLocation,
+      Map<String, Mark> locations) {
+    @SuppressWarnings("unchecked")
+    final List<Object> script = (List<Object>) job.get("script");
+    final String scriptPath = jobLocation.getPath() + ".script";
+    final Location scriptLocation = ErrorHandler.createLocation(
+        locations.get(scriptPath),
+        scriptPath
+    );
+
+    if (script.isEmpty()) {
+      System.err.println(ErrorHandler.formatException(
+          scriptLocation,
+          String.format("Job '%s' must have at least one script command", job.get("name"))
+      ));
+      return false;
+    }
+
+    for (int i = 0; i < script.size(); i++) {
+      final Object command = script.get(i);
+      final String commandPath = String.format("%s[%d]", scriptPath, i);
+      final Location commandLocation = ErrorHandler.createLocation(
+          locations.get(commandPath),
+          commandPath
+      );
+
+      if (!(command instanceof String)) {
+        System.err.println(ErrorHandler.formatTypeError(
+            commandLocation,
+            String.format("script[%d]", i),
+            command,
+            String.class
+        ));
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Returns an unmodifiable map of job names to their corresponding stages.
+   *
+   * @return A map where the key is the job name and the value is the stage name
    */
   public Map<String, String> getJobStages() {
     return Collections.unmodifiableMap(jobStages);

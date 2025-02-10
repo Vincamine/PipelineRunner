@@ -37,8 +37,8 @@ public class GitValidator {
      */
     public static void validateGitRepo() {
         if (!isGitRepository()) {
-            String message = "This CLI must be run from the root of a Git repository.";
-            String formattedError = ErrorHandler.formatException(
+            final String message = "This CLI must be run from the root of a Git repository.";
+            final String formattedError = ErrorHandler.formatException(
                 new ErrorHandler.Location(
                     "GitValidator.java",
                     Thread.currentThread().getStackTrace()[1].getLineNumber(),

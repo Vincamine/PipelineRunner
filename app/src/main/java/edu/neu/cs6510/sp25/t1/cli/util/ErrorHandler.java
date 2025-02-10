@@ -137,8 +137,8 @@ public class ErrorHandler {
   }
 
   public static void reportError(String message) {
-    StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[1];
-    Location location = new Location(
+    final StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[1];
+    final Location location = new Location(
         stackTrace.getFileName(),
         stackTrace.getLineNumber(),
         1,
