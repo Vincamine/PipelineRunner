@@ -30,8 +30,7 @@
 
 
 
-# Carry over tasks
-
+# 5
 > List all issues that were planned for this week but did not get DONE
 > Include
 > 1. A link to the Issue
@@ -41,8 +40,8 @@
 | Task | Weight | Assignee |
 | ---- | ------ | -------- |
 |  [Implement Error Handling (CLI-Specific Errors Only)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/11)    |   3     |     Shenqian     |
-|  [Add filename flag](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/40)   |    1    | Wenxue|
-|  [Confirming Testing & Documentation](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/12)    |   2     | Wenxue |
+
+
 
 
 
@@ -59,7 +58,7 @@
 | [Implement `run` CLI command](#)              | 3      | Yiwen |
 | [Implement sequential stage execution](#)     | 2      | Yiwen   |
 | [Implement job execution logic](#)            | 2      | Yiwen  |
-| [Implement `--dry-run` support](#)            | 2      |Yiwen  |
+| [Implement `--dry-run` support](#)            | 2      | Yiwen  |
 | [Parse and validate job definitions](#)       | 1      | Shenqian |
 | [Implement job execution inside Docker](#)    | 2      | Shenqian |
 | [Implement job status tracking](#)            | 2      | Shenqian |
@@ -71,9 +70,11 @@
 | [Implement pipeline summary report](#)        | 2      | Wenxue |
 | [Implement filtering by stage & job](#)       | 2      | Wenxue |
 | [Implement unique execution IDs](#)           | 2      | Wenxue |
+|  [Confirming Testing & Documentation]         | 2      | Wenxue |
+|  [Add filename flag]                          |  1     | Wenxue |
 | [Improve YAML validation](#)                  | 1      | Mingtianfang |
 | [Check required fields in pipeline config](#) | 2      | Mingtianfang |
-| [Detect circular dependencies](#)             | 2      | Mingtianfang|
+| [Detect circular dependencies](#)             | 2      | Mingtianfang |
 | [Standardize error reporting format](#)       | 2      | Mingtianfang |
 | [Improve execution error logging](#)          | 1      | Mingtianfang |
 
@@ -90,6 +91,9 @@
 
 - **Communication was smooth.**  
   Everyone stayed aligned, which helped resolve issues quickly and prevented misunderstandings.
+
+- **We had effective team collaboration.**  
+  This made task allocation smoother and improved coordination among team members.
 
 # What did not work this week?
 
