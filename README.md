@@ -3,15 +3,16 @@
 - **Title:** Readme file
 - **Date:** Feb 9, 2025
 - **Author:** Yiwen Wang
-- **Version:** 1.2
+- **Version:** 1.3
 
 **Revision History**
 
-|     Date     | Version | Description                                      | Author     |
-| :----------: | :-----: | :----------------------------------------------- | :--------- |
-| Jan 31, 2025 |   1.0   | Initial release                                  | Yiwen Wang |
-| Feb 3, 2025  |   1.1   | Added CLI usage details                          | Yiwen Wang |
+|     Date     | Version | Description                                     | Author     |
+| :----------: | :-----: | :---------------------------------------------- | :--------- |
+| Jan 31, 2025 |   1.0   | Initial release                                 | Yiwen Wang |
+| Feb 3, 2025  |   1.1   | Added CLI usage details                         | Yiwen Wang |
 | Feb 9, 2025  |   1.2   | Enhanced Git validation & added status command  | Yiwen Wang |
+| Feb 9, 2025  |   1.3   | Added troubleshooting & structured error format | Yiwen Wang |
 
 ---
 
@@ -51,6 +52,7 @@ Detail the implementation of various components, including algorithms, data stru
 - [Pipeline Configuration File](#pipeline-configuration-file)
 - [Execution Flow](#execution-flow)
 - [Error Reporting](#error-reporting)
+- [Troubleshooting](#troubleshooting)
 - [Reporting on Past Executions](#reporting-on-past-executions)
 - [Contributing](#contributing)
 - [License](#license)
@@ -225,6 +227,94 @@ jobs:
 ./gradlew test
 ```
 ✅ Expected: All tests should pass.
+
+---
+## Error Reporting
+
+All CLI errors follow a structured **(filename:line:col:error)** format:
+
+```bash
+<filename>:<line>:<column>: <error-message>
+```
+
+Example:
+
+```
+StatusCommand.java:45:5: Pipeline ID not found
+```
+
+---
+
+## Troubleshooting
+
+### 🛠️ Issue: `org.yaml.snakeyaml` Cannot Be Resolved
+
+#### **Cause**
+
+This issue happens when the **SnakeYAML library is missing**.
+
+#### **Solution**
+
+1️⃣ **Ensure Dependency is Installed**
+Run:
+
+```bash
+./gradlew dependencies --configuration compileClasspath | grep snakeyaml
+```
+
+2️⃣ **If Missing, Add It in `build.gradle.kts`**
+
+```kotlin
+dependencies {
+    implementation("org.yaml:snakeyaml:2.0")
+}
+```
+
+Then rebuild:
+
+```bash
+./gradlew clean build --refresh-dependencies
+```
+
+---
+
+### 🛠️ Issue: CLI Throws "Must Be in Git Repository"
+
+#### **Cause**
+
+GitValidator now **requires** that the CLI **only runs in a Git repository**.
+
+#### **Solution**
+
+Run:
+
+```bash
+git rev-parse --is-inside-work-tree
+```
+
+If it prints `true`, you are inside a Git repo. Otherwise, run:
+
+```bash
+git init
+```
+
+---
+
+### 🛠️ Issue: CLI Fails with `IllegalArgumentException: Invalid YAML Format`
+
+#### **Cause**
+
+The pipeline configuration file contains **invalid YAML syntax**.
+
+#### **Solution**
+
+Run:
+
+```bash
+yamllint .pipelines/pipeline-config.yaml
+```
+
+Fix any reported issues.
 
 ---
 

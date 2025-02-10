@@ -81,6 +81,7 @@ class DependencyValidatorTest {
    * @param yamlData The parsed YAML data.
    * @return A list of job configurations.
    */
+  @SuppressWarnings("unchecked")
   private List<Map<String, Object>> getJobs(Map<String, Object> yamlData) {
     return (List<Map<String, Object>>) yamlData.get("job");
   }

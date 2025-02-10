@@ -29,6 +29,7 @@ class YamlLoaderTest {
     assertTrue(yamlData.containsKey("job"));
 
     // Validate pipeline name
+    @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) yamlData.get("pipeline");
     assertEquals("TestPipeline", pipeline.get("name"));
   }
