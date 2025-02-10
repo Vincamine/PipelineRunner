@@ -20,26 +20,25 @@ class CheckCommandTest {
   private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
   private final PrintStream originalOut = System.out;
   private final PrintStream originalErr = System.err;
-  private java.lang.reflect.Field yamlPathField;
+  private java.lang.reflect.Field yamlFilePathField;
 
   @BeforeEach
   void setUp() throws NoSuchFieldException {
     checkCommand = new CheckCommand();
-    // Clear the output streams
-    outContent.reset();
-    errContent.reset();
+
     // Redirect stdout and stderr for testing
     System.setOut(new PrintStream(outContent));
     System.setErr(new PrintStream(errContent));
 
-    yamlPathField = CheckCommand.class.getDeclaredField("yamlPath");
-    yamlPathField.setAccessible(true);
+    // Get access to private field `yamlFilePath`
+    yamlFilePathField = CheckCommand.class.getDeclaredField("yamlFilePath");
+    yamlFilePathField.setAccessible(true);
   }
 
   @Test
   void testValidPipelineValidation() throws URISyntaxException, IllegalAccessException {
-    final Path yamlPath = getResourcePath("yaml/commands/valid_pipeline.yml");
-    yamlPathField.set(checkCommand, yamlPath);
+    final Path yamlPath = getResourcePath("yaml/commands/pipelines/valid_pipeline.yml");
+    yamlFilePathField.set(checkCommand, yamlPath.toString());
 
     assertEquals(0, checkCommand.call());
     assertTrue(outContent.toString().contains("Pipeline validation successful"));
@@ -47,8 +46,8 @@ class CheckCommandTest {
 
   @Test
   void testInvalidPipelineValidation() throws URISyntaxException, IllegalAccessException {
-    final Path yamlPath = getResourcePath("yaml/commands/invalid_pipeline.yml");
-    yamlPathField.set(checkCommand, yamlPath);
+    final Path yamlPath = getResourcePath("yaml/commands/pipelines/invalid_pipeline.yml");
+    yamlFilePathField.set(checkCommand, yamlPath.toString());
 
     assertEquals(1, checkCommand.call());
     assertTrue(errContent.toString().contains("Pipeline validation failed"));
@@ -56,7 +55,7 @@ class CheckCommandTest {
 
   @Test
   void testNonExistentFile() throws IllegalAccessException {
-    yamlPathField.set(checkCommand, Path.of("non_existent_file.yml"));
+    yamlFilePathField.set(checkCommand, Path.of("non_existent_file.yml").toString());
 
     // Clear streams before test
     outContent.reset();
@@ -74,8 +73,8 @@ class CheckCommandTest {
 
   @Test
   void testInvalidYamlFormat() throws URISyntaxException, IllegalAccessException {
-    final Path yamlPath = getResourcePath("yaml/commands/invalid_format_pipeline.yml");
-    yamlPathField.set(checkCommand, yamlPath);
+    final Path yamlPath = getResourcePath("yaml/commands/pipelines/invalid_format_pipeline.yml");
+    yamlFilePathField.set(checkCommand, yamlPath.toString());
 
     assertEquals(1, checkCommand.call());
     assertTrue(errContent.toString().contains("Error validating pipeline"));
@@ -83,11 +82,26 @@ class CheckCommandTest {
 
   @Test
   void testMissingPipelineKey() throws URISyntaxException, IllegalAccessException {
-    final Path yamlPath = getResourcePath("yaml/commands/missing_pipeline.yml");
-    yamlPathField.set(checkCommand, yamlPath);
+    final Path yamlPath = getResourcePath("yaml/commands/pipelines/missing_pipeline.yml");
+    yamlFilePathField.set(checkCommand, yamlPath.toString());
 
     assertEquals(1, checkCommand.call());
     assertTrue(errContent.toString().contains("Pipeline validation failed"));
+  }
+
+  @Test
+  void testYamlFileNotInPipelinesFolder() throws URISyntaxException, IllegalAccessException {
+    // Providing a YAML file outside of `pipelines/` folder
+    final Path yamlPath = getResourcePath("yaml/commands/not_in_pipelines.yml");
+    yamlFilePathField.set(checkCommand, yamlPath.toString());
+
+    // Run validation
+    final int result = checkCommand.call();
+
+    // Assert that validation fails due to incorrect location
+    assertEquals(1, result);
+    assertTrue(errContent.toString().contains("YAML file must be inside the 'pipelines/' folder"),
+        "Error message should indicate the file is not in pipelines/. Actual: " + errContent.toString());
   }
 
   /**
