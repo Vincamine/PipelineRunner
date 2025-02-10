@@ -39,7 +39,6 @@
 
 | Task | Weight | Assignee |
 | ---- | ------ | -------- |
-|  [Implement Error Handling (CLI-Specific Errors Only)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/11)    |   3     |     Shenqian     |
 
 
 
@@ -65,13 +64,14 @@
 | [Handle job dependencies](#)                  | 2      | Shenqian |
 | [Ensure execution stops on failure](#)        | 2      | Shenqian |
 | [Detect duplicate pipeline executions](#)     | 1      | Shenqian |
+| [Implement Error Handling (CLI-Specific Errors Only)](#)   | 3     | Shenqian |
 | [Implement `reports` CLI sub-command](#)      | 1      | Wenxue |
 | [Store execution logs](#)                     | 2      | Wenxue |
 | [Implement pipeline summary report](#)        | 2      | Wenxue |
 | [Implement filtering by stage & job](#)       | 2      | Wenxue |
 | [Implement unique execution IDs](#)           | 2      | Wenxue |
 |  [Confirming Testing & Documentation]         | 2      | Wenxue |
-|  [Add filename flag]                          |  1     | Wenxue |
+|  [Add filename flag]                          | 1      | Wenxue |
 | [Improve YAML validation](#)                  | 1      | Mingtianfang |
 | [Check required fields in pipeline config](#) | 2      | Mingtianfang |
 | [Detect circular dependencies](#)             | 2      | Mingtianfang |

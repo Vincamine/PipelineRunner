@@ -43,8 +43,8 @@ public class RunCommand implements Runnable {
                 return;
             }
 
-            YamlPipelineValidator validator = new YamlPipelineValidator();
-            boolean isValid = validator.validatePipeline(filePath);
+            final YamlPipelineValidator validator = new YamlPipelineValidator();
+            final boolean isValid = validator.validatePipeline(filePath);
             if (!isValid) {
                 System.err.println("Pipeline validation failed.");
                 return;
