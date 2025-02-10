@@ -1,47 +1,49 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.validation.PipelineValidator;
-import edu.neu.cs6510.sp25.t1.cli.validation.ValidationResult;
-
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.concurrent.Callable;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
+import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
+
+/**
+ * Command to validate a pipeline YAML file.
+ * Checks structure, dependencies, jobs, and overall pipeline configuration.
+ */
 @Command(
     name = "check",
-    description = "Validate YAML pipeline configuration without execution",
+    description = "Validate a pipeline YAML file",
     mixinStandardHelpOptions = true
 )
 public class CheckCommand implements Callable<Integer> {
-  private static final Logger LOGGER = Logger.getLogger(CheckCommand.class.getName());
+  @Parameters(index = "0", description = "Path to the pipeline YAML file")
+  private Path yamlPath;
 
-  @Parameters(index = "0", description = "Path to the YAML pipeline configuration file")
-  private File yamlFile;
-
+  /**
+   * Executes the check command to validate a pipeline YAML file.
+   *
+   * @return 0 if validation succeeds, 1 if validation fails
+   */
   @Override
   public Integer call() {
     try {
-      LOGGER.log(Level.INFO, "Validating pipeline configuration: {0}", yamlFile.getPath());
+      final YamlPipelineValidator pipelineValidator = new YamlPipelineValidator();
 
-      PipelineValidator validator = new PipelineValidator();
-      ValidationResult result = validator.validatePipelineConfig(yamlFile);
+      final boolean isValid = pipelineValidator.validatePipeline(yamlPath.toString());
 
-      if (result.isValid()) {
-        LOGGER.log(Level.INFO, "Pipeline configuration is valid.");
-        return 0; // Success
+      if (isValid) {
+        System.out.println("Pipeline validation successful: " + yamlPath);
+        return 0;
       } else {
-        LOGGER.log(Level.SEVERE, "Pipeline configuration is invalid:");
-        result.getErrors().forEach(error ->
-            LOGGER.log(Level.SEVERE, "  - {0}", error));
-        return 1; // Error
+        System.err.println("Pipeline validation failed: " + yamlPath);
+        return 1;
       }
+
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Error validating pipeline configuration", e);
-      return 1; // Error
+      System.err.println("Error validating pipeline: " + e.getMessage());
+      return 1;
     }
   }
 }
