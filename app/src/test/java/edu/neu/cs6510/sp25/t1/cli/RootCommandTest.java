@@ -4,12 +4,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 import edu.neu.cs6510.sp25.t1.cli.util.GitValidator;
 import picocli.CommandLine;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockStatic;
@@ -25,6 +28,8 @@ class RootCommandTest {
     private ByteArrayOutputStream errContent;
     private RootCommand rootCommand;
     private CommandLine cmd;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -66,15 +71,111 @@ class RootCommandTest {
         try (MockedStatic<GitValidator> mockGitValidator = mockStatic(GitValidator.class)) {
             // Mock GitValidator to prevent failure due to missing .git directory
             mockGitValidator.when(GitValidator::validateGitRepo).thenAnswer(invocation -> null);
-            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);  // ✅ Ensure it returns true
+            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);
 
-            final int exitCode = cmd.execute("--verbose");
-
-            assertEquals(0, exitCode, "Expected CLI to return exit code 0 when --verbose is passed.");
-
-            final String output = outContent.toString();
-            assertTrue(output.contains("✅ Verbose mode enabled."), "Expected verbose message to be printed.");
+            final int exitCode = cmd.execute("--verbose", "-f", "test.txt");
+            assertEquals(0, exitCode);
+            assertTrue(outContent.toString().contains("✅ Verbose mode enabled."));    
         }
+    }
+
+    /**
+     * Tests whether the CLI correctly handles a valid filename.
+     */
+    @Test
+    @DisplayName("✅ CLI should accept a valid filename")
+    void testValidFilename() throws Exception {
+        final Path tempFile = tempDir.resolve("test.txt");
+        Files.createFile(tempFile);
+
+        try (MockedStatic<GitValidator> mockGitValidator = mockStatic(GitValidator.class)) {
+            mockGitValidator.when(GitValidator::validateGitRepo).thenAnswer(invocation -> null);
+            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);
+
+            final int exitCode = cmd.execute("-f", tempFile.toString());
+            assertEquals(0, exitCode);
+            final String output = outContent.toString();
+            assertTrue(output.contains("Welcome to the CI/CD CLI Tool"));
+        }
+    }
+
+    @Test
+    @DisplayName("🚨 CLI should handle missing filename")
+    void testMissingFilename() {
+        try (MockedStatic<GitValidator> mockGitValidator = mockStatic(GitValidator.class)) {
+            mockGitValidator.when(GitValidator::validateGitRepo).thenAnswer(invocation -> null);
+            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);
+
+            final int exitCode = cmd.execute();
+            assertEquals(1, exitCode);
+            assertTrue(errContent.toString().contains("Error: Filename must be specified"));
+        }
+    }
+
+    @Test
+    @DisplayName("🚨 CLI should handle non-existent file")
+    void testNonExistentFile() {
+        try (MockedStatic<GitValidator> mockGitValidator = mockStatic(GitValidator.class)) {
+            mockGitValidator.when(GitValidator::validateGitRepo).thenAnswer(invocation -> null);
+            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);
+
+            final int exitCode = cmd.execute("-f", "nonexistent.txt");
+            assertEquals(1, exitCode);
+            assertTrue(errContent.toString().contains("Error: File does not exist"));
+        }
+    }
+
+    @Test
+    @DisplayName("🚨 CLI should handle directory as filename")
+    void testDirectoryAsFilename() throws Exception {
+        final Path tempDirectory = tempDir.resolve("testDir");
+        Files.createDirectory(tempDirectory);
+
+        try (MockedStatic<GitValidator> mockGitValidator = mockStatic(GitValidator.class)) {
+            mockGitValidator.when(GitValidator::validateGitRepo).thenAnswer(invocation -> null);
+            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);
+
+            final int exitCode = cmd.execute("-f", tempDirectory.toString());
+            assertEquals(1, exitCode);
+            assertTrue(errContent.toString().contains("Error: Not a regular file"));
+        }
+    }
+
+    @Test
+    @DisplayName("✅ CLI should handle empty filename")
+    void testEmptyFilename() {
+        try (MockedStatic<GitValidator> mockGitValidator = mockStatic(GitValidator.class)) {
+            mockGitValidator.when(GitValidator::validateGitRepo).thenAnswer(invocation -> null);
+            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);
+
+            final int exitCode = cmd.execute("-f", "");
+            assertEquals(1, exitCode);
+            assertTrue(errContent.toString().contains("Error: Filename must be specified"));
+        }
+    }
+
+    @Test
+    @DisplayName("✅ CLI should handle run command with valid file")
+    void testRunCommandWithValidFile() throws Exception {
+        final Path tempFile = tempDir.resolve("test.txt");
+        Files.createFile(tempFile);
+
+        try (MockedStatic<GitValidator> mockGitValidator = mockStatic(GitValidator.class)) {
+            mockGitValidator.when(GitValidator::validateGitRepo).thenAnswer(invocation -> null);
+            mockGitValidator.when(GitValidator::isGitRepository).thenReturn(true);
+
+            final int exitCode = cmd.execute("--run", "-f", tempFile.toString());
+            assertEquals(0, exitCode);
+            assertTrue(outContent.toString().contains("🚀 Running the CI/CD pipeline"));
+        }
+    }
+
+    @Test
+    @DisplayName("✅ CLI should handle version command")
+    void testVersionCommand() {
+        final int exitCode = cmd.execute("--version");
+        assertEquals(0, exitCode);
+        assertTrue(outContent.toString().contains("CI/CD CLI Tool"));
     }
 
 }
