@@ -1,119 +1,122 @@
 package edu.neu.cs6510.sp25.t1.cli.validation;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
+import org.yaml.snakeyaml.error.Mark;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for DependencyValidator.
- * Ensures job dependency rules are properly enforced.
- */
 class DependencyValidatorTest {
-  private DependencyValidator dependencyValidator;
+  private Map<String, List<String>> dependencies;
+  private Mark testMark;
+  private final ByteArrayOutputStream errorOutput = new ByteArrayOutputStream();
+  private final PrintStream originalErr = System.err;
 
-  /**
-   * Tests a valid job dependency structure.
-   */
+  @BeforeEach
+  void setUp() {
+    dependencies = new HashMap<>();
+    testMark = new Mark("pipeline.yaml", 0, 5, 10, new int[]{}, 0);
+    System.setErr(new PrintStream(errorOutput));
+  }
+
   @Test
-  void testValidDependencies() throws IOException, URISyntaxException {
-    final Path yamlPath = getResourcePath("yaml/dependencyVal/valid_dependencies.yml");
-    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+  void validateDependencies_WithValidDependencies_ShouldReturnTrue() {
+    dependencies.put("job1", Arrays.asList("job2", "job3"));
+    dependencies.put("job2", Collections.emptyList());
+    dependencies.put("job3", Collections.singletonList("job2"));
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark);
 
-    final List<Map<String, Object>> jobs = getJobs(yamlData);
-    final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
+    final boolean result = validator.validateDependencies();
 
-    dependencyValidator = new DependencyValidator(jobDependencies);
-    assertTrue(dependencyValidator.validateDependencies(), "Valid dependencies should pass validation.");
+    assertTrue(result);
+    assertEquals("", errorOutput.toString());
   }
 
-  /**
-   * Tests a job referencing a non-existent job in its 'needs' field.
-   */
   @Test
-  void testMissingDependency() throws IOException, URISyntaxException {
-    final Path yamlPath = getResourcePath("yaml/dependencyVal/missing_dependency.yml");
-    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+  void validateDependencies_WithNonExistentDependency_ShouldReturnFalse() {
+    dependencies.put("job1", Collections.singletonList("non-existent-job"));
+    dependencies.put("job2", Collections.emptyList());
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark);
 
-    final List<Map<String, Object>> jobs = getJobs(yamlData);
-    final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
+    final boolean result = validator.validateDependencies();
 
-    dependencyValidator = new DependencyValidator(jobDependencies);
-    assertFalse(dependencyValidator.validateDependencies(), "Job referencing a non-existent dependency should fail validation.");
+    assertFalse(result);
+    final String expectedError = "pipeline.yaml:6:11: Missing required field 'Job 'job1' has a dependency on non-existent job 'non-existent-job''";
+    assertTrue(errorOutput.toString().trim().contains(expectedError));
   }
 
-  /**
-   * Tests a cyclic dependency where jobs depend on each other.
-   */
   @Test
-  void testCyclicDependencies() throws IOException, URISyntaxException {
-    final Path yamlPath = getResourcePath("yaml/dependencyVal/cyclic_dependencies.yml");
-    final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
+  void validateDependencies_WithCyclicDependency_ShouldReturnFalse() {
+    dependencies.put("job1", Collections.singletonList("job2"));
+    dependencies.put("job2", Collections.singletonList("job3"));
+    dependencies.put("job3", Collections.singletonList("job1"));
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark);
 
-    final List<Map<String, Object>> jobs = getJobs(yamlData);
-    final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs);
+    final boolean result = validator.validateDependencies();
 
-    dependencyValidator = new DependencyValidator(jobDependencies);
-    assertFalse(dependencyValidator.validateDependencies(), "Cyclic dependencies should fail validation.");
+    assertFalse(result);
+    final String expectedError = "pipeline.yaml:6:11: Dependency cycle detected: job1 -> job2 -> job3 -> job1";
+    assertTrue(errorOutput.toString().trim().contains(expectedError));
   }
 
-  /**
-   * Helper method to retrieve a test resource file path.
-   *
-   * @param resource The relative path of the test resource.
-   * @return The absolute file path.
-   * @throws URISyntaxException If resource path conversion fails.
-   */
-  private Path getResourcePath(String resource) throws URISyntaxException {
-    return Paths.get(ClassLoader.getSystemResource(resource).toURI());
+  @Test
+  void validateDependencies_WithSelfDependency_ShouldReturnFalse() {
+    dependencies.put("job1", Collections.singletonList("job1"));
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark);
+
+    final boolean result = validator.validateDependencies();
+
+    assertFalse(result);
+    final String expectedError = "pipeline.yaml:6:11: Dependency cycle detected: job1 -> job1";
+    assertTrue(errorOutput.toString().trim().contains(expectedError));
   }
 
-  /**
-   * Helper method to extract the list of jobs from parsed YAML data.
-   *
-   * @param yamlData The parsed YAML data.
-   * @return A list of job configurations.
-   */
-  @SuppressWarnings("unchecked")
-  private List<Map<String, Object>> getJobs(Map<String, Object> yamlData) {
-    return (List<Map<String, Object>>) yamlData.get("job");
+  @Test
+  void validateDependencies_WithEmptyDependencies_ShouldReturnTrue() {
+    dependencies.put("job1", Collections.emptyList());
+    dependencies.put("job2", Collections.emptyList());
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark);
+
+    final boolean result = validator.validateDependencies();
+
+    assertTrue(result);
+    assertEquals("", errorOutput.toString());
   }
 
-  /**
-   * Helper method to extract job dependencies.
-   *
-   * @param jobs List of job definitions from YAML.
-   * @return A map where each job name is mapped to its dependencies.
-   */
-  private Map<String, List<String>> extractJobDependencies(List<Map<String, Object>> jobs) {
-    final Map<String, List<String>> jobDependencies = new HashMap<>();
+  @Test
+  void validateDependencies_WithComplexDependencyGraph_ShouldReturnTrue() {
+    dependencies.put("job1", Arrays.asList("job2", "job3"));
+    dependencies.put("job2", Collections.singletonList("job4"));
+    dependencies.put("job3", Collections.singletonList("job4"));
+    dependencies.put("job4", Collections.emptyList());
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark);
 
-    for (Map<String, Object> job : jobs) {
-      final Object jobNameObj = job.get("name");
-      if (!(jobNameObj instanceof String jobName)) {
-        System.err.println("Error: Job without a valid 'name'.");
-        continue;
-      }
+    final boolean result = validator.validateDependencies();
 
-      final Object needsObj = job.get("needs");
-      if (needsObj instanceof List<?> rawNeeds) {
-        final List<String> needs = rawNeeds.stream()
-            .filter(String.class::isInstance)
-            .map(String.class::cast)
-            .collect(Collectors.toList());
-        jobDependencies.put(jobName, needs);
-      } else {
-        jobDependencies.put(jobName, List.of()); // No dependencies
-      }
-    }
+    assertTrue(result);
+    assertEquals("", errorOutput.toString());
+  }
 
-    return jobDependencies;
+  @Test
+  void validateDependencies_WithComplexCyclicDependency_ShouldReturnFalse() {
+    dependencies.put("job1", Arrays.asList("job2", "job3"));
+    dependencies.put("job2", Collections.singletonList("job4"));
+    dependencies.put("job3", Collections.singletonList("job4"));
+    dependencies.put("job4", Collections.singletonList("job1"));
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark);
+
+    final boolean result = validator.validateDependencies();
+
+    assertFalse(result);
+    assertTrue(errorOutput.toString().trim().contains("Dependency cycle detected:"));
+  }
+
+  @AfterEach
+  void tearDown() {
+    System.setErr(originalErr);
   }
 }
