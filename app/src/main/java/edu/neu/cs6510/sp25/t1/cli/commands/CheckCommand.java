@@ -2,7 +2,7 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Option;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +21,11 @@ import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
     mixinStandardHelpOptions = true
 )
 public class CheckCommand implements Callable<Integer> {
-  @Parameters(index = "0", description = "Path to the pipeline YAML file")
+  @Option(
+      names = {"-f", "--file"},
+      description = "Path to the pipeline YAML file",
+      required = true
+  )
   private String yamlFilePath;
 
   /**
@@ -52,12 +56,12 @@ public class CheckCommand implements Callable<Integer> {
         return 1;
       }
 
-      // Verify parent directory is 'pipelines'
+      // Verify parent directory is '.pipelines'
       final Path parentDir = yamlPath.getParent();
-      if (parentDir == null || !parentDir.getFileName().toString().equals("pipelines")) {
+      if (parentDir == null || !parentDir.getFileName().toString().equals(".pipelines")) {
         System.err.println(ErrorHandler.formatMissingFieldError(
             location,
-            "YAML file must be inside the 'pipelines/' folder"
+            "YAML file must be inside the '.pipelines/' folder"
         ));
         return 1;
       }

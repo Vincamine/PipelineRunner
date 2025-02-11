@@ -91,3 +91,7 @@ logs/
 *.sln.docstates
 
 app/bin/
+
+.sh00-demo-error-handle.sh
+demo_plan_updated.md
+00-demo-error-handle.sh

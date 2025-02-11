@@ -5,37 +5,22 @@ package edu.neu.cs6510.sp25.t1.cli.util;
 import org.yaml.snakeyaml.error.Mark;
 import java.util.List;
 
+
+import org.yaml.snakeyaml.error.Mark;
+import java.util.List;
+
 /**
  * Enhanced error handler for YAML validation that provides consistent error formatting
  * and detailed context information for all validation errors.
- *
- * Usage:
- * // Create a location for error reporting
- * Mark mark = ... // from SnakeYAML parsing
- * Location location = ErrorHandler.createLocation(mark, "jobs[0].steps[1]");
- *
- * // Report type mismatch errors
- * String typeError = ErrorHandler.formatTypeError(
- *     location,
- *     "timeout",
- *     "30s",  // actual value
- *     Integer.class  // expected type
- * );
- * // Output: pipeline.yaml:10:15: Wrong type for value '30s' in key 'timeout', expected Integer but got String
- *
- * // Report dependency cycles
- * List<String> cycle = Arrays.asList("build", "test", "deploy");
- * String cycleError = ErrorHandler.formatCycleError(location, cycle);
- * // Output: pipeline.yaml:5:10: Dependency cycle detected: build -> test -> deploy -> build
- *
- * // Report missing required fields
- * String missingError = ErrorHandler.formatMissingFieldError(location, "name");
- * // Output: pipeline.yaml:8:1: Missing required field 'name'
  */
-
-
 public class ErrorHandler {
   private static final String DEFAULT_FILENAME = "pipeline.yaml";
+
+  // Error type constants
+  private static final String TYPE_ERROR = "type error";
+  private static final String DEPENDENCY_ERROR = "dependency error";
+  private static final String MISSING_FIELD_ERROR = "missing field error";
+  private static final String FILE_ERROR = "file error";
 
   /**
    * Represents a location within a YAML document, including file position and path context.
@@ -76,11 +61,13 @@ public class ErrorHandler {
     public String format() {
       return String.format("%s:%d:%d", filename, line, column);
     }
-
   }
 
-  public static String formatException(Location location, String message) {
-    return String.format("%s: %s", location.format(), message);
+  /**
+   * Base method for formatting errors with type prefix
+   */
+  private static String formatErrorWithType(Location location, String errorType, String message) {
+    return String.format("%s: %s, %s", location.format(), errorType, message);
   }
 
   /**
@@ -94,9 +81,9 @@ public class ErrorHandler {
    */
   public static String formatTypeError(Location location, String key, Object actualValue, Class<?> expectedType) {
     final String actualType = actualValue != null ? actualValue.getClass().getSimpleName() : "null";
-    final String message = String.format("Wrong type for value '%s' in key '%s', expected %s but got %s",
+    final String message = String.format("wrong type for value '%s' in key '%s', expected %s but got %s",
         actualValue, key, expectedType.getSimpleName(), actualType);
-    return String.format("%s: %s", location.format(), message);
+    return formatErrorWithType(location, TYPE_ERROR, message);
   }
 
   /**
@@ -108,7 +95,7 @@ public class ErrorHandler {
    */
   public static String formatCycleError(Location location, List<String> cycle) {
     final String cycleStr = String.join(" -> ", cycle) + " -> " + cycle.get(0);
-    return String.format("%s: Dependency cycle detected: %s", location.format(), cycleStr);
+    return formatErrorWithType(location, DEPENDENCY_ERROR, String.format("cycle detected in: %s", cycleStr));
   }
 
   /**
@@ -119,7 +106,29 @@ public class ErrorHandler {
    * @return Formatted error message
    */
   public static String formatMissingFieldError(Location location, String fieldName) {
-    return String.format("%s: Missing required field '%s'", location.format(), fieldName);
+    return formatErrorWithType(location, MISSING_FIELD_ERROR, String.format("required field '%s' not found", fieldName));
+  }
+
+  /**
+   * Formats file-related error messages.
+   *
+   * @param location The location in the file
+   * @param message The error message
+   * @return Formatted error message
+   */
+  public static String formatFileError(Location location, String message) {
+    return formatErrorWithType(location, FILE_ERROR, message);
+  }
+
+  /**
+   * Formats general exception messages.
+   *
+   * @param location The location where the exception occurred
+   * @param message The exception message
+   * @return Formatted error message
+   */
+  public static String formatException(Location location, String message) {
+    return formatErrorWithType(location, "error", message);
   }
 
   /**
@@ -136,6 +145,11 @@ public class ErrorHandler {
     return new Location(DEFAULT_FILENAME, mark.getLine() + 1, mark.getColumn() + 1, path);
   }
 
+  /**
+   * Reports an error with stack trace information.
+   *
+   * @param message The error message to report
+   */
   public static void reportError(String message) {
     final StackTraceElement stackTrace = Thread.currentThread().getStackTrace()[1];
     final Location location = new Location(
@@ -147,4 +161,3 @@ public class ErrorHandler {
     System.err.println(formatException(location, message));
   }
 }
-
