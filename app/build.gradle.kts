@@ -1,14 +1,13 @@
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
     application
     java
     jacoco
     checkstyle
     pmd
+    id("com.github.johnrengelman.shadow") version "8.1.1" // Fat JAR plugin
 }
 
 repositories {
-    // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
 
@@ -25,11 +24,9 @@ dependencies {
     implementation("info.picocli:picocli:4.7.4")
     annotationProcessor("info.picocli:picocli-codegen:4.7.4")
 
-    // JUnit 5 API & Engine (for unit testing)
+    // JUnit 5 for unit testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-
-    // JUnit Platform Launcher (Fixes JUnit5TestLoader not found issue)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.0")
 
     // Mockito for unit testing
@@ -39,9 +36,8 @@ dependencies {
     // Google Guava (Utility library)
     implementation("com.google.guava:guava:32.1.2-jre")
 
-    // yaml file parser
+    // YAML file parser
     implementation("org.yaml:snakeyaml:2.0")
-
 }
 
 sourceSets {
@@ -55,42 +51,46 @@ sourceSets {
     }
 }
 
-// Apply a specific Java toolchain (Java 21)
+// Apply Java toolchain (Java 21)
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
+// Ensure the application knows the correct main class
 application {
-    // Define the main class for the application.
     mainClass.set("edu.neu.cs6510.sp25.t1.App")
 }
 
-tasks.named<Test>("test") {
-    // Use JUnit Platform for running tests.
-    useJUnitPlatform()
-}
-
-// Force JUnit 5 versions to prevent conflicts
-configurations.all {
-    resolutionStrategy {
-        force("org.junit.platform:junit-platform-commons:1.10.0")
-        force("org.junit.platform:junit-platform-launcher:1.10.0")
-        force("org.junit.jupiter:junit-jupiter-api:5.10.0")
-        force("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+// ✅ Configure Fat JAR for including dependencies
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "edu.neu.cs6510.sp25.t1.App"
     }
 }
 
-// Jacoco (Code Coverage)
-jacoco {
-    toolVersion = "0.8.10"
+// ✅ Build a Fat JAR that includes dependencies
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveBaseName.set("ci-tool")
+    archiveClassifier.set("")
+    archiveVersion.set("")
 }
 
-tasks.test {
-    workingDir = rootProject.projectDir
+// ✅ Ensure Picocli annotation processing works correctly
+tasks.withType<JavaCompile> {
+    options.annotationProcessorPath = configurations["annotationProcessor"]
+}
+
+// ✅ Run tests with JUnit 5
+tasks.named<Test>("test") {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+}
+
+// ✅ Code Coverage Configuration
+jacoco {
+    toolVersion = "0.8.10"
 }
 
 tasks.jacocoTestReport {
@@ -101,7 +101,7 @@ tasks.jacocoTestReport {
     }
 }
 
-// Checkstyle Configuration
+// ✅ Checkstyle Configuration
 checkstyle {
     toolVersion = "10.12.3"
     configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
@@ -114,16 +114,10 @@ tasks.withType<Checkstyle> {
     }
 }
 
-// PMD Configuration
+// ✅ PMD Configuration
 pmd {
     toolVersion = "6.55.0"
     rulesMinimumPriority.set(5)
-}
-
-tasks.withType<Jar> {
-    manifest {
-        attributes["Main-Class"] = "edu.neu.cs6510.sp25.t1.App"
-    }
 }
 
 tasks.withType<Pmd> {
@@ -133,12 +127,13 @@ tasks.withType<Pmd> {
     }
 }
 
-tasks.withType<JavaCompile> {
-    options.compilerArgs.add("-Xlint:deprecation")
-}
-
-// JavaDoc generation
+// ✅ JavaDoc Generation
 tasks.javadoc {
     options.encoding = "UTF-8"
     isFailOnError = false
+}
+
+// ✅ Enable compiler warnings
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-Xlint:deprecation")
 }

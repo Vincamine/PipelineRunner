@@ -1,10 +1,11 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import edu.neu.cs6510.sp25.t1.cli.model.LogEntry;
+import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
 import picocli.CommandLine;
 import edu.neu.cs6510.sp25.t1.cli.service.LogService;
 import edu.neu.cs6510.sp25.t1.cli.util.LogFormatter;
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorFormatter;
+
 
 import java.net.http.HttpClient;
 import java.util.List;
@@ -47,8 +48,7 @@ public class LogCommand implements Runnable {
             logs.forEach(log -> System.out.println(LogFormatter.format(log)));
 
         } catch (Exception e) {
-            final String errorMessage = ErrorFormatter.format("LogCommand.java", 35, 10, e.getMessage());
-            System.err.println(errorMessage);
+            ErrorHandler.reportError(e.getMessage());
         }
     }
 }

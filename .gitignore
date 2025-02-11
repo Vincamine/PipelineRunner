@@ -91,3 +91,7 @@ logs/
 *.sln.docstates
 
 app/bin/
+
+*.sh
+demo_plan_updated.md
+

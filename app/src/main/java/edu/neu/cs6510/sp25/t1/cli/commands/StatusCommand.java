@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
+import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -8,7 +9,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import edu.neu.cs6510.sp25.t1.cli.model.PipelineStatus;
 import edu.neu.cs6510.sp25.t1.cli.service.StatusService;
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorFormatter;
 
 /**
  * Command to check pipeline execution status.
@@ -43,8 +43,7 @@ public class StatusCommand implements Runnable {
             final PipelineStatus status = statusService.getPipelineStatus(pipelineId);
             displayStatus(status);
         } catch (Exception e) {
-            final String errorMessage = ErrorFormatter.format("StatusCommand.java", 45, 5, e.getMessage());
-            System.err.println(errorMessage);
+            ErrorHandler.reportError(e.getMessage());
         }
     }
 
