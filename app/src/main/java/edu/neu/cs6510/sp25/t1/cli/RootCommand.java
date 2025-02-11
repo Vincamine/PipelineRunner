@@ -7,6 +7,9 @@ import edu.neu.cs6510.sp25.t1.cli.commands.StatusCommand;
 import edu.neu.cs6510.sp25.t1.cli.util.GitValidator;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Root command for the CI/CD CLI tool.
@@ -40,16 +43,21 @@ public class RootCommand implements Runnable {
     @Option(names = {"--run"}, description = "Trigger CI/CD pipeline execution")
     boolean run;
 
+    @Option(names = {"-f", "--filename"}, description = "Specify the filename for the CI/CD pipeline.")
+    private String filename;
+
     @Override
     public void run() {
-        // ✅ Ensure verbose message is printed FIRST before Git validation
         if (verbose) {
             System.out.println("✅ Verbose mode enabled.");
         }
-
-        // 🚨 Perform Git validation AFTER verbose flag handling
+        
         GitValidator.validateGitRepo();
-
+        
+        if (!validateFilePath()) {
+            return;
+        }
+        
         if (run) {
             System.out.println("🚀 Running the CI/CD pipeline...");
             new RunCommand().run();
@@ -57,5 +65,39 @@ public class RootCommand implements Runnable {
             System.out.println("Welcome to the CI/CD CLI Tool!");
             System.out.println("Use 'cli --help' to view available commands.");
         }
+    }
+
+    /**
+     * Validates the file path specified by -f or --filename option.
+     * 
+     * @return true if the file path is valid, false otherwise
+     */
+    private boolean validateFilePath() {
+        if (filename == null || filename.trim().isEmpty()) {
+            System.err.println("Error: Filename must be specified with -f or --filename option");
+            return false;
+        }
+
+        final Path path = Paths.get(filename);
+        
+        // Check if path exists
+        if (!Files.exists(path)) {
+            System.err.println("Error: File does not exist: " + filename);
+            return false;
+        }
+        
+        // Check if it's a regular file (not a directory)
+        if (!Files.isRegularFile(path)) {
+            System.err.println("Error: Not a regular file: " + filename);
+            return false;
+        }
+        
+        // Check if file is readable
+        if (!Files.isReadable(path)) {
+            System.err.println("Error: File is not readable: " + filename);
+            return false;
+        }
+
+        return true;
     }
 }
