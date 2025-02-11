@@ -92,6 +92,6 @@ logs/
 
 app/bin/
 
-.sh00-demo-error-handle.sh
+*.sh
 demo_plan_updated.md
-00-demo-error-handle.sh
+
