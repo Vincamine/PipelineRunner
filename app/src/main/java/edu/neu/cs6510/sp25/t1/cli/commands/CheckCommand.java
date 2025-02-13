@@ -20,7 +20,7 @@ import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
     description = "Validate a pipeline YAML file",
     mixinStandardHelpOptions = true
 )
-public class CheckCommand implements Callable<Integer> {
+public class CheckCommand implements Callable<Boolean> {
   @Option(
       names = {"-f", "--file"},
       description = "Path to the pipeline YAML file",
@@ -31,10 +31,10 @@ public class CheckCommand implements Callable<Integer> {
   /**
    * Executes the check command to validate a pipeline YAML file.
    *
-   * @return 0 if validation succeeds, 1 if validation fails
+   * @return true if validation succeeds, false if validation fails
    */
   @Override
-  public Integer call() {
+  public Boolean call() {
     try {
       // Normalize path for consistent processing
       final Path yamlPath = Paths.get(yamlFilePath).toAbsolutePath().normalize();
@@ -53,17 +53,17 @@ public class CheckCommand implements Callable<Integer> {
             location,
             "YAML file not found: " + yamlFilePath
         ));
-        return 1;
+        return false;
       }
 
       // Verify parent directory is '.pipelines'
       final Path parentDir = yamlPath.getParent();
-      if (parentDir == null || !parentDir.getFileName().toString().equals(".pipelines")) {
+      if (parentDir == null || !".pipelines".equals(parentDir.getFileName().toString())) {
         System.err.println(ErrorHandler.formatMissingFieldError(
             location,
             "YAML file must be inside the '.pipelines/' folder"
         ));
-        return 1;
+        return false;
       }
 
       // Validate pipeline configuration
@@ -72,10 +72,10 @@ public class CheckCommand implements Callable<Integer> {
 
       if (isValid) {
         System.out.println("Pipeline validation successful: " + yamlPath);
-        return 0;
+        return true;
       } else {
         // Note: specific error messages are already printed by the validator
-        return 1;
+        return false;
       }
 
     } catch (Exception e) {
@@ -90,7 +90,7 @@ public class CheckCommand implements Callable<Integer> {
           errorLocation,
           e.getMessage()
       ));
-      return 1;
+      return false;
     }
   }
 }
