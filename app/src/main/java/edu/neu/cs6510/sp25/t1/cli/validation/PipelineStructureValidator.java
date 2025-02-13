@@ -34,9 +34,10 @@ public class PipelineStructureValidator {
    * @param locations Map containing source locations for all elements in the configuration
    * @return true if the structure is valid, false otherwise
    */
-  public boolean validate(Map<String, Object> data, Map<String, Mark> locations) {
+  public boolean validate(Map<String, Object> data, Map<String, Mark> locations, String filePath) {
     // Validate pipeline key
     final Location rootLocation = ErrorHandler.createLocation(
+        filePath,
         locations.get("pipeline"),
         "pipeline"
     );
@@ -53,6 +54,7 @@ public class PipelineStructureValidator {
 
     // Validate pipeline name
     final Location nameLocation = ErrorHandler.createLocation(
+        filePath,
         locations.get("pipeline.name"),
         "pipeline.name"
     );
@@ -69,6 +71,7 @@ public class PipelineStructureValidator {
 
     // Validate stages list
     final Location stagesLocation = ErrorHandler.createLocation(
+        filePath,
         locations.get("pipeline.stages"),
         "pipeline.stages"
     );
@@ -95,6 +98,7 @@ public class PipelineStructureValidator {
         final Object stage = rawStages.get(i);
         if (!(stage instanceof String)) {
           final Location stageLocation = ErrorHandler.createLocation(
+              filePath,
               locations.get(String.format("pipeline.stages[%d]", i)),
               String.format("pipeline.stages[%d]", i)
           );

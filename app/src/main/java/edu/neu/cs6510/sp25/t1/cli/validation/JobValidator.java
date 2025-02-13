@@ -59,9 +59,9 @@ public class JobValidator {
    * @return true if all jobs are valid according to the validation rules,
    *         false if any validation check fails
    */
-  public boolean validateJobs(List<Map<String, Object>> jobs, Map<String, Mark> locations) {
+  public boolean validateJobs(List<Map<String, Object>> jobs, Map<String, Mark> locations, String filename) {
     if (jobs == null || jobs.isEmpty()) {
-      final Location location = ErrorHandler.createLocation(locations.get("jobs"), "jobs");
+      final Location location = ErrorHandler.createLocation(filename, locations.get("jobs"), "jobs");
       System.err.println(ErrorHandler.formatMissingFieldError(location, "jobs"));
       return false;
     }
@@ -69,12 +69,12 @@ public class JobValidator {
     for (int i = 0; i < jobs.size(); i++) {
       final Map<String, Object> job = jobs.get(i);
       final String jobPath = String.format("jobs[%d]", i);
-      final Location jobLocation = ErrorHandler.createLocation(
+      final Location jobLocation = ErrorHandler.createLocation(filename,
           locations.get(jobPath),
           jobPath
       );
 
-      if (!validateRequiredFields(job, jobLocation, locations)) {
+      if (!validateRequiredFields(job, jobLocation, locations, filename)) {
         return false;
       }
 
@@ -89,7 +89,7 @@ public class JobValidator {
         return false;
       }
 
-      if (!validateScript(job, jobLocation, locations)) {
+      if (!validateScript(job, jobLocation, locations, filename)) {
         return false;
       }
 
@@ -111,7 +111,8 @@ public class JobValidator {
   private boolean validateRequiredFields(
       Map<String, Object> job,
       Location jobLocation,
-      Map<String, Mark> locations) {
+      Map<String, Mark> locations,
+      String filename) {
     final String[] requiredFields = {"name", "stage", "image", "script"};
     final Class<?>[] expectedTypes = {String.class, String.class, String.class, List.class};
 
@@ -129,7 +130,7 @@ public class JobValidator {
 
       final Object value = job.get(field);
       final String fieldPath = jobLocation.getPath() + "." + field;
-      final Location fieldLocation = ErrorHandler.createLocation(
+      final Location fieldLocation = ErrorHandler.createLocation(filename,
           locations.get(fieldPath),
           fieldPath
       );
@@ -202,11 +203,13 @@ public class JobValidator {
   private boolean validateScript(
       Map<String, Object> job,
       Location jobLocation,
-      Map<String, Mark> locations) {
+      Map<String, Mark> locations,
+      String filename) {
     @SuppressWarnings("unchecked")
     final List<Object> script = (List<Object>) job.get("script");
     final String scriptPath = jobLocation.getPath() + ".script";
     final Location scriptLocation = ErrorHandler.createLocation(
+        filename,
         locations.get(scriptPath),
         scriptPath
     );
@@ -223,6 +226,7 @@ public class JobValidator {
       final Object command = script.get(i);
       final String commandPath = String.format("%s[%d]", scriptPath, i);
       final Location commandLocation = ErrorHandler.createLocation(
+          filename,
           locations.get(commandPath),
           commandPath
       );

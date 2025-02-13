@@ -21,11 +21,11 @@ public class DependencyValidator {
    * @param jobDependencies Map of jobs to their dependencies
    * @param yamlMark Location mark from the YAML parser
    */
-  public DependencyValidator(Map<String, List<String>> jobDependencies, Mark yamlMark) {
+  public DependencyValidator(Map<String, List<String>> jobDependencies, Mark yamlMark, String filename) {
     this.jobDependencies = jobDependencies;
     this.allJobNames = new HashSet<>(jobDependencies.keySet());
     this.currentCycle = new ArrayList<>();
-    this.baseLocation = ErrorHandler.createLocation(yamlMark, "dependencies");
+    this.baseLocation = ErrorHandler.createLocation(filename, yamlMark, "dependencies");
   }
 
   /**

@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Top-level validator for YAML pipeline configurations.
- * This validator coordinates the validation process by:
+ * Top-level validator for YAML pipeline configurations. This validator coordinates the validation
+ * process by:
  * <ul>
  *   <li>Loading and parsing the YAML file</li>
  *   <li>Validating the overall pipeline structure</li>
@@ -33,13 +33,14 @@ public class YamlPipelineValidator {
 
       // Create root location for error reporting
       final Location rootLocation = ErrorHandler.createLocation(
+          filePath,
           locations.get("pipeline"),
           "pipeline"
       );
 
       // Validate structure of pipeline
       final PipelineStructureValidator structureValidator = new PipelineStructureValidator();
-      if (!structureValidator.validate(data, locations)) {
+      if (!structureValidator.validate(data, locations, filePath)) {
         return false;
       }
 
@@ -57,6 +58,7 @@ public class YamlPipelineValidator {
       // Extract 'stages' safely
       final Object stagesObj = pipeline.get("stages");
       final Location stagesLocation = ErrorHandler.createLocation(
+          filePath,
           locations.get("pipeline.stages"),
           "pipeline.stages"
       );
@@ -77,6 +79,7 @@ public class YamlPipelineValidator {
 
       // Extract 'job' section
       final Location jobsLocation = ErrorHandler.createLocation(
+          filePath,
           locations.get("job"),
           "job"
       );
@@ -91,26 +94,27 @@ public class YamlPipelineValidator {
         return false;
       }
 
-      @SuppressWarnings("unchecked")
-      final List<Map<String, Object>> jobs = rawJobs.stream()
+      @SuppressWarnings("unchecked") final List<Map<String, Object>> jobs = rawJobs.stream()
           .filter(item -> item instanceof Map)
           .map(item -> (Map<String, Object>) item)
           .toList();
 
       // Validate jobs
       final JobValidator jobValidator = new JobValidator(stages);
-      if (!jobValidator.validateJobs(jobs, locations)) {
+      if (!jobValidator.validateJobs(jobs, locations, filePath)) {
         return false;
       }
 
-      final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs, locations);
+      final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs, locations,
+          filePath);
       if (jobDependencies == null) {
         return false;
       }
 
       // Validate dependencies
       final Mark dependencyMark = locations.get("job");
-      final DependencyValidator dependencyValidator = new DependencyValidator(jobDependencies, dependencyMark);
+      final DependencyValidator dependencyValidator = new DependencyValidator(jobDependencies,
+          dependencyMark, filePath);
       return dependencyValidator.validateDependencies();
 
     } catch (IOException e) {
@@ -127,19 +131,21 @@ public class YamlPipelineValidator {
   /**
    * Extracts and validates job dependencies from the job definitions.
    *
-   * @param jobs List of job definitions from YAML
+   * @param jobs      List of job definitions from YAML
    * @param locations Map containing source locations for all YAML elements
    * @return A map of job names to their dependencies, or null if validation fails
    */
   private Map<String, List<String>> extractJobDependencies(
       final List<Map<String, Object>> jobs,
-      final Map<String, Mark> locations) {
+      final Map<String, Mark> locations,
+      final String filePath) {
     final Map<String, List<String>> jobDependencies = new HashMap<>();
 
     for (int i = 0; i < jobs.size(); i++) {
       final Map<String, Object> job = jobs.get(i);
       final String jobPath = String.format("job[%d]", i);
       final Location jobLocation = ErrorHandler.createLocation(
+          filePath,
           locations.get(jobPath),
           jobPath
       );
@@ -158,6 +164,7 @@ public class YamlPipelineValidator {
       final Object needsObj = job.get("needs");
       final String needsPath = jobPath + ".needs";
       final Location needsLocation = ErrorHandler.createLocation(
+          filePath,
           locations.get(needsPath),
           needsPath
       );
@@ -179,6 +186,7 @@ public class YamlPipelineValidator {
           final Object need = rawNeeds.get(j);
           final String needPath = String.format("%s[%d]", needsPath, j);
           final Location needLocation = ErrorHandler.createLocation(
+              filePath,
               locations.get(needPath),
               needPath
           );
@@ -208,6 +216,7 @@ public class YamlPipelineValidator {
  * Container class for YAML loading results including data and location information.
  */
 class YamlLoadResult {
+
   private final Map<String, Object> data;
   private final Map<String, Mark> locations;
 
