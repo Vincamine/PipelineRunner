@@ -14,7 +14,6 @@ import java.util.List;
  * and detailed context information for all validation errors.
  */
 public class ErrorHandler {
-  private static final String DEFAULT_FILENAME = "pipeline.yaml";
 
   // Error type constants
   private static final String TYPE_ERROR = "type error";
@@ -138,12 +137,20 @@ public class ErrorHandler {
    * @param path The YAML path to the current location
    * @return A new Location object
    */
-  public static Location createLocation(Mark mark, String path) {
-    if (mark == null) {
-      return new Location(DEFAULT_FILENAME, 1, 1, path);
-    }
-    return new Location(DEFAULT_FILENAME, mark.getLine() + 1, mark.getColumn() + 1, path);
-  }
+  public static Location createLocation(String filename, Mark mark, String path) {
+//    if (mark == null) {
+//      return new Location("DEFAULT_FILENAME", 1, 1, path);
+//    }
+//    return new Location("DEFAULT_FILENAME", mark.getLine() + 1, mark.getColumn() + 1, path);
+
+//    final String filename = (mark != null && mark.getName() != null) ? mark.getName() : "unknown.yaml";
+//    return new Location(filename, mark != null ? mark.getLine() + 1 : 1, mark != null ? mark.getColumn() + 1 : 1, path);
+    {
+      if (mark == null) {
+        return new Location(filename, 1, 1, path);
+      }
+      return new Location(filename, mark.getLine() + 1, mark.getColumn() + 1, path);
+  }}
 
   /**
    * Reports an error with stack trace information.

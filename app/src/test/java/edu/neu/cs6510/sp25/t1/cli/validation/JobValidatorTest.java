@@ -19,6 +19,7 @@ class JobValidatorTest {
   private final PrintStream originalErr = System.err;
   private List<String> validStages;
   private Map<String, Mark> locations;
+  private final String TEST_FILENAME = "pipeline.yaml";
 
   @BeforeEach
   void setUp() {
@@ -31,7 +32,7 @@ class JobValidatorTest {
   @Test
   void validateJobs_WithValidJob() {
     final Map<String, Object> job = createValidJob("build-job", "build");
-    assertTrue(validator.validateJobs(Collections.singletonList(job), locations));
+    assertTrue(validator.validateJobs(Collections.singletonList(job), locations, TEST_FILENAME));
   }
 
   @ParameterizedTest
@@ -39,7 +40,7 @@ class JobValidatorTest {
   void validateJobs_WithInvalidFields(String fieldName, Object invalidValue) {
     final Map<String, Object> job = createValidJob("test-job", "build");
     job.put(fieldName, invalidValue);
-    assertFalse(validator.validateJobs(Collections.singletonList(job), locations));
+    assertFalse(validator.validateJobs(Collections.singletonList(job), locations, TEST_FILENAME));
     assertTrue(errContent.toString().contains("Wrong type"));
   }
 
@@ -56,14 +57,14 @@ class JobValidatorTest {
   void validateJobs_WithMissingFields() {
     final Map<String, Object> job = createValidJob("test-job", "build");
     job.remove("image");
-    assertFalse(validator.validateJobs(Collections.singletonList(job), locations));
+    assertFalse(validator.validateJobs(Collections.singletonList(job), locations, TEST_FILENAME));
     assertTrue(errContent.toString().contains("Missing required field"));
   }
 
   @Test
   void validateJobs_WithNonExistentStage() {
     final Map<String, Object> job = createValidJob("test-job", "non-existent-stage");
-    assertFalse(validator.validateJobs(Collections.singletonList(job), locations));
+    assertFalse(validator.validateJobs(Collections.singletonList(job), locations, TEST_FILENAME));
     assertTrue(errContent.toString().contains("non-existent stage"));
   }
 
@@ -73,7 +74,7 @@ class JobValidatorTest {
         createValidJob("same-name", "build"),
         createValidJob("same-name", "build")
     );
-    assertFalse(validator.validateJobs(jobs, locations));
+    assertFalse(validator.validateJobs(jobs, locations, TEST_FILENAME));
     assertTrue(errContent.toString().contains("Duplicate job name"));
   }
 

@@ -15,6 +15,7 @@ class PipelineStructureValidatorTest {
   private Map<String, Mark> locations;
   private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
   private final PrintStream originalErr = System.err;
+  private final String TEST_FILENAME = "pipeline.yaml";
 
   @BeforeEach
   void setUp() {
@@ -26,19 +27,19 @@ class PipelineStructureValidatorTest {
 
   @Test
   void validate_WithValidStructure() {
-    assertTrue(validator.validate(validPipelineData, locations));
+    assertTrue(validator.validate(validPipelineData, locations, TEST_FILENAME));
   }
 
   @Test
   void validate_WithMissingPipeline() {
     final Map<String, Object> data = new HashMap<>();
-    assertFalse(validator.validate(data, locations));
+    assertFalse(validator.validate(data, locations, TEST_FILENAME));
   }
 
   @Test
   void validate_WithInvalidPipelineType() {
     validPipelineData.put("pipeline", "not-a-map");
-    assertFalse(validator.validate(validPipelineData, locations));
+    assertFalse(validator.validate(validPipelineData, locations, TEST_FILENAME));
   }
 
   @Test
@@ -46,7 +47,7 @@ class PipelineStructureValidatorTest {
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) validPipelineData.get("pipeline");
     pipeline.remove("name");
-    assertFalse(validator.validate(validPipelineData, locations));
+    assertFalse(validator.validate(validPipelineData, locations, TEST_FILENAME));
   }
 
   @Test
@@ -54,7 +55,7 @@ class PipelineStructureValidatorTest {
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) validPipelineData.get("pipeline");
     pipeline.put("name", 123);
-    assertFalse(validator.validate(validPipelineData, locations));
+    assertFalse(validator.validate(validPipelineData, locations, TEST_FILENAME));
   }
 
   @Test
@@ -62,7 +63,7 @@ class PipelineStructureValidatorTest {
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) validPipelineData.get("pipeline");
     pipeline.remove("stages");
-    assertFalse(validator.validate(validPipelineData, locations));
+    assertFalse(validator.validate(validPipelineData, locations, TEST_FILENAME));
   }
 
   @Test
@@ -70,7 +71,7 @@ class PipelineStructureValidatorTest {
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) validPipelineData.get("pipeline");
     pipeline.put("stages", Collections.emptyList());
-    assertFalse(validator.validate(validPipelineData, locations));
+    assertFalse(validator.validate(validPipelineData, locations, TEST_FILENAME));
   }
 
   @Test
@@ -78,7 +79,7 @@ class PipelineStructureValidatorTest {
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) validPipelineData.get("pipeline");
     pipeline.put("stages", "not-a-list");
-    assertFalse(validator.validate(validPipelineData, locations));
+    assertFalse(validator.validate(validPipelineData, locations, TEST_FILENAME));
   }
 
   @Test
@@ -86,7 +87,7 @@ class PipelineStructureValidatorTest {
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) validPipelineData.get("pipeline");
     pipeline.put("stages", Arrays.asList("build", 123, "deploy"));
-    assertFalse(validator.validate(validPipelineData, locations));
+    assertFalse(validator.validate(validPipelineData, locations, TEST_FILENAME));
   }
 
   private Map<String, Object> createValidPipelineData() {

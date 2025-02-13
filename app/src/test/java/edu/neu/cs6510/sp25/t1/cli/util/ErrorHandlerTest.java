@@ -70,7 +70,8 @@ class ErrorHandlerTest {
 
   @Test
   void createLocationShouldHandleNullMark() {
-    final ErrorHandler.Location location = ErrorHandler.createLocation(null, "test.path");
+    // Pass a file path (e.g., "pipeline.yaml") to the method
+    final ErrorHandler.Location location = ErrorHandler.createLocation("pipeline.yaml", null, "test.path");
     assertEquals("pipeline.yaml", location.getFilename());
     assertEquals(1, location.getLine());
     assertEquals(1, location.getColumn());
@@ -80,7 +81,7 @@ class ErrorHandlerTest {
   @Test
   void createLocationShouldConvertMarkCoordinates() {
     final Mark mark = new Mark("test", 0, 5, 10, new int[]{}, 0);
-    final ErrorHandler.Location location = ErrorHandler.createLocation(mark, "test.path");
+    final ErrorHandler.Location location = ErrorHandler.createLocation("pipeline.yaml", mark, "test.path");
     assertEquals("pipeline.yaml", location.getFilename());
     assertEquals(6, location.getLine());
     assertEquals(11, location.getColumn());
