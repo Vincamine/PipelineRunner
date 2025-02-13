@@ -40,7 +40,7 @@ class CheckCommandTest {
     final Path yamlPath = getResourcePath("yaml/commands/pipelines/valid_pipeline.yml");
     yamlFilePathField.set(checkCommand, yamlPath.toString());
 
-    assertEquals(0, checkCommand.call());
+    assertTrue(checkCommand.call());
     assertTrue(outContent.toString().contains("Pipeline validation successful"));
   }
 
@@ -49,7 +49,7 @@ class CheckCommandTest {
     final Path yamlPath = getResourcePath("yaml/commands/pipelines/invalid_pipeline.yml");
     yamlFilePathField.set(checkCommand, yamlPath.toString());
 
-    assertEquals(1, checkCommand.call());
+    assertFalse(checkCommand.call());
     assertTrue(errContent.toString().contains("Pipeline validation failed"));
   }
 
@@ -61,12 +61,10 @@ class CheckCommandTest {
     outContent.reset();
     errContent.reset();
 
-    assertEquals(1, checkCommand.call(), "Should return 1 for non-existent file");
+    assertFalse(checkCommand.call(), "Should return false for non-existent file");
 
     // Get the actual error output
     final String errorOutput = errContent.toString();
-//    System.out.println("Actual error output: " + errorOutput); // Debug output
-
     assertTrue(errorOutput.contains("Error") || errorOutput.contains("error"),
         "Should output an error message for non-existent file. Actual output: " + errorOutput);
   }
@@ -76,7 +74,7 @@ class CheckCommandTest {
     final Path yamlPath = getResourcePath("yaml/commands/pipelines/invalid_format_pipeline.yml");
     yamlFilePathField.set(checkCommand, yamlPath.toString());
 
-    assertEquals(1, checkCommand.call());
+    assertFalse(checkCommand.call());
     assertTrue(errContent.toString().contains("Error validating pipeline"));
   }
 
@@ -85,7 +83,7 @@ class CheckCommandTest {
     final Path yamlPath = getResourcePath("yaml/commands/pipelines/missing_pipeline.yml");
     yamlFilePathField.set(checkCommand, yamlPath.toString());
 
-    assertEquals(1, checkCommand.call());
+    assertFalse(checkCommand.call());
     assertTrue(errContent.toString().contains("Pipeline validation failed"));
   }
 
@@ -96,10 +94,10 @@ class CheckCommandTest {
     yamlFilePathField.set(checkCommand, yamlPath.toString());
 
     // Run validation
-    final int result = checkCommand.call();
+    final boolean result = checkCommand.call();
 
     // Assert that validation fails due to incorrect location
-    assertEquals(1, result);
+    assertFalse(result);
     assertTrue(errContent.toString().contains("YAML file must be inside the 'pipelines/' folder"),
         "Error message should indicate the file is not in pipelines/. Actual: " + errContent.toString());
   }
