@@ -3,6 +3,7 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
 import edu.neu.cs6510.sp25.t1.cli.util.PipelineExecutionOrderGenerator;
 import edu.neu.cs6510.sp25.t1.cli.util.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
 import org.yaml.snakeyaml.Yaml;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -39,7 +40,9 @@ public class DryRunCommand implements Callable<Boolean> {
    */
   @Override
   public Boolean call() {
-    if (!PipelineValidator.validatePipelineFile(yamlFilePath)) {
+    YamlPipelineValidator yamlPipelineValidator = new YamlPipelineValidator();
+    PipelineValidator pipelineValidator = new PipelineValidator(yamlPipelineValidator);
+    if (!pipelineValidator.validatePipelineFile(yamlFilePath)) {
       return false;
     }
     try {

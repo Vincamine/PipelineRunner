@@ -10,13 +10,24 @@ import java.nio.file.Paths;
  * Utility class to validate pipeline YAML files and ensure they are correctly formatted.
  */
 public class PipelineValidator {
+  private final YamlPipelineValidator yamlPipelineValidator;
+
+  /**
+   * Constructor for injecting a YamlPipelineValidator instance.
+   *
+   * @param yamlPipelineValidator The YAML validator instance
+   */
+  public PipelineValidator(YamlPipelineValidator yamlPipelineValidator) {
+    this.yamlPipelineValidator = yamlPipelineValidator;
+  }
+
   /**
    * Validates a pipeline YAML file.
    *
    * @param yamlFilePath The path to the YAML file
    * @return true if the file is valid, false otherwise
    */
-  public static boolean validatePipelineFile(String yamlFilePath) {
+  public boolean validatePipelineFile(String yamlFilePath) {
     try {
       // Normalize path for consistent processing
       final Path yamlPath = Paths.get(yamlFilePath).toAbsolutePath().normalize();
@@ -49,8 +60,7 @@ public class PipelineValidator {
       }
 
       // Validate pipeline configuration
-      final YamlPipelineValidator pipelineValidator = new YamlPipelineValidator();
-      final boolean isValid = pipelineValidator.validatePipeline(yamlPath.toString());
+      final boolean isValid = yamlPipelineValidator.validatePipeline(yamlPath.toString());
 
       if (isValid) {
         System.out.println("Pipeline validation successful: " + yamlPath);

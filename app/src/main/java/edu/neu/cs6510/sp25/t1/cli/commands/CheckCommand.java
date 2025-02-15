@@ -1,10 +1,13 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import edu.neu.cs6510.sp25.t1.cli.util.PipelineValidator;
-
+import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+
 import java.util.concurrent.Callable;
+
+
 
 /**
  * Command to validate a pipeline YAML file.
@@ -30,10 +33,16 @@ public class CheckCommand implements Callable<Boolean> {
    */
   @Override
   public Boolean call() {
-    boolean isValid = PipelineValidator.validatePipelineFile(yamlFilePath);
+    YamlPipelineValidator yamlPipelineValidator = new YamlPipelineValidator();
+    PipelineValidator pipelineValidator = new PipelineValidator(yamlPipelineValidator);
+
+    // Call instance method instead of static
+    boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);
+
     if (isValid) {
       System.out.println("Pipeline validation successful: " + yamlFilePath);
     }
+
     return isValid;
   }
 }
