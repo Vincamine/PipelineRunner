@@ -33,11 +33,11 @@ public class CheckCommand implements Callable<Boolean> {
    */
   @Override
   public Boolean call() {
-    YamlPipelineValidator yamlPipelineValidator = new YamlPipelineValidator();
-    PipelineValidator pipelineValidator = new PipelineValidator(yamlPipelineValidator);
+    final YamlPipelineValidator yamlPipelineValidator = new YamlPipelineValidator();
+    final PipelineValidator pipelineValidator = new PipelineValidator(yamlPipelineValidator);
 
     // Call instance method instead of static
-    boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);
+    final boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);
 
     if (isValid) {
       System.out.println("Pipeline validation successful: " + yamlFilePath);

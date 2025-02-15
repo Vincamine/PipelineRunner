@@ -25,7 +25,7 @@ class PipelineValidatorTest {
 
   @BeforeEach
   void setUp() throws IOException {
-    Path pipelinesDir = tempDir.resolve(".pipelines");
+    final Path pipelinesDir = tempDir.resolve(".pipelines");
     Files.createDirectory(pipelinesDir);
 
     validYamlPath = pipelinesDir.resolve("valid_pipeline.yml");

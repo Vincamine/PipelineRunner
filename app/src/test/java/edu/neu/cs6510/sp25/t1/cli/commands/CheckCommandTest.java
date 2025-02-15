@@ -1,7 +1,6 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import edu.neu.cs6510.sp25.t1.cli.util.PipelineValidator;
-import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -31,7 +30,7 @@ class CheckCommandTest {
   @BeforeEach
   void setUp() throws IOException {
     // Create .pipelines directory inside tempDir
-    Path pipelinesDir = tempDir.resolve(".pipelines");
+    final Path pipelinesDir = tempDir.resolve(".pipelines");
     Files.createDirectory(pipelinesDir);
 
     // Copy valid YAML file from test resources (updated path)
@@ -54,10 +53,10 @@ class CheckCommandTest {
     when(mockValidator.validatePipelineFile(validYamlPath.toString())).thenReturn(true);
 
     // Execute the command with the actual temporary file path
-    int exitCode = commandLine.execute("-f", validYamlPath.toString());
+    final int exitCode = commandLine.execute("-f", validYamlPath.toString());
 
     // Verify output and return value
-    String output = outputStream.toString();
+    final String output = outputStream.toString();
     assertTrue(output.contains("Pipeline validation successful"));
     assertEquals(0, exitCode);
   }

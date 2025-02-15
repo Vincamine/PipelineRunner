@@ -1,7 +1,6 @@
 package edu.neu.cs6510.sp25.t1.cli.util;
 
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,8 +20,8 @@ public class PipelineExecutionOrderGenerator {
    * @throws IOException If the file cannot be read
    */
   public Map<String, Map<String, Object>> generateExecutionOrder(String yamlFilePath) throws IOException {
-    Yaml yaml = new Yaml();
-    Map<String, Object> pipelineConfig;
+    final Yaml yaml = new Yaml();
+    final Map<String, Object> pipelineConfig;
 
     try (FileInputStream inputStream = new FileInputStream(yamlFilePath)) {
       pipelineConfig = yaml.load(inputStream);
@@ -32,7 +31,7 @@ public class PipelineExecutionOrderGenerator {
       throw new IllegalArgumentException("Invalid YAML structure: 'stages' key is missing.");
     }
 
-    Map<String, List<Map<String, Object>>> stages = (Map<String, List<Map<String, Object>>>) pipelineConfig.get("stages");
+    final Map<String, List<Map<String, Object>>> stages = (Map<String, List<Map<String, Object>>>) pipelineConfig.get("stages");
     return processStages(stages);
   }
 
@@ -43,14 +42,14 @@ public class PipelineExecutionOrderGenerator {
    * @return A LinkedHashMap maintaining the correct execution order
    */
   private Map<String, Map<String, Object>> processStages(Map<String, List<Map<String, Object>>> stages) {
-    Map<String, List<String>> dependencies = new HashMap<>();
-    Map<String, List<String>> jobsByStage = new LinkedHashMap<>();
-    Set<String> processedStages = new HashSet<>();
+    final Map<String, List<String>> dependencies = new HashMap<>();
+    final Map<String, List<String>> jobsByStage = new LinkedHashMap<>();
+    final Set<String> processedStages = new HashSet<>();
 
     // Extract jobs and dependencies
     for (Map.Entry<String, List<Map<String, Object>>> entry : stages.entrySet()) {
-      String stageName = entry.getKey();
-      List<String> jobs = new ArrayList<>();
+      final String stageName = entry.getKey();
+      final List<String> jobs = new ArrayList<>();
 
       for (Map<String, Object> jobDef : entry.getValue()) {
         for (String jobName : jobDef.keySet()) {
@@ -58,9 +57,9 @@ public class PipelineExecutionOrderGenerator {
 
           // Extract "needs" dependencies
           if (jobDef.get(jobName) instanceof Map) {
-            Map<String, Object> jobProps = (Map<String, Object>) jobDef.get(jobName);
+            final Map<String, Object> jobProps = (Map<String, Object>) jobDef.get(jobName);
             if (jobProps.containsKey("needs")) {
-              List<String> neededJobs = (List<String>) jobProps.get("needs");
+              final List<String> neededJobs = (List<String>) jobProps.get("needs");
               dependencies.put(jobName, neededJobs);
             }
           }
@@ -80,12 +79,12 @@ public class PipelineExecutionOrderGenerator {
    * @return A LinkedHashMap with execution order (stage -> jobs)
    */
   private Map<String, Map<String, Object>> resolveExecutionOrder(Map<String, List<String>> jobsByStage, Map<String, List<String>> dependencies) {
-    Map<String, Map<String, Object>> executionOrder = new LinkedHashMap<>();
-    Set<String> executedJobs = new HashSet<>();
+    final Map<String, Map<String, Object>> executionOrder = new LinkedHashMap<>();
+    final Set<String> executedJobs = new HashSet<>();
 
     for (Map.Entry<String, List<String>> stageEntry : jobsByStage.entrySet()) {
-      String stage = stageEntry.getKey();
-      Map<String, Object> stageJobs = new LinkedHashMap<>();
+      final String stage = stageEntry.getKey();
+      final Map<String, Object> stageJobs = new LinkedHashMap<>();
 
       for (String job : stageEntry.getValue()) {
         if (canExecuteJob(job, dependencies, executedJobs)) {
