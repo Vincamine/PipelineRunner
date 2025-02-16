@@ -2,11 +2,11 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import edu.neu.cs6510.sp25.t1.cli.util.PipelineExecutionOrderGenerator;
 import edu.neu.cs6510.sp25.t1.cli.util.PipelineValidator;
-import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Mockito;
+
 import org.yaml.snakeyaml.Yaml;
 import picocli.CommandLine;
 
@@ -36,7 +36,7 @@ class DryRunCommandTest {
   @BeforeEach
   void setUp() throws IOException {
     // Create .pipelines directory inside tempDir
-    Path pipelinesDir = tempDir.resolve(".pipelines");
+    final Path pipelinesDir = tempDir.resolve(".pipelines");
     Files.createDirectory(pipelinesDir);
 
     // Copy valid YAML file from test resources to tempDir/.pipelines/
@@ -50,7 +50,7 @@ class DryRunCommandTest {
     // Configure mocks
     when(mockValidator.validatePipelineFile(yamlFilePath.toString())).thenReturn(true);
 
-    Map<String, Map<String, Object>> mockExecutionOrder = new LinkedHashMap<>();
+    final Map<String, Map<String, Object>> mockExecutionOrder = new LinkedHashMap<>();
     mockExecutionOrder.put("build", Map.of("BuildJob", new LinkedHashMap<>()));
     mockExecutionOrder.put("test", Map.of("TestJob", new LinkedHashMap<>()));
     mockExecutionOrder.put("deploy", Map.of("DeployJob", new LinkedHashMap<>()));
@@ -72,14 +72,14 @@ class DryRunCommandTest {
   @Test
   void testDryRunCommand_ValidYaml() {
     // Execute the command
-    int exitCode = commandLine.execute("-f", yamlFilePath.toString());
+    final int exitCode = commandLine.execute("-f", yamlFilePath.toString());
 
     // Capture console output
-    String output = outputStream.toString().trim();
+    final String output = outputStream.toString().trim();
     System.out.println("Raw DryRun Output:\n" + output);
 
-    String[] lines = output.split("\n");
-    StringBuilder yamlOutputBuilder = new StringBuilder();
+    final String[] lines = output.split("\n");
+    final StringBuilder yamlOutputBuilder = new StringBuilder();
     boolean foundYamlStart = false;
 
     for (String line : lines) {
@@ -91,13 +91,13 @@ class DryRunCommandTest {
       }
     }
 
-    String yamlOutput = yamlOutputBuilder.toString().trim();
+    final String yamlOutput = yamlOutputBuilder.toString().trim();
     System.out.println("Extracted YAML Output:\n" + yamlOutput);
 
     assertFalse(yamlOutput.isEmpty(), "Extracted YAML output should not be empty.");
 
-    Yaml yaml = new Yaml();
-    Map<String, Object> parsedYaml;
+    final Yaml yaml = new Yaml();
+    final Map<String, Object> parsedYaml;
     try {
       parsedYaml = yaml.load(yamlOutput);
     } catch (Exception e) {

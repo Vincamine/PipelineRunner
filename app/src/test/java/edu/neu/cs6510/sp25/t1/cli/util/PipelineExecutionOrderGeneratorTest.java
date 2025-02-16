@@ -27,7 +27,7 @@ class PipelineExecutionOrderGeneratorTest {
     generator = Mockito.spy(new PipelineExecutionOrderGenerator());
 
     // Create .pipelines directory inside tempDir
-    Path pipelinesDir = tempDir.resolve(".pipelines");
+    final Path pipelinesDir = tempDir.resolve(".pipelines");
     Files.createDirectory(pipelinesDir);
 
     // Copy YAML file from test resources to tempDir/.pipelines/
@@ -37,7 +37,7 @@ class PipelineExecutionOrderGeneratorTest {
 
   @Test
   void testGenerateExecutionOrder_ValidYaml() throws IOException {
-    Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder(yamlFilePath.toString());
+    final Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder(yamlFilePath.toString());
 
     assertNotNull(executionOrder);
     assertTrue(executionOrder.containsKey("build"));
@@ -56,9 +56,9 @@ class PipelineExecutionOrderGeneratorTest {
 
   @Test
   void testGenerateExecutionOrder_InvalidYaml_NoStages() throws IOException {
-    Path invalidYamlFile = copyTestResource("yaml/commands/execution_pipelines/missing_stages.yml", tempDir.resolve("missing_stages.yml"));
+    final Path invalidYamlFile = copyTestResource("yaml/commands/execution_pipelines/missing_stages.yml", tempDir.resolve("missing_stages.yml"));
 
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+    final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
         generator.generateExecutionOrder(invalidYamlFile.toString())
     );
 
@@ -67,19 +67,19 @@ class PipelineExecutionOrderGeneratorTest {
 
   @Test
   void testGenerateExecutionOrder_JobDependsOnUnexecutedJob() throws IOException {
-    Path dependencyYamlFile = copyTestResource("yaml/commands/execution_pipelines/missing_dependencies.yml", tempDir.resolve("missing_dependencies.yml"));
+    final Path dependencyYamlFile = copyTestResource("yaml/commands/execution_pipelines/missing_dependencies.yml", tempDir.resolve("missing_dependencies.yml"));
 
-    Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder(dependencyYamlFile.toString());
+    final Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder(dependencyYamlFile.toString());
 
-    boolean allStagesEmpty = executionOrder.values().stream().allMatch(Map::isEmpty);
+    final boolean allStagesEmpty = executionOrder.values().stream().allMatch(Map::isEmpty);
     assertTrue(allStagesEmpty);
   }
 
   @Test
   void testGenerateExecutionOrder_EmptyYaml() throws IOException {
-    Path emptyYamlFile = copyTestResource("yaml/commands/execution_pipelines/empty_pipeline.yml", tempDir.resolve("empty_pipeline.yml"));
+    final Path emptyYamlFile = copyTestResource("yaml/commands/execution_pipelines/empty_pipeline.yml", tempDir.resolve("empty_pipeline.yml"));
 
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+    final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
         generator.generateExecutionOrder(emptyYamlFile.toString())
     );
 

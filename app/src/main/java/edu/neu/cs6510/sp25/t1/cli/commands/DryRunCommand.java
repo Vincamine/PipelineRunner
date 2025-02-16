@@ -55,7 +55,7 @@ public class DryRunCommand implements Callable<Boolean> {
       }
 
       final Yaml yaml = new Yaml();
-      String yamlOutput = yaml.dump(executionOrder);
+      final String yamlOutput = yaml.dump(executionOrder);
 
       System.err.flush();
       System.out.flush();

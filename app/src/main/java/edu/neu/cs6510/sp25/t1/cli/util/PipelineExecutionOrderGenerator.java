@@ -32,8 +32,8 @@ public class PipelineExecutionOrderGenerator {
       throw new IllegalArgumentException("Invalid YAML structure: 'pipeline' key is missing.");
     }
 
-    Map<String, Object> pipelineMetadata = (Map<String, Object>) pipelineConfig.get("pipeline");
-    List<String> stages = (List<String>) pipelineMetadata.get("stages");
+    final Map<String, Object> pipelineMetadata = (Map<String, Object>) pipelineConfig.get("pipeline");
+    final List<String> stages = (List<String>) pipelineMetadata.get("stages");
 
     if (stages == null || stages.isEmpty()) {
       throw new IllegalArgumentException("Invalid YAML structure: 'stages' list is empty.");
@@ -43,27 +43,27 @@ public class PipelineExecutionOrderGenerator {
       throw new IllegalArgumentException("Invalid YAML structure: 'job' key is missing.");
     }
 
-    Object jobObj = pipelineConfig.get("job");
+    final Object jobObj = pipelineConfig.get("job");
     if (!(jobObj instanceof List)) {
       throw new IllegalArgumentException("Invalid YAML structure: 'job' should be a list.");
     }
 
     // Extract jobs
-    List<Map<String, Object>> jobsList = (List<Map<String, Object>>) pipelineConfig.get("job");
+    final List<Map<String, Object>> jobsList = (List<Map<String, Object>>) pipelineConfig.get("job");
 
-    Set<String> jobNames = new HashSet<>();
+    final Set<String> jobNames = new HashSet<>();
     for (Map<String, Object> job : jobsList) {
       jobNames.add((String) job.get("name"));
     }
 
     // Convert jobs into adjacency list (Graph representation)
-    Map<String, List<String>> jobDependencies = new HashMap<>();
+    final Map<String, List<String>> jobDependencies = new HashMap<>();
     for (Map<String, Object> job : jobsList) {
-      String jobName = (String) job.get("name");
+      final String jobName = (String) job.get("name");
       jobDependencies.putIfAbsent(jobName, new ArrayList<>());
 
       if (job.containsKey("needs")) {
-        List<String> needsList = (List<String>) job.get("needs");
+        final List<String> needsList = (List<String>) job.get("needs");
         for (String dep : needsList) {
           if (!jobNames.contains(dep)) {
             System.err.println("Missing dependency detected: " + dep + " for job " + jobName);
@@ -95,8 +95,8 @@ public class PipelineExecutionOrderGenerator {
 
     // Extract jobs and dependencies
     for (Map<String, Object> job : jobsList) {
-      String jobName = (String) job.get("name");
-      String stage = (String) job.get("stage");
+      final String jobName = (String) job.get("name");
+      final String stage = (String) job.get("stage");
 
       if (!executionOrder.containsKey(stage)) {
         throw new IllegalArgumentException("Invalid job stage: " + stage);
@@ -105,7 +105,7 @@ public class PipelineExecutionOrderGenerator {
       executionOrder.get(stage).put(jobName, new LinkedHashMap<>());
 
       if (job.containsKey("needs")) {
-        List<String> neededJobs = (List<String>) job.get("needs");
+        final List<String> neededJobs = (List<String>) job.get("needs");
         dependencies.put(jobName, neededJobs);
       }
     }
