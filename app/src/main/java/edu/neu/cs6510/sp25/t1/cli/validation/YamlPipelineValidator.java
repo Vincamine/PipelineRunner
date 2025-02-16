@@ -76,18 +76,25 @@ public class YamlPipelineValidator {
           .filter(String.class::isInstance)
           .map(String.class::cast)
           .toList();
+      // Try to get jobs from either 'job' or 'jobs' key
+      Object jobsObj = data.get("jobs");  // First try 'jobs'
+      String jobKey = "jobs";
+      if (jobsObj == null) {  // If 'jobs' not found, try 'job'
+        jobsObj = data.get("job");
+        jobKey = "job";
+      }
 
-      // Extract 'job' section
+      // Use dynamic jobKey for location
       final Location jobsLocation = ErrorHandler.createLocation(
           filePath,
-          locations.get("job"),
-          "job"
+          locations.get(jobKey),
+          jobKey
       );
-      final Object jobsObj = data.get("job");
+
       if (!(jobsObj instanceof List<?> rawJobs)) {
         System.err.println(ErrorHandler.formatTypeError(
             jobsLocation,
-            "job",
+            jobKey,
             jobsObj,
             List.class
         ));
@@ -111,8 +118,8 @@ public class YamlPipelineValidator {
         return false;
       }
 
-      // Validate dependencies
-      final Mark dependencyMark = locations.get("job");
+      // Use the correct jobKey for dependency mark
+      final Mark dependencyMark = locations.get(jobKey);
       final DependencyValidator dependencyValidator = new DependencyValidator(jobDependencies,
           dependencyMark, filePath);
       return dependencyValidator.validateDependencies();
@@ -126,7 +133,6 @@ public class YamlPipelineValidator {
       return false;
     }
   }
-
 
   /**
    * Extracts and validates job dependencies from the job definitions.
