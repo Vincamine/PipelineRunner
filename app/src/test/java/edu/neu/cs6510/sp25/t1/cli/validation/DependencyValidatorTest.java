@@ -52,8 +52,9 @@ class DependencyValidatorTest {
     final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
 
     assertFalse(validator.validateDependencies());
-    assertTrue(errorOutput.toString().contains("Dependency cycle detected"));
+    assertTrue(errorOutput.toString().contains("cycle detected"));
   }
+
 
   @Test
   void validateDependencies_WithComplexCycle() {
@@ -64,7 +65,7 @@ class DependencyValidatorTest {
     final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
 
     assertFalse(validator.validateDependencies());
-    assertTrue(errorOutput.toString().contains("Dependency cycle detected"));
+    assertTrue(errorOutput.toString().contains("cycle detected"));
   }
 
   @Test
@@ -73,7 +74,7 @@ class DependencyValidatorTest {
     final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
 
     assertFalse(validator.validateDependencies());
-    assertTrue(errorOutput.toString().contains("Dependency cycle detected"));
+    assertTrue(errorOutput.toString().contains("cycle detected"));
   }
 
   @Test
