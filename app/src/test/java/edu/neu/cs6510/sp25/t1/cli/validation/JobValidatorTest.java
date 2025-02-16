@@ -104,6 +104,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 
 class JobValidatorTest {
+
   private JobValidator validator;
   private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
   private final PrintStream originalErr = System.err;
@@ -121,11 +122,12 @@ class JobValidatorTest {
     final YamlLoadResult result = YamlLoader.loadYamlWithLocations(yamlPath.toString());
 
     @SuppressWarnings("unchecked")
-    List<String> stages = (List<String>) ((Map<String, Object>)result.getData().get("pipeline")).get("stages");
+    final List<String> stages = (List<String>) ((Map<String, Object>) result.getData()
+        .get("pipeline")).get("stages");
     validator = new JobValidator(stages);
 
     @SuppressWarnings("unchecked")
-    List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
+    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
 
     assertTrue(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
     assertEquals("", errContent.toString());
@@ -137,11 +139,12 @@ class JobValidatorTest {
     final YamlLoadResult result = YamlLoader.loadYamlWithLocations(yamlPath.toString());
 
     @SuppressWarnings("unchecked")
-    List<String> stages = (List<String>) ((Map<String, Object>)result.getData().get("pipeline")).get("stages");
+    final List<String> stages = (List<String>) ((Map<String, Object>) result.getData()
+        .get("pipeline")).get("stages");
     validator = new JobValidator(stages);
 
     @SuppressWarnings("unchecked")
-    List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
+    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
 
     assertFalse(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
     assertTrue(errContent.toString().contains("Duplicate job name"));
@@ -153,11 +156,12 @@ class JobValidatorTest {
     final YamlLoadResult result = YamlLoader.loadYamlWithLocations(yamlPath.toString());
 
     @SuppressWarnings("unchecked")
-    List<String> stages = (List<String>) ((Map<String, Object>)result.getData().get("pipeline")).get("stages");
+    final List<String> stages = (List<String>) ((Map<String, Object>) result.getData()
+        .get("pipeline")).get("stages");
     validator = new JobValidator(stages);
 
     @SuppressWarnings("unchecked")
-    List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
+    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
 
     assertFalse(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
     assertTrue(errContent.toString().contains("non-existent stage"));
@@ -169,11 +173,12 @@ class JobValidatorTest {
     final YamlLoadResult result = YamlLoader.loadYamlWithLocations(yamlPath.toString());
 
     @SuppressWarnings("unchecked")
-    List<String> stages = (List<String>) ((Map<String, Object>)result.getData().get("pipeline")).get("stages");
+    final List<String> stages = (List<String>) ((Map<String, Object>) result.getData()
+        .get("pipeline")).get("stages");
     validator = new JobValidator(stages);
 
     @SuppressWarnings("unchecked")
-    List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
+    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
 
     assertFalse(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
     System.out.println(errContent.toString());
