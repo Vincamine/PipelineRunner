@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.cli.util;
 
+//import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler.Location;
 import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
 
 import java.nio.file.Files;
@@ -31,10 +32,11 @@ public class PipelineValidator {
     try {
       // Normalize path for consistent processing
       final Path yamlPath = Paths.get(yamlFilePath).toAbsolutePath().normalize();
+      final String absolutePath = yamlPath.toString();
 
       // Create location for error reporting
       final ErrorHandler.Location location = new ErrorHandler.Location(
-          yamlPath.getFileName().toString(),
+          absolutePath,
           1,
           1,
           "root"
@@ -42,7 +44,7 @@ public class PipelineValidator {
 
       // Check if file exists
       if (!Files.exists(yamlPath)) {
-        System.err.println(ErrorHandler.formatMissingFieldError(
+        System.err.println(ErrorHandler.formatFileError(
             location,
             "YAML file not found: " + yamlFilePath
         ));
@@ -52,7 +54,7 @@ public class PipelineValidator {
       // Verify parent directory is '.pipelines'
       final Path parentDir = yamlPath.getParent();
       if (parentDir == null || !".pipelines".equals(parentDir.getFileName().toString())) {
-        System.err.println(ErrorHandler.formatMissingFieldError(
+        System.err.println(ErrorHandler.formatFileError(
             location,
             "YAML file must be inside the '.pipelines/' folder"
         ));
@@ -73,12 +75,12 @@ public class PipelineValidator {
     } catch (Exception e) {
       // Create error location for the exception
       final ErrorHandler.Location errorLocation = new ErrorHandler.Location(
-          yamlFilePath,
+          Paths.get(yamlFilePath).toAbsolutePath().normalize().toString(),
           1,
           1,
           "error"
       );
-      System.err.println(ErrorHandler.formatMissingFieldError(
+      System.err.println(ErrorHandler.formatFileError(
           errorLocation,
           e.getMessage()
       ));

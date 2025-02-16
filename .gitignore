@@ -92,6 +92,6 @@ logs/
 
 app/bin/
 
-*.sh
+#*.sh
 demo_plan_updated.md
 
