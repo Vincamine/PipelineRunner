@@ -1,5 +1,19 @@
-stages:
-  build:
-    - jobB: { needs: [jobA] }
-  test:
-    - jobC: { needs: [jobB] }
+pipeline:
+  name: "MissingDependency"
+  stages:
+    - build
+    - test
+job:
+  - name: "BuildJob"
+    stage: "build"
+    image: "openjdk:11"
+    script:
+      - "mvn clean install"
+
+  - name: "TestJob"
+    stage: "test"
+    image: "python:3.9"
+    script:
+      - "pytest tests/"
+    needs:
+      - "NonExistentJob"

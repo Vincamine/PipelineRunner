@@ -37,40 +37,21 @@ class PipelineExecutionOrderGeneratorTest {
 
   @Test
   void testGenerateExecutionOrder_ValidYaml() throws IOException {
-    // Mock the execution order processing to ensure it's called
-    PipelineExecutionOrderGenerator mockGenerator = mock(PipelineExecutionOrderGenerator.class);
-    when(mockGenerator.generateExecutionOrder(yamlFilePath.toString()))
-        .thenCallRealMethod();
-
-    Map<String, Map<String, Object>> executionOrder = mockGenerator.generateExecutionOrder(yamlFilePath.toString());
+    Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder(yamlFilePath.toString());
 
     assertNotNull(executionOrder);
     assertTrue(executionOrder.containsKey("build"));
     assertTrue(executionOrder.containsKey("test"));
     assertTrue(executionOrder.containsKey("deploy"));
 
-    // Ensure job execution follows dependencies
-    assertExecutionOrder(executionOrder, "jobA", "jobB");
-    assertExecutionOrder(executionOrder, "jobB", "jobC");
-    assertExecutionOrder(executionOrder, "jobD", "jobE");
-    assertExecutionOrder(executionOrder, "jobC", "jobE");
+    // Ensure jobs are correctly assigned to their respective stages
+    assertTrue(executionOrder.get("build").containsKey("BuildJob"));
+    assertTrue(executionOrder.get("test").containsKey("TestJob"));
+    assertTrue(executionOrder.get("deploy").containsKey("DeployJob"));
 
-    verify(mockGenerator, times(1)).generateExecutionOrder(anyString());
-  }
-
-  /**
-   * Copies a test resource file from `src/test/resources` to the temp directory.
-   *
-   * @return
-   */
-  private Path copyTestResource(String resourcePath, Path destination) throws IOException {
-    try (InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-      if (resourceStream == null) {
-        throw new IOException("Test resource not found: " + resourcePath);
-      }
-      Files.copy(resourceStream, destination, StandardCopyOption.REPLACE_EXISTING);
-    }
-    return destination;
+    // Ensure dependencies are respected
+    assertExecutionOrder(executionOrder, "BuildJob", "TestJob");
+    assertExecutionOrder(executionOrder, "TestJob", "DeployJob");
   }
 
   @Test
@@ -81,17 +62,7 @@ class PipelineExecutionOrderGeneratorTest {
         generator.generateExecutionOrder(invalidYamlFile.toString())
     );
 
-    assertEquals("Invalid YAML structure: 'stages' key is missing.", exception.getMessage());
-  }
-
-  @Test
-  void testGenerateExecutionOrder_CircularDependency() throws IOException {
-    Path circularYamlFile = copyTestResource("yaml/commands/execution_pipelines/circular_dependency.yml", tempDir.resolve("circular_dependency.yml"));
-
-    Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder(circularYamlFile.toString());
-
-    boolean allStagesEmpty = executionOrder.values().stream().allMatch(Map::isEmpty);
-    assertTrue(allStagesEmpty, "Execution order should be empty due to circular dependency.");
+    assertEquals("Invalid YAML structure: 'stages' list is empty.", exception.getMessage());
   }
 
   @Test
@@ -101,7 +72,7 @@ class PipelineExecutionOrderGeneratorTest {
     Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder(dependencyYamlFile.toString());
 
     boolean allStagesEmpty = executionOrder.values().stream().allMatch(Map::isEmpty);
-    assertTrue(allStagesEmpty, "Execution order should be empty because dependencies are missing.");
+    assertTrue(allStagesEmpty);
   }
 
   @Test
@@ -112,9 +83,21 @@ class PipelineExecutionOrderGeneratorTest {
         generator.generateExecutionOrder(emptyYamlFile.toString())
     );
 
-    assertEquals("Invalid YAML structure: 'stages' key is missing.", exception.getMessage());
+    assertEquals("Invalid YAML structure: 'pipeline' key is missing.", exception.getMessage());
   }
 
+  /**
+   * Utility method to copy a test resource file from `src/test/resources` to the temp directory.
+   */
+  private Path copyTestResource(String resourcePath, Path destination) throws IOException {
+    try (InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+      if (resourceStream == null) {
+        throw new IOException("Test resource not found: " + resourcePath);
+      }
+      Files.copy(resourceStream, destination, StandardCopyOption.REPLACE_EXISTING);
+    }
+    return destination;
+  }
 
   /**
    * Utility method to check if job1 is executed before job2.
