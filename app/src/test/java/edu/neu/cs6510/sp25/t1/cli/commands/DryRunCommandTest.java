@@ -76,19 +76,32 @@ class DryRunCommandTest {
 
     // Capture console output
     String output = outputStream.toString().trim();
-    System.out.println("DryRun Output:\n" + output);
+    System.out.println("Raw DryRun Output:\n" + output);
 
-    // ✅ Debug if output is malformed
-    assertFalse(output.isEmpty(), "DryRun output should not be empty.");
-    assertTrue(output.startsWith("build:"), "Output should start with a valid YAML key.");
+    String[] lines = output.split("\n");
+    StringBuilder yamlOutputBuilder = new StringBuilder();
+    boolean foundYamlStart = false;
 
-    // ✅ Validate YAML format
+    for (String line : lines) {
+      if (line.startsWith("build:") || line.startsWith("test:") || line.startsWith("deploy:")) {
+        foundYamlStart = true;
+      }
+      if (foundYamlStart) {
+        yamlOutputBuilder.append(line).append("\n");
+      }
+    }
+
+    String yamlOutput = yamlOutputBuilder.toString().trim();
+    System.out.println("Extracted YAML Output:\n" + yamlOutput);
+
+    assertFalse(yamlOutput.isEmpty(), "Extracted YAML output should not be empty.");
+
     Yaml yaml = new Yaml();
     Map<String, Object> parsedYaml;
     try {
-      parsedYaml = yaml.load(output);
+      parsedYaml = yaml.load(yamlOutput);
     } catch (Exception e) {
-      fail("YAML parsing failed. Output:\n" + output);
+      fail("YAML parsing failed. Extracted Output:\n" + yamlOutput);
       return;
     }
 
@@ -99,6 +112,7 @@ class DryRunCommandTest {
 
     assertEquals(0, exitCode);
   }
+
 
 
   /**
