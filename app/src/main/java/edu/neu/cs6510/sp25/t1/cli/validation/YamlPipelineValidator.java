@@ -76,18 +76,25 @@ public class YamlPipelineValidator {
           .filter(String.class::isInstance)
           .map(String.class::cast)
           .toList();
+      // MODIFIED: Try to get jobs from either 'job' or 'jobs' key
+      Object jobsObj = data.get("jobs");  // First try 'jobs'
+      String jobKey = "jobs";
+      if (jobsObj == null) {  // If 'jobs' not found, try 'job'
+        jobsObj = data.get("job");
+        jobKey = "job";
+      }
 
-      // Extract 'job' section
+      // MODIFIED: Use dynamic jobKey for location
       final Location jobsLocation = ErrorHandler.createLocation(
           filePath,
-          locations.get("job"),
-          "job"
+          locations.get(jobKey),
+          jobKey
       );
-      final Object jobsObj = data.get("job");
+
       if (!(jobsObj instanceof List<?> rawJobs)) {
         System.err.println(ErrorHandler.formatTypeError(
             jobsLocation,
-            "job",
+            jobKey,  // MODIFIED: Use dynamic jobKey in error message
             jobsObj,
             List.class
         ));
@@ -111,8 +118,8 @@ public class YamlPipelineValidator {
         return false;
       }
 
-      // Validate dependencies
-      final Mark dependencyMark = locations.get("job");
+      // MODIFIED: Use the correct jobKey for dependency mark
+      final Mark dependencyMark = locations.get(jobKey);
       final DependencyValidator dependencyValidator = new DependencyValidator(jobDependencies,
           dependencyMark, filePath);
       return dependencyValidator.validateDependencies();
@@ -126,6 +133,56 @@ public class YamlPipelineValidator {
       return false;
     }
   }
+
+//      // Extract 'job' section
+//      final Location jobsLocation = ErrorHandler.createLocation(
+//          filePath,
+//          locations.get("job"),
+//          "job"
+//      );
+//      final Object jobsObj = data.get("job");
+//      if (!(jobsObj instanceof List<?> rawJobs)) {
+//        System.err.println(ErrorHandler.formatTypeError(
+//            jobsLocation,
+//            "job",
+//            jobsObj,
+//            List.class
+//        ));
+//        return false;
+//      }
+//
+//      @SuppressWarnings("unchecked") final List<Map<String, Object>> jobs = rawJobs.stream()
+//          .filter(item -> item instanceof Map)
+//          .map(item -> (Map<String, Object>) item)
+//          .toList();
+//
+//      // Validate jobs
+//      final JobValidator jobValidator = new JobValidator(stages);
+//      if (!jobValidator.validateJobs(jobs, locations, filePath)) {
+//        return false;
+//      }
+//
+//      final Map<String, List<String>> jobDependencies = extractJobDependencies(jobs, locations,
+//          filePath);
+//      if (jobDependencies == null) {
+//        return false;
+//      }
+//
+//      // Validate dependencies
+//      final Mark dependencyMark = locations.get("job");
+//      final DependencyValidator dependencyValidator = new DependencyValidator(jobDependencies,
+//          dependencyMark, filePath);
+//      return dependencyValidator.validateDependencies();
+//
+//    } catch (IOException e) {
+//      final Location errorLocation = new Location(filePath, 1, 1, "file");
+//      System.err.println(ErrorHandler.formatException(
+//          errorLocation,
+//          "Error reading YAML file: " + e.getMessage()
+//      ));
+//      return false;
+//    }
+//  }
 
 
   /**

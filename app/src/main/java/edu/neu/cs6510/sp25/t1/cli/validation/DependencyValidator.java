@@ -172,15 +172,16 @@ public class DependencyValidator {
   }
 
   private void findAllCycles() {
-    final Set<String> visited = new HashSet<>();
-    final Set<String> recursionStack = new HashSet<>();
-    final List<String> currentPath = new ArrayList<>();
+    final Set<String> processedCycles = new HashSet<>();
 
-    // Start DFS from each node to find all possible cycles
-    for (String job : jobDependencies.keySet()) {
-      if (!visited.contains(job)) {
-        detectCycles(job, visited, recursionStack, currentPath, new HashSet<>());
-      }
+    // Start DFS from each job to find all possible cycles
+    // Need to start from each node to ensure we find all unique cycles
+    for (String startJob : jobDependencies.keySet()) {
+      final Set<String> recursionStack = new HashSet<>();
+      final List<String> currentPath = new ArrayList<>();
+      final Set<String> visited = new HashSet<>();
+
+      detectCycles(startJob, visited, recursionStack, currentPath, processedCycles);
     }
   }
 
@@ -189,37 +190,39 @@ public class DependencyValidator {
       Set<String> visited,
       Set<String> recursionStack,
       List<String> currentPath,
-      Set<String> processedCycles) {
-
+      Set<String> processedCycles
+  ) {
+    // If job is in recursion stack, we found a cycle
     if (recursionStack.contains(job)) {
-      // Found a cycle
       final int cycleStart = currentPath.indexOf(job);
       final List<String> cycle = new ArrayList<>(currentPath.subList(cycleStart, currentPath.size()));
 
-      // Create a cycle signature to avoid duplicates
-      final String cycleSignature = createCycleSignature(cycle);
-      if (!processedCycles.contains(cycleSignature)) {
-        detectedCycles.add(new ArrayList<>(cycle));
-        processedCycles.add(cycleSignature);
+      // Create a unique signature for this cycle to avoid duplicates
+      final String signature = createCycleSignature(cycle);
+      if (!processedCycles.contains(signature)) {
+        detectedCycles.add(cycle);
+        processedCycles.add(signature);
       }
       return;
     }
 
+    // If we've visited this node in current DFS path, no need to explore again
     if (visited.contains(job)) {
       return;
     }
 
+    // Add current job to tracking sets and current path
     visited.add(job);
     recursionStack.add(job);
     currentPath.add(job);
 
-    if (jobDependencies.containsKey(job)) {
-      for (String dep : jobDependencies.get(job)) {
-        detectCycles(dep, visited, recursionStack, currentPath, processedCycles);
-      }
+    // Recursively check all dependencies
+    final List<String> dependencies = jobDependencies.getOrDefault(job, Collections.emptyList());
+    for (String dep : dependencies) {
+      detectCycles(dep, visited, recursionStack, currentPath, processedCycles);
     }
 
-    // Backtrack
+    // Backtrack: remove job from recursion stack and current path
     recursionStack.remove(job);
     currentPath.remove(currentPath.size() - 1);
   }
