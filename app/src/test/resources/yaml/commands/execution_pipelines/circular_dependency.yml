@@ -1,0 +1,5 @@
+stages:
+  build:
+    - jobA: { needs: [jobB] }
+  test:
+    - jobB: { needs: [jobA] }

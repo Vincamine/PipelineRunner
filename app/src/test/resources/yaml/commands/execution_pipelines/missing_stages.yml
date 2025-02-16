@@ -1,0 +1,4 @@
+# Missing "stages" key
+pipeline:
+  - jobA: {}
+  - jobB: { needs: [jobA] }

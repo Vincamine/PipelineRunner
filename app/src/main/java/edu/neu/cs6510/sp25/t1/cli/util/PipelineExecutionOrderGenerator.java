@@ -114,6 +114,7 @@ public class PipelineExecutionOrderGenerator {
 
     for (String dependency : dependencies.get(job)) {
       if (!executedJobs.contains(dependency)) {
+        System.err.println("Dependency missing: " + dependency + " for job " + job);
         return false;
       }
     }

@@ -1,0 +1,9 @@
+stages:
+  build:
+    - jobA: {}
+    - jobB: { needs: [jobA] }
+  test:
+    - jobC: { needs: [jobB] }
+    - jobD: {}
+  deploy:
+    - jobE: { needs: [jobC, jobD] }
