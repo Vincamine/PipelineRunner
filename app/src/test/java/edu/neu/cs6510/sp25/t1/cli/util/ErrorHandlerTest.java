@@ -33,7 +33,7 @@ class ErrorHandlerTest {
     final String error = ErrorHandler.formatTypeError(testLocation, "testField", value, expectedType);
 
     assertEquals(
-        String.format("pipeline.yaml:10:22: Wrong type for value '%s' in key 'testField', expected %s but got %s",
+        String.format("pipeline.yaml:10:22: type error, wrong type for value '%s' in key 'testField', expected %s but got %s",
             value, expectedType.getSimpleName(),
             value != null ? value.getClass().getSimpleName() : "null"),
         error
@@ -54,7 +54,7 @@ class ErrorHandlerTest {
     final List<String> cycle = Arrays.asList("job1", "job2", "job3");
     final String error = ErrorHandler.formatCycleError(testLocation, cycle);
     assertEquals(
-        "pipeline.yaml:10:22: Dependency cycle detected: job1 -> job2 -> job3 -> job1",
+        "pipeline.yaml:10:22: dependency error, cycle detected in: job1 -> job2 -> job3 -> job1",
         error
     );
   }
@@ -63,7 +63,7 @@ class ErrorHandlerTest {
   void missingFieldErrorShouldIncludeFieldName() {
     final String error = ErrorHandler.formatMissingFieldError(testLocation, "requiredField");
     assertEquals(
-        "pipeline.yaml:10:22: Missing required field 'requiredField'",
+        "pipeline.yaml:10:22: missing field error, required field 'requiredField' not found",
         error
     );
   }
