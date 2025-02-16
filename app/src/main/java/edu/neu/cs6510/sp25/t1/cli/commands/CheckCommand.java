@@ -22,7 +22,8 @@ public class CheckCommand implements Callable<Boolean> {
   @Option(
       names = {"-f", "--file"},
       description = "Path to the pipeline YAML file",
-      required = true
+      required = false,
+      defaultValue = ".pipelines/pipeline.yaml"
   )
   private String yamlFilePath;
 

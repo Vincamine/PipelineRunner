@@ -1,0 +1,41 @@
+pipeline:
+  name: "Multi-Path Dependencies Pipeline"
+
+  stages:
+    - build
+    - test
+    - docs
+
+jobs:
+  - name: "Build Frontend"
+    dependencies:
+      - "job4"
+      - "job5"
+    script: "npm build"
+
+  - name: "Build Backend"
+    dependencies:
+      - "job1"
+      - "job3"
+    script: "gradle build"
+
+  - name: "Database Migration"
+    dependencies:
+      - "job4"
+      - "job6"
+    script: "flyway migrate"
+
+  - name: "Code Quality Check"
+    dependencies:
+      - "job2"
+    script: "sonar-scanner"
+
+  - name: "Unit Tests"
+    dependencies:
+      - "job6"
+    script: "npm test"
+
+  - name: "Config Validation"
+    dependencies:
+      - "job2"
+    script: "validate-config"
