@@ -1,9 +1,8 @@
 pipeline:
-  name: simple-pipeline
+  name: direct-cycle
   stages:
     - build
     - test
-    - deploy
 job:
   - name: job1
     stage: build
@@ -18,13 +17,5 @@ job:
     image: node:16
     script:
       - echo "job2"
-    needs:
-      - job3
-
-  - name: job3
-    stage: deploy
-    image: node:16
-    script:
-      - echo "job3"
     needs:
       - job1

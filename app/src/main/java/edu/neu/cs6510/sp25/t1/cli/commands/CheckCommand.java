@@ -39,9 +39,6 @@ public class CheckCommand implements Callable<Boolean> {
     // Call instance method instead of static
     final boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);
 
-    if (isValid) {
-      System.out.println("Pipeline validation successful: " + yamlFilePath);
-    }
 
     return isValid;
   }
