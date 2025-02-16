@@ -26,8 +26,7 @@ public class DryRunCommand implements Callable<Boolean> {
       description = "Path to the pipeline YAML file",
       required = true
   )
-
-  private String yamlFilePath;
+  String yamlFilePath;
 
   /**
    * Executes the dry-run command to validate and print execution order.
@@ -38,17 +37,30 @@ public class DryRunCommand implements Callable<Boolean> {
   public Boolean call() {
     final YamlPipelineValidator yamlPipelineValidator = new YamlPipelineValidator();
     final PipelineValidator pipelineValidator = new PipelineValidator(yamlPipelineValidator);
+
     if (!pipelineValidator.validatePipelineFile(yamlFilePath)) {
+      System.err.println("Validation failed. Exiting.");
       return false;
     }
+
     try {
       // Generate execution order
       final PipelineExecutionOrderGenerator executionOrderGenerator = new PipelineExecutionOrderGenerator();
       final Map<String, Map<String, Object>> executionOrder = executionOrderGenerator.generateExecutionOrder(yamlFilePath);
 
-      // Print execution order as YAML
+      // Prevent empty output if execution order fails
+      if (executionOrder.isEmpty()) {
+        System.err.println("No valid execution order. Check for dependency issues.");
+        return false;
+      }
+
       final Yaml yaml = new Yaml();
-      System.out.println(yaml.dump(executionOrder));
+      final String yamlOutput = yaml.dump(executionOrder);
+
+      System.err.flush();
+      System.out.flush();
+
+      System.out.println(yamlOutput);
 
       return true;
     } catch (Exception e) {
@@ -56,4 +68,5 @@ public class DryRunCommand implements Callable<Boolean> {
       return false;
     }
   }
+
 }

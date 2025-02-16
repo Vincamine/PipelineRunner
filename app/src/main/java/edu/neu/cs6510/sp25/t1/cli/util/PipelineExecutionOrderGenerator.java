@@ -25,98 +25,91 @@ public class PipelineExecutionOrderGenerator {
 
     try (FileInputStream inputStream = new FileInputStream(yamlFilePath)) {
       pipelineConfig = yaml.load(inputStream);
+      System.out.println("Parsed YAML: " + pipelineConfig); // Debugging
     }
 
-    if (pipelineConfig == null || !pipelineConfig.containsKey("stages")) {
-      throw new IllegalArgumentException("Invalid YAML structure: 'stages' key is missing.");
+    if (pipelineConfig == null || !pipelineConfig.containsKey("pipeline")) {
+      throw new IllegalArgumentException("Invalid YAML structure: 'pipeline' key is missing.");
     }
 
-    final Map<String, List<Map<String, Object>>> stages = (Map<String, List<Map<String, Object>>>) pipelineConfig.get("stages");
-    return processStages(stages);
-  }
+    final Map<String, Object> pipelineMetadata = (Map<String, Object>) pipelineConfig.get("pipeline");
+    final List<String> stages = (List<String>) pipelineMetadata.get("stages");
 
-  /**
-   * Processes the stages and resolves dependencies while omitting "needs".
-   *
-   * @param stages The pipeline stages from the YAML file
-   * @return A LinkedHashMap maintaining the correct execution order
-   */
-  private Map<String, Map<String, Object>> processStages(Map<String, List<Map<String, Object>>> stages) {
-    final Map<String, List<String>> dependencies = new HashMap<>();
-    final Map<String, List<String>> jobsByStage = new LinkedHashMap<>();
-    final Set<String> processedStages = new HashSet<>();
+    if (stages == null || stages.isEmpty()) {
+      throw new IllegalArgumentException("Invalid YAML structure: 'stages' list is empty.");
+    }
 
-    // Extract jobs and dependencies
-    for (Map.Entry<String, List<Map<String, Object>>> entry : stages.entrySet()) {
-      final String stageName = entry.getKey();
-      final List<String> jobs = new ArrayList<>();
+    if (!pipelineConfig.containsKey("job")) {
+      throw new IllegalArgumentException("Invalid YAML structure: 'job' key is missing.");
+    }
 
-      for (Map<String, Object> jobDef : entry.getValue()) {
-        for (String jobName : jobDef.keySet()) {
-          jobs.add(jobName);
+    final Object jobObj = pipelineConfig.get("job");
+    if (!(jobObj instanceof List)) {
+      throw new IllegalArgumentException("Invalid YAML structure: 'job' should be a list.");
+    }
 
-          // Extract "needs" dependencies
-          if (jobDef.get(jobName) instanceof Map) {
-            final Map<String, Object> jobProps = (Map<String, Object>) jobDef.get(jobName);
-            if (jobProps.containsKey("needs")) {
-              final List<String> neededJobs = (List<String>) jobProps.get("needs");
-              dependencies.put(jobName, neededJobs);
-            }
+    // Extract jobs
+    final List<Map<String, Object>> jobsList = (List<Map<String, Object>>) pipelineConfig.get("job");
+
+    final Set<String> jobNames = new HashSet<>();
+    for (Map<String, Object> job : jobsList) {
+      jobNames.add((String) job.get("name"));
+    }
+
+    // Convert jobs into adjacency list (Graph representation)
+    final Map<String, List<String>> jobDependencies = new HashMap<>();
+    for (Map<String, Object> job : jobsList) {
+      final String jobName = (String) job.get("name");
+      jobDependencies.putIfAbsent(jobName, new ArrayList<>());
+
+      if (job.containsKey("needs")) {
+        final List<String> needsList = (List<String>) job.get("needs");
+        for (String dep : needsList) {
+          if (!jobNames.contains(dep)) {
+            System.err.println("Missing dependency detected: " + dep + " for job " + jobName);
+            return new HashMap<>(); // Return empty execution order
           }
         }
+        jobDependencies.get(jobName).addAll(needsList);
       }
-      jobsByStage.put(stageName, jobs);
     }
 
-    return resolveExecutionOrder(jobsByStage, dependencies);
+    return processJobs(jobsList, stages);
   }
 
   /**
-   * Resolves job execution order while ensuring dependencies are respected.
+   * Processes the jobs and resolves dependencies while omitting "needs".
    *
-   * @param jobsByStage The mapping of stages to jobs
-   * @param dependencies The dependency graph of jobs
-   * @return A LinkedHashMap with execution order (stage -> jobs)
+   * @param jobsList The list of jobs from the YAML file
+   * @param stages The list of stages from the pipeline
+   * @return A LinkedHashMap maintaining the correct execution order
    */
-  private Map<String, Map<String, Object>> resolveExecutionOrder(Map<String, List<String>> jobsByStage, Map<String, List<String>> dependencies) {
+  private Map<String, Map<String, Object>> processJobs(List<Map<String, Object>> jobsList, List<String> stages) {
+    final Map<String, List<String>> dependencies = new HashMap<>();
     final Map<String, Map<String, Object>> executionOrder = new LinkedHashMap<>();
-    final Set<String> executedJobs = new HashSet<>();
 
-    for (Map.Entry<String, List<String>> stageEntry : jobsByStage.entrySet()) {
-      final String stage = stageEntry.getKey();
-      final Map<String, Object> stageJobs = new LinkedHashMap<>();
+    // Initialize stages in execution order
+    for (String stage : stages) {
+      executionOrder.put(stage, new LinkedHashMap<>());
+    }
 
-      for (String job : stageEntry.getValue()) {
-        if (canExecuteJob(job, dependencies, executedJobs)) {
-          stageJobs.put(job, new LinkedHashMap<>());
-          executedJobs.add(job);
-        }
+    // Extract jobs and dependencies
+    for (Map<String, Object> job : jobsList) {
+      final String jobName = (String) job.get("name");
+      final String stage = (String) job.get("stage");
+
+      if (!executionOrder.containsKey(stage)) {
+        throw new IllegalArgumentException("Invalid job stage: " + stage);
       }
 
-      executionOrder.put(stage, stageJobs);
+      executionOrder.get(stage).put(jobName, new LinkedHashMap<>());
+
+      if (job.containsKey("needs")) {
+        final List<String> neededJobs = (List<String>) job.get("needs");
+        dependencies.put(jobName, neededJobs);
+      }
     }
 
     return executionOrder;
-  }
-
-  /**
-   * Checks if a job can be executed based on its dependencies.
-   *
-   * @param job The job to check
-   * @param dependencies The dependency mapping
-   * @param executedJobs The set of already executed jobs
-   * @return true if the job can execute, false otherwise
-   */
-  private boolean canExecuteJob(String job, Map<String, List<String>> dependencies, Set<String> executedJobs) {
-    if (!dependencies.containsKey(job)) {
-      return true;
-    }
-
-    for (String dependency : dependencies.get(job)) {
-      if (!executedJobs.contains(dependency)) {
-        return false;
-      }
-    }
-    return true;
   }
 }
