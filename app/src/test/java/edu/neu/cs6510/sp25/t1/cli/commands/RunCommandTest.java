@@ -46,7 +46,7 @@ class RunCommandTest {
         // Mock HTTP connection
         final HttpURLConnection mockConnection = mock(HttpURLConnection.class);
         final URL mockUrl = new URI("http://localhost:3000/pipelines").toURL();
-        
+
         try (MockedStatic<Paths> mockedPaths = Mockito.mockStatic(Paths.class)) {
             mockedPaths.when(() -> Paths.get(any(String.class)))
                       .thenReturn(configPath);
@@ -58,10 +58,10 @@ class RunCommandTest {
                     .thenReturn(new java.io.ByteArrayInputStream("Success".getBytes()));
                 when(mockConnection.getOutputStream())
                     .thenReturn(new java.io.ByteArrayOutputStream());
-                
+
                 mockedUrl.when(() -> URL.class.cast(any()))
                          .thenReturn(mockUrl);
-                
+
                 runCommand.execute();
 
                 assertTrue(outputStream.toString().contains("Pipeline executed successfully"));
@@ -80,7 +80,7 @@ class RunCommandTest {
         // Mock HTTP connection
         final HttpURLConnection mockConnection = mock(HttpURLConnection.class);
         final URL mockUrl = new URI("http://localhost:3000/pipelines").toURL();
-        
+
         try (MockedStatic<Paths> mockedPaths = Mockito.mockStatic(Paths.class)) {
             mockedPaths.when(() -> Paths.get(any(String.class)))
                       .thenReturn(configPath);
@@ -92,10 +92,10 @@ class RunCommandTest {
                     .thenReturn(new java.io.ByteArrayInputStream("Error occurred".getBytes()));
                 when(mockConnection.getOutputStream())
                     .thenReturn(new java.io.ByteArrayOutputStream());
-                
+
                 mockedUrl.when(() -> URL.class.cast(any()))
                          .thenReturn(mockUrl);
-                
+
                 runCommand.execute();
 
                 assertTrue(outputStream.toString().contains("Pipeline has encountered a hiccup"));
@@ -130,7 +130,7 @@ class RunCommandTest {
             try (MockedStatic<URL> mockedUrl = Mockito.mockStatic(URL.class)) {
                 mockedUrl.when(() -> URL.class.cast(any()))
                          .thenThrow(new IOException("Connection failed"));
-                
+
                 runCommand.execute();
 
                 assertTrue(errorStream.toString().contains("Connection failed"));
@@ -151,12 +151,12 @@ class RunCommandTest {
             final ClassLoader mockLoader = mock(ClassLoader.class);
             when(mockLoader.getResourceAsStream("config.properties"))
                 .thenReturn(null);
-            
+
             mockedLoader.when(() -> ClassLoader.getSystemClassLoader())
                        .thenReturn(mockLoader);
 
             runCommand.execute();
-            
+
             assertTrue(errorStream.toString().contains("unable to find config.properties"));
         }
     }

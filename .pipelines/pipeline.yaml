@@ -1,0 +1,26 @@
+pipeline:
+  name: "example-pipeline"
+  stages:
+    - build
+    - test
+    - deploy
+
+jobs:
+  - name: build-app
+    stage: build
+    image: maven:3.8
+    script:
+      - mvn clean
+      - mvn compile
+
+  - name: run-tests
+    stage: test
+    image: maven:3.8
+    script:
+      - mvn test
+
+  - name: deploy-app
+    stage: deploy
+    image: alpine
+    script:
+      - echo "Deploying application..."
