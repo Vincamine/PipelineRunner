@@ -16,10 +16,8 @@ class YamlLoaderTest {
   @Test
   void testValidYamlFile() throws IOException, URISyntaxException {
     final Path yamlPath = getResourcePath("yaml/loader/valid_pipeline_loader_test.yml");
-    // 使用新的 loadYamlWithLocations 方法
     final YamlLoadResult result = YamlLoader.loadYamlWithLocations(yamlPath.toString());
 
-    // 验证数据内容
     final Map<String, Object> yamlData = result.getData();
     assertNotNull(yamlData);
     assertTrue(yamlData.containsKey("pipeline"));
@@ -29,7 +27,7 @@ class YamlLoaderTest {
     final Map<String, Object> pipeline = (Map<String, Object>) yamlData.get("pipeline");
     assertEquals("TestPipeline", pipeline.get("name"));
 
-    // 验证位置信息
+
     final Map<String, Mark> locations = result.getLocations();
     assertNotNull(locations);
     assertTrue(locations.containsKey("pipeline"));
@@ -38,7 +36,7 @@ class YamlLoaderTest {
 
   @Test
   void testValidYamlFileBackwardCompatibility() throws IOException, URISyntaxException {
-    // 测试旧的 loadYaml 方法
+
     final Path yamlPath = getResourcePath("yaml/loader/valid_pipeline_loader_test.yml");
     final Map<String, Object> yamlData = YamlLoader.loadYaml(yamlPath.toString());
 
