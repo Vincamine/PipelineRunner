@@ -169,7 +169,7 @@ public class ErrorHandler {
                 "pipeline.execute"
         );
 
-        String formattedError = formatException(location, message);
+        final String formattedError = formatException(location, message);
         LOGGER.log(Level.SEVERE, formattedError);
     }
 }

@@ -138,7 +138,7 @@ public class YamlPipelineValidator {
     }
 
     // Validate using existing structure validation logic
-    PipelineStructureValidator structureValidator = new PipelineStructureValidator();
+    final PipelineStructureValidator structureValidator = new PipelineStructureValidator();
     if (!structureValidator.validate(pipelineConfig, new HashMap<>(), "in-memory")) {
       return false;
     }

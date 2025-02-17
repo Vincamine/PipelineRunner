@@ -78,7 +78,7 @@ public class RunCommand implements Runnable {
 
         GitValidator.validateGitRepo();
 
-        String filePath = (pipelineFile != null) ? pipelineFile : ".pipelines/pipeline.yaml";
+        final String filePath = (pipelineFile != null) ? pipelineFile : ".pipelines/pipeline.yaml";
         executePipeline(filePath);
     }
 
@@ -92,7 +92,7 @@ public class RunCommand implements Runnable {
             return;
         }
 
-        String filePath = (pipelineFile != null) ? pipelineFile : ".pipelines/pipeline.yaml";
+        final String filePath = (pipelineFile != null) ? pipelineFile : ".pipelines/pipeline.yaml";
         executePipeline(filePath);
     }
 
@@ -102,21 +102,21 @@ public class RunCommand implements Runnable {
      */
     private void executePipeline(String filePath) {
         try {
-            String pipelineConfig = readPipelineConfig(filePath);
+            final String pipelineConfig = readPipelineConfig(filePath);
             if (pipelineConfig == null) {
                 System.err.println("❌ Error: Unable to read pipeline configuration.");
                 System.exit(1);
                 return;
             }
 
-            YamlPipelineValidator validator = new YamlPipelineValidator();
+            final YamlPipelineValidator validator = new YamlPipelineValidator();
             if (!validator.validatePipeline(filePath)) {
                 System.err.println("❌ Pipeline validation failed.");
                 System.exit(1);
                 return;
             }
 
-            ApiResponse apiResponse = sendRequestToApi(pipelineConfig);
+            final ApiResponse apiResponse = sendRequestToApi(pipelineConfig);
             displayMessage(apiResponse.getStatusCode(), apiResponse.getResponseBody());
 
             if (apiResponse.getStatusCode() != HttpURLConnection.HTTP_OK) {
@@ -136,7 +136,7 @@ public class RunCommand implements Runnable {
      */
     String readPipelineConfig(String filePath) {
         try {
-            Path path = Paths.get(filePath);
+            final Path path = Paths.get(filePath);
             if (!Files.exists(path) || !Files.isRegularFile(path) || !Files.isReadable(path)) {
                 System.err.println("❌ Error: Invalid or unreadable pipeline file: " + filePath);
                 return null;
@@ -154,16 +154,16 @@ public class RunCommand implements Runnable {
      */
     ApiResponse sendRequestToApi(String pipelineConfig) {
         try {
-            URI uri = new URI(getApiUrl());
-            HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
+            final URI uri = new URI(getApiUrl());
+            final HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");
 
             connection.getOutputStream().write(pipelineConfig.getBytes());
 
-            int statusCode = connection.getResponseCode();
-            String responseBody = new String(connection.getInputStream().readAllBytes());
+            final int statusCode = connection.getResponseCode();
+            final String responseBody = new String(connection.getInputStream().readAllBytes());
 
             return new ApiResponse(statusCode, responseBody);
         } catch (URISyntaxException | IOException e) {
@@ -176,7 +176,7 @@ public class RunCommand implements Runnable {
      * @return The API URL as a string.
      */
     private String getApiUrl() {
-        Properties properties = new Properties();
+        final Properties properties = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
             if (input == null) {
                 return "http://localhost:3000/pipelines";

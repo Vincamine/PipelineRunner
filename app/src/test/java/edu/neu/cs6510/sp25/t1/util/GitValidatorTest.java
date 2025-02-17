@@ -21,7 +21,7 @@ class GitValidatorTest {
 
     @Test
     void testIsGitRepositoryFalse(@TempDir Path tempDir) {
-        Path originalWorkingDir = Paths.get(System.getProperty("user.dir")); // Store current working directory
+        final Path originalWorkingDir = Paths.get(System.getProperty("user.dir")); // Store current working directory
         try {
             // Change working directory to the temporary non-git directory
             System.setProperty("user.dir", tempDir.toString());
@@ -36,7 +36,7 @@ class GitValidatorTest {
 
     @Test
     void testValidateGitRepoThrowsException(@TempDir Path tempDir) {
-        Path originalWorkingDir = Paths.get(System.getProperty("user.dir")); // Store current working directory
+        final Path originalWorkingDir = Paths.get(System.getProperty("user.dir")); // Store current working directory
 
         try {
             // Change working directory to the temporary directory (which has no .git)

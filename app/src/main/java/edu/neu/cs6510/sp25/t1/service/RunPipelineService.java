@@ -44,17 +44,17 @@ public class RunPipelineService {
             }
 
             // Extract Stages, Jobs, and Dependencies safely
-            List<String> stages = extractStages(pipelineConfig);
-            Map<String, List<String>> jobs = extractJobs(pipelineConfig);
-            Map<String, List<String>> dependencies = extractDependencies(pipelineConfig);
+            final List<String> stages = extractStages(pipelineConfig);
+            final Map<String, List<String>> jobs = extractJobs(pipelineConfig);
+            final Map<String, List<String>> dependencies = extractDependencies(pipelineConfig);
 
             @SuppressWarnings("unused")
-            PipelineStatus status = new PipelineStatus("pipeline", PipelineState.RUNNING, 0, "Executing pipeline.");
+            final PipelineStatus status = new PipelineStatus("pipeline", PipelineState.RUNNING, 0, "Executing pipeline.");
 
             // Execute pipeline stage by stage
             for (String stage : stages) {
                 System.out.println("🚀 Executing stage: " + stage);
-                boolean stageFailed = executeStage(stage, jobs.getOrDefault(stage, Collections.emptyList()), dependencies);
+                final boolean stageFailed = executeStage(stage, jobs.getOrDefault(stage, Collections.emptyList()), dependencies);
 
                 if (stageFailed) {
                     System.err.println("❌ Pipeline failed at stage: " + stage);
@@ -77,7 +77,7 @@ public class RunPipelineService {
      * @return A list of stage names.
      */
     private List<String> extractStages(Map<String, Object> pipelineConfig) {
-        Object stagesObj = pipelineConfig.get("stages");
+        final Object stagesObj = pipelineConfig.get("stages");
         if (stagesObj instanceof List<?>) {
             return ((List<?>) stagesObj).stream()
                     .filter(String.class::isInstance)
@@ -94,12 +94,12 @@ public class RunPipelineService {
      * @return A map where keys are stage names, and values are lists of job names.
      */
     private Map<String, List<String>> extractJobs(Map<String, Object> pipelineConfig) {
-        Map<String, List<String>> jobs = new HashMap<>();
-        Object jobsObj = pipelineConfig.get("jobs");
+        final Map<String, List<String>> jobs = new HashMap<>();
+        final Object jobsObj = pipelineConfig.get("jobs");
         if (jobsObj instanceof Map<?, ?> jobMap) {
             for (Map.Entry<?, ?> entry : jobMap.entrySet()) {
                 if (entry.getKey() instanceof String && entry.getValue() instanceof List<?>) {
-                    List<String> jobList = ((List<?>) entry.getValue()).stream()
+                    final List<String> jobList = ((List<?>) entry.getValue()).stream()
                             .filter(String.class::isInstance)
                             .map(String.class::cast)
                             .toList();
@@ -119,12 +119,12 @@ public class RunPipelineService {
      * @return A map where keys are job names, and values are lists of dependent job names.
      */
     private Map<String, List<String>> extractDependencies(Map<String, Object> pipelineConfig) {
-        Map<String, List<String>> dependencies = new HashMap<>();
-        Object dependenciesObj = pipelineConfig.get("dependencies");
+        final Map<String, List<String>> dependencies = new HashMap<>();
+        final Object dependenciesObj = pipelineConfig.get("dependencies");
         if (dependenciesObj instanceof Map<?, ?> dependencyMap) {
             for (Map.Entry<?, ?> entry : dependencyMap.entrySet()) {
                 if (entry.getKey() instanceof String && entry.getValue() instanceof List<?>) {
-                    List<String> depList = ((List<?>) entry.getValue()).stream()
+                    final List<String> depList = ((List<?>) entry.getValue()).stream()
                             .filter(String.class::isInstance)
                             .map(String.class::cast)
                             .toList();
@@ -146,15 +146,15 @@ public class RunPipelineService {
      * @return {@code true} if any job fails; otherwise, {@code false}.
      */
     private boolean executeStage(String stage, List<String> jobs, Map<String, List<String>> dependencies) {
-        Set<String> completedJobs = new HashSet<>();
-        Queue<String> jobQueue = new LinkedList<>(jobs);
+        final Set<String> completedJobs = new HashSet<>();
+        final Queue<String> jobQueue = new LinkedList<>(jobs);
 
         while (!jobQueue.isEmpty()) {
-            String job = jobQueue.poll();
+            final String job = jobQueue.poll();
 
             // Ensure dependencies are met before running job
             if (dependencies.containsKey(job)) {
-                boolean unmetDependency = dependencies.get(job).stream().anyMatch(dep -> !completedJobs.contains(dep));
+                final boolean unmetDependency = dependencies.get(job).stream().anyMatch(dep -> !completedJobs.contains(dep));
                 if (unmetDependency) {
                     jobQueue.offer(job); // Requeue job for later execution
                     continue;
@@ -162,7 +162,7 @@ public class RunPipelineService {
             }
 
             // Simulate job execution (Replace with actual execution logic)
-            boolean jobFailed = simulateJobExecution(job);
+            final boolean jobFailed = simulateJobExecution(job);
 
             if (jobFailed) {
                 return true; // If a job fails, return failure immediately

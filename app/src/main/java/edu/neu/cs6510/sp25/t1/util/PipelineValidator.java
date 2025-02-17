@@ -45,7 +45,7 @@ public class PipelineValidator {
                 return false;
             }
 
-            boolean isValid = yamlPipelineValidator.validatePipeline(yamlPath.toString());
+            final boolean isValid = yamlPipelineValidator.validatePipeline(yamlPath.toString());
 
             if (!isValid) {
                 System.err.println("❌ Pipeline validation failed.");
