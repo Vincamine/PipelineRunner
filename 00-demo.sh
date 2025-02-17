@@ -1,7 +1,7 @@
 # Generate Jar
 ./gradlew clean build
 ./gradlew clean shadowJar
-##
+#
 
 # Check Installation
 java -jar app/build/libs/ci-tool.jar --help
@@ -36,5 +36,8 @@ java -jar app/build/libs/ci-tool.jar check -f .pipelines/05-cycle-self.yaml
 java -jar app/build/libs/ci-tool.jar check -f .pipelines/06-cycle-complex.yaml
 java -jar app/build/libs/ci-tool.jar check -f .pipelines/07-multi-path-dependencies.yaml
 
+ Run Command
+java -jar app/build/libs/ci-tool.jar dry-run
 
-#java -jar app/build/libs/ci-tool.jar run .pipelines/00-valid-file.yaml
+# QUESTION: Do we have -f?
+java -jar app/build/libs/ci-tool.jar run -f .pipelines/00-valid-file.yaml

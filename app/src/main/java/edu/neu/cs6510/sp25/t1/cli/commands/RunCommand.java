@@ -125,3 +125,213 @@ public class RunCommand implements Runnable {
     }
   }
 }
+
+
+
+//package edu.neu.cs6510.sp25.t1.cli.commands;
+//
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import edu.neu.cs6510.sp25.t1.cli.model.PipelineState;
+//import edu.neu.cs6510.sp25.t1.cli.model.PipelineStatus;
+//import edu.neu.cs6510.sp25.t1.cli.service.StatusService;
+//import edu.neu.cs6510.sp25.t1.cli.util.ExecutionErrorHandler;
+//import java.io.IOException;
+//import java.io.InputStream;
+//import java.util.Properties;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
+////import java.net.URISyntaxException;
+//import java.net.HttpURLConnection;
+//import java.net.URL;
+//import java.net.URI;
+//import org.yaml.snakeyaml.Yaml;
+//import picocli.CommandLine.Command;
+//import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
+//import picocli.CommandLine.Option;
+//
+///**
+// * Command to trigger CI/CD pipeline execution with error handling.
+// */
+//@Command(
+//    name = "run",
+//    description = "Trigger CI/CD pipeline execution",
+//    mixinStandardHelpOptions = true
+//)
+//public class RunCommand implements Runnable {
+//  private static final int STATUS_CHECK_INTERVAL = 5000; // 5 seconds
+//
+//  @Option(
+//      names = {"-f", "--file"},
+//      description = "Path to the pipeline YAML file",
+//      defaultValue = ".pipelines/pipeline.yaml"
+//  )
+//  private String yamlFilePath;
+//
+//  private final StatusService statusService;
+//  private final ExecutionErrorHandler errorHandler;
+//  private final ObjectMapper objectMapper;
+//
+//  public RunCommand() {
+//    this.statusService = new StatusService();
+//    this.errorHandler = new ExecutionErrorHandler();
+//    this.objectMapper = new ObjectMapper();
+//  }
+//
+//  @Override
+//  public void run() {
+//    try {
+//      System.out.println("Starting CI/CD pipeline execution...");
+//      executePipeline();
+//    } catch (Exception e) {
+//      errorHandler.handleStartupError(e);
+//    }
+//  }
+//
+//  private void executePipeline() {
+//    try {
+//      final String config = readConfiguration();
+//      if (config == null) {
+//        return;
+//      }
+//
+//      final String pipelineId = startPipeline(config);
+//      if (pipelineId == null) {
+//        return;
+//      }
+//
+//      monitorExecution(pipelineId);
+//
+//    } catch (Exception e) {
+//      errorHandler.handleStartupError(e);
+//    }
+//  }
+//
+//  private String readConfiguration() {
+//    try {
+//      final String yamlContent = new String(Files.readAllBytes(Paths.get(yamlFilePath)));
+//
+//      final YamlPipelineValidator validator = new YamlPipelineValidator();
+//      if (!validator.validatePipeline(yamlFilePath)) {
+//        errorHandler.handleConfigError(yamlFilePath, "Configuration validation failed");
+//        return null;
+//      }
+//
+//      final Yaml yaml = new Yaml();
+//      final Object obj = yaml.load(yamlContent);
+//      return objectMapper.writeValueAsString(obj);
+//
+//    } catch (IOException e) {
+//      errorHandler.handleConfigError(yamlFilePath, "Failed to read configuration: " + e.getMessage());
+//      return null;
+//    }
+//  }
+//
+//  private String startPipeline(String config) {
+//    try {
+//      final ApiResponse response = sendRequestToApi(config);
+//
+//      if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+//        final String pipelineId = extractPipelineId(response.getResponseBody());
+//        System.out.println("Pipeline started successfully with ID: " + pipelineId);
+//        return pipelineId;
+//      }
+//
+//      errorHandler.handleApiError(response);
+//      return null;
+//
+//    } catch (Exception e) {
+//      errorHandler.handleStartupError(e);
+//      return null;
+//    }
+//  }
+//
+//  private void monitorExecution(String pipelineId) {
+//    PipelineStatus lastStatus = null;
+//
+//    while (true) {
+//      try {
+//        final PipelineStatus status = statusService.getPipelineStatus(pipelineId);
+//
+//        if (shouldDisplayStatus(lastStatus, status)) {
+//          displayExecutionStatus(status);
+//          lastStatus = status;
+//        }
+//
+//        if (!errorHandler.handlePipelineStatus(status)) {
+//          break;
+//        }
+//
+//        if (isExecutionComplete(status)) {
+//          break;
+//        }
+//
+//        Thread.sleep(STATUS_CHECK_INTERVAL);
+//
+//      } catch (InterruptedException e) {
+//        Thread.currentThread().interrupt();
+//        errorHandler.handleMonitoringError(e);
+//        break;
+//      } catch (Exception e) {
+//        errorHandler.handleMonitoringError(e);
+//      }
+//    }
+//  }
+//
+//  private boolean shouldDisplayStatus(PipelineStatus lastStatus, PipelineStatus currentStatus) {
+//    if (lastStatus == null) {
+//      return true;
+//    }
+//
+//    return !lastStatus.getState().equals(currentStatus.getState()) ||
+//        !lastStatus.getCurrentStage().equals(currentStatus.getCurrentStage()) ||
+//        lastStatus.getProgress() != currentStatus.getProgress();
+//  }
+//
+//  private void displayExecutionStatus(PipelineStatus status) {
+//    System.out.printf("Status: %s | Stage: %s | Progress: %d%%%n",
+//        status.getState(),
+//        status.getCurrentStage(),
+//        status.getProgress());
+//  }
+//
+//  private boolean isExecutionComplete(PipelineStatus status) {
+//    return status.getState() == PipelineState.SUCCEEDED ||
+//        status.getState() == PipelineState.FAILED ||
+//        status.getState() == PipelineState.CANCELLED;
+//  }
+//
+//  private ApiResponse sendRequestToApi(String pipelineConfig) throws Exception {
+//    final URI uri = new URI(getApiUrl());
+//    final URL url = uri.toURL();
+//    final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//    connection.setRequestMethod("POST");
+//    connection.setDoOutput(true);
+//    connection.setRequestProperty("Content-Type", "application/json");
+//
+//    connection.getOutputStream().write(pipelineConfig.getBytes());
+//
+//    final int statusCode = connection.getResponseCode();
+//    final String responseBody = new String(connection.getInputStream().readAllBytes());
+//
+//    return new ApiResponse(statusCode, responseBody);
+//  }
+//
+//  private String getApiUrl() {
+//    final Properties properties = new Properties();
+//    try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
+//      if (input == null) {
+//        System.err.println("Unable to find config.properties");
+//        return "http://localhost:3000/pipelines";
+//      }
+//      properties.load(input);
+//      return properties.getProperty("api.url");
+//    } catch (IOException ex) {
+//      ex.printStackTrace();
+//      return "http://localhost:3000/pipelines";
+//    }
+//  }
+//
+//  private String extractPipelineId(String responseBody) {
+//    return responseBody.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+//  }
+//}
