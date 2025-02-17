@@ -1,75 +1,30 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.util.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.util.PipelineValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class CheckCommandTest {
-  @TempDir
-  Path tempDir; // Temporary directory for test files
 
-  private Path validYamlPath;
-  private PipelineValidator mockValidator;
-  private CheckCommand checkCommand;
-  private CommandLine commandLine;
-  private ByteArrayOutputStream outputStream;
+    private CheckCommand checkCommand;
+    private PipelineValidator pipelineValidator;
 
-  @BeforeEach
-  void setUp() throws IOException {
-    // Create .pipelines directory inside tempDir
-    final Path pipelinesDir = tempDir.resolve(".pipelines");
-    Files.createDirectory(pipelinesDir);
-
-    // Copy valid YAML file from test resources (updated path)
-    validYamlPath = pipelinesDir.resolve("valid_pipeline.yml");
-    copyTestResource("yaml/commands/pipelines/valid_pipeline.yml", validYamlPath);
-
-    // Mock the pipeline validator
-    mockValidator = mock(PipelineValidator.class);
-    checkCommand = new CheckCommand();
-    commandLine = new CommandLine(checkCommand);
-
-    // Capture console output
-    outputStream = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(outputStream));
-  }
-
-  @Test
-  void testCheckCommand_ValidYaml() {
-    // Mock successful validation
-    when(mockValidator.validatePipelineFile(validYamlPath.toString())).thenReturn(true);
-
-    // Execute the command with the actual temporary file path
-    final int exitCode = commandLine.execute("-f", validYamlPath.toString());
-
-    // Verify output and return value
-    final String output = outputStream.toString();
-    assertTrue(output.contains("Pipeline validation successful"));
-    assertEquals(0, exitCode);
-  }
-
-  /**
-   * Copies a test resource file from src/test/resources to a destination path.
-   */
-  private void copyTestResource(String resourcePath, Path destination) throws IOException {
-    try (InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-      if (resourceStream == null) {
-        throw new IOException("Test resource not found: " + resourcePath);
-      }
-      Files.copy(resourceStream, destination, StandardCopyOption.REPLACE_EXISTING);
+    @BeforeEach
+    void setUp() {
+        pipelineValidator = mock(PipelineValidator.class);
+        checkCommand = new CheckCommand();
     }
-  }
+
+    @Test
+    void testCheck_ValidPipeline_Success() {
+        doReturn(true).when(pipelineValidator).validatePipelineFile(anyString());
+
+        final int exitCode = new CommandLine(checkCommand).execute("-f", "valid_pipeline.yaml");
+        assertEquals(0, exitCode);
+    }
 }

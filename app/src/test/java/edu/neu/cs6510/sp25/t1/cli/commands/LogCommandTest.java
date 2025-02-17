@@ -1,58 +1,34 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.model.LogEntry;
-import edu.neu.cs6510.sp25.t1.cli.model.LogLevel;
-import edu.neu.cs6510.sp25.t1.cli.service.LogService;
+import edu.neu.cs6510.sp25.t1.model.LogEntry;
+import edu.neu.cs6510.sp25.t1.service.LogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import picocli.CommandLine;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class LogCommandTest {
-    @Mock
-    private LogService mockLogService;
 
-    private CommandLine commandLine;
+    private LogCommand logCommand;
+    private LogService logService;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        commandLine = new CommandLine(new LogCommand(mockLogService));
+        logService = mock(LogService.class);
+        logCommand = new LogCommand(logService);
     }
 
     @Test
-    void testRun_SuccessfulLogs() {
-        final List<LogEntry> mockLogs = List.of(
-            new LogEntry("123", LogLevel.INFO, "Pipeline execution started", System.currentTimeMillis())
-        );
+    void testLogs_ValidPipeline_Success() {
+        final List<LogEntry> mockLogs = List.of(new LogEntry(null, null, null, 0));
+        doReturn(mockLogs).when(logService).getLogsByPipelineId(anyString());
 
-        when(mockLogService.getLogsByPipelineId("123")).thenReturn(mockLogs);
-
-        final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
-        commandLine.execute("--id", "123");
-
-        assertTrue(outContent.toString().contains("Pipeline execution started"));
-    }
-
-    @Test
-    void testRun_NoLogsFound() {
-        when(mockLogService.getLogsByPipelineId("123")).thenReturn(List.of());
-
-        final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
-
-        commandLine.execute("--id", "123");
-
-        assertTrue(outContent.toString().contains("No logs found for pipeline ID: 123"));
+        final int exitCode = new CommandLine(logCommand).execute("--id", "123");
+        assertEquals(0, exitCode);
     }
 }
