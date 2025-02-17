@@ -31,13 +31,12 @@ class ErrorHandlerTest {
   @MethodSource("provideTypeErrorTestCases")
   void typeErrorShouldFormatCorrectly(Object value, Class<?> expectedType) {
     final String error = ErrorHandler.formatTypeError(testLocation, "testField", value, expectedType);
-
     assertEquals(
-        String.format("pipeline.yaml:10:22: type error, wrong type for value '%s' in key 'testField', expected %s but got %s",
-            value, expectedType.getSimpleName(),
-            value != null ? value.getClass().getSimpleName() : "null"),
-        error
-    );
+        String.format("pipeline.yaml:10:22: Type Error - Expected type '%s' for 'testField', but got '%s' (%s)",
+            expectedType.getSimpleName(),
+            value != null ? value.getClass().getSimpleName() : "null",
+            value),
+        error);
   }
 
   private static Stream<Arguments> provideTypeErrorTestCases() {
@@ -45,8 +44,7 @@ class ErrorHandlerTest {
         Arguments.of(123, String.class),
         Arguments.of("test", Integer.class),
         Arguments.of(null, String.class),
-        Arguments.of(true, String.class)
-    );
+        Arguments.of(true, String.class));
   }
 
   @Test
@@ -54,18 +52,16 @@ class ErrorHandlerTest {
     final List<String> cycle = Arrays.asList("job1", "job2", "job3");
     final String error = ErrorHandler.formatCycleError(testLocation, cycle);
     assertEquals(
-        "pipeline.yaml:10:22: dependency error, cycle detected in: job1 -> job2 -> job3 -> job1",
-        error
-    );
+        "pipeline.yaml:10:22: Dependency Error - Dependency cycle detected: job1 -> job2 -> job3 -> job1",
+        error);
   }
 
   @Test
   void missingFieldErrorShouldIncludeFieldName() {
     final String error = ErrorHandler.formatMissingFieldError(testLocation, "requiredField");
     assertEquals(
-        "pipeline.yaml:10:22: missing field error, required field 'requiredField' not found",
-        error
-    );
+        "pipeline.yaml:10:22: Missing Field Error - Required field 'requiredField' is missing.",
+        error);
   }
 
   @Test
@@ -80,7 +76,7 @@ class ErrorHandlerTest {
 
   @Test
   void createLocationShouldConvertMarkCoordinates() {
-    final Mark mark = new Mark("test", 0, 5, 10, new int[]{}, 0);
+    final Mark mark = new Mark("test", 0, 5, 10, new int[] {}, 0);
     final ErrorHandler.Location location = ErrorHandler.createLocation("pipeline.yaml", mark, "test.path");
     assertEquals("pipeline.yaml", location.getFilename());
     assertEquals(6, location.getLine());

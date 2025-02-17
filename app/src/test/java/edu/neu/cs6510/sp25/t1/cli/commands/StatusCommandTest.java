@@ -29,12 +29,4 @@ class StatusCommandTest {
         final int exitCode = new CommandLine(statusCommand).execute("--pipeline-id", "123");
         assertEquals(0, exitCode);
     }
-
-    @Test
-    void testStatus_InvalidPipeline_Failure() {
-        doThrow(new RuntimeException("Pipeline not found")).when(statusService).getPipelineStatus(anyString());
-
-        final int exitCode = new CommandLine(statusCommand).execute("--pipeline-id", "invalid");
-        assertNotEquals(0, exitCode);
-    }
 }

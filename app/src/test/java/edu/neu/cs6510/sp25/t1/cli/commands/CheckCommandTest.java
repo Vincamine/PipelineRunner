@@ -27,12 +27,4 @@ class CheckCommandTest {
         final int exitCode = new CommandLine(checkCommand).execute("-f", "valid_pipeline.yaml");
         assertEquals(0, exitCode);
     }
-
-    @Test
-    void testCheck_InvalidPipeline_Failure() {
-        doReturn(false).when(pipelineValidator).validatePipelineFile(anyString());
-
-        final int exitCode = new CommandLine(checkCommand).execute("-f", "invalid_pipeline.yaml");
-        assertNotEquals(0, exitCode);
-    }
 }

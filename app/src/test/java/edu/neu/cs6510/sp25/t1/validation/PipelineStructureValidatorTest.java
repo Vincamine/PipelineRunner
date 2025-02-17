@@ -119,7 +119,7 @@ class PipelineStructureValidatorTest {
     final Map<String, Object> pipeline = (Map<String, Object>) validPipelineData.get("pipeline");
     pipeline.put("stages", Collections.emptyList());
     assertFalse(validator.validate(validPipelineData, locations, TEST_FILENAME));
-    assertTrue(errContent.toString().contains("At least one stage"));
+    assertTrue(errContent.toString().contains("at least one stage"));
   }
 
   /**

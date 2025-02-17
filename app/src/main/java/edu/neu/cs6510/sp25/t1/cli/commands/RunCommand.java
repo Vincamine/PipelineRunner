@@ -4,18 +4,18 @@ import edu.neu.cs6510.sp25.t1.model.ApiResponse;
 import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 import edu.neu.cs6510.sp25.t1.util.GitValidator;
 import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
-
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 
 /**
  * CLI command to trigger a CI/CD pipeline execution.
@@ -47,8 +47,10 @@ public class RunCommand implements Runnable {
         try {
             System.out.println("🚀 CI/CD pipeline execution started.");
 
+            // Validate mutually exclusive options
             if (pipeline != null && pipelineFile != null) {
                 System.err.println("❌ Error: --pipeline and --file cannot be used together.");
+                System.exit(1);
                 return;
             }
 
@@ -59,20 +61,34 @@ public class RunCommand implements Runnable {
             }
         } catch (Exception e) {
             ErrorHandler.reportError(e.getMessage());
+            System.exit(1);
         }
     }
 
+    /**
+     * Executes the pipeline locally.
+     */
     private void executeLocalRun() {
         System.out.println("🔍 Validating local repository...");
+        if (!GitValidator.isGitRepository()) {
+            System.err.println("❌ Error: Not a valid Git repository.");
+            System.exit(1);
+            return;
+        }
+
         GitValidator.validateGitRepo();
 
         String filePath = (pipelineFile != null) ? pipelineFile : ".pipelines/pipeline.yaml";
         executePipeline(filePath);
     }
 
+    /**
+     * Executes the pipeline for a remote repository.
+     */
     private void executeRemoteRun() {
         if (!repo.startsWith("https://")) {
             System.err.println("❌ Error: Remote repo URL must start with 'https://'.");
+            System.exit(1);
             return;
         }
 
@@ -80,36 +96,62 @@ public class RunCommand implements Runnable {
         executePipeline(filePath);
     }
 
+    /**
+     * Executes the pipeline, validating the YAML configuration and sending an API request.
+     * @param filePath The path to the pipeline YAML file.
+     */
     private void executePipeline(String filePath) {
         try {
             String pipelineConfig = readPipelineConfig(filePath);
             if (pipelineConfig == null) {
                 System.err.println("❌ Error: Unable to read pipeline configuration.");
+                System.exit(1);
                 return;
             }
 
             YamlPipelineValidator validator = new YamlPipelineValidator();
             if (!validator.validatePipeline(filePath)) {
                 System.err.println("❌ Pipeline validation failed.");
+                System.exit(1);
                 return;
             }
 
             ApiResponse apiResponse = sendRequestToApi(pipelineConfig);
             displayMessage(apiResponse.getStatusCode(), apiResponse.getResponseBody());
 
+            if (apiResponse.getStatusCode() != HttpURLConnection.HTTP_OK) {
+                System.exit(1);
+            }
+
         } catch (Exception e) {
             ErrorHandler.reportError(e.getMessage());
+            System.exit(1);
         }
     }
 
+    /**
+     * Reads the pipeline YAML configuration file.
+     * @param filePath Path to the pipeline file.
+     * @return The file contents as a string, or null if an error occurs.
+     */
     String readPipelineConfig(String filePath) {
         try {
-            return new String(Files.readAllBytes(Paths.get(filePath)));
+            Path path = Paths.get(filePath);
+            if (!Files.exists(path) || !Files.isRegularFile(path) || !Files.isReadable(path)) {
+                System.err.println("❌ Error: Invalid or unreadable pipeline file: " + filePath);
+                return null;
+            }
+            return Files.readString(path);
         } catch (IOException e) {
             return null;
         }
     }
 
+    /**
+     * Sends a request to the API to trigger the pipeline.
+     * @param pipelineConfig The pipeline configuration as a JSON string.
+     * @return The API response.
+     */
     ApiResponse sendRequestToApi(String pipelineConfig) {
         try {
             URI uri = new URI(getApiUrl());
@@ -129,6 +171,10 @@ public class RunCommand implements Runnable {
         }
     }
 
+    /**
+     * Retrieves the API URL from the configuration properties file.
+     * @return The API URL as a string.
+     */
     private String getApiUrl() {
         Properties properties = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
@@ -142,6 +188,11 @@ public class RunCommand implements Runnable {
         }
     }
 
+    /**
+     * Displays the response message after pipeline execution.
+     * @param response The HTTP response status code.
+     * @param responseBody The response body.
+     */
     private void displayMessage(int response, String responseBody) {
         if (response == HttpURLConnection.HTTP_OK) {
             System.out.println("✅ Pipeline executed successfully!");

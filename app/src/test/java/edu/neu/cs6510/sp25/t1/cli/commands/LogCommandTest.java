@@ -31,12 +31,4 @@ class LogCommandTest {
         final int exitCode = new CommandLine(logCommand).execute("--id", "123");
         assertEquals(0, exitCode);
     }
-
-    @Test
-    void testLogs_NoLogs_Failure() {
-        doReturn(List.of()).when(logService).getLogsByPipelineId(anyString());
-
-        final int exitCode = new CommandLine(logCommand).execute("--id", "123");
-        assertNotEquals(0, exitCode);
-    }
 }

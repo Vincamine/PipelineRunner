@@ -112,7 +112,7 @@ class JobValidatorTest {
     assertFalse(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
 
     // Verify correct error message
-    assertTrue(errContent.toString().contains("missing field error"));
+    assertTrue(errContent.toString().contains("Missing Field Error"));
   }
 
   @Test
@@ -130,7 +130,6 @@ class JobValidatorTest {
     final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
 
     assertFalse(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
-
     // Check if the error message mentions the script being empty
     assertTrue(errContent.toString().contains("must have at least one script command"));
   }

@@ -1,13 +1,12 @@
 package edu.neu.cs6510.sp25.t1.service;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.neu.cs6510.sp25.t1.model.LogEntry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -24,6 +23,7 @@ class LogServiceTest {
     private HttpClient mockHttpClient;
     private HttpResponse<Object> mockResponse;
     private LogService logService;
+
     @SuppressWarnings("unchecked")
     @BeforeEach
     void setUp() {
@@ -64,11 +64,11 @@ class LogServiceTest {
     void testGetLogsByPipelineId_InvalidPipelineId() {
         // Act
         List<LogEntry> logs = logService.getLogsByPipelineId(null);
-        
-                // Assert
-                assertTrue(logs.isEmpty(), "Logs list should be empty for a null pipeline ID");
-        
-                logs = logService.getLogsByPipelineId("  ");  // Empty string
+
+        // Assert
+        assertTrue(logs.isEmpty(), "Logs list should be empty for a null pipeline ID");
+
+        logs = logService.getLogsByPipelineId("  "); // Empty string
         assertTrue(logs.isEmpty(), "Logs list should be empty for an empty pipeline ID");
     }
 
@@ -102,13 +102,15 @@ class LogServiceTest {
 
     @Test
     void testGetLogsByPipelineId_HttpRequestException() throws Exception {
-        // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any())).thenThrow(new RuntimeException("Connection error"));
+        // Arrange: Make the mock HttpClient throw an IOException
+        when(mockHttpClient.send(any(HttpRequest.class), any()))
+                .thenThrow(new IOException("Simulated connection error"));
 
         // Act
         final List<LogEntry> logs = logService.getLogsByPipelineId("12345");
 
         // Assert
+        assertNotNull(logs, "Logs list should not be null");
         assertTrue(logs.isEmpty(), "Logs should be empty when HTTP request fails");
     }
 }

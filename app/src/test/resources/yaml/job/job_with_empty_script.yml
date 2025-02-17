@@ -1,0 +1,10 @@
+pipeline:
+  name: sample-pipeline
+  stages:
+    - build
+    - test
+job:
+  - name: build-app
+    stage: build
+    image: maven:3.8
+    script: []
