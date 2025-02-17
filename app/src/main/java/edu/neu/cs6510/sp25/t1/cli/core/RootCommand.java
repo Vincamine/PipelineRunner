@@ -1,6 +1,7 @@
 package edu.neu.cs6510.sp25.t1.cli.core;
 
 import edu.neu.cs6510.sp25.t1.cli.commands.CheckCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.DryRunCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.LogCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.StatusCommand;
@@ -56,7 +57,8 @@ import java.nio.file.Paths;
         LogCommand.class,
         StatusCommand.class,
         RunCommand.class,
-        CheckCommand.class
+        CheckCommand.class,
+        DryRunCommand.class,
 })
 public class RootCommand implements Runnable {
 
