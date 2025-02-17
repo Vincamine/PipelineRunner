@@ -38,7 +38,11 @@ public class LogEntry {
   }
 
 
-  /**
+  public LogEntry(String pipelineId2, String string, String string2, long timeMillis) {
+    //TODO Auto-generated constructor stub
+}
+
+/**
    * Retrieves the ID of the pipeline associated with this log entry.
    *
    * @return The pipeline ID.
