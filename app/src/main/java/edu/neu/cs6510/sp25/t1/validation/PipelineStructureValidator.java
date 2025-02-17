@@ -12,12 +12,12 @@ import java.util.Map;
  * Validates the structure of a pipeline YAML configuration.
  * This validator ensures that:
  * <ul>
- *   <li>The root pipeline key exists and is a map</li>
- *   <li>The pipeline has a valid name</li>
- *   <li>The stages section exists and is a non-empty list of strings</li>
+ *   <li>The root pipeline key exists and is a map.</li>
+ *   <li>The pipeline has a valid name.</li>
+ *   <li>The stages section exists and is a non-empty list of strings.</li>
  * </ul>
  *
- * <p>Example of a valid pipeline structure:</p>
+ * <h2>Example of a valid pipeline structure:</h2>
  * <pre>
  * pipeline:
  *   name: my-pipeline
@@ -30,14 +30,17 @@ import java.util.Map;
 public class PipelineStructureValidator {
 
   /**
-   * Validates the overall structure of the pipeline configuration.
+   * Validates the structure of the given pipeline YAML configuration.
+   * Ensures that the required keys (`pipeline`, `pipeline.name`, `pipeline.stages`) exist
+   * and have the correct types.
    *
-   * @param data The parsed YAML data as a map
-   * @param locations Map containing source locations for all elements in the configuration
-   * @return true if the structure is valid, false otherwise
+   * @param data      The parsed YAML data as a map containing pipeline definitions.
+   * @param locations A map containing source locations for all elements in the configuration.
+   * @param filePath  The path to the YAML file being validated.
+   * @return {@code true} if the pipeline structure is valid, {@code false} otherwise.
    */
   public boolean validate(Map<String, Object> data, Map<String, Mark> locations, String filePath) {
-    // Validate pipeline key
+    // Validate that the root "pipeline" key exists and is a Map
     final Location rootLocation = ErrorHandler.createLocation(
         filePath,
         locations.get("pipeline"),
@@ -54,14 +57,14 @@ public class PipelineStructureValidator {
       return false;
     }
 
-    // Validate pipeline name
+    // Validate the presence of "name" within "pipeline"
     final Location nameLocation = ErrorHandler.createLocation(
         filePath,
         locations.get("pipeline.name"),
         "pipeline.name"
     );
 
-    if (!(pipeline.get("name") instanceof String)) {
+    if (!pipeline.containsKey("name") || !(pipeline.get("name") instanceof String)) {
       System.err.println(ErrorHandler.formatTypeError(
           nameLocation,
           "name",
@@ -71,14 +74,14 @@ public class PipelineStructureValidator {
       return false;
     }
 
-    // Validate stages list
+    // Validate the presence of "stages" within "pipeline"
     final Location stagesLocation = ErrorHandler.createLocation(
         filePath,
         locations.get("pipeline.stages"),
         "pipeline.stages"
     );
 
-    if (!(pipeline.get("stages") instanceof List<?> rawStages)) {
+    if (!pipeline.containsKey("stages") || !(pipeline.get("stages") instanceof List<?> rawStages)) {
       System.err.println(ErrorHandler.formatTypeError(
           stagesLocation,
           "stages",
@@ -88,14 +91,14 @@ public class PipelineStructureValidator {
       return false;
     }
 
-    // Validate stage entries
+    // Validate that all stages are non-empty strings
     final List<String> stages = rawStages.stream()
         .filter(String.class::isInstance)
         .map(String.class::cast)
         .toList();
 
     if (stages.size() != rawStages.size()) {
-      // Find the first non-string stage for error reporting
+      // Find the first invalid stage (non-string) for precise error reporting
       for (int i = 0; i < rawStages.size(); i++) {
         final Object stage = rawStages.get(i);
         if (!(stage instanceof String)) {
@@ -115,10 +118,11 @@ public class PipelineStructureValidator {
       }
     }
 
+    // Ensure that at least one stage is defined
     if (stages.isEmpty()) {
       System.err.println(ErrorHandler.formatException(
           stagesLocation,
-          "At least one stage must be defined"
+          "Pipeline must define at least one stage."
       ));
       return false;
     }

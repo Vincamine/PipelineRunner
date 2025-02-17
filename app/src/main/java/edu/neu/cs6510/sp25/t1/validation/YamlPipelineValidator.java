@@ -9,13 +9,14 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Top-level validator for YAML pipeline configurations. This validator coordinates the validation
+ * Top-level validator for YAML pipeline configurations. This validator
+ * coordinates the validation
  * process by:
  * <ul>
- *   <li>Loading and parsing the YAML file</li>
- *   <li>Validating the overall pipeline structure</li>
- *   <li>Validating individual jobs</li>
- *   <li>Checking job dependencies for cycles</li>
+ * <li>Loading and parsing the YAML file</li>
+ * <li>Validating the overall pipeline structure</li>
+ * <li>Validating individual jobs</li>
+ * <li>Checking job dependencies for cycles</li>
  * </ul>
  */
 public class YamlPipelineValidator {
@@ -37,8 +38,7 @@ public class YamlPipelineValidator {
       final Location rootLocation = ErrorHandler.createLocation(
           filePath,
           locations.get("pipeline"),
-          "pipeline"
-      );
+          "pipeline");
 
       // Validate structure of pipeline
       final PipelineStructureValidator structureValidator = new PipelineStructureValidator();
@@ -52,8 +52,7 @@ public class YamlPipelineValidator {
             rootLocation,
             "pipeline",
             data.get("pipeline"),
-            Map.class
-        ));
+            Map.class));
         return false;
       }
 
@@ -62,15 +61,13 @@ public class YamlPipelineValidator {
       final Location stagesLocation = ErrorHandler.createLocation(
           filePath,
           locations.get("pipeline.stages"),
-          "pipeline.stages"
-      );
+          "pipeline.stages");
       if (!(stagesObj instanceof List<?> rawStages)) {
         System.err.println(ErrorHandler.formatTypeError(
             stagesLocation,
             "stages",
             stagesObj,
-            List.class
-        ));
+            List.class));
         return false;
       }
 
@@ -79,9 +76,9 @@ public class YamlPipelineValidator {
           .map(String.class::cast)
           .toList();
       // Try to get jobs from either 'job' or 'jobs' key
-      Object jobsObj = data.get("jobs");  // First try 'jobs'
+      Object jobsObj = data.get("jobs"); // First try 'jobs'
       String jobKey = "jobs";
-      if (jobsObj == null) {  // If 'jobs' not found, try 'job'
+      if (jobsObj == null) { // If 'jobs' not found, try 'job'
         jobsObj = data.get("job");
         jobKey = "job";
       }
@@ -90,20 +87,19 @@ public class YamlPipelineValidator {
       final Location jobsLocation = ErrorHandler.createLocation(
           filePath,
           locations.get(jobKey),
-          jobKey
-      );
+          jobKey);
 
       if (!(jobsObj instanceof List<?> rawJobs)) {
         System.err.println(ErrorHandler.formatTypeError(
             jobsLocation,
             jobKey,
             jobsObj,
-            List.class
-        ));
+            List.class));
         return false;
       }
 
-      @SuppressWarnings("unchecked") final List<Map<String, Object>> jobs = rawJobs.stream()
+      @SuppressWarnings("unchecked")
+      final List<Map<String, Object>> jobs = rawJobs.stream()
           .filter(item -> item instanceof Map)
           .map(item -> (Map<String, Object>) item)
           .toList();
@@ -130,10 +126,24 @@ public class YamlPipelineValidator {
       final Location errorLocation = new Location(filePath, 1, 1, "file");
       System.err.println(ErrorHandler.formatException(
           errorLocation,
-          "Error reading YAML file: " + e.getMessage()
-      ));
+          "Error reading YAML file: " + e.getMessage()));
       return false;
     }
+  }
+
+  public boolean validatePipeline(Map<String, Object> pipelineConfig) {
+    if (pipelineConfig == null || !pipelineConfig.containsKey("pipeline")) {
+      System.err.println("❌ Error: Pipeline configuration is invalid or missing.");
+      return false;
+    }
+
+    // Validate using existing structure validation logic
+    PipelineStructureValidator structureValidator = new PipelineStructureValidator();
+    if (!structureValidator.validate(pipelineConfig, new HashMap<>(), "in-memory")) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -155,8 +165,7 @@ public class YamlPipelineValidator {
       final Location jobLocation = ErrorHandler.createLocation(
           filePath,
           locations.get(jobPath),
-          jobPath
-      );
+          jobPath);
 
       final Object jobNameObj = job.get("name");
       if (!(jobNameObj instanceof String jobName)) {
@@ -164,8 +173,7 @@ public class YamlPipelineValidator {
             jobLocation,
             "name",
             jobNameObj,
-            String.class
-        ));
+            String.class));
         return null;
       }
 
@@ -174,8 +182,7 @@ public class YamlPipelineValidator {
       final Location needsLocation = ErrorHandler.createLocation(
           filePath,
           locations.get(needsPath),
-          needsPath
-      );
+          needsPath);
 
       if (needsObj != null) {
         if (!(needsObj instanceof List<?> rawNeeds)) {
@@ -183,8 +190,7 @@ public class YamlPipelineValidator {
               needsLocation,
               "needs",
               needsObj,
-              List.class
-          ));
+              List.class));
           return null;
         }
 
@@ -196,16 +202,14 @@ public class YamlPipelineValidator {
           final Location needLocation = ErrorHandler.createLocation(
               filePath,
               locations.get(needPath),
-              needPath
-          );
+              needPath);
 
           if (!(need instanceof String)) {
             System.err.println(ErrorHandler.formatTypeError(
                 needLocation,
                 "need",
                 need,
-                String.class
-            ));
+                String.class));
             return null;
           }
           needs.add((String) need);
@@ -219,4 +223,3 @@ public class YamlPipelineValidator {
     return jobDependencies;
   }
 }
-
