@@ -32,11 +32,19 @@
 # New tasks
 | Task | Weight | Assignee |
 | ---- | ------ | -------- |
-| [](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/) | 0 | Name |
+| [Implement `xx report` CLI command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/102)                 | 5    | Yiwen        |
+| [Implement repository-level pipeline execution summary (L4.1)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/103)  | 3    | Mingtianfang |
+| [Implement individual pipeline run summary (L4.2)    ](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/104)          | 3    | Wenxue       |
+| [Debug current code base and add all needed documentation ](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/101)     | 2    | Yiwen        |
+| [Update README for Week 3 Sprint](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/87)                             | 2    | Wenxue       |
+| [Ensure reports CLI command follows proper error handling](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/105)      | 3    | Shenqian     |
+| [Check all other error reporting works](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/)       | 3    | Shenqian     |
+| [Validate report format and ensure correct output structure](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/107)    | 3    | Mingtianfang     |
+
 
 
 # What worked this week?
-1. We assigned and reviewed requirement earlier than last week, we improved from last week, so this worked. 
+1. We assigned and reviewed requirement earlier than last week, we improved from last week, so this worked. We had a file created during the requirement review meeting and assigning issue with details, so that each of us can create our own issues. 
 2. We sccussfully have a demo ready to show the client, this worked because now we understand how to do the demo. 
 3. We helped each other while others may have class dues, we are all helped and flexiable, so this worked. 
 
