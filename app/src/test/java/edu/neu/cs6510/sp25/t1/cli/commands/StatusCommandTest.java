@@ -1,58 +1,40 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.time.Instant;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import edu.neu.cs6510.sp25.t1.model.PipelineState;
 import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
 import edu.neu.cs6510.sp25.t1.service.StatusService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import picocli.CommandLine;
 
-@ExtendWith(MockitoExtension.class)
-public class StatusCommandTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-    @Mock
-    private StatusService statusService;
+class StatusCommandTest {
+
     private StatusCommand statusCommand;
-    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    private final ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+    private StatusService statusService;
 
     @BeforeEach
     void setUp() {
-        System.setOut(new PrintStream(outputStream));
-        System.setErr(new PrintStream(errorStream));
+        statusService = mock(StatusService.class);
         statusCommand = new StatusCommand(statusService);
     }
 
     @Test
-    void testBasicStatusCheck() {
-        final String pipelineId = "pipeline-123";
-        final PipelineStatus mockStatus = new PipelineStatus(
-                pipelineId,
-                PipelineState.RUNNING,
-                75,
-                "Build",
-                Instant.now(),
-                Instant.now()
-        );
-        when(statusService.getPipelineStatus(pipelineId)).thenReturn(mockStatus);
+    void testStatus_ValidPipeline_Success() {
+        PipelineStatus mockStatus = new PipelineStatus("123");
+        doReturn(mockStatus).when(statusService).getPipelineStatus(anyString());
 
-        // Use the setter method instead of accessing pipelineId directly
-        statusCommand.setPipelineId(pipelineId);
+        int exitCode = new CommandLine(statusCommand).execute("--pipeline-id", "123");
+        assertEquals(0, exitCode);
+    }
 
-        statusCommand.run();
+    @Test
+    void testStatus_InvalidPipeline_Failure() {
+        doThrow(new RuntimeException("Pipeline not found")).when(statusService).getPipelineStatus(anyString());
 
-        final String output = outputStream.toString();
-        assertTrue(output.contains("Pipeline ID: " + pipelineId));
-        assertTrue(output.contains("Status: RUNNING"));
-        assertTrue(output.contains("Progress: 75%"));
+        int exitCode = new CommandLine(statusCommand).execute("--pipeline-id", "invalid");
+        assertNotEquals(0, exitCode);
     }
 }

@@ -91,7 +91,7 @@ public class RunCommand implements Runnable {
    * @param filePath The path to the pipeline configuration file.
    * @return The file contents as a string or {@code null} if an error occurs.
    */
-  private String readPipelineConfig(String filePath) {
+  String readPipelineConfig(String filePath) {
     try {
       return new String(Files.readAllBytes(Paths.get(filePath)));
     } catch (IOException e) {
@@ -126,7 +126,7 @@ public class RunCommand implements Runnable {
    * @param pipelineConfig The pipeline configuration to send.
    * @return The API response.
    */
-  private ApiResponse sendRequestToApi(String pipelineConfig) {
+  ApiResponse sendRequestToApi(String pipelineConfig) {
     try {
       final URI uri = new URI(getApiUrl());
       final URL url = uri.toURL();

@@ -32,7 +32,15 @@ public class PipelineStatus {
     this.lastUpdated = lastUpdated;
   }
 
-  // Getters
+  public PipelineStatus(String pipelineId, PipelineState state, int progress, String currentStage) {
+    this.pipelineId = pipelineId;
+    this.state = state;
+    this.progress = progress;
+    this.currentStage = currentStage;
+}
+
+
+// Getters
   public String getPipelineId() { return pipelineId; }
   public PipelineState getState() { return state; }
   public int getProgress() { return progress; }
