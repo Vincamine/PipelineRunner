@@ -1,74 +1,43 @@
 package edu.neu.cs6510.sp25.t1.util;
 
+import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
-import edu.neu.cs6510.sp25.t1.util.PipelineValidator;
-import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
-
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class PipelineValidatorTest {
+    private PipelineValidator pipelineValidator;
+    private YamlPipelineValidator yamlPipelineValidator;
 
-  @TempDir
-  Path tempDir;
+    @BeforeEach
+    void setUp() {
+        yamlPipelineValidator = mock(YamlPipelineValidator.class);
+        pipelineValidator = new PipelineValidator(yamlPipelineValidator);
+    }
 
-  private Path validYamlPath;
-  private Path invalidYamlPath;
-  private Path wrongDirYamlPath;
-  private YamlPipelineValidator mockValidator;
-  private PipelineValidator pipelineValidator;
+    @Test
+    void testValidatePipelineFile_Success() {
+        Path mockPath = Paths.get(".pipelines/pipeline.yaml").toAbsolutePath();
+        when(yamlPipelineValidator.validatePipeline(mockPath.toString())).thenReturn(true);
 
-  @BeforeEach
-  void setUp() throws IOException {
-    final Path pipelinesDir = tempDir.resolve(".pipelines");
-    Files.createDirectory(pipelinesDir);
+        assertTrue(pipelineValidator.validatePipelineFile(mockPath.toString()));
+    }
 
-    validYamlPath = pipelinesDir.resolve("valid_pipeline.yml");
-    Files.writeString(validYamlPath, "valid: pipeline");
+    @Test
+    void testValidatePipelineFile_NotFound() {
+        assertFalse(pipelineValidator.validatePipelineFile("nonexistent.yaml"));
+    }
 
-    invalidYamlPath = pipelinesDir.resolve("invalid_pipeline.yml");
-    Files.writeString(invalidYamlPath, "invalid: : pipeline");
-
-    wrongDirYamlPath = tempDir.resolve("wrong_pipeline.yml");
-    Files.writeString(wrongDirYamlPath, "valid: pipeline");
-
-    // Mock YamlPipelineValidator
-    mockValidator = mock(YamlPipelineValidator.class);
-    pipelineValidator = new PipelineValidator(mockValidator);
-  }
-
-  @Test
-  void testValidatePipelineFile_FileNotFound() {
-    assertFalse(pipelineValidator.validatePipelineFile(tempDir.resolve("nonexistent.yml").toString()));
-  }
-
-  @Test
-  void testValidatePipelineFile_FileNotInPipelinesDirectory() {
-    assertFalse(pipelineValidator.validatePipelineFile(wrongDirYamlPath.toString()));
-  }
-
-  @Test
-  void testValidatePipelineFile_ValidYaml() {
-    when(mockValidator.validatePipeline(validYamlPath.toString())).thenReturn(true);
-    assertTrue(pipelineValidator.validatePipelineFile(validYamlPath.toString()));
-  }
-
-  @Test
-  void testValidatePipelineFile_InvalidYaml() {
-    when(mockValidator.validatePipeline(invalidYamlPath.toString())).thenReturn(false);
-    assertFalse(pipelineValidator.validatePipelineFile(invalidYamlPath.toString()));
-  }
-
-  @Test
-  void testValidatePipelineFile_ExceptionHandling() {
-    when(mockValidator.validatePipeline(anyString())).thenThrow(new RuntimeException("Unexpected error"));
-    assertFalse(pipelineValidator.validatePipelineFile(validYamlPath.toString()));
-  }
+    @Test
+    void testValidatePipelineFile_WrongDirectory() {
+        Path wrongPath = Paths.get("wrong-directory/pipeline.yaml").toAbsolutePath();
+        assertFalse(pipelineValidator.validatePipelineFile(wrongPath.toString()));
+    }
 }

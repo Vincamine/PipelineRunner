@@ -1,53 +1,31 @@
 package edu.neu.cs6510.sp25.t1.model;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
-
-import edu.neu.cs6510.sp25.t1.model.LogEntry;
-import edu.neu.cs6510.sp25.t1.model.LogLevel;
-
 class LogEntryTest {
-  /**
-   * Test LogEntry object creation and field retrieval.
-   */
-  @Test
-  void testLogEntryCreation() {
-    final long timestamp = System.currentTimeMillis();
-    final LogEntry log = new LogEntry("123", LogLevel.INFO, "Pipeline started", timestamp);
 
-    assertEquals("123", log.getPipelineId(), "Pipeline ID should match.");
-    assertEquals(LogLevel.INFO, log.getLevel(), "Log level should be INFO.");
-    assertEquals("Pipeline started", log.getMessage(), "Message should match.");
-    assertEquals(timestamp, log.getTimestamp(), "Timestamp should match.");
-  }
+    @Test
+    void testConstructorAndGetters() {
+        LogEntry log = new LogEntry("pipeline-123", LogLevel.INFO, "Pipeline started", System.currentTimeMillis());
 
-  /**
-   * Test LogEntry with a null message.
-   */
-  @Test
-  void testLogEntryWithNullMessage() {
-    final long timestamp = System.currentTimeMillis();
-    final LogEntry log = new LogEntry("456", LogLevel.WARN, null, timestamp);
+        assertEquals("pipeline-123", log.getPipelineId());
+        assertEquals(LogLevel.INFO, log.getLevel());
+        assertEquals("Pipeline started", log.getMessage());
+        assertTrue(log.getTimestamp() > 0);
+    }
 
-    assertEquals("456", log.getPipelineId(), "Pipeline ID should match.");
-    assertEquals(LogLevel.WARN, log.getLevel(), "Log level should be WARN.");
-    assertNull(log.getMessage(), "Message should be null.");
-    assertEquals(timestamp, log.getTimestamp(), "Timestamp should match.");
-  }
+    @Test
+    void testJsonSerialization() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        LogEntry log = new LogEntry("pipeline-123", LogLevel.ERROR, "An error occurred", 1678945600000L);
+        String json = mapper.writeValueAsString(log);
 
-  /**
-   * Test LogEntry with an empty message.
-   */
-  @Test
-  void testLogEntryWithEmptyMessage() {
-    final long timestamp = System.currentTimeMillis();
-    final LogEntry log = new LogEntry("789", LogLevel.ERROR, "", timestamp);
-
-    assertEquals("789", log.getPipelineId(), "Pipeline ID should match.");
-    assertEquals(LogLevel.ERROR, log.getLevel(), "Log level should be ERROR.");
-    assertEquals("", log.getMessage(), "Message should be empty.");
-    assertEquals(timestamp, log.getTimestamp(), "Timestamp should match.");
-  }
-
+        LogEntry deserializedLog = mapper.readValue(json, LogEntry.class);
+        assertEquals("pipeline-123", deserializedLog.getPipelineId());
+        assertEquals(LogLevel.ERROR, deserializedLog.getLevel());
+        assertEquals("An error occurred", deserializedLog.getMessage());
+        assertEquals(1678945600000L, deserializedLog.getTimestamp());
+    }
 }

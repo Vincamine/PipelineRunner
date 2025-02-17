@@ -1,30 +1,40 @@
 package edu.neu.cs6510.sp25.t1.model;
+
 import java.net.HttpURLConnection;
 
 /**
- * The ApiResponse class is used to encapsulate the response information from a REST API.
- * It includes the status code and the response body.
+ * Represents an API response with a status code and response body.
+ * Used to encapsulate HTTP responses from REST API calls.
  */
-
 public class ApiResponse {
-    private int statusCode; 
-    private String responseBody;
+    private final int statusCode;
+    private final String responseBody;
 
     /**
-     * Constructor to create an ApiResponse object.
+     * Constructs an ApiResponse object.
      *
-     * @param statusCode the status code of the response
-     * @param responseBody the content of the response
+     * @param statusCode   The HTTP status code of the response.
+     * @param responseBody The response body content.
      */
     public ApiResponse(int statusCode, String responseBody) {
         this.statusCode = statusCode;
         this.responseBody = responseBody;
     }
 
+    /**
+     * Retrieves the HTTP status code.
+     *
+     * @return The HTTP status code.
+     */
     public int getStatusCode() {
         return statusCode;
     }
 
+    /**
+     * Retrieves the response body content.
+     *
+     * @return The response body as a string.
+     */
     public String getResponseBody() {
         return responseBody;
     }
@@ -32,7 +42,7 @@ public class ApiResponse {
     /**
      * Checks if the response indicates a 404 Not Found error.
      *
-     * @return true if the status code is 404, false otherwise
+     * @return {@code true} if the status code is 404, otherwise {@code false}.
      */
     public boolean isNotFound() {
         return statusCode == HttpURLConnection.HTTP_NOT_FOUND;

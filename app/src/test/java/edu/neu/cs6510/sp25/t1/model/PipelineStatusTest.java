@@ -1,64 +1,60 @@
 package edu.neu.cs6510.sp25.t1.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.time.Instant;
 import org.junit.jupiter.api.Test;
+import java.time.Instant;
+import static org.junit.jupiter.api.Assertions.*;
 
-import edu.neu.cs6510.sp25.t1.model.PipelineState;
-import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
+class PipelineStatusTest {
 
-public class PipelineStatusTest {
+    @Test
+    void testDefaultConstructor() {
+        PipelineStatus status = new PipelineStatus("pipeline-123");
 
-  @Test
-  void testConstructorAndGetters() {
-    final String pipelineId = "test-123";
-    final PipelineState state = PipelineState.RUNNING;
-    final int progress = 50;
-    final String currentStage = "Build";
-    final Instant startTime = Instant.now();
-    final Instant lastUpdated = Instant.now();
+        assertEquals("pipeline-123", status.getPipelineId());
+        assertEquals(PipelineState.UNKNOWN, status.getState());
+        assertEquals(0, status.getProgress());
+        assertNotNull(status.getStartTime());
+        assertNotNull(status.getLastUpdated());
+    }
 
-    final PipelineStatus status = new PipelineStatus(
-        pipelineId, state, progress, currentStage, startTime, lastUpdated
-    );
+    @Test
+    void testParameterizedConstructor() {
+        Instant start = Instant.now().minusSeconds(600);
+        Instant updated = Instant.now();
+        PipelineStatus status = new PipelineStatus("pipeline-123", PipelineState.RUNNING, 50, "Build Stage", start, updated);
 
-    assertEquals(pipelineId, status.getPipelineId());
-    assertEquals(state, status.getState());
-    assertEquals(progress, status.getProgress());
-    assertEquals(currentStage, status.getCurrentStage());
-    assertEquals(startTime, status.getStartTime());
-    assertEquals(lastUpdated, status.getLastUpdated());
+        assertEquals("pipeline-123", status.getPipelineId());
+        assertEquals(PipelineState.RUNNING, status.getState());
+        assertEquals(50, status.getProgress());
+        assertEquals("Build Stage", status.getCurrentStage());
+        assertEquals(start, status.getStartTime());
+        assertEquals(updated, status.getLastUpdated());
+    }
 
-  }
+    @Test
+    void testSetters() {
+        PipelineStatus status = new PipelineStatus("pipeline-123");
+        status.setState(PipelineState.FAILED);
+        status.setProgress(80);
+        status.setCurrentStage("Deploy");
+        status.setMessage("Deployment failed");
+        Instant newUpdateTime = Instant.now();
+        status.setLastUpdated(newUpdateTime);
 
-  @Test
-  void testDefaultConstructor() {
-    final String pipelineId = "test-123";
-    final PipelineStatus status = new PipelineStatus(pipelineId);
-    assertEquals(pipelineId, status.getPipelineId());
-    assertEquals(PipelineState.UNKNOWN, status.getState());
-    assertEquals(0, status.getProgress());
-    assertNotNull(status.getStartTime());
-    assertNotNull(status.getLastUpdated());
-  }
+        assertEquals(PipelineState.FAILED, status.getState());
+        assertEquals(80, status.getProgress());
+        assertEquals("Deploy", status.getCurrentStage());
+        assertEquals("Deployment failed", status.getMessage());
+        assertEquals(newUpdateTime, status.getLastUpdated());
+    }
 
-  @Test
-  void testSetters() {
-    final PipelineStatus status = new PipelineStatus("test-123");
+    @Test
+    void testProgressBoundary() {
+        PipelineStatus status = new PipelineStatus("pipeline-123");
+        status.setProgress(120);
+        assertEquals(100, status.getProgress());
 
-    status.setState(PipelineState.RUNNING);
-    status.setProgress(75);
-    status.setCurrentStage("Test");
-    status.setMessage("Running tests");
-    final Instant now = Instant.now();
-    status.setLastUpdated(now);
-
-    assertEquals(PipelineState.RUNNING, status.getState());
-    assertEquals(75, status.getProgress());
-    assertEquals("Test", status.getCurrentStage());
-    assertEquals("Running tests", status.getMessage());
-    assertEquals(now, status.getLastUpdated());
-  }
+        status.setProgress(-5);
+        assertEquals(0, status.getProgress());
+    }
 }

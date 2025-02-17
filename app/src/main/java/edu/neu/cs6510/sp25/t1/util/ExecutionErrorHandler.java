@@ -2,7 +2,6 @@ package edu.neu.cs6510.sp25.t1.util;
 
 import java.time.Duration;
 import java.time.Instant;
-
 import edu.neu.cs6510.sp25.t1.model.ApiResponse;
 import edu.neu.cs6510.sp25.t1.model.PipelineState;
 import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
@@ -13,39 +12,42 @@ import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
  */
 public class ExecutionErrorHandler {
   private String currentStage;
-  private Instant executionStartTime;
+  private final Instant executionStartTime;
 
+  /**
+   * Initializes the error handler and sets the execution start time.
+   */
   public ExecutionErrorHandler() {
     this.executionStartTime = Instant.now();
   }
 
   /**
-   * Handles pipeline status errors and provides appropriate error messages.
+   * Handles pipeline status errors and determines if execution should continue.
    *
-   * @param status Current pipeline status
-   * @return true if execution can continue, false if it should stop
+   * @param status The current pipeline status.
+   * @return {@code true} if execution can proceed, {@code false} if it should stop.
    */
   public boolean handlePipelineStatus(PipelineStatus status) {
     switch (status.getState()) {
       case FAILED:
-        System.err.printf("Pipeline failed in stage '%s': %s%n",
+        System.err.printf("❌ Pipeline failed at stage '%s': %s%n",
             status.getCurrentStage(),
-            status.getMessage() != null ? status.getMessage() : "No error message provided");
+            (status.getMessage() != null) ? status.getMessage() : "No error message provided");
         return false;
 
       case CANCELLED:
-        System.err.printf("Pipeline was cancelled in stage '%s' after running for %s%n",
+        System.err.printf("⚠️ Pipeline was cancelled at stage '%s' after running for %s%n",
             status.getCurrentStage(),
             getExecutionDuration(status));
         return false;
 
       case UNKNOWN:
-        System.err.println("Unable to determine pipeline status. Please check manually.");
+        System.err.println("⚠️ Unknown pipeline status. Please check manually.");
         return false;
 
       case PENDING:
         if (Duration.between(status.getLastUpdated(), Instant.now()).toMinutes() > 10) {
-          System.err.println("Pipeline has been pending for too long. Please check for issues.");
+          System.err.println("⏳ Pipeline has been pending for too long. Check for issues.");
           return false;
         }
         return true;
@@ -58,16 +60,16 @@ public class ExecutionErrorHandler {
   /**
    * Handles API response errors during pipeline execution.
    *
-   * @param response The API response to check
-   * @return true if the operation should continue
+   * @param response The API response to check.
+   * @return {@code true} if execution can continue, {@code false} if an error occurs.
    */
   public boolean handleApiError(ApiResponse response) {
     if (response.isNotFound()) {
-      System.err.println("Error: Resource not found - " + response.getResponseBody());
+      System.err.println("❌ API Error: Resource not found - " + response.getResponseBody());
       return false;
     }
 
-    System.err.printf("Error: API request failed (%d) - %s%n",
+    System.err.printf("⚠️ API request failed (Status Code: %d) - %s%n",
         response.getStatusCode(),
         response.getResponseBody());
     return false;
@@ -76,83 +78,27 @@ public class ExecutionErrorHandler {
   /**
    * Handles stage execution failures.
    *
-   * @param status Current pipeline status
-   * @return true if execution can continue, false if it should stop
+   * @param status The pipeline status at the time of failure.
+   * @return {@code true} if execution can continue, {@code false} if it should stop.
    */
   public boolean handleStageFailure(PipelineStatus status) {
     if (status.getState() != PipelineState.FAILED) {
       return true;
     }
 
-    // 更新当前阶段
+    // Update the current stage
     if (!status.getCurrentStage().equals(currentStage)) {
       currentStage = status.getCurrentStage();
     }
 
-    // 输出详细的失败信息
-    System.err.println("\nStage Failure Details:");
-    System.err.println("----------------------");
+    // Log failure details
+    System.err.println("\n❌ Stage Failure Details:");
+    System.err.println("------------------------");
     System.err.printf("Failed Stage: %s%n", currentStage);
     System.err.printf("Error Message: %s%n",
-        status.getMessage() != null ? status.getMessage() : "No error message provided");
+        (status.getMessage() != null) ? status.getMessage() : "No error message provided");
     System.err.printf("Execution Time: %s%n", getExecutionDuration(status));
     System.err.printf("Last Updated: %s%n", status.getLastUpdated());
-    System.err.println("----------------------");
+    System.err.println("------------------------");
 
     return false;
-  }
-
-  /**
-   * Handles configuration file errors.
-   *
-   * @param filePath The path to the configuration file
-   * @param error The error message
-   */
-  public void handleConfigError(String filePath, String error) {
-    System.err.println("\nConfiguration Error:");
-    System.err.println("-------------------");
-    System.err.printf("File: %s%n", filePath);
-    System.err.printf("Error: %s%n", error);
-    System.err.println("Please check your pipeline configuration file for errors.");
-    System.err.println("-------------------");
-  }
-
-  /**
-   * Handles startup errors during pipeline initialization.
-   *
-   * @param e The exception that occurred
-   */
-  public void handleStartupError(Exception e) {
-    System.err.println("\nStartup Error:");
-    System.err.println("--------------");
-    System.err.printf("Error: %s%n", e.getMessage());
-    System.err.println("Unable to start pipeline execution.");
-    System.err.println("--------------");
-  }
-
-  /**
-   * Handles monitoring errors during pipeline execution.
-   *
-   * @param e The exception that occurred
-   */
-  public void handleMonitoringError(Exception e) {
-    System.err.println("\nMonitoring Error:");
-    System.err.println("-----------------");
-    System.err.printf("Error: %s%n", e.getMessage());
-    System.err.println("Unable to monitor pipeline status.");
-    System.err.println("-----------------");
-  }
-
-  /**
-   * Calculates the execution duration from start to last update.
-   *
-   * @param status The pipeline status
-   * @return A string representing the execution duration
-   */
-  private String getExecutionDuration(PipelineStatus status) {
-    final Duration duration = Duration.between(status.getStartTime(), status.getLastUpdated());
-    final long minutes = duration.toMinutes();
-    final long seconds = duration.minusMinutes(minutes).getSeconds();
-    return String.format("%d minutes, %d seconds", minutes, seconds);
-  }
-}

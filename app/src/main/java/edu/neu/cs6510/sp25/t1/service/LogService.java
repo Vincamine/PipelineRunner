@@ -1,21 +1,27 @@
 package edu.neu.cs6510.sp25.t1.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.neu.cs6510.sp25.t1.model.LogEntry;
-import java.util.List;
+
+import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Collections;
+import java.util.List;
 
 /**
- * Service class responsible for retrieving pipeline execution logs.
- * <p>
- * 🚀 **Mock Implementation** for demo purposes.
- * - This service **simulates** retrieving logs from an API.
- * - Once the backend API is available, **replace the mock logic with an actual API call**.
- * </p>
+ * Service class for retrieving logs from an external API.
+ * Handles HTTP requests, JSON deserialization, and error handling.
  */
 public class LogService {
+    
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private static final String BASE_URL = "https://example.com/api/log/"; // Placeholder API
 
     /**
      * Constructs a LogService with a given HTTP client.
@@ -25,26 +31,75 @@ public class LogService {
      */
     public LogService(HttpClient httpClient) {
         this.httpClient = httpClient != null ? httpClient : HttpClient.newHttpClient();
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper(); // Ensure it's properly initialized and used
     }
 
     /**
-     * Retrieves mock logs for a pipeline.
+     * Fetches logs for a given pipeline ID from the external API.
      *
-     * @param pipelineId The unique identifier of the pipeline.
-     * @return A list of {@link LogEntry} objects containing mock log data.
+     * @param pipelineId The pipeline ID to retrieve logs for.
+     * @return A list of {@link LogEntry} objects if successful; otherwise, an empty list.
      */
     public List<LogEntry> getLogsByPipelineId(String pipelineId) {
         if (pipelineId == null || pipelineId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Pipeline ID cannot be null or empty.");
+            System.err.println("Error: Pipeline ID cannot be null or empty.");
+            return Collections.emptyList();
         }
 
-        // 🚀 TODO: Replace this with an actual API call when backend is ready
-        return List.of(
-            new LogEntry(pipelineId, "INFO", "Pipeline execution started", System.currentTimeMillis()),
-            new LogEntry(pipelineId, "INFO", "Job 1 completed", System.currentTimeMillis()),
-            new LogEntry(pipelineId, "WARN", "Job 2 encountered a delay", System.currentTimeMillis()),
-            new LogEntry(pipelineId, "INFO", "Pipeline execution finished", System.currentTimeMillis())
-        );
+        final String requestUrl = BASE_URL + pipelineId;
+        final HttpRequest request = buildHttpRequest(requestUrl);
+
+        try {
+            final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return processResponse(response);
+        } catch (IOException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Failed to fetch logs: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Constructs an HTTP GET request.
+     *
+     * @param url The request URL.
+     * @return A configured {@link HttpRequest} object.
+     */
+    private HttpRequest buildHttpRequest(String url) {
+        return HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Accept", "application/json")
+            .GET()
+            .build();
+    }
+
+    /**
+     * Processes the HTTP response and converts it into a list of log entries.
+     *
+     * @param response The HTTP response.
+     * @return A list of {@link LogEntry} objects or an empty list if an error occurs.
+     */
+    private List<LogEntry> processResponse(HttpResponse<String> response) {
+        if (response.statusCode() == 200) {
+            return parseJsonResponse(response.body());
+        } else {
+            System.err.println("Error fetching logs. HTTP Status: " + response.statusCode());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Parses a JSON response into a list of {@link LogEntry} objects.
+     *
+     * @param jsonResponse The JSON response body.
+     * @return A list of log entries or an empty list if parsing fails.
+     */
+    private List<LogEntry> parseJsonResponse(String jsonResponse) {
+        try {
+            return objectMapper.readValue(jsonResponse, new TypeReference<List<LogEntry>>() {});
+        } catch (JsonProcessingException e) {
+            System.err.println("Error parsing JSON response: " + e.getMessage());
+            return Collections.emptyList();
+        }
     }
 }
