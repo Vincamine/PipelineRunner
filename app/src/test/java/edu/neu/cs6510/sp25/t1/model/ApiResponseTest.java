@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.cli.commands;
+package edu.neu.cs6510.sp25.t1.model;
 
 import org.junit.jupiter.api.Test;
 

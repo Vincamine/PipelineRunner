@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.cli.validation;
+package edu.neu.cs6510.sp25.t1.validation;
 
 import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.error.Mark;

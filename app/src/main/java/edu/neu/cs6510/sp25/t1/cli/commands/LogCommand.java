@@ -37,6 +37,11 @@ public class LogCommand implements Runnable {
     @Override
     public void run() {
         try {
+            if (pipelineId == null || pipelineId.trim().isEmpty()) {
+                System.err.println("❌ Error: Pipeline ID is required.");
+                return;
+            }
+
             final List<LogEntry> logs = logService.getLogsByPipelineId(pipelineId);
 
             if (logs.isEmpty()) {

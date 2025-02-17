@@ -32,6 +32,7 @@ public class StatusCommand implements Runnable {
 
     /**
      * Constructor allowing dependency injection for testing.
+     *
      * @param statusService The service responsible for retrieving pipeline status.
      */
     public StatusCommand(StatusService statusService) {
@@ -49,15 +50,8 @@ public class StatusCommand implements Runnable {
     }
 
     /**
-     * Sets the pipeline ID for testing purposes.
-     * @param pipelineId The pipeline ID to be set.
-     */
-    public void setPipelineId(String pipelineId) {
-        this.pipelineId = pipelineId;
-    }
-
-    /**
      * Displays pipeline status details.
+     *
      * @param status The pipeline status retrieved from the service.
      */
     private void displayStatus(PipelineStatus status) {
@@ -70,11 +64,14 @@ public class StatusCommand implements Runnable {
         System.out.println("\nDetailed Information");
         System.out.println("-----------------------");
         System.out.println("Current Stage: " + status.getCurrentStage());
+
         final LocalDateTime startTime = LocalDateTime.ofInstant(status.getStartTime(), ZoneId.systemDefault());
         final LocalDateTime lastUpdated = LocalDateTime.ofInstant(status.getLastUpdated(), ZoneId.systemDefault());
+
         System.out.println("Start Time: " + TIME_FORMATTER.format(startTime));
         System.out.println("Last Updated: " + TIME_FORMATTER.format(lastUpdated));
-        if (status.getMessage() != null) {
+
+        if (status.getMessage() != null && !status.getMessage().isEmpty()) {
             System.out.println("Message: " + status.getMessage());
         }
     }

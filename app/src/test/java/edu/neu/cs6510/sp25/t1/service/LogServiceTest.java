@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.cli.service;
+package edu.neu.cs6510.sp25.t1.service;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;

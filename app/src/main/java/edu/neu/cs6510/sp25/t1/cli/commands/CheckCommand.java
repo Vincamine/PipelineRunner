@@ -7,11 +7,16 @@ import picocli.CommandLine.Option;
 
 import java.util.concurrent.Callable;
 
-
-
 /**
  * Command to validate a pipeline YAML file.
- * Checks structure, dependencies, jobs, and overall pipeline configuration.
+ * <p>
+ * This command ensures that the pipeline YAML file:
+ * <ul>
+ *     <li>Has a valid structure</li>
+ *     <li>Contains no cyclic dependencies</li>
+ *     <li>Defines valid job configurations</li>
+ * </ul>
+ * </p>
  */
 @Command(
     name = "check",
@@ -19,6 +24,7 @@ import java.util.concurrent.Callable;
     mixinStandardHelpOptions = true
 )
 public class CheckCommand implements Callable<Boolean> {
+
   @Option(
       names = {"-f", "--file"},
       description = "Path to the pipeline YAML file",
@@ -30,16 +36,19 @@ public class CheckCommand implements Callable<Boolean> {
   /**
    * Executes the check command to validate a pipeline YAML file.
    *
-   * @return true if validation succeeds, false if validation fails
+   * @return {@code true} if validation succeeds, {@code false} if validation fails.
    */
   @Override
   public Boolean call() {
     final YamlPipelineValidator yamlPipelineValidator = new YamlPipelineValidator();
     final PipelineValidator pipelineValidator = new PipelineValidator(yamlPipelineValidator);
 
-    // Call instance method instead of static
+    // Validate pipeline file
     final boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);
 
+    if (!isValid) {
+      System.err.println("❌ Pipeline validation failed. Please check your YAML file.");
+    }
 
     return isValid;
   }

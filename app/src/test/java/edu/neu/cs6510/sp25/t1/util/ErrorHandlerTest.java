@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.cli.util;
+package edu.neu.cs6510.sp25.t1.util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;

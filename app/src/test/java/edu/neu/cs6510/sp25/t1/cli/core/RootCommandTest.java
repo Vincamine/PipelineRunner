@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.cli;
+package edu.neu.cs6510.sp25.t1.cli.core;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

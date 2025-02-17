@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Root command for the CI/CD Command-Line Interface (CLI) tool.
+ * Root command for the CI/CD Command-Line Interface (CLI) tool. (command dispatcher)
  * <p>
  * This class defines the global CLI behavior, including general options 
  * (like {@code --verbose}) and available subcommands (like {@code run}, {@code check}, etc.).
