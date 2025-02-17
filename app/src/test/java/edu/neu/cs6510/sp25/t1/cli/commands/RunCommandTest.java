@@ -1,17 +1,17 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import edu.neu.cs6510.sp25.t1.model.ApiResponse;
-import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-import org.mockito.Mockito;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class RunCommandTest {
@@ -31,7 +31,7 @@ class RunCommandTest {
         doReturn(true).when(validator).validatePipeline(anyString());
         doReturn(new ApiResponse(HttpURLConnection.HTTP_OK, "Pipeline executed")).when(runCommand).sendRequestToApi(any());
 
-        int exitCode = new CommandLine(runCommand).execute();
+        final int exitCode = new CommandLine(runCommand).execute();
         assertEquals(0, exitCode);
     }
 
@@ -40,7 +40,7 @@ class RunCommandTest {
         doReturn("dummy config").when(runCommand).readPipelineConfig(anyString());
         doReturn(false).when(validator).validatePipeline(anyString());
 
-        int exitCode = new CommandLine(runCommand).execute();
+        final int exitCode = new CommandLine(runCommand).execute();
         assertNotEquals(0, exitCode);
     }
 
@@ -50,7 +50,7 @@ class RunCommandTest {
         doReturn(true).when(validator).validatePipeline(anyString());
         doReturn(new ApiResponse(HttpURLConnection.HTTP_INTERNAL_ERROR, "API failure")).when(runCommand).sendRequestToApi(any());
 
-        int exitCode = new CommandLine(runCommand).execute();
+        final int exitCode = new CommandLine(runCommand).execute();
         assertNotEquals(0, exitCode);
     }
 }

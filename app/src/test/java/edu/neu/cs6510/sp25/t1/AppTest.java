@@ -12,11 +12,11 @@ class AppTest {
     @Test
     void testMain_ValidCommand() {
         // Simulate CLI execution with a mock RootCommand
-        RootCommand rootCommand = Mockito.mock(RootCommand.class);
-        CommandLine cmd = new CommandLine(rootCommand);
+        final RootCommand rootCommand = Mockito.mock(RootCommand.class);
+        final CommandLine cmd = new CommandLine(rootCommand);
 
         // Ensure execution does not throw errors
-        int exitCode = cmd.execute("--help");
+        final int exitCode = cmd.execute("--help");
         assertEquals(0, exitCode, "Expected successful execution of --help command.");
     }
 }

@@ -8,7 +8,7 @@ class PipelineStatusTest {
 
     @Test
     void testDefaultConstructor() {
-        PipelineStatus status = new PipelineStatus("pipeline-123");
+        final PipelineStatus status = new PipelineStatus("pipeline-123");
 
         assertEquals("pipeline-123", status.getPipelineId());
         assertEquals(PipelineState.UNKNOWN, status.getState());
@@ -19,9 +19,9 @@ class PipelineStatusTest {
 
     @Test
     void testParameterizedConstructor() {
-        Instant start = Instant.now().minusSeconds(600);
-        Instant updated = Instant.now();
-        PipelineStatus status = new PipelineStatus("pipeline-123", PipelineState.RUNNING, 50, "Build Stage", start, updated);
+        final Instant start = Instant.now().minusSeconds(600);
+        final Instant updated = Instant.now();
+        final PipelineStatus status = new PipelineStatus("pipeline-123", PipelineState.RUNNING, 50, "Build Stage", start, updated);
 
         assertEquals("pipeline-123", status.getPipelineId());
         assertEquals(PipelineState.RUNNING, status.getState());
@@ -33,12 +33,12 @@ class PipelineStatusTest {
 
     @Test
     void testSetters() {
-        PipelineStatus status = new PipelineStatus("pipeline-123");
+        final PipelineStatus status = new PipelineStatus("pipeline-123");
         status.setState(PipelineState.FAILED);
         status.setProgress(80);
         status.setCurrentStage("Deploy");
         status.setMessage("Deployment failed");
-        Instant newUpdateTime = Instant.now();
+        final Instant newUpdateTime = Instant.now();
         status.setLastUpdated(newUpdateTime);
 
         assertEquals(PipelineState.FAILED, status.getState());
@@ -50,7 +50,7 @@ class PipelineStatusTest {
 
     @Test
     void testProgressBoundary() {
-        PipelineStatus status = new PipelineStatus("pipeline-123");
+        final PipelineStatus status = new PipelineStatus("pipeline-123");
         status.setProgress(120);
         assertEquals(100, status.getProgress());
 

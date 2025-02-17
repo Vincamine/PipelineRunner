@@ -12,7 +12,7 @@ class GitValidatorTest {
 
     @Test
     void testIsGitRepositoryTrue(@TempDir Path tempDir) {
-        File gitDir = new File(tempDir.toFile(), ".git");
+        final File gitDir = new File(tempDir.toFile(), ".git");
         assertTrue(gitDir.mkdir());
 
         assertTrue(GitValidator.isGitRepository());
@@ -25,7 +25,7 @@ class GitValidatorTest {
 
     @Test
     void testValidateGitRepoThrowsException() {
-        Exception exception = assertThrows(IllegalStateException.class, GitValidator::validateGitRepo);
+        final Exception exception = assertThrows(IllegalStateException.class, GitValidator::validateGitRepo);
         assertTrue(exception.getMessage().contains("This CLI must be run from the root of a Git repository."));
     }
 }

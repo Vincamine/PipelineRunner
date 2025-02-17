@@ -10,8 +10,8 @@ class LogFormatterTest {
 
     @Test
     void testFormat() {
-        LogEntry log = new LogEntry("pipeline-1", LogLevel.INFO, "Pipeline started", System.currentTimeMillis());
-        String formattedLog = LogFormatter.format(log);
+        final LogEntry log = new LogEntry("pipeline-1", LogLevel.INFO, "Pipeline started", System.currentTimeMillis());
+        final String formattedLog = LogFormatter.format(log);
 
         assertTrue(formattedLog.contains("[INFO] Pipeline started"));
         assertTrue(formattedLog.contains("["));

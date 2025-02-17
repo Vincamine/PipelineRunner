@@ -16,7 +16,7 @@ class PipelineExecutionOrderGeneratorTest {
 
     @Test
     void testGenerateExecutionOrder_ValidFile() throws IOException {
-        Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder("src/test/resources/sample-pipeline.yaml");
+        final Map<String, Map<String, Object>> executionOrder = generator.generateExecutionOrder("src/test/resources/sample-pipeline.yaml");
         assertNotNull(executionOrder);
         assertFalse(executionOrder.isEmpty());
     }

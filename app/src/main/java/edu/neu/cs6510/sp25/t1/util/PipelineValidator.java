@@ -20,6 +20,7 @@ public class PipelineValidator {
   public boolean validatePipelineFile(String yamlFilePath) {
     try {
       final Path yamlPath = Paths.get(yamlFilePath).toAbsolutePath().normalize();
+      @SuppressWarnings("unused")
       final String absolutePath = yamlPath.toString();
 
       if (!Files.exists(yamlPath)) {

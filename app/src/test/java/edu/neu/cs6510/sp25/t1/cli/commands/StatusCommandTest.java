@@ -4,10 +4,10 @@ import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
 import edu.neu.cs6510.sp25.t1.service.StatusService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class StatusCommandTest {
@@ -23,10 +23,10 @@ class StatusCommandTest {
 
     @Test
     void testStatus_ValidPipeline_Success() {
-        PipelineStatus mockStatus = new PipelineStatus("123");
+        final PipelineStatus mockStatus = new PipelineStatus("123");
         doReturn(mockStatus).when(statusService).getPipelineStatus(anyString());
 
-        int exitCode = new CommandLine(statusCommand).execute("--pipeline-id", "123");
+        final int exitCode = new CommandLine(statusCommand).execute("--pipeline-id", "123");
         assertEquals(0, exitCode);
     }
 
@@ -34,7 +34,7 @@ class StatusCommandTest {
     void testStatus_InvalidPipeline_Failure() {
         doThrow(new RuntimeException("Pipeline not found")).when(statusService).getPipelineStatus(anyString());
 
-        int exitCode = new CommandLine(statusCommand).execute("--pipeline-id", "invalid");
+        final int exitCode = new CommandLine(statusCommand).execute("--pipeline-id", "invalid");
         assertNotEquals(0, exitCode);
     }
 }

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class CheckCommandTest {
@@ -23,7 +24,7 @@ class CheckCommandTest {
     void testCheck_ValidPipeline_Success() {
         doReturn(true).when(pipelineValidator).validatePipelineFile(anyString());
 
-        int exitCode = new CommandLine(checkCommand).execute("-f", "valid_pipeline.yaml");
+        final int exitCode = new CommandLine(checkCommand).execute("-f", "valid_pipeline.yaml");
         assertEquals(0, exitCode);
     }
 
@@ -31,7 +32,7 @@ class CheckCommandTest {
     void testCheck_InvalidPipeline_Failure() {
         doReturn(false).when(pipelineValidator).validatePipelineFile(anyString());
 
-        int exitCode = new CommandLine(checkCommand).execute("-f", "invalid_pipeline.yaml");
+        final int exitCode = new CommandLine(checkCommand).execute("-f", "invalid_pipeline.yaml");
         assertNotEquals(0, exitCode);
     }
 }

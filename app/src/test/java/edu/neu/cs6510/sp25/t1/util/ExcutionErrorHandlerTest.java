@@ -13,8 +13,8 @@ class ExecutionErrorHandlerTest {
 
     @Test
     void testHandlePipelineStatusFailed() {
-        ExecutionErrorHandler errorHandler = new ExecutionErrorHandler();
-        PipelineStatus status = new PipelineStatus("123", PipelineState.FAILED, 50, "Build Stage");
+        final ExecutionErrorHandler errorHandler = new ExecutionErrorHandler();
+        final PipelineStatus status = new PipelineStatus("123", PipelineState.FAILED, 50, "Build Stage");
         status.setMessage("Build failed due to missing dependencies");
 
         assertFalse(errorHandler.handlePipelineStatus(status));
@@ -22,16 +22,16 @@ class ExecutionErrorHandlerTest {
 
     @Test
     void testHandleApiErrorNotFound() {
-        ExecutionErrorHandler errorHandler = new ExecutionErrorHandler();
-        ApiResponse response = new ApiResponse(404, "Resource not found");
+        final ExecutionErrorHandler errorHandler = new ExecutionErrorHandler();
+        final ApiResponse response = new ApiResponse(404, "Resource not found");
 
         assertFalse(errorHandler.handleApiError(response));
     }
 
     @Test
     void testHandleStageFailure() {
-        ExecutionErrorHandler errorHandler = new ExecutionErrorHandler();
-        PipelineStatus status = new PipelineStatus("123", PipelineState.FAILED, 40, "Deploy");
+        final ExecutionErrorHandler errorHandler = new ExecutionErrorHandler();
+        final PipelineStatus status = new PipelineStatus("123", PipelineState.FAILED, 40, "Deploy");
         status.setMessage("Deploy failed due to network issues");
         status.setLastUpdated(Instant.now());
 

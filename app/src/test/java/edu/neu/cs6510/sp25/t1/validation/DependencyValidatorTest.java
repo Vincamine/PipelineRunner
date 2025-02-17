@@ -5,8 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.error.Mark;
 
-import edu.neu.cs6510.sp25.t1.validation.DependencyValidator;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.*;
@@ -23,7 +21,7 @@ class DependencyValidatorTest {
   @BeforeEach
   void setUp() {
     dependencies = new HashMap<>();
-    testMark = new Mark("pipeline.yaml", 0, 5, 10, new int[]{}, 0);
+    testMark = new Mark(TEST_FILENAME, 0, 5, 10, new int[]{}, 0);
     System.setErr(new PrintStream(errorOutput));
   }
 
@@ -32,32 +30,31 @@ class DependencyValidatorTest {
     dependencies.put("job1", Arrays.asList("job2", "job3"));
     dependencies.put("job2", Collections.emptyList());
     dependencies.put("job3", Collections.singletonList("job2"));
-    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
 
-    assertTrue(validator.validateDependencies());
-    assertEquals("", errorOutput.toString());
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
+    assertTrue(validator.validateDependencies(), "Valid dependencies should return true");
+    assertEquals("", errorOutput.toString().trim());
   }
 
   @Test
   void validateDependencies_WithNonExistentDependency() {
     dependencies.put("job1", Collections.singletonList("non-existent-job"));
     dependencies.put("job2", Collections.emptyList());
-    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
 
-    assertFalse(validator.validateDependencies());
-    assertTrue(errorOutput.toString().contains("non-existent job"));
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
+    assertFalse(validator.validateDependencies(), "Validation should fail for a missing dependency");
+    assertTrue(errorOutput.toString().contains("non-existent job"), "Expected error message for missing job");
   }
 
   @Test
   void validateDependencies_WithSimpleCycle() {
     dependencies.put("job1", Collections.singletonList("job2"));
     dependencies.put("job2", Collections.singletonList("job1"));
+
     final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
-
-    assertFalse(validator.validateDependencies());
-    assertTrue(errorOutput.toString().contains("cycle detected"));
+    assertFalse(validator.validateDependencies(), "Simple cycle should return false");
+    assertTrue(errorOutput.toString().contains("cycle detected"), "Expected cycle detection error");
   }
-
 
   @Test
   void validateDependencies_WithComplexCycle() {
@@ -65,19 +62,19 @@ class DependencyValidatorTest {
     dependencies.put("job2", Collections.singletonList("job4"));
     dependencies.put("job3", Collections.singletonList("job4"));
     dependencies.put("job4", Collections.singletonList("job1"));
-    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
 
-    assertFalse(validator.validateDependencies());
-    assertTrue(errorOutput.toString().contains("cycle detected"));
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
+    assertFalse(validator.validateDependencies(), "Complex cycle should return false");
+    assertTrue(errorOutput.toString().contains("cycle detected"), "Expected cycle detection error");
   }
 
   @Test
   void validateDependencies_WithSelfDependency() {
     dependencies.put("job1", Collections.singletonList("job1"));
-    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
 
-    assertFalse(validator.validateDependencies());
-    assertTrue(errorOutput.toString().contains("cycle detected"));
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
+    assertFalse(validator.validateDependencies(), "Self dependency should return false");
+    assertTrue(errorOutput.toString().contains("cycle detected"), "Expected cycle detection error");
   }
 
   @Test
@@ -86,10 +83,30 @@ class DependencyValidatorTest {
     dependencies.put("job2", Collections.singletonList("job4"));
     dependencies.put("job3", Collections.singletonList("job4"));
     dependencies.put("job4", Collections.emptyList());
-    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
 
-    assertTrue(validator.validateDependencies());
-    assertEquals("", errorOutput.toString());
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
+    assertTrue(validator.validateDependencies(), "Valid dependency graph should return true");
+    assertEquals("", errorOutput.toString().trim());
+  }
+
+  @Test
+  void validateDependencies_WithMultipleJobsWithoutDependencies() {
+    dependencies.put("job1", Collections.emptyList());
+    dependencies.put("job2", Collections.emptyList());
+    dependencies.put("job3", Collections.emptyList());
+
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
+    assertTrue(validator.validateDependencies(), "Multiple independent jobs should return true");
+    assertEquals("", errorOutput.toString().trim());
+  }
+
+  @Test
+  void validateDependencies_WithJobHavingNoDependencies() {
+    dependencies.put("job1", Collections.emptyList());
+
+    final DependencyValidator validator = new DependencyValidator(dependencies, testMark, TEST_FILENAME);
+    assertTrue(validator.validateDependencies(), "Job with no dependencies should return true");
+    assertEquals("", errorOutput.toString().trim());
   }
 
   @AfterEach

@@ -59,7 +59,9 @@ public class PipelineExecutionOrderGenerator {
             throw new IllegalArgumentException("Invalid YAML structure: 'pipeline' key is missing.");
         }
 
+        @SuppressWarnings("unchecked")
         final Map<String, Object> pipelineMetadata = (Map<String, Object>) pipelineConfig.get("pipeline");
+        @SuppressWarnings("unchecked")
         final List<String> stages = (List<String>) pipelineMetadata.get("stages");
 
         if (stages == null || stages.isEmpty()) {

@@ -4,8 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.error.Mark;
 
-import edu.neu.cs6510.sp25.t1.validation.PipelineStructureValidator;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.*;
@@ -17,7 +15,6 @@ class PipelineStructureValidatorTest {
   private Map<String, Object> validPipelineData;
   private Map<String, Mark> locations;
   private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-  private final PrintStream originalErr = System.err;
   private final String TEST_FILENAME = "pipeline.yaml";
 
   @BeforeEach

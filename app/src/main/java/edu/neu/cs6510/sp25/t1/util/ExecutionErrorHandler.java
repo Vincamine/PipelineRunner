@@ -12,13 +12,14 @@ import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
  */
 public class ExecutionErrorHandler {
   private String currentStage;
-  private final Instant executionStartTime;
-
-  /**
-   * Initializes the error handler and sets the execution start time.
-   */
-  public ExecutionErrorHandler() {
-    this.executionStartTime = Instant.now();
+    @SuppressWarnings("unused")
+    private Instant executionStartTime;
+  
+    /**
+     * Initializes the error handler and sets the execution start time.
+     */
+    public ExecutionErrorHandler() {
+      this.executionStartTime = Instant.now();
   }
 
   /**
@@ -102,3 +103,18 @@ public class ExecutionErrorHandler {
     System.err.println("------------------------");
 
     return false;
+  }
+
+  /**
+   * Returns the execution duration in a human-readable format.
+   *
+   * @param status The pipeline status.
+   * @return A formatted duration string.
+   */
+  private String getExecutionDuration(PipelineStatus status) {
+    final Duration duration = Duration.between(status.getStartTime(), status.getLastUpdated());
+    final long minutes = duration.toMinutes();
+    final long seconds = duration.minusMinutes(minutes).getSeconds();
+    return String.format("%d minutes, %d seconds", minutes, seconds);
+  }
+}

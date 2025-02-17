@@ -15,7 +15,7 @@ class StatusServiceTest {
 
     @Test
     void testGetPipelineStatus_ValidId_ReturnsMockStatus() {
-        PipelineStatus status = statusService.getPipelineStatus("pipeline-123");
+        final PipelineStatus status = statusService.getPipelineStatus("pipeline-123");
         assertNotNull(status);
         assertEquals("pipeline-123", status.getPipelineId());
     }

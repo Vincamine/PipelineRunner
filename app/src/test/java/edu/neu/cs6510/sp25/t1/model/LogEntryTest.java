@@ -8,7 +8,7 @@ class LogEntryTest {
 
     @Test
     void testConstructorAndGetters() {
-        LogEntry log = new LogEntry("pipeline-123", LogLevel.INFO, "Pipeline started", System.currentTimeMillis());
+        final LogEntry log = new LogEntry("pipeline-123", LogLevel.INFO, "Pipeline started", System.currentTimeMillis());
 
         assertEquals("pipeline-123", log.getPipelineId());
         assertEquals(LogLevel.INFO, log.getLevel());
@@ -18,11 +18,11 @@ class LogEntryTest {
 
     @Test
     void testJsonSerialization() throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        LogEntry log = new LogEntry("pipeline-123", LogLevel.ERROR, "An error occurred", 1678945600000L);
-        String json = mapper.writeValueAsString(log);
+        final ObjectMapper mapper = new ObjectMapper();
+        final LogEntry log = new LogEntry("pipeline-123", LogLevel.ERROR, "An error occurred", 1678945600000L);
+        final String json = mapper.writeValueAsString(log);
 
-        LogEntry deserializedLog = mapper.readValue(json, LogEntry.class);
+        final LogEntry deserializedLog = mapper.readValue(json, LogEntry.class);
         assertEquals("pipeline-123", deserializedLog.getPipelineId());
         assertEquals(LogLevel.ERROR, deserializedLog.getLevel());
         assertEquals("An error occurred", deserializedLog.getMessage());

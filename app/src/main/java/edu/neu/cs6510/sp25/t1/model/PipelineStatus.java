@@ -48,6 +48,15 @@ public class PipelineStatus {
         this.lastUpdated = lastUpdated;
     }
 
+    public PipelineStatus(String string, PipelineState failed, int i, String string2) {
+        this.pipelineId = string;
+        this.state = failed;
+        this.progress = i;
+        this.currentStage = string2;
+        this.startTime = Instant.now();
+        this.lastUpdated = Instant.now();
+    }
+
     // Getters and Setters
     public String getPipelineId() { return pipelineId; }
     public PipelineState getState() { return state; }
@@ -58,4 +67,8 @@ public class PipelineStatus {
     public Instant getLastUpdated() { return lastUpdated; }
 
     public void setState(PipelineState state) { this.state = state; }
-    pub
+    public void setProgress(int progress) { this.progress = Math.max(0, Math.min(progress, 100)); }
+    public void setCurrentStage(String currentStage) { this.currentStage = currentStage; }
+    public void setMessage(String message) { this.message = message; }
+    public void setLastUpdated(Instant lastUpdated) { this.lastUpdated = lastUpdated; }
+}
