@@ -1,16 +1,6 @@
 
-# Week n
-
-> Fill in the week number (e.g., 1, 2, 3 etc.) for this report.
-
-> **Please fill in the week number for your updates**
-
+# Week 2
 # Completed tasks
-
-> List completed (DONE) tasks, include
-> 1. A link to the Issue
-> 2. The total weight (points or T-shirt size) allocated to the issue
-
 | Task | Weight |
 | ---- | ------ |
 |  [Format errors properly (filename:line:col:error)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/48)    |   3     |
@@ -28,32 +18,19 @@
 |  [implement retrieve log commond](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/10)    |    3    |
 |  [implement check status command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/9)    |    2    |
 |  [initialize CLI project](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/7)    |   2     |
+|  [Add -f --filename flag](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/40)    |   2     |
+|  [Error handling](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/48)    |   2     |
+|  [Weekly Report](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/49)    |   2     |
 
 
 > Good throughout from the team. Keep it up!
 
-# 5
-> List all issues that were planned for this week but did not get DONE
-> Include
-> 1. A link to the Issue
-> 2. The total weight (points or T-shirt size) allocated to the issue
-> 3. The team member assigned to the task. This has to be 1 person!
-
+# Carry on Tasks
 | Task | Weight | Assignee |
 | ---- | ------ | -------- |
-
-
-
-
+| [](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/) | 0 | Name |
 
 # New tasks
-
-> List all the issues that the team is planning to work for next sprint
-> Include
-> 1. A link to the Issue
-> 2. The total weight (points or T-shirt size) allocated to the issue
-> 3. The team member assigned to the task. This has to be 1 person!
-
 | Task                                          | Weight | Assignee |
 | --------------------------------------------- | ------ | -------- |
 | [Implement `run` CLI command](#)              | 3      | Yiwen |
@@ -72,8 +49,6 @@
 | [Implement pipeline summary report](#)        | 2      | Wenxue |
 | [Implement filtering by stage & job](#)       | 2      | Wenxue |
 | [Implement unique execution IDs](#)           | 2      | Wenxue |
-|  [Confirming Testing & Documentation]         | 2      | Wenxue |
-|  [Add filename flag]                          | 1      | Wenxue |
 | [Improve YAML validation](#)                  | 1      | Mingtianfang |
 | [Check required fields in pipeline config](#) | 2      | Mingtianfang |
 | [Detect circular dependencies](#)             | 2      | Mingtianfang |

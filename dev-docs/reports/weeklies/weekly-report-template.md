@@ -12,7 +12,7 @@
 
 | Task | Weight |
 | ---- | ------ |
-|      |        |
+|  [](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/)    |   2     |
 
 # Carry over tasks
 
@@ -24,8 +24,7 @@
 
 | Task | Weight | Assignee |
 | ---- | ------ | -------- |
-|      |        |          |
-
+| [](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/) | 0 | Name |
 
 # New tasks
 
@@ -37,7 +36,7 @@
 
 | Task | Weight | Assignee |
 | ---- | ------ | -------- |
-|      |        |          |
+| [](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/) | 0 | Name |
 
 
 # What worked this week?
