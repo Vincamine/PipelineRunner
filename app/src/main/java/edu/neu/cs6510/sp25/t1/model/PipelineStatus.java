@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.cli.model;
+package edu.neu.cs6510.sp25.t1.model;
 
 import java.time.Instant;
 

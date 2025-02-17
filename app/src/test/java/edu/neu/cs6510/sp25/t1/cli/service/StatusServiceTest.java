@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineState;
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import edu.neu.cs6510.sp25.t1.model.PipelineState;
+import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
+import edu.neu.cs6510.sp25.t1.service.StatusService;
 
 public class StatusServiceTest {
 

@@ -1,7 +1,7 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.util.PipelineExecutionOrderGenerator;
-import edu.neu.cs6510.sp25.t1.cli.util.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.service.PipelineExecutionOrderGenerator;
+import edu.neu.cs6510.sp25.t1.util.PipelineValidator;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

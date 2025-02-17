@@ -1,11 +1,10 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.model.LogEntry;
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
+import edu.neu.cs6510.sp25.t1.model.LogEntry;
+import edu.neu.cs6510.sp25.t1.service.LogService;
+import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
+import edu.neu.cs6510.sp25.t1.util.LogFormatter;
 import picocli.CommandLine;
-import edu.neu.cs6510.sp25.t1.cli.service.LogService;
-import edu.neu.cs6510.sp25.t1.cli.util.LogFormatter;
-
 
 import java.net.http.HttpClient;
 import java.util.List;

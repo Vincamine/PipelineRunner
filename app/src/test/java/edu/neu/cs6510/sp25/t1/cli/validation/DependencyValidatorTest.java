@@ -4,6 +4,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.error.Mark;
+
+import edu.neu.cs6510.sp25.t1.validation.DependencyValidator;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.*;

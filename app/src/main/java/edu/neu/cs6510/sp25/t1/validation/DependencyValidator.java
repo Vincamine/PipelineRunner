@@ -112,11 +112,12 @@
 //    return false;
 //  }
 //}
-package edu.neu.cs6510.sp25.t1.cli.validation;
+package edu.neu.cs6510.sp25.t1.validation;
 
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
 import java.util.*;
 import org.yaml.snakeyaml.error.Mark;
+
+import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 
 /**
  * Enhanced DependencyValidator that can detect multiple cyclic dependency paths.

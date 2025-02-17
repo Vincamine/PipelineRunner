@@ -1,6 +1,9 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import org.junit.jupiter.api.Test;
+
+import edu.neu.cs6510.sp25.t1.model.ApiResponse;
+
 import org.junit.jupiter.api.DisplayName;
 import java.net.HttpURLConnection;
 import static org.junit.jupiter.api.Assertions.*;

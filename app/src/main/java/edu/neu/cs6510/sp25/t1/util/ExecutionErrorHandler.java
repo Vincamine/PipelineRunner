@@ -1,10 +1,11 @@
-package edu.neu.cs6510.sp25.t1.cli.util;
+package edu.neu.cs6510.sp25.t1.util;
 
-import edu.neu.cs6510.sp25.t1.cli.commands.ApiResponse;
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineState;
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineStatus;
 import java.time.Duration;
 import java.time.Instant;
+
+import edu.neu.cs6510.sp25.t1.model.ApiResponse;
+import edu.neu.cs6510.sp25.t1.model.PipelineState;
+import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
 
 /**
  * Handles errors that occur during pipeline execution.

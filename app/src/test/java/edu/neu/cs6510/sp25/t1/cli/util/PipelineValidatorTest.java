@@ -1,9 +1,11 @@
 package edu.neu.cs6510.sp25.t1.cli.util;
 
-import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import edu.neu.cs6510.sp25.t1.util.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
 
 import java.io.IOException;
 import java.nio.file.Files;

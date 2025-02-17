@@ -1,9 +1,10 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.util.PipelineValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import edu.neu.cs6510.sp25.t1.util.PipelineValidator;
 import picocli.CommandLine;
 
 import java.io.IOException;

@@ -1,8 +1,9 @@
-package edu.neu.cs6510.sp25.t1.cli.service;
+package edu.neu.cs6510.sp25.t1.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.neu.cs6510.sp25.t1.cli.model.LogEntry;
+
+import edu.neu.cs6510.sp25.t1.model.LogEntry;
 
 import java.util.List;
 

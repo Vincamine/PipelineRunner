@@ -1,8 +1,9 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.model.LogEntry;
-import edu.neu.cs6510.sp25.t1.cli.model.LogLevel;
-import edu.neu.cs6510.sp25.t1.cli.service.LogService;
+import edu.neu.cs6510.sp25.t1.model.LogEntry;
+import edu.neu.cs6510.sp25.t1.model.LogLevel;
+import edu.neu.cs6510.sp25.t1.service.LogService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

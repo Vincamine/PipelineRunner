@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import edu.neu.cs6510.sp25.t1.model.LogEntry;
+import edu.neu.cs6510.sp25.t1.model.LogLevel;
+
 class LogEntryTest {
   /**
    * Test LogEntry object creation and field retrieval.

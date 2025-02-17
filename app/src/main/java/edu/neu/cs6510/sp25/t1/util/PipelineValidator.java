@@ -1,11 +1,10 @@
-package edu.neu.cs6510.sp25.t1.cli.util;
-
-//import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler.Location;
-import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
+package edu.neu.cs6510.sp25.t1.util;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
 
 /**
  * Utility class to validate pipeline YAML files and ensure they are correctly formatted.

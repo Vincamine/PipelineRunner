@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.cli.util;
+package edu.neu.cs6510.sp25.t1.service;
 
 import org.yaml.snakeyaml.Yaml;
 

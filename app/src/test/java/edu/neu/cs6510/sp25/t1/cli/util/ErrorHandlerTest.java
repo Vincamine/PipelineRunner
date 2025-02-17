@@ -6,6 +6,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.yaml.snakeyaml.error.Mark;
+
+import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;

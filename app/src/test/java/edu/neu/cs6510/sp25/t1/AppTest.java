@@ -1,8 +1,9 @@
 package edu.neu.cs6510.sp25.t1;
 
-import edu.neu.cs6510.sp25.t1.cli.RootCommand;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
+
+import edu.neu.cs6510.sp25.t1.cli.core.RootCommand;
 import picocli.CommandLine;
 
 import java.io.ByteArrayOutputStream;

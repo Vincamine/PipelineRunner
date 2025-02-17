@@ -1,6 +1,9 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
+import edu.neu.cs6510.sp25.t1.model.ApiResponse;
+import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
+import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -11,7 +14,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URI;
 import picocli.CommandLine.Command;
-import edu.neu.cs6510.sp25.t1.cli.validation.YamlPipelineValidator;
 
 /**
  * Command to trigger CI/CD pipeline execution.

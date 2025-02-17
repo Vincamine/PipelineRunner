@@ -6,7 +6,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
-import edu.neu.cs6510.sp25.t1.cli.util.GitValidator;
+
+import edu.neu.cs6510.sp25.t1.cli.core.RootCommand;
+import edu.neu.cs6510.sp25.t1.util.GitValidator;
 import picocli.CommandLine;
 
 import java.io.ByteArrayOutputStream;

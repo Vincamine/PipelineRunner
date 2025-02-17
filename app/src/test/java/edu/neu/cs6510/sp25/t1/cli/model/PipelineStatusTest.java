@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
+import edu.neu.cs6510.sp25.t1.model.PipelineState;
+import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
+
 public class PipelineStatusTest {
 
   @Test

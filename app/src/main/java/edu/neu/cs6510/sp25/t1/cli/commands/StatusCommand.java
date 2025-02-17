@@ -1,14 +1,15 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
+import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
+import edu.neu.cs6510.sp25.t1.service.StatusService;
+import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineStatus;
-import edu.neu.cs6510.sp25.t1.cli.service.StatusService;
 
 /**
  * Command to check pipeline execution status.

@@ -1,9 +1,9 @@
-package edu.neu.cs6510.sp25.t1.cli.util;
-
-import edu.neu.cs6510.sp25.t1.cli.model.LogEntry;
+package edu.neu.cs6510.sp25.t1.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import edu.neu.cs6510.sp25.t1.model.LogEntry;
 
 /**
  * Utility class for formatting log entries for display.

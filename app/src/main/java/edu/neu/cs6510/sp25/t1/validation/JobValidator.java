@@ -1,8 +1,10 @@
-package edu.neu.cs6510.sp25.t1.cli.validation;
+package edu.neu.cs6510.sp25.t1.validation;
 
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler.Location;
 import org.yaml.snakeyaml.error.Mark;
+
+import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
+import edu.neu.cs6510.sp25.t1.util.ErrorHandler.Location;
+
 import java.util.*;
 
 /**

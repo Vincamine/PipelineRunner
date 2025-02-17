@@ -11,9 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineState;
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineStatus;
-import edu.neu.cs6510.sp25.t1.cli.service.StatusService;
+
+import edu.neu.cs6510.sp25.t1.model.PipelineState;
+import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
+import edu.neu.cs6510.sp25.t1.service.StatusService;
 
 @ExtendWith(MockitoExtension.class)
 public class StatusCommandTest {

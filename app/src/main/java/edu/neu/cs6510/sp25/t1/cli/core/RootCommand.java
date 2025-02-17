@@ -1,10 +1,10 @@
-package edu.neu.cs6510.sp25.t1.cli;
+package edu.neu.cs6510.sp25.t1.cli.core;
 
 import edu.neu.cs6510.sp25.t1.cli.commands.CheckCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.LogCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.StatusCommand;
-import edu.neu.cs6510.sp25.t1.cli.util.GitValidator;
+import edu.neu.cs6510.sp25.t1.util.GitValidator;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import java.nio.file.Files;

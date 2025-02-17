@@ -1,6 +1,6 @@
 package edu.neu.cs6510.sp25.t1;
 
-import edu.neu.cs6510.sp25.t1.cli.RootCommand;
+import edu.neu.cs6510.sp25.t1.cli.core.RootCommand;
 import picocli.CommandLine;
 
 /**

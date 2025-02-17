@@ -1,12 +1,14 @@
-package edu.neu.cs6510.sp25.t1.cli.validation;
+package edu.neu.cs6510.sp25.t1.validation;
 
-import edu.neu.cs6510.sp25.t1.cli.util.ErrorHandler;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.error.YAMLException;
 import org.yaml.snakeyaml.error.MarkedYAMLException;
 import org.yaml.snakeyaml.nodes.*;
+
+import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
+
 import org.yaml.snakeyaml.error.Mark;
 
 import java.io.FileInputStream;

@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import edu.neu.cs6510.sp25.t1.cli.model.LogEntry;
-import edu.neu.cs6510.sp25.t1.cli.model.LogLevel;
+
+import edu.neu.cs6510.sp25.t1.model.LogEntry;
+import edu.neu.cs6510.sp25.t1.model.LogLevel;
+import edu.neu.cs6510.sp25.t1.util.LogFormatter;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 

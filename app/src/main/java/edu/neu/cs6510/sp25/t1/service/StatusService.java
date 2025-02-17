@@ -1,8 +1,9 @@
-package edu.neu.cs6510.sp25.t1.cli.service;
+package edu.neu.cs6510.sp25.t1.service;
 
 import java.time.Instant;
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineState;
-import edu.neu.cs6510.sp25.t1.cli.model.PipelineStatus;
+
+import edu.neu.cs6510.sp25.t1.model.PipelineState;
+import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
 
 /**
  * Service class for retrieving pipeline status information.
