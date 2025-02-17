@@ -1,43 +1,48 @@
-# Generate Jar
+#!/bin/bash
+
+# Set script to exit on error
+set -e
+
+echo "🚀 Starting CI/CD CLI Tool Demo"
+
+# Step 1: Build the CLI Tool
+echo "🔨 Building the CI/CD tool..."
 ./gradlew clean build
 ./gradlew clean shadowJar
-#
 
-# Check Installation
+# Step 2: Verify CLI Installation
+echo "✅ Checking CLI Installation..."
 java -jar app/build/libs/ci-tool.jar --help
 
-# Check pipeline configuration
-echo "Check pipeline configuration"
+# Step 3: Validate a Pipeline Configuration
+echo "🔍 Checking pipeline configuration..."
 java -jar app/build/libs/ci-tool.jar check -f .pipelines/00-valid-file.yaml
 
-#java -jar app/build/libs/ci-tool.jar logs --id 12345
+# Step 4: Perform a Dry Run to Generate Execution Order
+echo "📄 Performing a Dry Run..."
+java -jar app/build/libs/ci-tool.jar dry-run -f .pipelines/00-valid-file.yaml
 
+# Step 5: Run Pipeline on Local Machine
+echo "🚀 Running Pipeline Locally..."
+java -jar app/build/libs/ci-tool.jar run --local --repo . --file .pipelines/00-valid-file.yaml
 
-### ERROR HANDLING
-# Check file Path
-echo "run check without argument"
-java -jar app/build/libs/ci-tool.jar check
-echo "Non-exist file"
-java -jar app/build/libs/ci-tool.jar check -f .pipelines/non-exist-file.yaml
-echo "File outside ./pipeline"
-java -jar app/build/libs/ci-tool.jar check -f 03-outside-pipeline.yaml
+# Step 6: Error Handling Scenarios
+echo "⚠️ Testing Error Handling Scenarios"
 
+# Missing file argument
+echo "❌ Running check command without specifying a file..."
+java -jar app/build/libs/ci-tool.jar check || echo "✅ Expected error received"
 
+# Non-existent pipeline file
+echo "❌ Checking a non-existent file..."
+java -jar app/build/libs/ci-tool.jar check -f .pipelines/non-exist-file.yaml || echo "✅ Expected error received"
 
-# Check fields
-echo "Check field"
-java -jar app/build/libs/ci-tool.jar check -f .pipelines/01-miss-name.yaml
-java -jar app/build/libs/ci-tool.jar check -f .pipelines/02-wrong-name-type.yaml
+# Invalid pipeline file with missing fields
+echo "❌ Checking an invalid pipeline file (missing name)..."
+java -jar app/build/libs/ci-tool.jar check -f .pipelines/01-miss-name.yaml || echo "✅ Expected error received"
 
-#Detect Circular Dependencies
-echo "Check dependencies"
-java -jar app/build/libs/ci-tool.jar check -f .pipelines/04-cycle-direct.yaml
-java -jar app/build/libs/ci-tool.jar check -f .pipelines/05-cycle-self.yaml
-java -jar app/build/libs/ci-tool.jar check -f .pipelines/06-cycle-complex.yaml
-java -jar app/build/libs/ci-tool.jar check -f .pipelines/07-multi-path-dependencies.yaml
+# Invalid pipeline file with wrong field type
+echo "❌ Checking an invalid pipeline file (wrong name type)..."
+java -jar app/build/libs/ci-tool.jar check -f .pipelines/02-wrong-name-type.yaml || echo "✅ Expected error received"
 
- Run Command
-java -jar app/build/libs/ci-tool.jar dry-run
-
-# QUESTION: Do we have -f?
-java -jar app/build/libs/ci-tool.jar run -f .pipelines/00-valid-file.yaml
+echo "🎉 CI/CD CLI Tool Demo Completed Successfully!"

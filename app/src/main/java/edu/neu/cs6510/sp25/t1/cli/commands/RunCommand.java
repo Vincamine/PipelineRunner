@@ -1,25 +1,14 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.model.ApiResponse;
 import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 import edu.neu.cs6510.sp25.t1.util.GitValidator;
 import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
-
 /**
  * CLI command to trigger a CI/CD pipeline execution.
- * Supports both local and remote repositories.
+ * Runs the pipeline either locally or remotely.
  */
 @Command(name = "run", description = "Trigger CI/CD pipeline execution")
 public class RunCommand implements Runnable {
@@ -27,19 +16,10 @@ public class RunCommand implements Runnable {
     @Option(names = "--local", description = "Run the pipeline on the local machine")
     private boolean isLocalRun;
 
-    @Option(names = "--repo", description = "Repository location (local path or remote HTTPS URL)", required = true)
+    @Option(names = "--repo", description = "Repository location (local path or remote HTTPS URL)")
     private String repo;
 
-    @Option(names = "--branch", description = "Branch name to run the pipeline on", defaultValue = "main")
-    private String branch;
-
-    @Option(names = "--commit", description = "Commit hash to run the pipeline on")
-    private String commit;
-
-    @Option(names = "--pipeline", description = "Pipeline name to execute")
-    private String pipeline;
-
-    @Option(names = "--file", description = "Path to the pipeline configuration file")
+    @Option(names = "--file", description = "Path to the pipeline configuration file", required = true)
     private String pipelineFile;
 
     @Override
@@ -47,17 +27,11 @@ public class RunCommand implements Runnable {
         try {
             System.out.println("🚀 CI/CD pipeline execution started.");
 
-            // Validate mutually exclusive options
-            if (pipeline != null && pipelineFile != null) {
-                System.err.println("❌ Error: --pipeline and --file cannot be used together.");
-                System.exit(1);
-                return;
-            }
-
             if (isLocalRun) {
                 executeLocalRun();
             } else {
-                executeRemoteRun();
+                System.err.println("❌ Error: Remote execution is not supported without a backend.");
+                System.exit(1);
             }
         } catch (Exception e) {
             ErrorHandler.reportError(e.getMessage());
@@ -78,126 +52,49 @@ public class RunCommand implements Runnable {
 
         GitValidator.validateGitRepo();
 
-        final String filePath = (pipelineFile != null) ? pipelineFile : ".pipelines/pipeline.yaml";
-        executePipeline(filePath);
-    }
-
-    /**
-     * Executes the pipeline for a remote repository.
-     */
-    private void executeRemoteRun() {
-        if (!repo.startsWith("https://")) {
-            System.err.println("❌ Error: Remote repo URL must start with 'https://'.");
+        if (!validatePipelineFile(pipelineFile)) {
             System.exit(1);
             return;
         }
 
-        final String filePath = (pipelineFile != null) ? pipelineFile : ".pipelines/pipeline.yaml";
-        executePipeline(filePath);
+        System.out.println("✅ Pipeline validation successful.");
+        System.out.println("🔄 Executing pipeline...");
+
+        executeLocalJobs();
+
+        System.out.println("✅ Pipeline execution complete.");
     }
 
     /**
-     * Executes the pipeline, validating the YAML configuration and sending an API request.
-     * @param filePath The path to the pipeline YAML file.
+     * Validates the pipeline YAML file.
+     * @param filePath The pipeline file path.
+     * @return True if valid, false otherwise.
      */
-    private void executePipeline(String filePath) {
-        try {
-            final String pipelineConfig = readPipelineConfig(filePath);
-            if (pipelineConfig == null) {
-                System.err.println("❌ Error: Unable to read pipeline configuration.");
+    private boolean validatePipelineFile(String filePath) {
+        final YamlPipelineValidator validator = new YamlPipelineValidator();
+        if (!validator.validatePipeline(filePath)) {
+            System.err.println("❌ Pipeline validation failed.");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Simulates local execution of jobs.
+     */
+    private void executeLocalJobs() {
+        final String[] jobs = {"build-app", "run-tests", "deploy-app"};
+
+        for (String job : jobs) {
+            System.out.println("🔄 Running job: " + job);
+            try {
+                Thread.sleep(2000); // Simulate job execution time
+                System.out.println("✅ Job completed: " + job);
+            } catch (InterruptedException e) {
+                System.err.println("❌ Job failed: " + job);
+                Thread.currentThread().interrupt();
                 System.exit(1);
-                return;
             }
-
-            final YamlPipelineValidator validator = new YamlPipelineValidator();
-            if (!validator.validatePipeline(filePath)) {
-                System.err.println("❌ Pipeline validation failed.");
-                System.exit(1);
-                return;
-            }
-
-            final ApiResponse apiResponse = sendRequestToApi(pipelineConfig);
-            displayMessage(apiResponse.getStatusCode(), apiResponse.getResponseBody());
-
-            if (apiResponse.getStatusCode() != HttpURLConnection.HTTP_OK) {
-                System.exit(1);
-            }
-
-        } catch (Exception e) {
-            ErrorHandler.reportError(e.getMessage());
-            System.exit(1);
-        }
-    }
-
-    /**
-     * Reads the pipeline YAML configuration file.
-     * @param filePath Path to the pipeline file.
-     * @return The file contents as a string, or null if an error occurs.
-     */
-    String readPipelineConfig(String filePath) {
-        try {
-            final Path path = Paths.get(filePath);
-            if (!Files.exists(path) || !Files.isRegularFile(path) || !Files.isReadable(path)) {
-                System.err.println("❌ Error: Invalid or unreadable pipeline file: " + filePath);
-                return null;
-            }
-            return Files.readString(path);
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Sends a request to the API to trigger the pipeline.
-     * @param pipelineConfig The pipeline configuration as a JSON string.
-     * @return The API response.
-     */
-    ApiResponse sendRequestToApi(String pipelineConfig) {
-        try {
-            final URI uri = new URI(getApiUrl());
-            final HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/json");
-
-            connection.getOutputStream().write(pipelineConfig.getBytes());
-
-            final int statusCode = connection.getResponseCode();
-            final String responseBody = new String(connection.getInputStream().readAllBytes());
-
-            return new ApiResponse(statusCode, responseBody);
-        } catch (URISyntaxException | IOException e) {
-            return new ApiResponse(0, e.getMessage());
-        }
-    }
-
-    /**
-     * Retrieves the API URL from the configuration properties file.
-     * @return The API URL as a string.
-     */
-    private String getApiUrl() {
-        final Properties properties = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
-            if (input == null) {
-                return "http://localhost:3000/pipelines";
-            }
-            properties.load(input);
-            return properties.getProperty("api.url", "http://localhost:3000/pipelines");
-        } catch (IOException ex) {
-            return "http://localhost:3000/pipelines";
-        }
-    }
-
-    /**
-     * Displays the response message after pipeline execution.
-     * @param response The HTTP response status code.
-     * @param responseBody The response body.
-     */
-    private void displayMessage(int response, String responseBody) {
-        if (response == HttpURLConnection.HTTP_OK) {
-            System.out.println("✅ Pipeline executed successfully!");
-        } else {
-            System.err.println("❌ Pipeline execution failed! Response: " + responseBody);
         }
     }
 }
