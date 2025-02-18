@@ -1,4 +1,4 @@
-name: Main Branch CI/CD
+name: Main Branch CI
 
 on:
   push:
@@ -41,20 +41,20 @@ jobs:
         run: ./gradlew jar
         
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: app/build/libs/*.jar
           
       - name: Upload Documentation
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: documentation
           path: app/build/docs/javadoc/
           
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
@@ -63,7 +63,7 @@ jobs:
             
       - name: Upload Static Analysis Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: static-analysis-results
           path: |
