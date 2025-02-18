@@ -28,8 +28,8 @@ class RunCommandTest {
      * Helper method to get the full path of a test resource file.
      */
     private Path getTestResourcePath(String resource) throws URISyntaxException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        URL resourceURL = classLoader.getResource("yaml/commands/execution_pipelines/" + resource);
+        final ClassLoader classLoader = getClass().getClassLoader();
+        final URL resourceURL = classLoader.getResource("yaml/commands/execution_pipelines/" + resource);
         assertNotNull(resourceURL, "Test resource file not found: " + resource);
         return Paths.get(resourceURL.toURI());
     }
@@ -37,14 +37,14 @@ class RunCommandTest {
     /** Ensures that a valid pipeline executes successfully */
     @Test
     void testRunCommandExecutesSuccessfully() throws Exception {
-        Path pipelineFile = getTestResourcePath("valid_pipeline.yml");
+        final Path pipelineFile = getTestResourcePath("valid_pipeline.yml");
     
         // Mocking the dependencies
         try (MockedStatic<GitValidator> gitValidatorMock = mockStatic(GitValidator.class);
              MockedStatic<Files> filesMock = mockStatic(Files.class)) {
     
             // Create a mock for YamlPipelineValidator
-            YamlPipelineValidator mockValidator = mock(YamlPipelineValidator.class);
+            final YamlPipelineValidator mockValidator = mock(YamlPipelineValidator.class);
             when(mockValidator.validatePipeline(pipelineFile.toString())).thenReturn(true); // ✅ Fix here
     
             // Ensure inside a Git repository
@@ -56,7 +56,7 @@ class RunCommandTest {
             filesMock.when(() -> Files.isReadable(pipelineFile)).thenReturn(true);
     
             // Inject the mock validator into RunCommand (Modify RunCommand constructor if needed)
-            RunCommand runCommand = new RunCommand(mockValidator);
+            final RunCommand runCommand = new RunCommand(mockValidator);
     
             final CommandLine cmd = new CommandLine(runCommand);
             final int exitCode = cmd.execute("--local", "--file", pipelineFile.toString());
