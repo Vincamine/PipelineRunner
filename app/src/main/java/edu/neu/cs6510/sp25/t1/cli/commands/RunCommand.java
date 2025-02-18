@@ -34,6 +34,7 @@ public class RunCommand implements Runnable {
 
     @SuppressWarnings("unused")
     private final YamlPipelineValidator validator;
+
     /**
      * Default constructor.
      */
@@ -43,26 +44,30 @@ public class RunCommand implements Runnable {
 
     /**
      * Constructor with a validator for testing.
+     * 
      * @param validator
      */
     public RunCommand(YamlPipelineValidator validator) {
+        if (validator == null) {
+            throw new IllegalArgumentException("Validator cannot be null.");
+        }
         this.validator = validator;
     }
 
     @Override
     public void run() {
-        try {
-            System.out.println("CI/CD pipeline execution started.");
+        System.out.println("CI/CD pipeline execution started.");
 
+        try {
             if (isLocalRun) {
                 executeLocalRun();
             } else {
                 System.err.println("Error: Remote execution is not supported without a backend.");
-                System.exit(1);
+                throw new UnsupportedOperationException("Remote execution is not supported.");
             }
         } catch (Exception e) {
             ErrorHandler.reportError(e.getMessage());
-            System.exit(1);
+            throw new RuntimeException("Pipeline execution failed.", e);
         }
     }
 
@@ -71,17 +76,15 @@ public class RunCommand implements Runnable {
      */
     private void executeLocalRun() {
         System.out.println("Validating local repository...");
+
         if (!GitValidator.isGitRepository()) {
-            System.err.println("Error: Not a valid Git repository.");
-            System.exit(1);
-            return;
+            throw new IllegalStateException("Error: Not a valid Git repository.");
         }
 
         GitValidator.validateGitRepo();
 
         if (!validatePipelineFile(pipelineFile)) {
-            System.exit(1);
-            return;
+            throw new IllegalArgumentException("Pipeline file validation failed.");
         }
 
         System.out.println("Pipeline validation successful.");
@@ -109,9 +112,11 @@ public class RunCommand implements Runnable {
 
     /**
      * Simulates local execution of jobs.
+     * 
+     * @throws RuntimeException if job execution is interrupted.
      */
     private void executeLocalJobs() {
-        final String[] jobs = {"build-app", "run-tests", "deploy-app"};
+        final String[] jobs = { "build-app", "run-tests", "deploy-app" };
 
         for (String job : jobs) {
             System.out.println("Running job: " + job);
@@ -121,8 +126,9 @@ public class RunCommand implements Runnable {
             } catch (InterruptedException e) {
                 System.err.println("Job failed: " + job);
                 Thread.currentThread().interrupt();
-                System.exit(1);
+                throw new RuntimeException("Job execution interrupted: " + job, e); // ✅ Instead of System.exit(1)
             }
         }
     }
+
 }

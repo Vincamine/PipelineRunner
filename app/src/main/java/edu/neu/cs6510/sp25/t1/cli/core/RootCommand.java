@@ -52,16 +52,14 @@ public class RootCommand implements Runnable {
         // Ensure inside a Git repository
         if (!GitValidator.isGitRepository()) {
             System.err.println("Error: This command must be run inside a Git repository.");
-            System.exit(1);
-            return;
+            throw new IllegalStateException("This command must be run inside a Git repository.");
         }
 
         GitValidator.validateGitRepo();
 
         // Validate pipeline file
         if (!validateFilePath()) {
-            System.exit(1);
-            return;
+            throw new IllegalArgumentException("Invalid file path provided."); 
         }
 
         if (run) {
@@ -72,7 +70,6 @@ public class RootCommand implements Runnable {
             System.out.println("Use 'cli --help' to view available commands.");
         }
     }
-
 
     /**
      * Validates the file path specified by the user through the -f or --filename
