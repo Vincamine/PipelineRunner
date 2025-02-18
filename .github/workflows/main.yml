@@ -1,0 +1,71 @@
+name: Main Branch CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        
+      - name: Check Code Style
+        run: ./gradlew checkstyleMain checkstyleTest
+        
+      - name: Run PMD Static Analysis 
+        run: ./gradlew pmdMain pmdTest
+
+      - name: Run Tests
+        run: ./gradlew test
+        
+      - name: Enforce 70% Test Coverage
+        run: ./gradlew jacocoTestCoverageVerification
+        
+      - name: Generate JaCoCo Coverage Report
+        run: ./gradlew jacocoTestReport
+        
+      - name: Generate Javadoc
+        run: ./gradlew javadoc
+        
+      - name: Build JAR
+        run: ./gradlew jar
+        
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: app/build/libs/*.jar
+          
+      - name: Upload Documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation
+          path: app/build/docs/javadoc/
+          
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            app/build/reports/tests/
+            app/build/reports/jacoco/
+            
+      - name: Upload Static Analysis Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: static-analysis-results
+          path: |
+            app/build/reports/checkstyle/
+            app/build/reports/pmd/

@@ -63,32 +63,32 @@ application {
     mainClass.set("edu.neu.cs6510.sp25.t1.App")
 }
 
-// ✅ Configure Fat JAR for including dependencies
+// Configure Fat JAR for including dependencies
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "edu.neu.cs6510.sp25.t1.App"
     }
 }
 
-// ✅ Build a Fat JAR that includes dependencies
+// Build a Fat JAR that includes dependencies
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName.set("ci-tool")
     archiveClassifier.set("")
     archiveVersion.set("")
 }
 
-// ✅ Ensure Picocli annotation processing works correctly
+// Ensure Picocli annotation processing works correctly
 tasks.withType<JavaCompile> {
     options.annotationProcessorPath = configurations["annotationProcessor"]
 }
 
-// ✅ Run tests with JUnit 5
+// Run tests with JUnit 5
 tasks.named<Test>("test") {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
 }
 
-// ✅ Code Coverage Configuration
+// Code Coverage Configuration
 jacoco {
     toolVersion = "0.8.10"
 }
@@ -101,10 +101,22 @@ tasks.jacocoTestReport {
     }
 }
 
-// ✅ Checkstyle Configuration
+// Enforce 70% test coverage
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.7".toBigDecimal() // 70% test coverage requirement
+            }
+        }
+    }
+}
+
+// Checkstyle Configuration (Updated path to app/config)
 checkstyle {
     toolVersion = "10.12.3"
-    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    configFile = file("${rootDir}/app/config/checkstyle/checkstyle.xml")
 }
 
 tasks.withType<Checkstyle> {
@@ -114,7 +126,7 @@ tasks.withType<Checkstyle> {
     }
 }
 
-// ✅ PMD Configuration
+// PMD Configuration
 pmd {
     toolVersion = "6.55.0"
     rulesMinimumPriority.set(5)
@@ -127,13 +139,13 @@ tasks.withType<Pmd> {
     }
 }
 
-// ✅ JavaDoc Generation
+// JavaDoc Generation
 tasks.javadoc {
     options.encoding = "UTF-8"
     isFailOnError = false
 }
 
-// ✅ Enable compiler warnings
+// Enable compiler warnings
 tasks.withType<JavaCompile> {
     options.compilerArgs.add("-Xlint:deprecation")
 }
