@@ -9,14 +9,11 @@ import java.util.concurrent.Callable;
 
 /**
  * Command to validate a pipeline YAML file.
- * <p>
+ * 
  * This command ensures that the pipeline YAML file:
- * <ul>
- *     <li>Has a valid structure</li>
- *     <li>Contains no cyclic dependencies</li>
- *     <li>Defines valid job configurations</li>
- * </ul>
- * </p>
+ * - Has a valid structure
+ * - Contains no cyclic dependencies
+ * - Defines valid job configurations
  */
 @Command(
     name = "check",
@@ -25,31 +22,36 @@ import java.util.concurrent.Callable;
 )
 public class CheckCommand implements Callable<Boolean> {
 
-  @Option(
-      names = {"-f", "--file"},
-      description = "Path to the pipeline YAML file",
-      required = false,
-      defaultValue = ".pipelines/pipeline.yaml"
-  )
-  private String yamlFilePath;
+    @Option(
+        names = {"-f", "--file"},
+        description = "Path to the pipeline YAML file",
+        required = false,
+        defaultValue = ".pipelines/pipeline.yaml"
+    )
+    private String yamlFilePath;
 
-  /**
-   * Executes the check command to validate a pipeline YAML file.
-   *
-   * @return {@code true} if validation succeeds, {@code false} if validation fails.
-   */
-  @Override
-  public Boolean call() {
-    final YamlPipelineValidator yamlPipelineValidator = new YamlPipelineValidator();
-    final PipelineValidator pipelineValidator = new PipelineValidator(yamlPipelineValidator);
+    private final PipelineValidator pipelineValidator;
 
-    // Validate pipeline file
-    final boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);
-
-    if (!isValid) {
-      System.err.println("❌ Pipeline validation failed. Please check your YAML file.");
+    /** Default constructor that creates a new PipelineValidator */
+    public CheckCommand() {
+        this(new PipelineValidator(new YamlPipelineValidator()));
     }
 
-    return isValid;
-  }
+    /** Constructor for injecting a mock PipelineValidator */
+    public CheckCommand(PipelineValidator pipelineValidator) {
+        this.pipelineValidator = pipelineValidator;
+    }
+
+    /** Executes the check command */
+    @Override
+    public Boolean call() {
+        final boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);
+    
+        if (!isValid) {
+            System.err.println("Pipeline validation failed. Please check your YAML file.");
+            return false; 
+        }
+    
+        return true;
+    }
 }

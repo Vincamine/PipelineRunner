@@ -10,11 +10,16 @@ import java.net.http.HttpClient;
 import java.util.List;
 
 /**
- * Command to retrieve logs for a specific pipeline.
+ * Command to retrieve logs for a specific pipeline execution.
+ * 
+ * This command fetches logs from a remote storage service or database.
  */
 @CommandLine.Command(name = "logs", description = "Retrieve logs for a pipeline based on its ID")
 public class LogCommand implements Runnable {
 
+    /**
+     * The ID of the pipeline whose logs are to be retrieved.
+     */
     @CommandLine.Option(names = "--id", required = true, description = "Pipeline ID to retrieve logs for")
     private String pipelineId;
 
@@ -22,6 +27,8 @@ public class LogCommand implements Runnable {
 
     /**
      * Constructor allowing dependency injection for testing.
+     *
+     * @param logService The service responsible for fetching logs.
      */
     public LogCommand(LogService logService) {
         this.logService = logService;
@@ -34,14 +41,18 @@ public class LogCommand implements Runnable {
         this(new LogService(HttpClient.newHttpClient()));
     }
 
+    /**
+     * Fetch logs for the given pipeline ID and print them to the console.
+     */
     @Override
     public void run() {
         try {
             if (pipelineId == null || pipelineId.trim().isEmpty()) {
-                System.err.println("❌ Error: Pipeline ID is required.");
+                System.err.println("Error: Pipeline ID is required.");
                 return;
             }
 
+            // Fetch logs for the given pipeline ID
             final List<LogEntry> logs = logService.getLogsByPipelineId(pipelineId);
 
             if (logs.isEmpty()) {
@@ -49,6 +60,7 @@ public class LogCommand implements Runnable {
                 return;
             }
 
+            // Print logs in formatted output
             logs.forEach(log -> System.out.println(LogFormatter.format(log)));
 
         } catch (Exception e) {

@@ -8,29 +8,39 @@ import picocli.CommandLine.Option;
 
 /**
  * CLI command to trigger a CI/CD pipeline execution.
- * Runs the pipeline either locally or remotely.
+ * 
+ * This command executes a pipeline either locally or remotely.
  */
 @Command(name = "run", description = "Trigger CI/CD pipeline execution")
 public class RunCommand implements Runnable {
 
+    /**
+     * Flag to indicate whether to run the pipeline locally.
+     */
     @Option(names = "--local", description = "Run the pipeline on the local machine")
     private boolean isLocalRun;
 
+    /**
+     * Path to the repository (local or remote).
+     */
     @Option(names = "--repo", description = "Repository location (local path or remote HTTPS URL)")
     private String repo;
 
+    /**
+     * Path to the pipeline configuration file.
+     */
     @Option(names = "--file", description = "Path to the pipeline configuration file", required = true)
     private String pipelineFile;
 
     @Override
     public void run() {
         try {
-            System.out.println("🚀 CI/CD pipeline execution started.");
+            System.out.println("CI/CD pipeline execution started.");
 
             if (isLocalRun) {
                 executeLocalRun();
             } else {
-                System.err.println("❌ Error: Remote execution is not supported without a backend.");
+                System.err.println("Error: Remote execution is not supported without a backend.");
                 System.exit(1);
             }
         } catch (Exception e) {
@@ -43,9 +53,9 @@ public class RunCommand implements Runnable {
      * Executes the pipeline locally.
      */
     private void executeLocalRun() {
-        System.out.println("🔍 Validating local repository...");
+        System.out.println("Validating local repository...");
         if (!GitValidator.isGitRepository()) {
-            System.err.println("❌ Error: Not a valid Git repository.");
+            System.err.println("Error: Not a valid Git repository.");
             System.exit(1);
             return;
         }
@@ -57,23 +67,24 @@ public class RunCommand implements Runnable {
             return;
         }
 
-        System.out.println("✅ Pipeline validation successful.");
-        System.out.println("🔄 Executing pipeline...");
+        System.out.println("Pipeline validation successful.");
+        System.out.println("Executing pipeline...");
 
         executeLocalJobs();
 
-        System.out.println("✅ Pipeline execution complete.");
+        System.out.println("Pipeline execution complete.");
     }
 
     /**
      * Validates the pipeline YAML file.
+     * 
      * @param filePath The pipeline file path.
-     * @return True if valid, false otherwise.
+     * @return true if valid, false otherwise.
      */
     private boolean validatePipelineFile(String filePath) {
         final YamlPipelineValidator validator = new YamlPipelineValidator();
         if (!validator.validatePipeline(filePath)) {
-            System.err.println("❌ Pipeline validation failed.");
+            System.err.println("Pipeline validation failed.");
             return false;
         }
         return true;
@@ -86,12 +97,12 @@ public class RunCommand implements Runnable {
         final String[] jobs = {"build-app", "run-tests", "deploy-app"};
 
         for (String job : jobs) {
-            System.out.println("🔄 Running job: " + job);
+            System.out.println("Running job: " + job);
             try {
                 Thread.sleep(2000); // Simulate job execution time
-                System.out.println("✅ Job completed: " + job);
+                System.out.println("Job completed: " + job);
             } catch (InterruptedException e) {
-                System.err.println("❌ Job failed: " + job);
+                System.err.println("Job failed: " + job);
                 Thread.currentThread().interrupt();
                 System.exit(1);
             }

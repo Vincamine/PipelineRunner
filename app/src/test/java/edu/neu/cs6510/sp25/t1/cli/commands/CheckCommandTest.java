@@ -6,25 +6,40 @@ import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class CheckCommandTest {
-
+    private PipelineValidator mockPipelineValidator;
     private CheckCommand checkCommand;
-    private PipelineValidator pipelineValidator;
 
     @BeforeEach
     void setUp() {
-        pipelineValidator = mock(PipelineValidator.class);
-        checkCommand = new CheckCommand();
+        mockPipelineValidator = mock(PipelineValidator.class);
+        checkCommand = new CheckCommand(mockPipelineValidator);
     }
 
+    /** Ensures the check command succeeds when the pipeline file is valid */
     @Test
     void testCheck_ValidPipeline_Success() {
-        doReturn(true).when(pipelineValidator).validatePipelineFile(anyString());
+        when(mockPipelineValidator.validatePipelineFile(".pipelines/pipeline.yaml")).thenReturn(true);
 
-        final int exitCode = new CommandLine(checkCommand).execute("-f", "valid_pipeline.yaml");
-        assertEquals(0, exitCode);
+        final CommandLine cmd = new CommandLine(checkCommand);
+        final int exitCode = cmd.execute();
+
+        assertEquals(0, exitCode, "Check command should succeed if pipeline file is valid.");
     }
+
+    /** Ensures the check command fails when the pipeline file is invalid */
+    @Test
+    void testCheck_InvalidPipeline_Fails() {
+        when(mockPipelineValidator.validatePipelineFile(".pipelines/pipeline.yaml")).thenReturn(false);
+
+        final CommandLine cmd = new CommandLine(checkCommand);
+        @SuppressWarnings("unused")
+        final int exitCode = cmd.execute();
+
+        // Picocli returns 0 for false, so explicitly check the boolean return
+        assertFalse(checkCommand.call(), "Check command should fail if pipeline file is invalid.");
+    }
+
 }
