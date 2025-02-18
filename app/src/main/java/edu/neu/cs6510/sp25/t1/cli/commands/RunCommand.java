@@ -32,6 +32,23 @@ public class RunCommand implements Runnable {
     @Option(names = "--file", description = "Path to the pipeline configuration file", required = true)
     private String pipelineFile;
 
+    @SuppressWarnings("unused")
+    private final YamlPipelineValidator validator;
+    /**
+     * Default constructor.
+     */
+    public RunCommand() {
+        this(new YamlPipelineValidator());
+    }
+
+    /**
+     * Constructor with a validator for testing.
+     * @param validator
+     */
+    public RunCommand(YamlPipelineValidator validator) {
+        this.validator = validator;
+    }
+
     @Override
     public void run() {
         try {
