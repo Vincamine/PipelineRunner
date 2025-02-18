@@ -5,7 +5,11 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.error.YAMLException;
 import org.yaml.snakeyaml.error.MarkedYAMLException;
-import org.yaml.snakeyaml.nodes.*;
+import org.yaml.snakeyaml.nodes.MappingNode;
+import org.yaml.snakeyaml.nodes.Node;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.ScalarNode;
+import org.yaml.snakeyaml.nodes.SequenceNode;
 
 import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 
@@ -14,16 +18,17 @@ import org.yaml.snakeyaml.error.Mark;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * YamlLoader is responsible for reading and parsing YAML files with location tracking.
+ * YamlLoader is responsible for reading and parsing YAML files with location
+ * tracking.
  * It provides methods to:
- * <ul>
- *   <li>Load and parse YAML content</li>
- *   <li>Track source locations of YAML elements</li>
- *   <li>Handle YAML parsing errors with detailed location information</li>
- * </ul>
+ * - Load and parse YAML content
+ * - Track source locations of YAML elements
+ * - Handle YAML parsing errors with detailed location information
+ * 
  */
 public class YamlLoader {
 
@@ -33,7 +38,7 @@ public class YamlLoader {
    *
    * @param filePath The path to the YAML file
    * @return A Map containing the parsed YAML data
-   * @throws IOException If the file cannot be read
+   * @throws IOException              If the file cannot be read
    * @throws IllegalArgumentException If the YAML format is invalid
    */
   public static Map<String, Object> loadYaml(String filePath) throws IOException {
@@ -45,8 +50,9 @@ public class YamlLoader {
    * Loads and parses a YAML file with location tracking.
    *
    * @param filePath The path to the YAML file
-   * @return A YamlLoadResult containing both the parsed data and location information
-   * @throws IOException If the file cannot be read
+   * @return A YamlLoadResult containing both the parsed data and location
+   *         information
+   * @throws IOException              If the file cannot be read
    * @throws IllegalArgumentException If the YAML format is invalid
    */
   public static YamlLoadResult loadYamlWithLocations(String filePath) throws IOException {
@@ -78,16 +84,14 @@ public class YamlLoader {
             filePath,
             markedE.getProblemMark().getLine() + 1,
             markedE.getProblemMark().getColumn() + 1,
-            "yaml"
-        );
+            "yaml");
       } else {
         location = new ErrorHandler.Location(filePath, 1, 1, "yaml");
       }
 
       final String errorMessage = ErrorHandler.formatException(
           location,
-          "YAML parsing error: " + e.getMessage()
-      );
+          "YAML parsing error: " + e.getMessage());
       throw new IllegalArgumentException(errorMessage);
     }
   }
@@ -95,8 +99,8 @@ public class YamlLoader {
   /**
    * Processes a YAML node recursively, collecting location information.
    *
-   * @param node The YAML node to process
-   * @param path The current path in the YAML structure
+   * @param node      The YAML node to process
+   * @param path      The current path in the YAML structure
    * @param locations Map to collect location information
    */
   private static void processNode(Node node, String path, Map<String, Mark> locations) {

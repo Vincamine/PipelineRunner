@@ -13,19 +13,19 @@ import picocli.CommandLine.Option;
 
 /**
  * Command to check pipeline execution status.
- * <p>
- * This command retrieves and displays the status of a specified pipeline execution.
- * </p>
+ * 
+ * This command retrieves and displays the status of a specified pipeline
+ * execution.
  */
-@Command(
-    name = "status",
-    description = "Check the status of a pipeline execution."
-)
+@Command(name = "status", description = "Check the status of a pipeline execution.")
 public class StatusCommand implements Runnable {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
 
-    @Option(names = {"-p", "--pipeline-id"}, description = "Pipeline ID to check.", required = true)
+    /**
+     * Pipeline ID to check the status.
+     */
+    @Option(names = { "-p", "--pipeline-id" }, description = "Pipeline ID to check.", required = true)
     private String pipelineId;
 
     private final StatusService statusService;

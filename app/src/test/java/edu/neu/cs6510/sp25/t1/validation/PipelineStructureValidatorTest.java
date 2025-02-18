@@ -7,14 +7,20 @@ import org.yaml.snakeyaml.error.Mark;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link PipelineStructureValidator}.
  * <p>
- * This test suite ensures that the pipeline structure follows the correct YAML format,
+ * This test suite ensures that the pipeline structure follows the correct YAML
+ * format,
  * checking for missing or incorrectly formatted fields.
  */
 class PipelineStructureValidatorTest {
@@ -26,7 +32,8 @@ class PipelineStructureValidatorTest {
   private final String TEST_FILENAME = "pipeline.yaml";
 
   /**
-   * Sets up the test environment by initializing the validator and valid pipeline data.
+   * Sets up the test environment by initializing the validator and valid pipeline
+   * data.
    * Redirects System.err output for error validation.
    */
   @BeforeEach

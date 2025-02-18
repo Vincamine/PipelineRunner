@@ -6,7 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Utility class for verifying if the CLI is being executed inside a Git repository.
+ * Utility class for verifying if the CLI is being executed inside a Git
+ * repository.
  */
 public class GitValidator {
     private static final Logger LOGGER = Logger.getLogger(GitValidator.class.getName());
@@ -14,7 +15,8 @@ public class GitValidator {
     /**
      * Checks whether the current directory is inside a Git repository.
      *
-     * @return {@code true} if a `.git` directory is found; otherwise, {@code false}.
+     * @return {@code true} if a `.git` directory is found; otherwise,
+     *         {@code false}.
      */
     public static boolean isGitRepository() {
         File currentDir = new File(System.getProperty("user.dir"));
@@ -33,11 +35,12 @@ public class GitValidator {
     /**
      * Ensures the CLI is running inside a Git repository.
      *
-     * @throws IllegalStateException if the CLI is not executed from a Git repository.
+     * @throws IllegalStateException if the CLI is not executed from a Git
+     *                               repository.
      */
     public static void validateGitRepo() {
         if (!isGitRepository()) {
-            final String message = "❌ This CLI must be run from the root of a Git repository.";
+            final String message = "This CLI must be run from the root of a Git repository.";
             LOGGER.log(Level.SEVERE, message);
             throw new IllegalStateException(message);
         }

@@ -6,11 +6,12 @@ import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
 
 /**
  * Service class responsible for retrieving pipeline execution status.
- * <p>
- * 🚀 **Mock Implementation** for demo purposes.
- * - This service **simulates** retrieving the pipeline status from an API.
- * - Once the backend API is available, **replace the mock logic with an actual API call**.
- * </p>
+ * 
+ * Mock Implementation for demo purposes.
+ * - This service simulates retrieving the pipeline status from an API.
+ * - Once the backend API is available, replace the mock logic with an actual
+ * API call.
+ * 
  */
 public class StatusService {
 
@@ -26,14 +27,13 @@ public class StatusService {
             throw new IllegalArgumentException("Pipeline ID cannot be null or empty.");
         }
 
-        // 🚀 TODO: Replace this with an actual API call when available
+        // TODO: Replace this with an actual API call when available
         return new PipelineStatus(
-            pipelineId,
-            PipelineState.RUNNING,
-            75,
-            "Deploy to Staging",
-            Instant.now().minusSeconds(300),
-            Instant.now()
-        );
+                pipelineId,
+                PipelineState.RUNNING,
+                75,
+                "Deploy to Staging",
+                Instant.now().minusSeconds(300),
+                Instant.now());
     }
 }

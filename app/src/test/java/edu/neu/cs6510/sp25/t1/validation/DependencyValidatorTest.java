@@ -7,9 +7,15 @@ import org.yaml.snakeyaml.error.Mark;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DependencyValidatorTest {
   private Map<String, List<String>> dependencies;
@@ -21,7 +27,7 @@ class DependencyValidatorTest {
   @BeforeEach
   void setUp() {
     dependencies = new HashMap<>();
-    testMark = new Mark(TEST_FILENAME, 0, 5, 10, new int[]{}, 0);
+    testMark = new Mark(TEST_FILENAME, 0, 5, 10, new int[] {}, 0);
     System.setErr(new PrintStream(errorOutput));
   }
 

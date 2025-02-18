@@ -1,43 +1,27 @@
 package edu.neu.cs6510.sp25.t1.validation;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.yaml.snakeyaml.error.Mark;
 import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 
 /**
- * <h1>DependencyValidator</h1>
- * <p>
- * Validates job dependencies in a CI/CD pipeline YAML configuration.
+ * DependencyValidator: Validates job dependencies in a CI/CD pipeline YAML
+ * configuration.
  * This class ensures that:
- * <ul>
- *     <li>All referenced job dependencies exist.</li>
- *     <li>No cyclic dependencies exist within the job structure.</li>
- * </ul>
- * </p>
  * 
- * <h2>Validation Flow:</h2>
- * <ol>
- *     <li>First, checks that all job dependencies exist in the job definitions.</li>
- *     <li>Then, performs a depth-first search (DFS) to detect cycles in job dependencies.</li>
- * </ol>
+ * - All referenced job dependencies exist.
+ * - No cyclic dependencies exist within the job structure.
  * 
- * <h2>Example Job Definition:</h2>
- * <pre>
- * jobs:
- *   - name: build
- *     stage: build
- *     script: [ "./build.sh" ]
- *   - name: test
- *     stage: test
- *     needs: [ "build" ]
- *     script: [ "./test.sh" ]
- *   - name: deploy
- *     stage: deploy
- *     needs: [ "test" ]
- *     script: [ "./deploy.sh" ]
- * </pre>
- * 
- * @author CI/CD CLI Team
+ * Validation Flow:
+ * First, checks that all job dependencies exist in the job definitions.
+ * Then, performs a depth-first search (DFS) to detect cycles in job
+ * dependencies.
  */
 public class DependencyValidator {
   private final Map<String, List<String>> jobDependencies;
@@ -48,8 +32,10 @@ public class DependencyValidator {
   /**
    * Constructor for DependencyValidator.
    *
-   * @param jobDependencies A map where the key is the job name, and the value is a list of dependent job names.
-   * @param yamlMark        The location information from the YAML parser for error reporting.
+   * @param jobDependencies A map where the key is the job name, and the value is
+   *                        a list of dependent job names.
+   * @param yamlMark        The location information from the YAML parser for
+   *                        error reporting.
    * @param filename        The filename of the YAML configuration.
    */
   public DependencyValidator(Map<String, List<String>> jobDependencies, Mark yamlMark, String filename) {
@@ -61,10 +47,8 @@ public class DependencyValidator {
 
   /**
    * Validates dependencies by ensuring:
-   * <ul>
-   *     <li>All referenced dependencies exist.</li>
-   *     <li>No circular dependencies are present.</li>
-   * </ul>
+   * - All referenced dependencies exist.
+   * - No circular dependencies are present.
    *
    * @return {@code true} if dependencies are valid, {@code false} otherwise.
    */
@@ -91,7 +75,8 @@ public class DependencyValidator {
   /**
    * Ensures all dependencies reference existing jobs.
    *
-   * @return {@code true} if all dependencies exist, {@code false} if any dependency is missing.
+   * @return {@code true} if all dependencies exist, {@code false} if any
+   *         dependency is missing.
    */
   private boolean validateExistence() {
     for (Map.Entry<String, List<String>> entry : jobDependencies.entrySet()) {
@@ -100,8 +85,7 @@ public class DependencyValidator {
         if (!allJobNames.contains(dependency)) {
           System.err.println(ErrorHandler.formatMissingFieldError(
               baseLocation,
-              String.format("Job '%s' has a dependency on non-existent job '%s'", jobName, dependency)
-          ));
+              String.format("Job '%s' has a dependency on non-existent job '%s'", jobName, dependency)));
           return false;
         }
       }
@@ -129,7 +113,8 @@ public class DependencyValidator {
    *
    * @param job             The current job being processed.
    * @param visited         A set of already visited jobs.
-   * @param recursionStack  Tracks the current path in the DFS for cycle detection.
+   * @param recursionStack  Tracks the current path in the DFS for cycle
+   *                        detection.
    * @param currentPath     The current job path being explored.
    * @param processedCycles Stores detected cycles to prevent duplicate reports.
    */
@@ -138,8 +123,7 @@ public class DependencyValidator {
       Set<String> visited,
       Set<String> recursionStack,
       List<String> currentPath,
-      Set<String> processedCycles
-  ) {
+      Set<String> processedCycles) {
     // If job is in recursion stack, we found a cycle
     if (recursionStack.contains(job)) {
       final int cycleStart = currentPath.indexOf(job);

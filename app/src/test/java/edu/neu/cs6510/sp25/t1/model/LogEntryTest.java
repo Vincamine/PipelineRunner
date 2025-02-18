@@ -2,13 +2,15 @@ package edu.neu.cs6510.sp25.t1.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LogEntryTest {
 
     @Test
     void testConstructorAndGetters() {
-        final LogEntry log = new LogEntry("pipeline-123", LogLevel.INFO, "Pipeline started", System.currentTimeMillis());
+        final LogEntry log = new LogEntry("pipeline-123", LogLevel.INFO, "Pipeline started",
+                System.currentTimeMillis());
 
         assertEquals("pipeline-123", log.getPipelineId());
         assertEquals(LogLevel.INFO, log.getLevel());

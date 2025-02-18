@@ -18,7 +18,7 @@ import java.util.List;
  * Handles HTTP requests, JSON deserialization, and error handling.
  */
 public class LogService {
-    
+
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
     private static final String BASE_URL = "https://example.com/api/log/"; // Placeholder API
@@ -27,7 +27,8 @@ public class LogService {
      * Constructs a LogService with a given HTTP client.
      * If {@code httpClient} is null, a default one is created.
      *
-     * @param httpClient An instance of {@link HttpClient} for sending HTTP requests.
+     * @param httpClient An instance of {@link HttpClient} for sending HTTP
+     *                   requests.
      */
     public LogService(HttpClient httpClient) {
         this.httpClient = httpClient != null ? httpClient : HttpClient.newHttpClient();
@@ -38,7 +39,8 @@ public class LogService {
      * Fetches logs for a given pipeline ID from the external API.
      *
      * @param pipelineId The pipeline ID to retrieve logs for.
-     * @return A list of {@link LogEntry} objects if successful; otherwise, an empty list.
+     * @return A list of {@link LogEntry} objects if successful; otherwise, an empty
+     *         list.
      */
     public List<LogEntry> getLogsByPipelineId(String pipelineId) {
         if (pipelineId == null || pipelineId.trim().isEmpty()) {
@@ -67,17 +69,18 @@ public class LogService {
      */
     private HttpRequest buildHttpRequest(String url) {
         return HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Accept", "application/json")
-            .GET()
-            .build();
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET()
+                .build();
     }
 
     /**
      * Processes the HTTP response and converts it into a list of log entries.
      *
      * @param response The HTTP response.
-     * @return A list of {@link LogEntry} objects or an empty list if an error occurs.
+     * @return A list of {@link LogEntry} objects or an empty list if an error
+     *         occurs.
      */
     private List<LogEntry> processResponse(HttpResponse<String> response) {
         if (response.statusCode() == 200) {
@@ -96,7 +99,8 @@ public class LogService {
      */
     private List<LogEntry> parseJsonResponse(String jsonResponse) {
         try {
-            return objectMapper.readValue(jsonResponse, new TypeReference<List<LogEntry>>() {});
+            return objectMapper.readValue(jsonResponse, new TypeReference<List<LogEntry>>() {
+            });
         } catch (JsonProcessingException e) {
             System.err.println("Error parsing JSON response: " + e.getMessage());
             return Collections.emptyList();

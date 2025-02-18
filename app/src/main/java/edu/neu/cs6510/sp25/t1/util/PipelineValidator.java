@@ -18,7 +18,8 @@ public class PipelineValidator {
     /**
      * Constructs a new PipelineValidator with a YAML validator.
      *
-     * @param yamlPipelineValidator The validator instance used for checking YAML structure.
+     * @param yamlPipelineValidator The validator instance used for checking YAML
+     *                              structure.
      */
     public PipelineValidator(YamlPipelineValidator yamlPipelineValidator) {
         this.yamlPipelineValidator = yamlPipelineValidator;
@@ -26,6 +27,8 @@ public class PipelineValidator {
 
     /**
      * Validates the existence and correctness of a pipeline YAML file.
+     * The file is checked for existence, if it resides in the correct directory,
+     * and if it adheres to the expected pipeline structure.
      *
      * @param yamlFilePath The path to the YAML file.
      * @return {@code true} if the file is valid, {@code false} otherwise.
@@ -34,27 +37,31 @@ public class PipelineValidator {
         try {
             final Path yamlPath = Paths.get(yamlFilePath).toAbsolutePath().normalize();
 
+            // Check if the file exists
             if (!Files.exists(yamlPath)) {
-                System.err.println("❌ YAML file not found: " + yamlFilePath);
+                System.err.println("YAML file not found: " + yamlFilePath);
                 return false;
             }
 
+            // Check if the file is inside the correct '.pipelines/' directory
             final Path parentDir = yamlPath.getParent();
-            if (parentDir == null || !Files.isDirectory(parentDir) || !PIPELINE_DIRECTORY.equals(parentDir.getFileName().toString())) {
-                System.err.println("⚠️ YAML file must be inside the '.pipelines/' folder");
+            if (parentDir == null || !Files.isDirectory(parentDir)
+                    || !PIPELINE_DIRECTORY.equals(parentDir.getFileName().toString())) {
+                System.err.println("YAML file must be inside the '.pipelines/' folder");
                 return false;
             }
 
+            // Validate the YAML file structure
             final boolean isValid = yamlPipelineValidator.validatePipeline(yamlPath.toString());
 
             if (!isValid) {
-                System.err.println("❌ Pipeline validation failed.");
+                System.err.println("Pipeline validation failed.");
             }
 
             return isValid;
 
         } catch (Exception e) {
-            System.err.println("❌ Pipeline validation error: " + e.getMessage());
+            System.err.println("Pipeline validation error: " + e.getMessage());
             return false;
         }
     }

@@ -1,0 +1,54 @@
+name: Code Review CI
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        
+      - name: Check Code Style
+        run: ./gradlew checkstyleMain checkstyleTest
+        
+      - name: Run PMD Static Analysis 
+        run: ./gradlew pmdMain pmdTest
+
+      - name: Run Tests
+        run: ./gradlew test
+        
+      - name: Enforce 70% Test Coverage
+        run: ./gradlew jacocoTestCoverageVerification
+        
+      - name: Generate JaCoCo Coverage Report
+        run: ./gradlew jacocoTestReport
+        
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            app/build/reports/tests/
+            app/build/reports/jacoco/
+            
+      - name: Upload Static Analysis Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-analysis-results
+          path: |
+            app/build/reports/checkstyle/
+            app/build/reports/pmd/

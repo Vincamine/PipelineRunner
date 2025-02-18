@@ -6,18 +6,20 @@ import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 import edu.neu.cs6510.sp25.t1.util.ErrorHandler.Location;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Top-level validator for YAML pipeline configurations. This validator
- * coordinates the validation
- * process by:
- * <ul>
- * <li>Loading and parsing the YAML file</li>
- * <li>Validating the overall pipeline structure</li>
- * <li>Validating individual jobs</li>
- * <li>Checking job dependencies for cycles</li>
- * </ul>
+ * coordinates the validation process by:
+ * - Loading and parsing the YAML file
+ * - Validating the overall pipeline structure
+ * - Validating individual jobs
+ * - Checking job dependencies for cycles
+ * 
  */
 public class YamlPipelineValidator {
 
@@ -131,6 +133,12 @@ public class YamlPipelineValidator {
     }
   }
 
+  /**
+   * Validates a pipeline configuration from a map.
+   * 
+   * @param pipelineConfig
+   * @return true if the pipeline is valid, false otherwise
+   */
   public boolean validatePipeline(Map<String, Object> pipelineConfig) {
     if (pipelineConfig == null || !pipelineConfig.containsKey("pipeline")) {
       System.err.println("❌ Error: Pipeline configuration is invalid or missing.");
