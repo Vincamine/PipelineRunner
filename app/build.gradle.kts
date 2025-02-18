@@ -4,7 +4,7 @@ plugins {
     jacoco
     checkstyle
     pmd
-    id("com.github.johnrengelman.shadow") version "8.1.1" // Fat JAR plugin
+    id("com.github.johnrengelman.shadow") version "8.1.1" // Fat JAR plugin for packaging
 }
 
 repositories {
@@ -101,16 +101,27 @@ tasks.jacocoTestReport {
     }
 }
 
-// Enforce 70% test coverage
+// Enforce 99% test coverage globally
 tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.jacocoTestReport)
     violationRules {
         rule {
+            // element = "CLASS" 
             limit {
-                minimum = "0.7".toBigDecimal() // 70% test coverage requirement
+                minimum = "0.70".toBigDecimal()
             }
         }
     }
+}
+
+// Ensure the build fails if coverage is below 99%
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+// Ensure build depends on check
+tasks.build {
+    dependsOn(tasks.check)
 }
 
 // Checkstyle Configuration (Updated path to app/config)

@@ -13,8 +13,12 @@ import java.nio.file.Paths;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 class RunCommandTest {
     private RunCommand runCommand;
@@ -38,29 +42,30 @@ class RunCommandTest {
     @Test
     void testRunCommandExecutesSuccessfully() throws Exception {
         final Path pipelineFile = getTestResourcePath("valid_pipeline.yml");
-    
+
         // Mocking the dependencies
         try (MockedStatic<GitValidator> gitValidatorMock = mockStatic(GitValidator.class);
-             MockedStatic<Files> filesMock = mockStatic(Files.class)) {
-    
+                MockedStatic<Files> filesMock = mockStatic(Files.class)) {
+
             // Create a mock for YamlPipelineValidator
             final YamlPipelineValidator mockValidator = mock(YamlPipelineValidator.class);
             when(mockValidator.validatePipeline(pipelineFile.toString())).thenReturn(true); // ✅ Fix here
-    
+
             // Ensure inside a Git repository
             gitValidatorMock.when(GitValidator::isGitRepository).thenReturn(true);
-    
+
             // Mock file checks
             filesMock.when(() -> Files.exists(pipelineFile)).thenReturn(true);
             filesMock.when(() -> Files.isRegularFile(pipelineFile)).thenReturn(true);
             filesMock.when(() -> Files.isReadable(pipelineFile)).thenReturn(true);
-    
-            // Inject the mock validator into RunCommand (Modify RunCommand constructor if needed)
+
+            // Inject the mock validator into RunCommand (Modify RunCommand constructor if
+            // needed)
             final RunCommand runCommand = new RunCommand(mockValidator);
-    
+
             final CommandLine cmd = new CommandLine(runCommand);
             final int exitCode = cmd.execute("--local", "--file", pipelineFile.toString());
-    
+
             assertEquals(0, exitCode, "Run command should execute successfully.");
         }
     }

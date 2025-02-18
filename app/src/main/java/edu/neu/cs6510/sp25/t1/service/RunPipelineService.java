@@ -5,16 +5,25 @@ import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
 import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
 import edu.neu.cs6510.sp25.t1.model.PipelineState;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 /**
- * Service to execute a CI/CD pipeline while respecting dependencies and failure policies.
+ * Service to execute a CI/CD pipeline while respecting dependencies and failure
+ * policies.
  * <p>
  * The pipeline runs in the order defined in the YAML file:
  * <ul>
- *     <li>Stages execute sequentially.</li>
- *     <li>Jobs within each stage execute concurrently.</li>
- *     <li>If a job (without allow_failure) fails, the pipeline halts immediately.</li>
+ * <li>Stages execute sequentially.</li>
+ * <li>Jobs within each stage execute concurrently.</li>
+ * <li>If a job (without allow_failure) fails, the pipeline halts
+ * immediately.</li>
  * </ul>
  */
 public class RunPipelineService {
@@ -30,7 +39,8 @@ public class RunPipelineService {
     }
 
     /**
-     * Executes the pipeline in order while respecting dependencies and failure policies.
+     * Executes the pipeline in order while respecting dependencies and failure
+     * policies.
      *
      * @param pipelineConfig The parsed YAML pipeline configuration.
      * @return The final pipeline execution status.
@@ -49,12 +59,14 @@ public class RunPipelineService {
             final Map<String, List<String>> dependencies = extractDependencies(pipelineConfig);
 
             @SuppressWarnings("unused")
-            final PipelineStatus status = new PipelineStatus("pipeline", PipelineState.RUNNING, 0, "Executing pipeline.");
+            final PipelineStatus status = new PipelineStatus("pipeline", PipelineState.RUNNING, 0,
+                    "Executing pipeline.");
 
             // Execute pipeline stage by stage
             for (String stage : stages) {
                 System.out.println("🚀 Executing stage: " + stage);
-                final boolean stageFailed = executeStage(stage, jobs.getOrDefault(stage, Collections.emptyList()), dependencies);
+                final boolean stageFailed = executeStage(stage, jobs.getOrDefault(stage, Collections.emptyList()),
+                        dependencies);
 
                 if (stageFailed) {
                     System.err.println("❌ Pipeline failed at stage: " + stage);
@@ -116,7 +128,8 @@ public class RunPipelineService {
      * Extracts job dependencies safely.
      *
      * @param pipelineConfig The parsed YAML pipeline configuration.
-     * @return A map where keys are job names, and values are lists of dependent job names.
+     * @return A map where keys are job names, and values are lists of dependent job
+     *         names.
      */
     private Map<String, List<String>> extractDependencies(Map<String, Object> pipelineConfig) {
         final Map<String, List<String>> dependencies = new HashMap<>();
@@ -140,8 +153,8 @@ public class RunPipelineService {
     /**
      * Executes a stage by running its jobs and respecting dependencies.
      *
-     * @param stage The stage name.
-     * @param jobs  The list of job names in this stage.
+     * @param stage        The stage name.
+     * @param jobs         The list of job names in this stage.
      * @param dependencies The job dependency mapping.
      * @return {@code true} if any job fails; otherwise, {@code false}.
      */
@@ -154,7 +167,8 @@ public class RunPipelineService {
 
             // Ensure dependencies are met before running job
             if (dependencies.containsKey(job)) {
-                final boolean unmetDependency = dependencies.get(job).stream().anyMatch(dep -> !completedJobs.contains(dep));
+                final boolean unmetDependency = dependencies.get(job).stream()
+                        .anyMatch(dep -> !completedJobs.contains(dep));
                 if (unmetDependency) {
                     jobQueue.offer(job); // Requeue job for later execution
                     continue;

@@ -4,7 +4,7 @@ import edu.neu.cs6510.sp25.t1.model.LogEntry;
 import edu.neu.cs6510.sp25.t1.model.LogLevel;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LogFormatterTest {
 

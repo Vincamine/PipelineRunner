@@ -15,19 +15,11 @@ import java.util.concurrent.Callable;
  * - Contains no cyclic dependencies
  * - Defines valid job configurations
  */
-@Command(
-    name = "check",
-    description = "Validate a pipeline YAML file",
-    mixinStandardHelpOptions = true
-)
+@Command(name = "check", description = "Validate a pipeline YAML file", mixinStandardHelpOptions = true)
 public class CheckCommand implements Callable<Boolean> {
 
-    @Option(
-        names = {"-f", "--file"},
-        description = "Path to the pipeline YAML file",
-        required = false,
-        defaultValue = ".pipelines/pipeline.yaml"
-    )
+    @Option(names = { "-f",
+            "--file" }, description = "Path to the pipeline YAML file", required = false, defaultValue = ".pipelines/pipeline.yaml")
     private String yamlFilePath;
 
     private final PipelineValidator pipelineValidator;
@@ -46,12 +38,12 @@ public class CheckCommand implements Callable<Boolean> {
     @Override
     public Boolean call() {
         final boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);
-    
+
         if (!isValid) {
             System.err.println("Pipeline validation failed. Please check your YAML file.");
-            return false; 
+            return false;
         }
-    
+
         return true;
     }
 }

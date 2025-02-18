@@ -9,23 +9,17 @@ import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Unit tests for {@link JobValidator}.
- * Ensures job validation logic correctly enforces:
- * <ul>
- *   <li>Required fields presence</li>
- *   <li>Duplicate job name detection</li>
- *   <li>Invalid stage detection</li>
- *   <li>Proper script formatting</li>
- * </ul>
- */
 class JobValidatorTest {
-  
+
   private JobValidator validator;
   private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
   private final PrintStream originalErr = System.err;

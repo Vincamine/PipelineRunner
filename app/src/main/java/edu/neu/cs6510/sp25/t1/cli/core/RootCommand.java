@@ -1,6 +1,10 @@
 package edu.neu.cs6510.sp25.t1.cli.core;
 
-import edu.neu.cs6510.sp25.t1.cli.commands.*;
+import edu.neu.cs6510.sp25.t1.cli.commands.CheckCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.DryRunCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.LogCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.StatusCommand;
 import edu.neu.cs6510.sp25.t1.util.GitValidator;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -59,7 +63,7 @@ public class RootCommand implements Runnable {
 
         // Validate pipeline file
         if (!validateFilePath()) {
-            throw new IllegalArgumentException("Invalid file path provided."); 
+            throw new IllegalArgumentException("Invalid file path provided.");
         }
 
         if (run) {

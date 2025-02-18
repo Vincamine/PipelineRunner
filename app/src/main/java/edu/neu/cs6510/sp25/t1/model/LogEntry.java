@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Represents a log entry in the CI/CD system.
- * Each log entry records information about a pipeline event, 
+ * Each log entry records information about a pipeline event,
  * including its severity level, message, and timestamp.
  */
 public class LogEntry {
@@ -20,14 +20,15 @@ public class LogEntry {
      * @param pipelineId The ID of the pipeline associated with this log entry.
      * @param level      The severity level of the log (e.g., INFO, WARN, ERROR).
      * @param message    A description of the event being logged.
-     * @param timestamp  The timestamp when the log entry was created (milliseconds).
+     * @param timestamp  The timestamp when the log entry was created
+     *                   (milliseconds).
      */
     @JsonCreator
     public LogEntry(
-        @JsonProperty("pipelineId") String pipelineId,
-        @JsonProperty("level") LogLevel level,
-        @JsonProperty("message") String message,
-        @JsonProperty("timestamp") long timestamp) {
+            @JsonProperty("pipelineId") String pipelineId,
+            @JsonProperty("level") LogLevel level,
+            @JsonProperty("message") String message,
+            @JsonProperty("timestamp") long timestamp) {
         this.pipelineId = pipelineId;
         this.level = level;
         this.message = message;

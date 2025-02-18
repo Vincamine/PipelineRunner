@@ -39,7 +39,7 @@ public class PipelineStatus {
      * @param lastUpdated  The timestamp when the status was last updated.
      */
     public PipelineStatus(String pipelineId, PipelineState state, int progress,
-                          String currentStage, Instant startTime, Instant lastUpdated) {
+            String currentStage, Instant startTime, Instant lastUpdated) {
         this.pipelineId = pipelineId;
         this.state = state;
         this.progress = Math.max(0, Math.min(progress, 100)); // Ensure valid range
@@ -58,17 +58,51 @@ public class PipelineStatus {
     }
 
     // Getters and Setters
-    public String getPipelineId() { return pipelineId; }
-    public PipelineState getState() { return state; }
-    public int getProgress() { return progress; }
-    public String getCurrentStage() { return currentStage; }
-    public String getMessage() { return message; }
-    public Instant getStartTime() { return startTime; }
-    public Instant getLastUpdated() { return lastUpdated; }
+    public String getPipelineId() {
+        return pipelineId;
+    }
 
-    public void setState(PipelineState state) { this.state = state; }
-    public void setProgress(int progress) { this.progress = Math.max(0, Math.min(progress, 100)); }
-    public void setCurrentStage(String currentStage) { this.currentStage = currentStage; }
-    public void setMessage(String message) { this.message = message; }
-    public void setLastUpdated(Instant lastUpdated) { this.lastUpdated = lastUpdated; }
+    public PipelineState getState() {
+        return state;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public String getCurrentStage() {
+        return currentStage;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Instant getStartTime() {
+        return startTime;
+    }
+
+    public Instant getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setState(PipelineState state) {
+        this.state = state;
+    }
+
+    public void setProgress(int progress) {
+        this.progress = Math.max(0, Math.min(progress, 100));
+    }
+
+    public void setCurrentStage(String currentStage) {
+        this.currentStage = currentStage;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setLastUpdated(Instant lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
 }

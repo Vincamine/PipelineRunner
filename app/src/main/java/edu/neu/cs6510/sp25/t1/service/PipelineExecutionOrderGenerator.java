@@ -6,42 +6,38 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Service class responsible for parsing a pipeline YAML file and determining execution order.
- * <p>
+ * Service class responsible for parsing a pipeline YAML file and determining
+ * execution order.
+ * 
  * This class reads a YAML configuration file defining pipeline stages and jobs,
  * then generates an execution order while respecting dependencies.
- * <br><br>
- * 🚀 **Mock Implementation** for demo purposes.
- * - This service **simulates** parsing pipeline execution order.
- * - Once the backend API is available, **modify it to integrate with actual execution logic**.
- * </p>
- *
- * <h2>Expected YAML Format:</h2>
- * <pre>
+ * 
+ * Expected YAML Format:
+ * 
  * pipeline:
- *   name: my_pipeline
- *   stages:
- *     - build
- *     - test
- *     - deploy
+ * name: my_pipeline
+ * stages:
+ * - build
+ * - test
+ * - deploy
  * jobs:
- *   - name: compile
- *     stage: build
- *     needs: []
- *   - name: test
- *     stage: test
- *     needs: [compile]
- *   - name: deploy
- *     stage: deploy
- *     needs: [test]
- * </pre>
+ * - name: compile
+ * stage: build
+ * needs: []
+ * - name: test
+ * stage: test
+ * needs: [compile]
+ * - name: deploy
+ * stage: deploy
+ * needs: [test]
  *
  * @see edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator
  */
 public class PipelineExecutionOrderGenerator {
 
     /**
-     * Parses a pipeline YAML file and determines the execution order of jobs and stages.
+     * Parses a pipeline YAML file and determines the execution order of jobs and
+     * stages.
      *
      * @param yamlFilePath The path to the pipeline YAML file.
      * @return A {@link LinkedHashMap} representing the execution order.
@@ -81,10 +77,11 @@ public class PipelineExecutionOrderGenerator {
     }
 
     /**
-     * Processes jobs from the pipeline configuration and determines the execution order.
+     * Processes jobs from the pipeline configuration and determines the execution
+     * order.
      *
      * @param jobsList The list of job configurations.
-     * @param stages The list of defined pipeline stages.
+     * @param stages   The list of defined pipeline stages.
      * @return A LinkedHashMap maintaining the correct execution order.
      */
     private Map<String, Map<String, Object>> processJobs(List<?> jobsList, List<String> stages) {
@@ -96,7 +93,8 @@ public class PipelineExecutionOrderGenerator {
         }
 
         for (Object jobObj : jobsList) {
-            if (!(jobObj instanceof Map<?, ?> job)) continue;
+            if (!(jobObj instanceof Map<?, ?> job))
+                continue;
 
             final String jobName = (String) job.get("name");
             final String stage = (String) job.get("stage");

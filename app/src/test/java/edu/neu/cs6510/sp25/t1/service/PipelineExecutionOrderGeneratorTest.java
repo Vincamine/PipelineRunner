@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PipelineExecutionOrderGeneratorTest {
     private PipelineExecutionOrderGenerator generator;
@@ -13,8 +13,6 @@ class PipelineExecutionOrderGeneratorTest {
     void setUp() {
         generator = new PipelineExecutionOrderGenerator();
     }
-
-    
 
     @Test
     void testGenerateExecutionOrder_InvalidFile_ThrowsException() {

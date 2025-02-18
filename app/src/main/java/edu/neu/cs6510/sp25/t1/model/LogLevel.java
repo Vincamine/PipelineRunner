@@ -8,11 +8,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Used to categorize log entries based on severity.
  */
 public enum LogLevel {
-    DEBUG,  // Detailed debugging information.
-    INFO,   // General operational messages.
-    WARN,   // Warnings that may require attention.
-    ERROR,  // Errors affecting functionality.
-    FATAL;  // Critical errors causing termination.
+    DEBUG, // Detailed debugging information.
+    INFO, // General operational messages.
+    WARN, // Warnings that may require attention.
+    ERROR, // Errors affecting functionality.
+    FATAL; // Critical errors causing termination.
 
     /**
      * Converts a string to a LogLevel enum.

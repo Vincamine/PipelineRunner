@@ -14,8 +14,13 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 
 class LogCommandTest {
     private LogService mockLogService;
@@ -30,11 +35,13 @@ class LogCommandTest {
     /** Ensures logs are retrieved and printed correctly */
     @Test
     void testLogs_ValidPipeline_Success() {
-        final LogEntry mockLog = new LogEntry("123", LogLevel.INFO, "Pipeline executed successfully", Instant.now().toEpochMilli());
+        final LogEntry mockLog = new LogEntry("123", LogLevel.INFO, "Pipeline executed successfully",
+                Instant.now().toEpochMilli());
         when(mockLogService.getLogsByPipelineId("123")).thenReturn(List.of(mockLog));
 
         try (MockedStatic<LogFormatter> logFormatterMock = mockStatic(LogFormatter.class)) {
-            logFormatterMock.when(() -> LogFormatter.format(mockLog)).thenReturn("INFO: Pipeline executed successfully");
+            logFormatterMock.when(() -> LogFormatter.format(mockLog))
+                    .thenReturn("INFO: Pipeline executed successfully");
 
             final CommandLine cmd = new CommandLine(logCommand);
             final int exitCode = cmd.execute("--id", "123");

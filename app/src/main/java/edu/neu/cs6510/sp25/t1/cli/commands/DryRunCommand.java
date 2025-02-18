@@ -18,27 +18,20 @@ import java.util.concurrent.Callable;
  * - Checks for dependency issues
  * - Determines and prints the execution order
  */
-@Command(
-    name = "dry-run",
-    description = "Dry run a pipeline file",
-    mixinStandardHelpOptions = true
-)
+@Command(name = "dry-run", description = "Dry run a pipeline file", mixinStandardHelpOptions = true)
 public class DryRunCommand implements Callable<Boolean> {
 
   /**
    * Path to the pipeline YAML file.
    */
-  @Option(
-      names = {"-f", "--file"},
-      description = "Path to the pipeline YAML file",
-      required = true
-  )
+  @Option(names = { "-f", "--file" }, description = "Path to the pipeline YAML file", required = true)
   String yamlFilePath;
 
   /**
    * Executes the dry-run command to validate and print execution order.
    *
-   * @return true if validation succeeds and execution order is printed, false otherwise.
+   * @return true if validation succeeds and execution order is printed, false
+   *         otherwise.
    */
   @Override
   public Boolean call() {
@@ -54,7 +47,8 @@ public class DryRunCommand implements Callable<Boolean> {
     try {
       // Generate execution order
       final PipelineExecutionOrderGenerator executionOrderGenerator = new PipelineExecutionOrderGenerator();
-      final Map<String, Map<String, Object>> executionOrder = executionOrderGenerator.generateExecutionOrder(yamlFilePath);
+      final Map<String, Map<String, Object>> executionOrder = executionOrderGenerator
+          .generateExecutionOrder(yamlFilePath);
 
       if (executionOrder.isEmpty()) {
         System.err.println("No valid execution order. Check for dependency issues.");

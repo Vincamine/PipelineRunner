@@ -7,7 +7,8 @@ import edu.neu.cs6510.sp25.t1.model.LogEntry;
 
 /**
  * Utility class for formatting log entries.
- * Formats logs into a readable structure including timestamps, log levels, and messages.
+ * Formats logs into a readable structure including timestamps, log levels, and
+ * messages.
  */
 public class LogFormatter {
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

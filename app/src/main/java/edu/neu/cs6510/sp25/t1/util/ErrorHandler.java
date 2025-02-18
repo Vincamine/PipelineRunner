@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 /**
  * Provides structured error handling for validation errors.
  * Formats error messages with precise location information.
+ * 
  */
 public class ErrorHandler {
     private static final Logger LOGGER = Logger.getLogger(ErrorHandler.class.getName());
@@ -31,9 +32,9 @@ public class ErrorHandler {
          * Constructs a Location object.
          *
          * @param filename The filename where the error occurred.
-         * @param line The line number of the error.
-         * @param column The column number of the error.
-         * @param path The YAML path to the error location.
+         * @param line     The line number of the error.
+         * @param column   The column number of the error.
+         * @param path     The YAML path to the error location.
          */
         public Location(String filename, int line, int column, String path) {
             this.filename = filename;
@@ -42,18 +43,38 @@ public class ErrorHandler {
             this.path = path;
         }
 
+        /**
+         * Gets the filename where the error occurred.
+         *
+         * @return The filename.
+         */
         public String getFilename() {
             return filename;
         }
 
+        /**
+         * Gets the line number of the error.
+         *
+         * @return The line number.
+         */
         public int getLine() {
             return line;
         }
 
+        /**
+         * Gets the column number of the error.
+         *
+         * @return The column number.
+         */
         public int getColumn() {
             return column;
         }
 
+        /**
+         * Gets the path to the error location.
+         *
+         * @return The YAML path.
+         */
         public String getPath() {
             return path;
         }
@@ -71,9 +92,9 @@ public class ErrorHandler {
     /**
      * Formats error messages with error type and location.
      *
-     * @param location The location where the error occurred.
+     * @param location  The location where the error occurred.
      * @param errorType The type of error.
-     * @param message The error message.
+     * @param message   The error message.
      * @return The formatted error message.
      */
     private static String formatErrorWithType(Location location, String errorType, String message) {
@@ -83,9 +104,9 @@ public class ErrorHandler {
     /**
      * Formats a type mismatch error.
      *
-     * @param location The location of the error.
-     * @param key The field with incorrect type.
-     * @param actualValue The actual value.
+     * @param location     The location of the error.
+     * @param key          The field with incorrect type.
+     * @param actualValue  The actual value.
      * @param expectedType The expected data type.
      * @return A formatted error message.
      */
@@ -100,7 +121,7 @@ public class ErrorHandler {
      * Formats a dependency cycle error.
      *
      * @param location The location where the cycle was detected.
-     * @param cycle The sequence of jobs forming a cycle.
+     * @param cycle    The sequence of jobs forming a cycle.
      * @return A formatted error message.
      */
     public static String formatCycleError(Location location, List<String> cycle) {
@@ -111,7 +132,7 @@ public class ErrorHandler {
     /**
      * Formats a missing field error.
      *
-     * @param location The location where the field is missing.
+     * @param location  The location where the field is missing.
      * @param fieldName The name of the missing field.
      * @return A formatted error message.
      */
@@ -123,7 +144,7 @@ public class ErrorHandler {
      * Formats a file-related error.
      *
      * @param location The file location.
-     * @param message The error message.
+     * @param message  The error message.
      * @return A formatted error message.
      */
     public static String formatFileError(Location location, String message) {
@@ -134,7 +155,7 @@ public class ErrorHandler {
      * Formats a general exception message.
      *
      * @param location The error location.
-     * @param message The error message.
+     * @param message  The error message.
      * @return A formatted exception message.
      */
     public static String formatException(Location location, String message) {
@@ -145,8 +166,8 @@ public class ErrorHandler {
      * Creates a Location object from a YAML parsing mark.
      *
      * @param filename The file where the error occurred.
-     * @param mark The YAML mark containing position info.
-     * @param path The path within the YAML structure.
+     * @param mark     The YAML mark containing position info.
+     * @param path     The path within the YAML structure.
      * @return A Location object.
      */
     public static Location createLocation(String filename, Mark mark, String path) {
@@ -166,8 +187,7 @@ public class ErrorHandler {
                 stackTrace.getFileName(),
                 stackTrace.getLineNumber(),
                 1,
-                "pipeline.execute"
-        );
+                "pipeline.execute");
 
         final String formattedError = formatException(location, message);
         LOGGER.log(Level.SEVERE, formattedError);

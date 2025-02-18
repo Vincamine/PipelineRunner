@@ -9,7 +9,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class YamlLoaderTest {
 
@@ -26,7 +29,6 @@ class YamlLoaderTest {
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) yamlData.get("pipeline");
     assertEquals("TestPipeline", pipeline.get("name"));
-
 
     final Map<String, Mark> locations = result.getLocations();
     assertNotNull(locations);
@@ -53,8 +55,8 @@ class YamlLoaderTest {
   void testInvalidYamlFile() throws URISyntaxException {
     final Path yamlPath = getResourcePath("yaml/loader/invalid_pipeline_loader_test.yml");
 
-    final Exception exception = assertThrows(IllegalArgumentException.class, () ->
-        YamlLoader.loadYamlWithLocations(yamlPath.toString()));
+    final Exception exception = assertThrows(IllegalArgumentException.class,
+        () -> YamlLoader.loadYamlWithLocations(yamlPath.toString()));
 
     assertTrue(exception.getMessage().contains("YAML parsing error"));
   }
@@ -63,8 +65,8 @@ class YamlLoaderTest {
   void testEmptyYamlFile() throws URISyntaxException {
     final Path yamlPath = getResourcePath("yaml/loader/empty_pipeline_loader_test.yml");
 
-    final Exception exception = assertThrows(IllegalArgumentException.class, () ->
-        YamlLoader.loadYamlWithLocations(yamlPath.toString()));
+    final Exception exception = assertThrows(IllegalArgumentException.class,
+        () -> YamlLoader.loadYamlWithLocations(yamlPath.toString()));
 
     assertTrue(exception.getMessage().contains("Empty YAML document"));
   }
@@ -74,14 +76,11 @@ class YamlLoaderTest {
     final Path yamlPath = getResourcePath("yaml/loader/complex_pipeline_loader_test.yml");
     final YamlLoadResult result = YamlLoader.loadYamlWithLocations(yamlPath.toString());
 
-
     final Map<String, Mark> locations = result.getLocations();
     assertNotNull(locations);
 
-
     assertTrue(locations.containsKey("pipeline.stages[0]"));
     assertTrue(locations.containsKey("job[0]"));
-
 
     assertTrue(locations.containsKey("pipeline.config.timeout"));
     assertTrue(locations.containsKey("job[0].script[0]"));

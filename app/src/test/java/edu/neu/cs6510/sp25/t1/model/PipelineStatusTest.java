@@ -2,7 +2,8 @@ package edu.neu.cs6510.sp25.t1.model;
 
 import org.junit.jupiter.api.Test;
 import java.time.Instant;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class PipelineStatusTest {
 
@@ -21,7 +22,8 @@ class PipelineStatusTest {
     void testParameterizedConstructor() {
         final Instant start = Instant.now().minusSeconds(600);
         final Instant updated = Instant.now();
-        final PipelineStatus status = new PipelineStatus("pipeline-123", PipelineState.RUNNING, 50, "Build Stage", start, updated);
+        final PipelineStatus status = new PipelineStatus("pipeline-123", PipelineState.RUNNING, 50, "Build Stage",
+                start, updated);
 
         assertEquals("pipeline-123", status.getPipelineId());
         assertEquals(PipelineState.RUNNING, status.getState());

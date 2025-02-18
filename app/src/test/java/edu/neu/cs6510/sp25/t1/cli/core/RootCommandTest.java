@@ -4,7 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class RootCommandTest {
     private RootCommand rootCommand;
@@ -21,7 +22,6 @@ class RootCommandTest {
         final int exitCode = cmd.execute("--help");
         assertEquals(0, exitCode, "Help command should execute successfully.");
     }
-    
 
     /** Ensures all subcommands are properly registered */
     @Test
