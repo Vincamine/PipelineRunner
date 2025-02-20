@@ -47,6 +47,20 @@ public class JobValidator {
     }
   }
 
+  /**
+   * Validates a list of job configurations against the defined validation rules.
+   *
+   * @param jobs      The list of job configurations to validate, where each job
+   *                  is represented
+   *                  as a Map containing the job's properties and their values.
+   * @param locations A map containing the source location information (line and
+   *                  column numbers)
+   *                  for each element in the YAML configuration, keyed by their
+   *                  path.
+   * @param filename  The YAML filename for error reporting.
+   * @return {@code true} if all jobs are valid according to the validation rules,
+   *         {@code false} if any validation check fails.
+   */
   public boolean validateJobs(List<Map<String, Object>> jobs, Map<String, Mark> locations, String filename) {
     if (jobs == null || jobs.isEmpty()) {
       final Location location = ErrorHandler.createLocation(filename, locations.get("jobs"), "jobs");
@@ -58,20 +72,16 @@ public class JobValidator {
       final Map<String, Object> job = jobs.get(i);
       final String jobPath = String.format("jobs[%d]", i);
       final Location jobLocation = ErrorHandler.createLocation(filename, locations.getOrDefault(jobPath, null),
-              jobPath);
+          jobPath);
 
-      if (!validateRequiredFields(job, jobLocation, locations, filename)) {
+      if (!validateRequiredFields(job, jobLocation, locations, filename))
         return false;
-      }
-      if (!validateStage(job, jobLocation)) {
+      if (!validateStage(job, jobLocation))
         return false;
-      }
-      if (!validateJobNameUniqueness(job, jobLocation)) {
+      if (!validateJobNameUniqueness(job, jobLocation))
         return false;
-      }
-      if (!validateScript(job, jobLocation, locations, filename)) {
+      if (!validateScript(job, jobLocation, locations, filename))
         return false;
-      }
 
       final String jobName = (String) job.get("name");
       final String jobStage = (String) job.get("stage");

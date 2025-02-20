@@ -3,19 +3,17 @@ package edu.neu.cs6510.sp25.t1.service;
 import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Service class responsible for parsing a pipeline YAML file and determining
  * execution order.
- *
+ * 
  * This class reads a YAML configuration file defining pipeline stages and jobs,
  * then generates an execution order while respecting dependencies.
- *
+ * 
  * Expected YAML Format:
- *
+ * 
  * pipeline:
  * name: my_pipeline
  * stages:
@@ -95,9 +93,8 @@ public class PipelineExecutionOrderGenerator {
         }
 
         for (Object jobObj : jobsList) {
-            if (!(jobObj instanceof Map<?, ?> job)) {
+            if (!(jobObj instanceof Map<?, ?> job))
                 continue;
-            }
 
             final String jobName = (String) job.get("name");
             final String stage = (String) job.get("stage");

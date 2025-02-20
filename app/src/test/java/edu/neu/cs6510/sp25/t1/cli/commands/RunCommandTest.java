@@ -30,10 +30,6 @@ class RunCommandTest {
 
     /**
      * Helper method to get the full path of a test resource file.
-     *
-     * @param resource The name of the resource file to locate in the test resources directory.
-     * @return The full path to the specified test resource file.
-     * @throws URISyntaxException If the resource path cannot be converted to a URI.
      */
     private Path getTestResourcePath(String resource) throws URISyntaxException {
         final ClassLoader classLoader = getClass().getClassLoader();
@@ -42,7 +38,7 @@ class RunCommandTest {
         return Paths.get(resourceURL.toURI());
     }
 
-    /** Ensures that a valid pipeline executes successfully. */
+    /** Ensures that a valid pipeline executes successfully */
     @Test
     void testRunCommandExecutesSuccessfully() throws Exception {
         final Path pipelineFile = getTestResourcePath("valid_pipeline.yml");
@@ -74,7 +70,7 @@ class RunCommandTest {
         }
     }
 
-    /** Ensures execution fails when no pipeline file is specified. */
+    /** Ensures execution fails when no pipeline file is specified */
     @Test
     void testRunCommandFailsWithoutPipelineFile() {
         final CommandLine cmd = new CommandLine(runCommand);
