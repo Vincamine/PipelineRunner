@@ -24,17 +24,21 @@ public class CheckCommand implements Callable<Boolean> {
 
     private final PipelineValidator pipelineValidator;
 
-    /** Default constructor that creates a new PipelineValidator */
+    /** Default constructor that creates a new PipelineValidator. */
     public CheckCommand() {
         this(new PipelineValidator(new YamlPipelineValidator()));
     }
 
-    /** Constructor for injecting a mock PipelineValidator */
+    /**
+     * Constructor for injecting a mock PipelineValidator.
+     * @param pipelineValidator The pipeline validator to be used for validation.
+     */
     public CheckCommand(PipelineValidator pipelineValidator) {
         this.pipelineValidator = pipelineValidator;
     }
 
-    /** Executes the check command */
+
+    /** Executes the check command. */
     @Override
     public Boolean call() {
         final boolean isValid = pipelineValidator.validatePipelineFile(yamlFilePath);

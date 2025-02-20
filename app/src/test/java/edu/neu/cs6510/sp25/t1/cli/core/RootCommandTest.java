@@ -15,7 +15,8 @@ class RootCommandTest {
         rootCommand = new RootCommand();
     }
 
-    /** Ensures `--help` prints the help message successfully */
+    /** Ensures `--help` prints the help message successfully. */
+
     @Test
     void testHelpCommand() {
         final CommandLine cmd = new CommandLine(rootCommand);
@@ -23,7 +24,8 @@ class RootCommandTest {
         assertEquals(0, exitCode, "Help command should execute successfully.");
     }
 
-    /** Ensures all subcommands are properly registered */
+    /** Ensures all subcommands are properly registered. */
+
     @Test
     void testSubcommandsExist() {
         final CommandLine cmd = new CommandLine(rootCommand);

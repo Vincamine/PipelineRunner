@@ -32,7 +32,7 @@ class LogCommandTest {
         logCommand = new LogCommand(mockLogService);
     }
 
-    /** Ensures logs are retrieved and printed correctly */
+    /** Ensures logs are retrieved and printed correctly. */
     @Test
     void testLogs_ValidPipeline_Success() {
         final LogEntry mockLog = new LogEntry("123", LogLevel.INFO, "Pipeline executed successfully",
@@ -50,7 +50,7 @@ class LogCommandTest {
         }
     }
 
-    /** Ensures correct handling when no logs exist */
+    /** Ensures correct handling when no logs exist. */
     @Test
     void testLogs_NoLogsFound() {
         when(mockLogService.getLogsByPipelineId("123")).thenReturn(Collections.emptyList());
@@ -61,7 +61,7 @@ class LogCommandTest {
         assertEquals(0, exitCode, "Command should execute successfully but print 'No logs found'.");
     }
 
-    /** Ensures an error is printed when pipeline ID is missing */
+    /** Ensures an error is printed when pipeline ID is missing. */
     @Test
     void testLogs_MissingPipelineId() {
         final CommandLine cmd = new CommandLine(logCommand);
@@ -70,7 +70,7 @@ class LogCommandTest {
         assertNotEquals(0, exitCode, "Command should fail when pipeline ID is missing.");
     }
 
-    /** Ensures exception handling works properly */
+    /** Ensures exception handling works properly. */
     @Test
     void testLogs_ServiceThrowsException() {
         when(mockLogService.getLogsByPipelineId("123")).thenThrow(new RuntimeException("Database error"));

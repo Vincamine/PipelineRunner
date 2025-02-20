@@ -26,7 +26,7 @@ class PipelineValidatorTest {
     @Test
     void testValidatePipelineFile_Success() {
         final Path projectRoot = Paths.get(System.getProperty("user.dir")).getParent();
-        final Path mockPath = projectRoot.resolve(".pipelines/pipeline.yaml").toAbsolutePath();
+        final Path mockPath = projectRoot.resolve(".pipelines/00-valid-file.yaml").toAbsolutePath();
 
         when(yamlPipelineValidator.validatePipeline(mockPath.toString())).thenReturn(true);
 
