@@ -159,6 +159,7 @@ public class YamlPipelineValidator {
    *
    * @param jobs      List of job definitions from YAML
    * @param locations Map containing source locations for all YAML elements
+   * @param filePath  The path to the YAML file being validated
    * @return A map of job names to their dependencies, or null if validation fails
    */
   private Map<String, List<String>> extractJobDependencies(

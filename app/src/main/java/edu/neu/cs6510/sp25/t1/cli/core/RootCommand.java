@@ -30,13 +30,13 @@ public class RootCommand implements Runnable {
      * Flag to enable verbose output.
      */
     @Option(names = { "-v", "--verbose" }, description = "Enable verbose output.")
-    boolean verbose;
+    private boolean verbose;
 
     /**
      * Flag to trigger CI/CD pipeline execution.
      */
     @Option(names = { "--run" }, description = "Trigger CI/CD pipeline execution")
-    boolean run;
+    private boolean run;
 
     /**
      * Filename for the CI/CD pipeline.
