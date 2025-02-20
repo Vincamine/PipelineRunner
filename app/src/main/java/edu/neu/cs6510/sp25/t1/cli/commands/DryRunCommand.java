@@ -25,7 +25,7 @@ public class DryRunCommand implements Callable<Boolean> {
    * Path to the pipeline YAML file.
    */
   @Option(names = { "-f", "--file" }, description = "Path to the pipeline YAML file", required = true)
-  private String yamlFilePath;
+  String yamlFilePath;
 
   /**
    * Executes the dry-run command to validate and print execution order.

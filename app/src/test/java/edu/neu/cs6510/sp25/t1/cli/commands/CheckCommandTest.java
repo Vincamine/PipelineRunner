@@ -20,7 +20,7 @@ class CheckCommandTest {
         checkCommand = new CheckCommand(mockPipelineValidator);
     }
 
-    /** Ensures the check command succeeds when the pipeline file is valid. */
+    /** Ensures the check command succeeds when the pipeline file is valid */
     @Test
     void testCheck_ValidPipeline_Success() {
         when(mockPipelineValidator.validatePipelineFile(".pipelines/pipeline.yaml")).thenReturn(true);
@@ -31,7 +31,7 @@ class CheckCommandTest {
         assertEquals(0, exitCode, "Check command should succeed if pipeline file is valid.");
     }
 
-    /** Ensures the check command fails when the pipeline file is invalid. */
+    /** Ensures the check command fails when the pipeline file is invalid */
     @Test
     void testCheck_InvalidPipeline_Fails() {
         when(mockPipelineValidator.validatePipelineFile(".pipelines/pipeline.yaml")).thenReturn(false);
