@@ -141,7 +141,7 @@ public class YamlPipelineValidator {
    */
   public boolean validatePipeline(Map<String, Object> pipelineConfig) {
     if (pipelineConfig == null || !pipelineConfig.containsKey("pipeline")) {
-      System.err.println("❌ Error: Pipeline configuration is invalid or missing.");
+      System.err.println("Error: Pipeline configuration is invalid or missing.");
       return false;
     }
 
@@ -159,6 +159,7 @@ public class YamlPipelineValidator {
    *
    * @param jobs      List of job definitions from YAML
    * @param locations Map containing source locations for all YAML elements
+   * @param filePath Given file path to validate
    * @return A map of job names to their dependencies, or null if validation fails
    */
   private Map<String, List<String>> extractJobDependencies(

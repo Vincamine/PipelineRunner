@@ -74,14 +74,18 @@ public class JobValidator {
       final Location jobLocation = ErrorHandler.createLocation(filename, locations.getOrDefault(jobPath, null),
           jobPath);
 
-      if (!validateRequiredFields(job, jobLocation, locations, filename))
+      if (!validateRequiredFields(job, jobLocation, locations, filename)) {
         return false;
-      if (!validateStage(job, jobLocation))
+      }
+      if (!validateStage(job, jobLocation)) {
         return false;
-      if (!validateJobNameUniqueness(job, jobLocation))
+      }
+      if (!validateJobNameUniqueness(job, jobLocation)) {
         return false;
-      if (!validateScript(job, jobLocation, locations, filename))
+      }
+      if (!validateScript(job, jobLocation, locations, filename)) {
         return false;
+      }
 
       final String jobName = (String) job.get("name");
       final String jobStage = (String) job.get("stage");
