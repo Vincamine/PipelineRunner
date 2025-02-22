@@ -23,61 +23,61 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
 class ReportCommandTest {
-    private ReportService mockLogService;
-    private ReportCommand logCommand;
+    private ReportService mockReportService;
+    private ReportCommand reportCommand;
 
     @BeforeEach
     void setUp() {
-        mockLogService = mock(ReportService.class);
-        logCommand = new ReportCommand(mockLogService);
+        mockReportService = mock(ReportService.class);
+        reportCommand = new ReportCommand(mockReportService);
     }
 
-    /** Ensures logs are retrieved and printed correctly */
+    /** Ensures reports are retrieved and printed correctly */
     @Test
-    void testLogs_ValidPipeline_Success() {
-        final ReportEntry mockLog = new ReportEntry("123", ReportLevel.SUCCESS, "Pipeline executed successfully",
-                Instant.now().toEpochMilli());
-        when(mockLogService.getReportsByPipelineId("123")).thenReturn(List.of(mockLog));
+    void testReports_ValidPipeline_Success() {
+        final ReportEntry mockReport = new ReportEntry("123", ReportLevel.SUCCESS, "Pipeline executed successfully",
+            Instant.now().toEpochMilli(), "SUCCESS", Collections.emptyList());
+        when(mockReportService.getPipelineRuns("repo-url", "123")).thenReturn(List.of(mockReport));
 
-        try (MockedStatic<ReportFormatter> logFormatterMock = mockStatic(ReportFormatter.class)) {
-            logFormatterMock.when(() -> ReportFormatter.format(mockLog))
-                    .thenReturn("SUCCESSSUCCESS: Pipeline executed successfully");
+        try (MockedStatic<ReportFormatter> reportFormatterMock = mockStatic(ReportFormatter.class)) {
+            reportFormatterMock.when(() -> ReportFormatter.format(mockReport))
+                .thenReturn("SUCCESS: Pipeline executed successfully");
 
-            final CommandLine cmd = new CommandLine(logCommand);
-            final int exitCode = cmd.execute("--id", "123");
+            final CommandLine cmd = new CommandLine(reportCommand);
+            final int exitCode = cmd.execute("--repo", "repo-url", "--pipeline", "123");
 
-            assertEquals(0, exitCode, "Logs should be printed successfully for a valid pipeline.");
+            assertEquals(0, exitCode, "Reports should be printed successfully for a valid pipeline.");
         }
     }
 
-    /** Ensures correct handling when no logs exist */
+    /** Ensures correct handling when no reports exist */
     @Test
-    void testLogs_NoLogsFound() {
-        when(mockLogService.getReportsByPipelineId("123")).thenReturn(Collections.emptyList());
+    void testReports_NoReportsFound() {
+        when(mockReportService.getPipelineRuns("repo-url", "123")).thenReturn(Collections.emptyList());
 
-        final CommandLine cmd = new CommandLine(logCommand);
-        final int exitCode = cmd.execute("--id", "123");
+        final CommandLine cmd = new CommandLine(reportCommand);
+        final int exitCode = cmd.execute("--repo", "repo-url", "--pipeline", "123");
 
-        assertEquals(0, exitCode, "Command should execute successfully but print 'No logs found'.");
+        assertEquals(0, exitCode, "Command should execute successfully but print 'No reports found'.");
     }
 
-    /** Ensures an error is printed when pipeline ID is missing */
+    /** Ensures an error is printed when repository URL is missing */
     @Test
-    void testLogs_MissingPipelineId() {
-        final CommandLine cmd = new CommandLine(logCommand);
+    void testReports_MissingRepoUrl() {
+        final CommandLine cmd = new CommandLine(reportCommand);
         final int exitCode = cmd.execute();
 
-        assertNotEquals(0, exitCode, "Command should fail when pipeline ID is missing.");
+        assertNotEquals(0, exitCode, "Command should fail when repository URL is missing.");
     }
 
     /** Ensures exception handling works properly */
     @Test
-    void testLogs_ServiceThrowsException() {
-        when(mockLogService.getReportsByPipelineId("123")).thenThrow(new RuntimeException("Database error"));
+    void testReports_ServiceThrowsException() {
+        when(mockReportService.getPipelineRuns("repo-url", "123")).thenThrow(new RuntimeException("Database error"));
 
         try (MockedStatic<ErrorHandler> errorHandlerMock = mockStatic(ErrorHandler.class)) {
-            final CommandLine cmd = new CommandLine(logCommand);
-            final int exitCode = cmd.execute("--id", "123");
+            final CommandLine cmd = new CommandLine(reportCommand);
+            final int exitCode = cmd.execute("--repo", "repo-url", "--pipeline", "123");
 
             errorHandlerMock.verify(() -> ErrorHandler.reportError("Database error"), times(1));
 

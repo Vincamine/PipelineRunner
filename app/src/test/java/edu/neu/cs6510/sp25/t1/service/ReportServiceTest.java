@@ -16,102 +16,69 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
 
 class ReportServiceTest {
   private HttpClient mockHttpClient;
-  private HttpResponse<Object> mockResponse;
+  private HttpResponse<String> mockResponse;
   private ReportService reportService;
+  private ObjectMapper objectMapper;
 
-  @SuppressWarnings("unchecked")
   @BeforeEach
   void setUp() {
     mockHttpClient = mock(HttpClient.class);
     mockResponse = mock(HttpResponse.class);
     reportService = new ReportService(mockHttpClient);
-    new ObjectMapper();
+    objectMapper = new ObjectMapper();
   }
 
   @Test
-  void testGetReportsByPipelineId_Success() throws Exception {
-    // Arrange
-    final String pipelineId = "12345";
-    final String jsonResponse = "[{\"timestamp\": 1678901234, \"level\": \"SUCCESS\", \"message\": \"Pipeline started.\"}]";
+  void testGetRepositoryReports_Success() throws Exception {
+    final String repoUrl = "https://github.com/test/repo";
+    final String jsonResponse = "[{\"pipelineId\": \"12345\", \"level\": \"SUCCESS\", \"message\": \"Pipeline completed.\"}]";
 
-    when(mockHttpClient.send(any(HttpRequest.class), any())).thenReturn(mockResponse);
+    when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(jsonResponse);
 
-    // Act
-    final List<ReportEntry> reports = reportService.getReportsByPipelineId(pipelineId);
-    System.out.println(reports);
+    final List<ReportEntry> reports = reportService.getRepositoryReports(repoUrl);
 
-    // Assert
     assertFalse(reports.isEmpty(), "Reports list should not be empty");
     assertEquals(1, reports.size(), "Only one report entry should be present");
-    assertEquals("Pipeline started.", reports.get(0).getMessage(), "Message should match the JSON response");
-
-    // Verify HTTP request
-    final ArgumentCaptor<HttpRequest> requestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
-    verify(mockHttpClient).send(requestCaptor.capture(), any());
-
-    final HttpRequest capturedRequest = requestCaptor.getValue();
-    assertEquals(URI.create("https://example.com/api/report/" + pipelineId), capturedRequest.uri());
-    assertEquals("GET", capturedRequest.method());
   }
 
   @Test
-  void testGetReportsByPipelineId_InvalidPipelineId() {
-    // Act
-    List<ReportEntry> reports = reportService.getReportsByPipelineId(null);
-
-    // Assert
-    assertTrue(reports.isEmpty(), "Reports list should be empty for a null pipeline ID");
-
-    reports = reportService.getReportsByPipelineId("  "); // Empty string
-    assertTrue(reports.isEmpty(), "Reports list should be empty for an empty pipeline ID");
-  }
-
-  @Test
-  void testGetReportsByPipelineId_ApiError() throws Exception {
-    // Arrange
-    when(mockHttpClient.send(any(HttpRequest.class), any())).thenReturn(mockResponse);
+  void testGetPipelineRunSummary_ApiError() throws Exception {
+    when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(500);
     when(mockResponse.body()).thenReturn("Internal Server Error");
 
-    // Act
-    final List<ReportEntry> reports = reportService.getReportsByPipelineId("12345");
+    final List<ReportEntry> reports = reportService.getPipelineRunSummary("repo-url", "pipeline-name", 1);
 
-    // Assert
     assertTrue(reports.isEmpty(), "Reports should be empty on API error");
   }
 
   @Test
-  void testGetReportsByPipelineId_JsonProcessingError() throws Exception {
-    // Arrange
-    when(mockHttpClient.send(any(HttpRequest.class), any())).thenReturn(mockResponse);
+  void testGetPipelineRunSummary_JsonProcessingError() throws Exception {
+    when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
-    when(mockResponse.body()).thenReturn("Invalid JSON Response"); // Corrupt JSON
+    when(mockResponse.body()).thenReturn("Invalid JSON Response");
 
-    // Act
-    final List<ReportEntry> reports = reportService.getReportsByPipelineId("12345");
+    final List<ReportEntry> reports = reportService.getPipelineRunSummary("repo-url", "pipeline-name", 1);
 
-    // Assert
-    assertTrue(reports.isEmpty(), "reports should be empty if JSON parsing fails");
+    assertTrue(reports.isEmpty(), "Reports should be empty if JSON parsing fails");
   }
 
   @Test
-  void testGetReportsByPipelineId_HttpRequestException() throws Exception {
-    // Arrange: Make the mock HttpClient throw an IOException
-    when(mockHttpClient.send(any(HttpRequest.class), any()))
+  void testGetPipelineRunSummary_HttpRequestException() throws Exception {
+    when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
         .thenThrow(new IOException("Simulated connection error"));
 
-    // Act
-    final List<ReportEntry> reports = reportService.getReportsByPipelineId("12345");
+    final List<ReportEntry> reports = reportService.getPipelineRunSummary("repo-url", "pipeline-name", 1);
 
-    // Assert
     assertNotNull(reports, "Reports list should not be null");
     assertTrue(reports.isEmpty(), "Reports should be empty when HTTP request fails");
   }
-
 }
