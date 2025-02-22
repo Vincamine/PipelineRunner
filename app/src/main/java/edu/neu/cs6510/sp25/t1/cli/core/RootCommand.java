@@ -2,7 +2,7 @@ package edu.neu.cs6510.sp25.t1.cli.core;
 
 import edu.neu.cs6510.sp25.t1.cli.commands.CheckCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.DryRunCommand;
-import edu.neu.cs6510.sp25.t1.cli.commands.LogCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.ReportCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.StatusCommand;
 import edu.neu.cs6510.sp25.t1.util.GitValidator;
@@ -19,7 +19,7 @@ import java.nio.file.Paths;
  * and available subcommands.
  */
 @Command(name = "cli", version = "CI/CD CLI Tool 1.0", mixinStandardHelpOptions = true, description = "A CI/CD Command-Line Tool", subcommands = {
-        LogCommand.class,
+        ReportCommand.class,
         StatusCommand.class,
         RunCommand.class,
         CheckCommand.class,
