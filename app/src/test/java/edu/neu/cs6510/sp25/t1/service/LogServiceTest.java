@@ -1,7 +1,7 @@
 package edu.neu.cs6510.sp25.t1.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.neu.cs6510.sp25.t1.model.LogEntry;
+import edu.neu.cs6510.sp25.t1.model.ReportEntry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -28,14 +28,14 @@ class LogServiceTest {
 
     private HttpClient mockHttpClient;
     private HttpResponse<Object> mockResponse;
-    private LogService logService;
+    private ReportService logService;
 
     @SuppressWarnings("unchecked")
     @BeforeEach
     void setUp() {
         mockHttpClient = mock(HttpClient.class);
         mockResponse = mock(HttpResponse.class);
-        logService = new LogService(mockHttpClient);
+        logService = new ReportService(mockHttpClient);
         new ObjectMapper();
     }
 
@@ -43,14 +43,14 @@ class LogServiceTest {
     void testGetLogsByPipelineId_Success() throws Exception {
         // Arrange
         final String pipelineId = "12345";
-        final String jsonResponse = "[{\"timestamp\": 1678901234, \"level\": \"INFO\", \"message\": \"Pipeline started.\"}]";
+        final String jsonResponse = "[{\"timestamp\": 1678901234, \"level\": \"SUCCESSSUCCESS\", \"message\": \"Pipeline started.\"}]";
 
         when(mockHttpClient.send(any(HttpRequest.class), any())).thenReturn(mockResponse);
         when(mockResponse.statusCode()).thenReturn(200);
         when(mockResponse.body()).thenReturn(jsonResponse);
 
         // Act
-        final List<LogEntry> logs = logService.getLogsByPipelineId(pipelineId);
+        final List<ReportEntry> logs = logService.getLogsByPipelineId(pipelineId);
 
         // Assert
         assertFalse(logs.isEmpty(), "Logs list should not be empty");
@@ -69,7 +69,7 @@ class LogServiceTest {
     @Test
     void testGetLogsByPipelineId_InvalidPipelineId() {
         // Act
-        List<LogEntry> logs = logService.getLogsByPipelineId(null);
+        List<ReportEntry> logs = logService.getLogsByPipelineId(null);
 
         // Assert
         assertTrue(logs.isEmpty(), "Logs list should be empty for a null pipeline ID");
@@ -86,7 +86,7 @@ class LogServiceTest {
         when(mockResponse.body()).thenReturn("Internal Server Error");
 
         // Act
-        final List<LogEntry> logs = logService.getLogsByPipelineId("12345");
+        final List<ReportEntry> logs = logService.getLogsByPipelineId("12345");
 
         // Assert
         assertTrue(logs.isEmpty(), "Logs should be empty on API error");
@@ -100,7 +100,7 @@ class LogServiceTest {
         when(mockResponse.body()).thenReturn("Invalid JSON Response"); // Corrupt JSON
 
         // Act
-        final List<LogEntry> logs = logService.getLogsByPipelineId("12345");
+        final List<ReportEntry> logs = logService.getLogsByPipelineId("12345");
 
         // Assert
         assertTrue(logs.isEmpty(), "Logs should be empty if JSON parsing fails");
@@ -113,7 +113,7 @@ class LogServiceTest {
                 .thenThrow(new IOException("Simulated connection error"));
 
         // Act
-        final List<LogEntry> logs = logService.getLogsByPipelineId("12345");
+        final List<ReportEntry> logs = logService.getLogsByPipelineId("12345");
 
         // Assert
         assertNotNull(logs, "Logs list should not be null");

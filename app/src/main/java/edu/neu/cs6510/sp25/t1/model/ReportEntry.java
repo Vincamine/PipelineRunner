@@ -8,9 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Each log entry records information about a pipeline event,
  * including its severity level, message, and timestamp.
  */
-public class LogEntry {
+public class ReportEntry {
     private final String pipelineId;
-    private final LogLevel level;
+    private final ReportLevel level;
     private final String message;
     private final long timestamp;
 
@@ -18,15 +18,15 @@ public class LogEntry {
      * Constructs a new LogEntry instance.
      *
      * @param pipelineId The ID of the pipeline associated with this log entry.
-     * @param level      The severity level of the log (e.g., INFO, WARN, ERROR).
+     * @param level      The severity level of the log (e.g., SUCCESS, WARN, FAILED).
      * @param message    A description of the event being logged.
      * @param timestamp  The timestamp when the log entry was created
      *                   (milliseconds).
      */
     @JsonCreator
-    public LogEntry(
+    public ReportEntry(
             @JsonProperty("pipelineId") String pipelineId,
-            @JsonProperty("level") LogLevel level,
+            @JsonProperty("level") ReportLevel level,
             @JsonProperty("message") String message,
             @JsonProperty("timestamp") long timestamp) {
         this.pipelineId = pipelineId;
@@ -47,9 +47,9 @@ public class LogEntry {
     /**
      * Retrieves the severity level of the log entry.
      *
-     * @return The log level as an enum (e.g., LogLevel.INFO, LogLevel.WARN).
+     * @return The log level as an enum (e.g., LogLevel.SUCCESS, LogLevel.WARN).
      */
-    public LogLevel getLevel() {
+    public ReportLevel getLevel() {
         return level;
     }
 

@@ -1,10 +1,10 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.model.LogEntry;
-import edu.neu.cs6510.sp25.t1.model.LogLevel;
-import edu.neu.cs6510.sp25.t1.service.LogService;
+import edu.neu.cs6510.sp25.t1.model.ReportEntry;
+import edu.neu.cs6510.sp25.t1.model.ReportLevel;
+import edu.neu.cs6510.sp25.t1.service.ReportService;
 import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
-import edu.neu.cs6510.sp25.t1.util.LogFormatter;
+import edu.neu.cs6510.sp25.t1.util.ReportFormatter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -23,25 +23,25 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
 class LogCommandTest {
-    private LogService mockLogService;
-    private LogCommand logCommand;
+    private ReportService mockLogService;
+    private ReportCommand logCommand;
 
     @BeforeEach
     void setUp() {
-        mockLogService = mock(LogService.class);
-        logCommand = new LogCommand(mockLogService);
+        mockLogService = mock(ReportService.class);
+        logCommand = new ReportCommand(mockLogService);
     }
 
     /** Ensures logs are retrieved and printed correctly */
     @Test
     void testLogs_ValidPipeline_Success() {
-        final LogEntry mockLog = new LogEntry("123", LogLevel.INFO, "Pipeline executed successfully",
+        final ReportEntry mockLog = new ReportEntry("123", ReportLevel.SUCCESS, "Pipeline executed successfully",
                 Instant.now().toEpochMilli());
         when(mockLogService.getLogsByPipelineId("123")).thenReturn(List.of(mockLog));
 
-        try (MockedStatic<LogFormatter> logFormatterMock = mockStatic(LogFormatter.class)) {
-            logFormatterMock.when(() -> LogFormatter.format(mockLog))
-                    .thenReturn("INFO: Pipeline executed successfully");
+        try (MockedStatic<ReportFormatter> logFormatterMock = mockStatic(ReportFormatter.class)) {
+            logFormatterMock.when(() -> ReportFormatter.format(mockLog))
+                    .thenReturn("SUCCESSSUCCESS: Pipeline executed successfully");
 
             final CommandLine cmd = new CommandLine(logCommand);
             final int exitCode = cmd.execute("--id", "123");

@@ -8,14 +8,14 @@ class LogLevelTest {
 
     @Test
     void testFromString() {
-        assertEquals(LogLevel.INFO, LogLevel.fromString("INFO"));
-        assertEquals(LogLevel.WARN, LogLevel.fromString("warn"));
-        assertNull(LogLevel.fromString(null));
+        assertEquals(ReportLevel.SUCCESS, ReportLevel.fromString("SUCCESS"));
+        assertEquals(ReportLevel.WARN, ReportLevel.fromString("warn"));
+        assertNull(ReportLevel.fromString(null));
     }
 
     @Test
     void testToValue() {
-        assertEquals("DEBUG", LogLevel.DEBUG.toValue());
-        assertEquals("ERROR", LogLevel.ERROR.toValue());
+        assertEquals("DEBUG", ReportLevel.DEBUG.toValue());
+        assertEquals("ERROR", ReportLevel.FAILED.toValue());
     }
 }

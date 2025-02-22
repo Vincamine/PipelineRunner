@@ -7,12 +7,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Defines log levels for the CI/CD system.
  * Used to categorize log entries based on severity.
  */
-public enum LogLevel {
+public enum ReportLevel {
     DEBUG, // Detailed debugging information.
-    INFO, // General operational messages.
+    SUCCESS, // General operational messages.
     WARN, // Warnings that may require attention.
-    ERROR, // Errors affecting functionality.
-    FATAL; // Critical errors causing termination.
+    FAILED, // Errors affecting functionality.
+    CANCEL; // Critical errors causing termination.
 
     /**
      * Converts a string to a LogLevel enum.
@@ -21,8 +21,8 @@ public enum LogLevel {
      * @return The corresponding LogLevel, or null if invalid.
      */
     @JsonCreator
-    public static LogLevel fromString(String value) {
-        return value == null ? null : LogLevel.valueOf(value.toUpperCase());
+    public static ReportLevel fromString(String value) {
+        return value == null ? null : ReportLevel.valueOf(value.toUpperCase());
     }
 
     /**
