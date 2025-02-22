@@ -29,7 +29,7 @@ class RootCommandTest {
         final CommandLine cmd = new CommandLine(rootCommand);
         assertNotNull(cmd.getSubcommands().get("run"), "RunCommand should be registered.");
         assertNotNull(cmd.getSubcommands().get("check"), "CheckCommand should be registered.");
-        assertNotNull(cmd.getSubcommands().get("logs"), "LogCommand should be registered.");
+        assertNotNull(cmd.getSubcommands().get("report"), "LogCommand should be registered.");
         assertNotNull(cmd.getSubcommands().get("status"), "StatusCommand should be registered.");
         assertNotNull(cmd.getSubcommands().get("dry-run"), "DryRunCommand should be registered.");
     }
