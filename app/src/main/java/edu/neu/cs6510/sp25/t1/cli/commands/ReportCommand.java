@@ -17,11 +17,30 @@ import java.util.List;
 @CommandLine.Command(name = "report", description = "Retrieve reports for a pipeline based on its ID")
 public class ReportCommand implements Runnable {
 
+
+    /**
+     * The repo of the pipeline whose reports are to be retrieved.
+     */
+    @CommandLine.Option(names = "--repo", description = "Repository URL to retrieve reports from")
+    private String repoUrl;
+
+    /**
+     *  Retrieve local reports.
+     */
+    @CommandLine.Option(names = "--local", description = "Retrieve reports from the local repository in the working directory")
+    private boolean isLocal;
+
     /**
      * The ID of the pipeline whose reports are to be retrieved.
      */
-    @CommandLine.Option(names = "--id", required = true, description = "Pipeline ID to retrieve reports for")
+    @CommandLine.Option(names = "--pipeline", required = true, description = "Pipeline Name to retrieve reports for")
     private String pipelineId;
+
+    /**
+     * The ID of the run from a pipeline.
+     */
+    @CommandLine.Option(names = "--run", description = "Specific run number for a pipeline")
+    private Integer runNumber;
 
     private final ReportService reportService;
 
@@ -47,16 +66,37 @@ public class ReportCommand implements Runnable {
     @Override
     public void run() {
         try {
-            if (pipelineId == null || pipelineId.trim().isEmpty()) {
-                System.err.println("Error: Pipeline ID is required.");
+            if (repoUrl == null && !isLocal) {
+                System.err.println("Error: Either --repo or --local must be specified.");
                 return;
             }
+            List<ReportEntry> reports;
 
-            // Fetch reports for the given pipeline ID
-            final List<ReportEntry> reports = reportService.getReportsByPipelineId(pipelineId);
-
+            if (isLocal) {
+                if (runNumber != null && pipelineId != null) {
+                    // Fetch specific pipeline run summary for local repository
+                    reports = reportService.getLocalPipelineRunSummary(pipelineId, runNumber);
+                } else if (pipelineId != null) {
+                    // Fetch all runs for a specific pipeline in local repo
+                    reports = reportService.getLocalPipelineRuns(pipelineId);
+                } else {
+                    // Fetch all pipeline runs in the local repo
+                    reports = reportService.getLocalRepositoryReports();
+                }
+            } else {
+                if (runNumber != null && pipelineId != null) {
+                    // Fetch specific pipeline run summary from remote repo
+                    reports = reportService.getPipelineRunSummary(repoUrl, pipelineId, runNumber);
+                } else if (pipelineId != null) {
+                    // Fetch all runs for a specific pipeline from remote repo
+                    reports = reportService.getPipelineRuns(repoUrl, pipelineId);
+                } else {
+                    // Fetch all pipeline runs for a remote repository
+                    reports = reportService.getRepositoryReports(repoUrl);
+                }
+            }
             if (reports.isEmpty()) {
-                System.out.println("No Reports found for pipeline ID: " + pipelineId);
+                System.out.println("No reports found matching the criteria.");
                 return;
             }
 
