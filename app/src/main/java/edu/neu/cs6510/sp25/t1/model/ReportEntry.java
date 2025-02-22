@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Represents a log entry in the CI/CD system.
- * Each log entry records information about a pipeline event,
+ * Represents a report entry in the CI/CD system.
+ * Each report entry records information about a pipeline event,
  * including its severity level, message, and timestamp.
  */
 public class ReportEntry {
@@ -15,12 +15,12 @@ public class ReportEntry {
     private final long timestamp;
 
     /**
-     * Constructs a new LogEntry instance.
+     * Constructs a new ReportEntry instance.
      *
-     * @param pipelineId The ID of the pipeline associated with this log entry.
-     * @param level      The severity level of the log (e.g., SUCCESS, WARN, FAILED).
+     * @param pipelineId The ID of the pipeline associated with this report entry.
+     * @param level      The severity level of the report (e.g., SUCCESS, WARN, FAILED).
      * @param message    A description of the event being logged.
-     * @param timestamp  The timestamp when the log entry was created
+     * @param timestamp  The timestamp when the report entry was created
      *                   (milliseconds).
      */
     @JsonCreator
@@ -36,7 +36,7 @@ public class ReportEntry {
     }
 
     /**
-     * Retrieves the ID of the pipeline associated with this log entry.
+     * Retrieves the ID of the pipeline associated with this report entry.
      *
      * @return The pipeline ID.
      */
@@ -45,25 +45,25 @@ public class ReportEntry {
     }
 
     /**
-     * Retrieves the severity level of the log entry.
+     * Retrieves the severity level of the report entry.
      *
-     * @return The log level as an enum (e.g., LogLevel.SUCCESS, LogLevel.WARN).
+     * @return The report level as an enum (e.g., ReportLevel. SUCCESS, ReportLevel. WARN).
      */
     public ReportLevel getLevel() {
         return level;
     }
 
     /**
-     * Retrieves the message describing the log entry.
+     * Retrieves the message describing the Report entry.
      *
-     * @return The log message.
+     * @return The Report message.
      */
     public String getMessage() {
         return message;
     }
 
     /**
-     * Retrieves the timestamp of the log entry.
+     * Retrieves the timestamp of the report entry.
      *
      * @return The timestamp in milliseconds.
      */

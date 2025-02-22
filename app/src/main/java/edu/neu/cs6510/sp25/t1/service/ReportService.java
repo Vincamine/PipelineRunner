@@ -14,17 +14,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Service class for retrieving logs from an external API.
+ * Service class for retrieving reports from an external API.
  * Handles HTTP requests, JSON deserialization, and error handling.
  */
 public class ReportService {
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    private static final String BASE_URL = "https://example.com/api/log/"; // Placeholder API
+    private static final String BASE_URL = "https://example.com/api/report/"; // Placeholder API
 
     /**
-     * Constructs a LogService with a given HTTP client.
+     * Constructs a ReportService with a given HTTP client.
      * If {@code httpClient} is null, a default one is created.
      *
      * @param httpClient An instance of {@link HttpClient} for sending HTTP
@@ -36,13 +36,13 @@ public class ReportService {
     }
 
     /**
-     * Fetches logs for a given pipeline ID from the external API.
+     * Fetches reports for a given pipeline ID from the external API.
      *
-     * @param pipelineId The pipeline ID to retrieve logs for.
+     * @param pipelineId The pipeline ID to retrieve reports for.
      * @return A list of {@link ReportEntry} objects if successful; otherwise, an empty
      *         list.
      */
-    public List<ReportEntry> getLogsByPipelineId(String pipelineId) {
+    public List<ReportEntry> getReportsByPipelineId(String pipelineId) {
         if (pipelineId == null || pipelineId.trim().isEmpty()) {
             System.err.println("Error: Pipeline ID cannot be null or empty.");
             return Collections.emptyList();
@@ -56,7 +56,7 @@ public class ReportService {
             return processResponse(response);
         } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.err.println("Failed to fetch logs: " + e.getMessage());
+            System.err.println("Failed to fetch reports: " + e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -76,7 +76,7 @@ public class ReportService {
     }
 
     /**
-     * Processes the HTTP response and converts it into a list of log entries.
+     * Processes the HTTP response and converts it into a list of Report entries.
      *
      * @param response The HTTP response.
      * @return A list of {@link ReportEntry} objects or an empty list if an error
@@ -86,7 +86,7 @@ public class ReportService {
         if (response.statusCode() == 200) {
             return parseJsonResponse(response.body());
         } else {
-            System.err.println("Error fetching logs. HTTP Status: " + response.statusCode());
+            System.err.println("Error fetching reports. HTTP Status: " + response.statusCode());
             return Collections.emptyList();
         }
     }
@@ -95,7 +95,7 @@ public class ReportService {
      * Parses a JSON response into a list of {@link ReportEntry} objects.
      *
      * @param jsonResponse The JSON response body.
-     * @return A list of log entries or an empty list if parsing fails.
+     * @return A list of report entries or an empty list if parsing fails.
      */
     private List<ReportEntry> parseJsonResponse(String jsonResponse) {
         try {

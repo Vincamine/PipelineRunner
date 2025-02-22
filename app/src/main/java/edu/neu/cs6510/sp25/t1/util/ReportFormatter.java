@@ -16,13 +16,13 @@ public class ReportFormatter {
   /**
    * Formats a {@link ReportEntry} into a structured log message.
    *
-   * @param log The log entry to format.
+   * @param report The log entry to format.
    * @return A formatted log message.
    */
-  public static String format(ReportEntry log) {
+  public static String format(ReportEntry report) {
     return String.format("[%s] [%s] %s",
-        DATE_FORMAT.format(new Date(log.getTimestamp())),
-        log.getLevel().name(),
-        log.getMessage());
+        DATE_FORMAT.format(new Date(report.getTimestamp())),
+        report.getLevel().name(),
+        report.getMessage());
   }
 }

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Defines log levels for the CI/CD system.
- * Used to categorize log entries based on severity.
+ * Defines report levels for the CI/CD system.
+ * Used to categorize report entries based on severity.
  */
 public enum ReportLevel {
     DEBUG, // Detailed debugging information.
@@ -15,10 +15,10 @@ public enum ReportLevel {
     CANCEL; // Critical errors causing termination.
 
     /**
-     * Converts a string to a LogLevel enum.
+     * Converts a string to a ReportLevel enum.
      *
-     * @param value The string representation of the log level.
-     * @return The corresponding LogLevel, or null if invalid.
+     * @param value The string representation of the report level.
+     * @return The corresponding ReportLevel, or null if invalid.
      */
     @JsonCreator
     public static ReportLevel fromString(String value) {
@@ -26,9 +26,9 @@ public enum ReportLevel {
     }
 
     /**
-     * Returns the string representation of the LogLevel.
+     * Returns the string representation of the ReportLevel.
      *
-     * @return The log level as a string.
+     * @return The report level as a string.
      */
     @JsonValue
     public String toValue() {
