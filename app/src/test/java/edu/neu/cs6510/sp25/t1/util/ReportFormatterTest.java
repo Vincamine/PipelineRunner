@@ -6,14 +6,14 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class LogFormatterTest {
+class ReportFormatterTest {
 
     @Test
     void testFormat() {
         final ReportEntry log = new ReportEntry("pipeline-1", ReportLevel.SUCCESS, "Pipeline started", System.currentTimeMillis());
         final String formattedLog = ReportFormatter.format(log);
 
-        assertTrue(formattedLog.contains("[SUCCESSSUCCESS] Pipeline started"));
+        assertTrue(formattedLog.contains("[SUCCESS] Pipeline started"));
         assertTrue(formattedLog.contains("["));
         assertTrue(formattedLog.contains("]"));
     }

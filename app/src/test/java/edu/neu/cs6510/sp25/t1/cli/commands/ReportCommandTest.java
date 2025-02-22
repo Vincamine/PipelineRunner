@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
-class LogCommandTest {
+class ReportCommandTest {
     private ReportService mockLogService;
     private ReportCommand logCommand;
 
@@ -37,7 +37,7 @@ class LogCommandTest {
     void testLogs_ValidPipeline_Success() {
         final ReportEntry mockLog = new ReportEntry("123", ReportLevel.SUCCESS, "Pipeline executed successfully",
                 Instant.now().toEpochMilli());
-        when(mockLogService.getLogsByPipelineId("123")).thenReturn(List.of(mockLog));
+        when(mockLogService.getReportsByPipelineId("123")).thenReturn(List.of(mockLog));
 
         try (MockedStatic<ReportFormatter> logFormatterMock = mockStatic(ReportFormatter.class)) {
             logFormatterMock.when(() -> ReportFormatter.format(mockLog))
@@ -53,7 +53,7 @@ class LogCommandTest {
     /** Ensures correct handling when no logs exist */
     @Test
     void testLogs_NoLogsFound() {
-        when(mockLogService.getLogsByPipelineId("123")).thenReturn(Collections.emptyList());
+        when(mockLogService.getReportsByPipelineId("123")).thenReturn(Collections.emptyList());
 
         final CommandLine cmd = new CommandLine(logCommand);
         final int exitCode = cmd.execute("--id", "123");
@@ -73,7 +73,7 @@ class LogCommandTest {
     /** Ensures exception handling works properly */
     @Test
     void testLogs_ServiceThrowsException() {
-        when(mockLogService.getLogsByPipelineId("123")).thenThrow(new RuntimeException("Database error"));
+        when(mockLogService.getReportsByPipelineId("123")).thenThrow(new RuntimeException("Database error"));
 
         try (MockedStatic<ErrorHandler> errorHandlerMock = mockStatic(ErrorHandler.class)) {
             final CommandLine cmd = new CommandLine(logCommand);

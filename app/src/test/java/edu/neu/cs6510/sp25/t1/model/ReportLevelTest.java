@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class LogLevelTest {
+class ReportLevelTest {
 
     @Test
     void testFromString() {
@@ -16,6 +16,6 @@ class LogLevelTest {
     @Test
     void testToValue() {
         assertEquals("DEBUG", ReportLevel.DEBUG.toValue());
-        assertEquals("ERROR", ReportLevel.FAILED.toValue());
+        assertEquals("FAILED", ReportLevel.FAILED.toValue());
     }
 }
