@@ -49,7 +49,7 @@ public class RunPipelineService {
         try {
             // Validate pipeline structure
             if (!validator.validatePipeline(pipelineConfig)) {
-                System.err.println("❌ Pipeline validation failed.");
+                System.err.println("Pipeline validation failed.");
                 return new PipelineStatus("unknown", PipelineState.FAILED, 0, "Validation error.");
             }
 
@@ -69,7 +69,7 @@ public class RunPipelineService {
                         dependencies);
 
                 if (stageFailed) {
-                    System.err.println("❌ Pipeline failed at stage: " + stage);
+                    System.err.println("Pipeline failed at stage: " + stage);
                     return new PipelineStatus("pipeline", PipelineState.FAILED, 1, "Pipeline execution failed.");
                 }
             }

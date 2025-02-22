@@ -3,7 +3,9 @@ package edu.neu.cs6510.sp25.t1.service;
 import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Service class responsible for parsing a pipeline YAML file and determining
@@ -93,9 +95,9 @@ public class PipelineExecutionOrderGenerator {
         }
 
         for (Object jobObj : jobsList) {
-            if (!(jobObj instanceof Map<?, ?> job))
+            if (!(jobObj instanceof Map<?, ?> job)) {
                 continue;
-
+            }
             final String jobName = (String) job.get("name");
             final String stage = (String) job.get("stage");
 
