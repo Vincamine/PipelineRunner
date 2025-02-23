@@ -1,0 +1,13 @@
+[
+  {
+    "pipelineId": "pipeline2-run1",
+    "level": "SUCCESS",
+    "message": "Deployment pipeline completed",
+    "timestamp": 1708819200000,
+    "status": "SUCCESS",
+    "details": [
+      "Successfully deployed to production",
+      "All health checks passed"
+    ]
+  }
+]

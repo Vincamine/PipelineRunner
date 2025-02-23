@@ -22,9 +22,15 @@ public enum ReportLevel {
      */
     @JsonCreator
     public static ReportLevel fromString(String value) {
-        return value == null ? null : ReportLevel.valueOf(value.toUpperCase());
+        if (value == null) {
+            return SUCCESS;
+        }
+        try {
+            return ReportLevel.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return SUCCESS;
+        }
     }
-
     /**
      * Returns the string representation of the ReportLevel.
      *

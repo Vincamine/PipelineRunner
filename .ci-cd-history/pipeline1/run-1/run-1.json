@@ -1,0 +1,10 @@
+[
+  {
+    "pipelineId": "pipeline1-run1",
+    "level": "SUCCESS",
+    "message": "Pipeline completed successfully",
+    "timestamp": 1708646400000,
+    "status": "SUCCESS",
+    "stages": ["build", "test"]
+  }
+]
