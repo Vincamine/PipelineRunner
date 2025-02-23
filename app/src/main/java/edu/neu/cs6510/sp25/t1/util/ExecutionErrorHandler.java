@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.util;
 
+
 import java.time.Duration;
 import java.time.Instant;
 import edu.neu.cs6510.sp25.t1.model.ApiResponse;
@@ -38,7 +39,7 @@ public class ExecutionErrorHandler {
             (status.getMessage() != null) ? status.getMessage() : "No error message provided");
         return false;
 
-      case CANCELLED:
+      case CANCELED:
         System.err.printf("Pipeline was cancelled at stage '%s' after running for %s%n",
             status.getCurrentStage(),
             getExecutionDuration(status));

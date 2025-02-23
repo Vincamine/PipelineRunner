@@ -75,7 +75,7 @@ public class RunPipelineService {
             }
 
             System.out.println("✅ Pipeline execution complete.");
-            return new PipelineStatus("pipeline", PipelineState.SUCCEEDED, 0, "Pipeline executed successfully.");
+            return new PipelineStatus("pipeline", PipelineState.SUCCESS, 0, "Pipeline executed successfully.");
         } catch (Exception e) {
             ErrorHandler.reportError("Pipeline execution error: " + e.getMessage());
             return new PipelineStatus("pipeline", PipelineState.FAILED, 1, "Execution error.");

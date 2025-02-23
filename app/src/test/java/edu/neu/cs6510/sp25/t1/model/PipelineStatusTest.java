@@ -1,62 +1,113 @@
 package edu.neu.cs6510.sp25.t1.model;
 
 import org.junit.jupiter.api.Test;
+
 import java.time.Instant;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class PipelineStatusTest {
 
     @Test
-    void testDefaultConstructor() {
-        final PipelineStatus status = new PipelineStatus("pipeline-123");
+    void testConstructorWithStagesAndJobs() {
+        // Prepare mock data for stages and jobs
+        List<StageInfo> stages = List.of(
+                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli()),
+                new StageInfo("Test", "RUNNING", Instant.now().minusSeconds(300).toEpochMilli(), 0) // Still running
+        );
+
+        List<JobInfo> jobs = List.of(
+                new JobInfo("Compile", "SUCCESS", false),
+                new JobInfo("Unit Test", "RUNNING", false)
+        );
+
+        final PipelineStatus status = new PipelineStatus("pipeline-123", stages, jobs);
 
         assertEquals("pipeline-123", status.getPipelineId());
-        assertEquals(PipelineState.UNKNOWN, status.getState());
-        assertEquals(0, status.getProgress());
         assertNotNull(status.getStartTime());
         assertNotNull(status.getLastUpdated());
+        assertEquals(stages, status.getStages());
+        assertEquals(jobs, status.getJobs());
     }
 
     @Test
-    void testParameterizedConstructor() {
-        final Instant start = Instant.now().minusSeconds(600);
-        final Instant updated = Instant.now();
-        final PipelineStatus status = new PipelineStatus("pipeline-123", PipelineState.RUNNING, 50, "Build Stage",
-                start, updated);
+    void testConstructorWithManualState() {
+        List<StageInfo> stages = List.of(
+                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli())
+        );
+
+        List<JobInfo> jobs = List.of(
+                new JobInfo("Deployment", "FAILED", false)
+        );
+
+        final PipelineStatus status = new PipelineStatus("pipeline-456", PipelineState.FAILED, 30, "Deployment failed", stages, jobs);
+
+        assertEquals("pipeline-456", status.getPipelineId());
+        assertEquals(PipelineState.FAILED, status.getState());
+        assertEquals(30, status.getProgress());
+        assertEquals("Deployment failed", status.getMessage());
+        assertEquals(stages, status.getStages());
+        assertEquals(jobs, status.getJobs());
+    }
+
+    @Test
+    void testProgressComputation() {
+        List<StageInfo> stages = List.of(
+                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli()),
+                new StageInfo("Test", "SUCCESS", Instant.now().minusSeconds(400).toEpochMilli(), Instant.now().minusSeconds(300).toEpochMilli()),
+                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(200).toEpochMilli(), Instant.now().minusSeconds(100).toEpochMilli())
+        );
+
+        List<JobInfo> jobs = List.of(
+                new JobInfo("Compile", "SUCCESS", false),
+                new JobInfo("Deploy", "FAILED", false)
+        );
+
+        final PipelineStatus status = new PipelineStatus("pipeline-789", stages, jobs);
+
+        assertEquals(66, status.getProgress()); // 2/3 stages succeeded → 66% progress
+    }
+
+    @Test
+    void testConstructorWithBasicInfo() {
+        final PipelineStatus status = new PipelineStatus("pipeline-123", PipelineState.RUNNING, 50, "Pipeline running...");
 
         assertEquals("pipeline-123", status.getPipelineId());
         assertEquals(PipelineState.RUNNING, status.getState());
         assertEquals(50, status.getProgress());
-        assertEquals("Build Stage", status.getCurrentStage());
-        assertEquals(start, status.getStartTime());
-        assertEquals(updated, status.getLastUpdated());
+        assertEquals("Pipeline running...", status.getMessage());
+        assertNotNull(status.getStartTime());
+        assertNotNull(status.getLastUpdated());
+        assertTrue(status.getStages().isEmpty()); // No stages
+        assertTrue(status.getJobs().isEmpty()); // No jobs
     }
 
     @Test
-    void testSetters() {
-        final PipelineStatus status = new PipelineStatus("pipeline-123");
-        status.setState(PipelineState.FAILED);
-        status.setProgress(80);
-        status.setCurrentStage("Deploy");
-        status.setMessage("Deployment failed");
-        final Instant newUpdateTime = Instant.now();
-        status.setLastUpdated(newUpdateTime);
+    void testStateComputation() {
+        List<StageInfo> stages = List.of(
+                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli()),
+                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(400).toEpochMilli(), Instant.now().minusSeconds(300).toEpochMilli())
+        );
 
-        assertEquals(PipelineState.FAILED, status.getState());
-        assertEquals(80, status.getProgress());
-        assertEquals("Deploy", status.getCurrentStage());
-        assertEquals("Deployment failed", status.getMessage());
-        assertEquals(newUpdateTime, status.getLastUpdated());
+        List<JobInfo> jobs = List.of(
+                new JobInfo("Compile", "SUCCESS", false),
+                new JobInfo("Deploy", "FAILED", false)
+        );
+
+        final PipelineStatus status = new PipelineStatus("pipeline-999", stages, jobs);
+
+        assertEquals(PipelineState.FAILED, status.getState()); // Should be failed due to one failed stage & job
     }
 
     @Test
-    void testProgressBoundary() {
-        final PipelineStatus status = new PipelineStatus("pipeline-123");
-        status.setProgress(120);
-        assertEquals(100, status.getProgress());
+    void testConstructorWithNoStagesOrJobs() {
+        final PipelineStatus status = new PipelineStatus("pipeline-000", List.of(), List.of());
 
-        status.setProgress(-5);
-        assertEquals(0, status.getProgress());
+        assertEquals("pipeline-000", status.getPipelineId());
+        assertEquals(PipelineState.SUCCESS, status.getState()); // No failures, default to success
+        assertEquals(0, status.getProgress()); // No stages, progress = 0%
+        assertTrue(status.getStages().isEmpty());
+        assertTrue(status.getJobs().isEmpty());
     }
 }

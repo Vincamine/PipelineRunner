@@ -16,7 +16,8 @@ public class StageInfo {
    * Constructs a new StageInfo instance.
    *
    * @param stageName      The name of the stage.
-   * @param stageStatus    The status of the stage (e.g., SUCCESS, FAILED, CANCELED).
+   * @param stageStatus    The status of the stage (e.g., SUCCESS, FAILED,
+   *                       CANCELED).
    * @param startTime      The timestamp when the stage started (milliseconds).
    * @param completionTime The timestamp when the stage completed (milliseconds).
    */

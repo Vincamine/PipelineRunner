@@ -7,6 +7,7 @@ import edu.neu.cs6510.sp25.t1.util.ReportFormatter;
 import picocli.CommandLine;
 
 import java.net.http.HttpClient;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,66 +16,43 @@ import java.util.List;
  * This class implements the main functionality for the 'report' command,
  * allowing users to retrieve various types of pipeline execution reports.
  *
- * <p>The command supports several levels of reporting:</p>
- * <ul>
- *   <li>List all available pipelines</li>
- *   <li>Get all executions for a pipeline</li>
- *   <li>Get specific run details</li>
- *   <li>Get stage-level reports</li>
- *   <li>Get job-level reports</li>
- * </ul>
+ * The command supports several levels of reporting:
+ * - List all available pipelines
+ * - Get all executions for a pipeline
+ * - Get specific run details
+ * - Get stage-level reports
+ * - Get job-level reports
+ * 
  *
- * <p>Example usage:</p>
- * <pre>
+ * Example usage:
  * report --repo https://github.com/user/repo --pipeline main-pipeline
  * report --local --pipeline main-pipeline --run 123
- * report --repo https://github.com/user/repo --pipeline main-pipeline --run 123 --stage build
- * </pre>
- *
- * @author Your Name
- * @version 1.0
+ * report --repo https://github.com/user/repo --pipeline main-pipeline --run 123
+ * --stage build
+ * 
  */
-@CommandLine.Command(
-        name = "report",
-        description = "Retrieve reports for pipeline executions",
-        mixinStandardHelpOptions = true
-)
+@CommandLine.Command(name = "report", description = "Retrieve reports for pipeline executions", mixinStandardHelpOptions = true)
+/**
+ * ReportCommand class to handle the retrieval of pipeline execution reports.
+ */
 public class ReportCommand implements Runnable {
 
-    @CommandLine.Option(
-            names = "--repo",
-            description = "Repository URL to retrieve reports from"
-    )
+    @CommandLine.Option(names = "--repo", description = "Repository URL to retrieve reports from")
     private String repoUrl;
 
-    @CommandLine.Option(
-            names = "--local",
-            description = "Retrieve reports from the local repository in the working directory"
-    )
+    @CommandLine.Option(names = "--local", description = "Retrieve reports from the local repository in the working directory")
     private boolean isLocal;
 
-    @CommandLine.Option(
-            names = "--pipeline",
-            description = "Pipeline Name to retrieve reports for"
-    )
+    @CommandLine.Option(names = "--pipeline", description = "Pipeline Name to retrieve reports for")
     private String pipelineId;
 
-    @CommandLine.Option(
-            names = "--run",
-            description = "Unique identifier for a specific pipeline execution"
-    )
+    @CommandLine.Option(names = "--run", description = "Unique identifier for a specific pipeline execution")
     private Integer runNumber;
 
-    @CommandLine.Option(
-            names = "--stage",
-            description = "Stage name to get specific stage report"
-    )
+    @CommandLine.Option(names = "--stage", description = "Stage name to get specific stage report")
     private String stageName;
 
-    @CommandLine.Option(
-            names = "--job",
-            description = "Job name to get specific job report"
-    )
+    @CommandLine.Option(names = "--job", description = "Job name to get specific job report")
     private String jobName;
 
     private final ReportService reportService;
@@ -116,8 +94,7 @@ public class ReportCommand implements Runnable {
             ReportErrorHandler.reportError("Unexpected error occurred", e);
             throw new CommandLine.ExecutionException(
                     new CommandLine(this),
-                    "Command execution failed: " + e.getMessage()
-            );
+                    "Command execution failed: " + e.getMessage());
         }
     }
 
@@ -128,25 +105,28 @@ public class ReportCommand implements Runnable {
      * @throws CommandLine.ParameterException if validation fails
      */
     private void validateInput() {
+        List<String> errors = new ArrayList<>();
+
         if (repoUrl == null && !isLocal) {
-            throw new CommandLine.ParameterException(
-                    new CommandLine(this),
-                    "Either --repo or --local must be specified."
-            );
+            errors.add("Either --repo or --local must be specified.");
         }
 
         if (jobName != null && stageName == null) {
-            throw new CommandLine.ParameterException(
-                    new CommandLine(this),
-                    "Stage name must be specified when requesting job report."
-            );
+            errors.add("Stage name must be specified when requesting job report.");
         }
 
         if ((stageName != null || jobName != null) && (pipelineId == null || runNumber == null)) {
+            errors.add("Pipeline name and run number must be specified for stage/job reports.");
+        }
+
+        // If any validation errors were collected, throw a single exception with all
+        // errors listed.
+        // This allows the user to see all issues at once instead of fixing them one by
+        // one.
+        if (!errors.isEmpty()) {
             throw new CommandLine.ParameterException(
                     new CommandLine(this),
-                    "Pipeline name and run number must be specified for stage/job reports."
-            );
+                    String.join("\n", errors));
         }
     }
 
@@ -155,7 +135,7 @@ public class ReportCommand implements Runnable {
      *
      * @return List of report entries
      * @throws IllegalArgumentException if repository is invalid
-     * @throws SecurityException if repository access is denied
+     * @throws SecurityException        if repository access is denied
      */
     private List<ReportEntry> retrieveReports() {
         try {
@@ -191,16 +171,25 @@ public class ReportCommand implements Runnable {
      *
      * @return List containing a single report entry with pipeline names
      */
+    /**
+     * Lists all available pipelines.
+     *
+     * @return List containing a single report entry with pipeline names
+     */
     private List<ReportEntry> handleListPipelines() {
         List<String> pipelineNames = reportService.getAllPipelineNames(isLocal ? null : repoUrl);
         return List.of(new ReportEntry(
-                "pipelines",             // pipelineId
-                "INFO",                  // level
+                "pipelines", // pipelineId
+                "INFO", // level
                 "Available Pipelines: " + String.join(", ", pipelineNames), // message
                 System.currentTimeMillis(), // timestamp
-                "INFO",                  // status
+                "INFO", // status
                 Collections.emptyList(), // stages
-                Collections.emptyList()  // details
+                Collections.emptyList(), // details
+                0, // Run number (default value since it's not applicable here)
+                "N/A", // Git commit hash (default value for list query)
+                System.currentTimeMillis(), // Start time (default value)
+                System.currentTimeMillis() // Completion time (default value)
         ));
     }
 
@@ -215,8 +204,7 @@ public class ReportCommand implements Runnable {
                 pipelineId,
                 runNumber,
                 stageName,
-                jobName
-        );
+                jobName);
     }
 
     /**
@@ -229,8 +217,7 @@ public class ReportCommand implements Runnable {
                 isLocal ? null : repoUrl,
                 pipelineId,
                 runNumber,
-                stageName
-        );
+                stageName);
     }
 
     /**
@@ -277,13 +264,11 @@ public class ReportCommand implements Runnable {
         if (jobName != null) {
             ReportErrorHandler.reportError(
                     String.format("No report found for job '%s' in stage '%s' of run #%d in pipeline '%s'",
-                            jobName, stageName, runNumber, pipelineId)
-            );
+                            jobName, stageName, runNumber, pipelineId));
         } else if (stageName != null) {
             ReportErrorHandler.reportError(
                     String.format("No report found for stage '%s' of run #%d in pipeline '%s'",
-                            stageName, runNumber, pipelineId)
-            );
+                            stageName, runNumber, pipelineId));
         } else if (runNumber != null) {
             ReportErrorHandler.reportPipelineRunNotFound(pipelineId, runNumber);
         } else if (pipelineId != null) {

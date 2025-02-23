@@ -8,6 +8,6 @@ class PipelineStateTest {
     @Test
     void testPipelineStateDescriptions() {
         assertEquals("Pipeline is waiting to start", PipelineState.PENDING.getDescription());
-        assertEquals("Pipeline completed successfully", PipelineState.SUCCEEDED.getDescription());
+        assertEquals("Pipeline completed successfully", PipelineState.SUCCESS.getDescription());
     }
 }
