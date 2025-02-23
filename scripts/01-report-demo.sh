@@ -1,3 +1,24 @@
+####Usage
+#--repo      Repository URL to retrieve reports from
+#--local     Retrieve reports from the local repository in the working directory
+#--pipeline  Pipeline Name to retrieve reports for
+#--run       Unique identifier for a specific pipeline execution
+#--stage     Stage name to get specific stage report
+#--job       Job name to get specific job report
+#--help      Show this help message and exit
+
+###Usage Guide
+#List all pipeline
+#Get all runs for a specific pipeline
+#Get a specific run summary
+#Get a stage report
+#Get a job report
+
+###Requirement
+#Either --repo or --local must be specified
+#When requesting a job report, the stage name must be specified
+#Pipeline name and run number must be specified for stage/job reports
+
 echo "Building the CI/CD tool..."
 ./gradlew clean build
 ./gradlew clean shadowJar
