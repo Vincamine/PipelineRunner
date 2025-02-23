@@ -1,0 +1,10 @@
+[
+  {
+    "pipelineId": "pipeline1-run2",
+    "level": "FAILURE",
+    "message": "Pipeline failed in test stage",
+    "timestamp": 1708732800000,
+    "status": "FAILURE",
+    "stages": ["build", "test"]
+  }
+]

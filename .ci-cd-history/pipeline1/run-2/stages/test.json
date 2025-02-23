@@ -1,0 +1,14 @@
+[
+  {
+    "pipelineId": "test-stage",
+    "level": "FAILURE",
+    "message": "Test stage failed",
+    "timestamp": 1708732600000,
+    "status": "FAILURE",
+    "details": [
+      "Unit tests failed: 148/150",
+      "Integration tests skipped",
+      "Check test logs for details"
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "pipelineId": "k8s-deploy-job",
+    "level": "SUCCESS",
+    "message": "Kubernetes deployment successful",
+    "timestamp": 1708819050000,
+    "status": "SUCCESS",
+    "details": [
+      "Deployed to production namespace",
+      "Pod health checks passed",
+      "Service endpoints verified"
+    ]
+  }
+]

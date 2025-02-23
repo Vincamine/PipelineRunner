@@ -1,0 +1,14 @@
+[
+  {
+    "pipelineId": "test-stage",
+    "level": "SUCCESS",
+    "message": "Test stage completed",
+    "timestamp": 1708646200000,
+    "status": "SUCCESS",
+    "details": [
+      "Unit tests passed: 150/150",
+      "Integration tests passed: 45/45",
+      "Code coverage: 87%"
+    ]
+  }
+]
