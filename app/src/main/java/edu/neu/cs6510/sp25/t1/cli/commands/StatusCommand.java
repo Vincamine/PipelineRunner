@@ -18,6 +18,9 @@ import picocli.CommandLine.Option;
  * execution.
  */
 @Command(name = "status", description = "Check the status of a pipeline execution.")
+/**
+ * Command to check the status of a pipeline execution.
+ */
 public class StatusCommand implements Runnable {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);

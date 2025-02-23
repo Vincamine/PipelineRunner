@@ -8,10 +8,12 @@ import picocli.CommandLine.Option;
 
 /**
  * CLI command to trigger a CI/CD pipeline execution.
- * 
  * This command executes a pipeline either locally or remotely.
  */
 @Command(name = "run", description = "Trigger CI/CD pipeline execution")
+/**
+ * RunCommand class to handle the execution of a CI/CD pipeline.
+ */
 public class RunCommand implements Runnable {
 
     /**

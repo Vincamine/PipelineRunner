@@ -9,6 +9,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -116,9 +118,20 @@ class ReportErrorHandlerTest {
             Exception cause = new SecurityException("Access denied");
             ReportErrorHandler.reportRepositoryAccessError(repoUrl, cause);
 
+            // Capture actual output
+            String actualOutput = errContent.toString();
+
+            // Filter out warnings (lines starting with "WARNING")
+            String filteredOutput = Arrays.stream(actualOutput.split("\n"))
+                    .filter(line -> !line.startsWith("WARNING"))
+                    .collect(Collectors.joining("\n"));
+
+            // Expected output
             String expected = String.format("[%s] Error: Unable to access repository: %s\n[%s] Cause: Access denied\n",
                     TIMESTAMP, repoUrl, TIMESTAMP);
-            assertEquals(expected, errContent.toString());
+
+            // Trim both expected and actual output to remove extra blank lines
+            assertEquals(expected.trim(), filteredOutput.trim());
         }
     }
 

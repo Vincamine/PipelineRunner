@@ -81,7 +81,7 @@ public class ReportService {
      * Retrieves a specific run summary from local repository.
      *
      * @param pipelineName Pipeline identifier
-     * @param runNumber Run identifier
+     * @param runNumber    Run identifier
      * @return List of ReportEntry objects
      */
     public List<ReportEntry> getLocalPipelineRunSummary(String pipelineName, int runNumber) {
@@ -91,7 +91,7 @@ public class ReportService {
     /**
      * Retrieves all runs for a specific pipeline.
      *
-     * @param repoUrl The repository URL
+     * @param repoUrl      The repository URL
      * @param pipelineName Pipeline identifier
      * @return List of ReportEntry objects
      */
@@ -102,9 +102,9 @@ public class ReportService {
     /**
      * Retrieves a specific pipeline run summary.
      *
-     * @param repoUrl The repository URL
+     * @param repoUrl      The repository URL
      * @param pipelineName Pipeline identifier
-     * @param runNumber Run identifier
+     * @param runNumber    Run identifier
      * @return List of ReportEntry objects
      */
     public List<ReportEntry> getPipelineRunSummary(String repoUrl, String pipelineName, int runNumber) {
@@ -114,10 +114,10 @@ public class ReportService {
     /**
      * Retrieves a report for a specific stage.
      *
-     * @param repoUrl The repository URL
+     * @param repoUrl      The repository URL
      * @param pipelineName Pipeline identifier
-     * @param runNumber Run identifier
-     * @param stageName Stage identifier
+     * @param runNumber    Run identifier
+     * @param stageName    Stage identifier
      * @return List of ReportEntry objects
      */
     public List<ReportEntry> getStageReport(String repoUrl, String pipelineName, int runNumber, String stageName) {
@@ -133,15 +133,15 @@ public class ReportService {
     /**
      * Retrieves a report for a specific job.
      *
-     * @param repoUrl The repository URL
+     * @param repoUrl      The repository URL
      * @param pipelineName Pipeline identifier
-     * @param runNumber Run identifier
-     * @param stageName Stage identifier
-     * @param jobName Job identifier
+     * @param runNumber    Run identifier
+     * @param stageName    Stage identifier
+     * @param jobName      Job identifier
      * @return List of ReportEntry objects
      */
     public List<ReportEntry> getJobReport(String repoUrl, String pipelineName,
-                                          int runNumber, String stageName, String jobName) {
+            int runNumber, String stageName, String jobName) {
         if (repoUrl == null) {
             return getLocalJobReport(pipelineName, runNumber, stageName, jobName);
         }
@@ -182,7 +182,7 @@ public class ReportService {
      * Retrieves a job report from local repository.
      */
     private List<ReportEntry> getLocalJobReport(String pipelineName, int runNumber,
-                                                String stageName, String jobName) {
+            String stageName, String jobName) {
         return fetchLocalReports(".ci-cd-history/" + pipelineName +
                 "/run-" + runNumber +
                 "/stages/" + stageName +
@@ -223,7 +223,8 @@ public class ReportService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
-                return objectMapper.readValue(response.body(), new TypeReference<List<String>>() {});
+                return objectMapper.readValue(response.body(), new TypeReference<List<String>>() {
+                });
             }
             System.err.println("Error fetching pipeline names. HTTP Status: " + response.statusCode());
             return Collections.emptyList();
@@ -243,7 +244,8 @@ public class ReportService {
                 throw new IOException("Report file not found: " + filePath);
             }
             String jsonContent = new String(Files.readAllBytes(Paths.get(filePath)));
-            return objectMapper.readValue(jsonContent, new TypeReference<List<ReportEntry>>() {});
+            return objectMapper.readValue(jsonContent, new TypeReference<List<ReportEntry>>() {
+            });
         } catch (IOException e) {
             System.err.println("Error reading local reports: " + e.getMessage());
             return Collections.emptyList();
@@ -267,7 +269,8 @@ public class ReportService {
      */
     private List<ReportEntry> parseJsonResponse(String jsonResponse) {
         try {
-            return objectMapper.readValue(jsonResponse, new TypeReference<List<ReportEntry>>() {});
+            return objectMapper.readValue(jsonResponse, new TypeReference<List<ReportEntry>>() {
+            });
         } catch (JsonProcessingException e) {
             System.err.println("Error parsing JSON response: " + e.getMessage());
             return Collections.emptyList();

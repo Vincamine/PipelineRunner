@@ -31,6 +31,7 @@ public enum ReportLevel {
             return SUCCESS;
         }
     }
+
     /**
      * Returns the string representation of the ReportLevel.
      *

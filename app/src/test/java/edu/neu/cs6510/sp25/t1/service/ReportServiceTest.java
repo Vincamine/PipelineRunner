@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -17,7 +16,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -28,8 +26,10 @@ class ReportServiceTest {
   private HttpClient mockHttpClient;
   private HttpResponse<String> mockResponse;
   private ReportService reportService;
+  @SuppressWarnings("unused")
   private ObjectMapper objectMapper;
 
+  @SuppressWarnings("unchecked")
   @BeforeEach
   void setUp() {
     mockHttpClient = mock(HttpClient.class);
@@ -41,13 +41,15 @@ class ReportServiceTest {
   /**
    * Tests successful retrieval of repository reports.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetRepositoryReports_Success() throws Exception {
     final String repoUrl = "https://github.com/test/repo";
-    final String jsonResponse = "[{\"pipelineId\": \"12345\", \"level\": \"SUCCESS\", \"message\": \"Pipeline completed.\", \"timestamp\": " + Instant.now().toEpochMilli() + "}]";
+    final String jsonResponse = "[{\"pipelineId\": \"12345\", \"level\": \"SUCCESS\", \"message\": \"Pipeline completed.\", \"timestamp\": "
+        + Instant.now().toEpochMilli() + "}]";
 
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(jsonResponse);
 
@@ -60,19 +62,20 @@ class ReportServiceTest {
     ArgumentCaptor<HttpRequest> requestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
     verify(mockHttpClient).send(requestCaptor.capture(), any());
     assertTrue(requestCaptor.getValue().uri().toString().contains(repoUrl),
-            "Request URL should contain repository URL");
+        "Request URL should contain repository URL");
   }
 
   /**
    * Tests retrieval of pipeline names.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetAllPipelineNames_Success() throws Exception {
     final String repoUrl = "https://github.com/test/repo";
     final String jsonResponse = "[\"pipeline1\", \"pipeline2\"]";
 
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(jsonResponse);
 
@@ -80,16 +83,17 @@ class ReportServiceTest {
 
     assertEquals(2, pipelineNames.size(), "Should return correct number of pipeline names");
     assertTrue(pipelineNames.containsAll(Arrays.asList("pipeline1", "pipeline2")),
-            "Should contain all pipeline names");
+        "Should contain all pipeline names");
   }
 
   /**
    * Tests pipeline run summary retrieval with API error.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetPipelineRunSummary_ApiError() throws Exception {
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(500);
     when(mockResponse.body()).thenReturn("Internal Server Error");
 
@@ -101,10 +105,11 @@ class ReportServiceTest {
   /**
    * Tests pipeline run summary retrieval with JSON processing error.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetPipelineRunSummary_JsonProcessingError() throws Exception {
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn("Invalid JSON Response");
 
@@ -116,10 +121,11 @@ class ReportServiceTest {
   /**
    * Tests pipeline run summary retrieval with HTTP request exception.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetPipelineRunSummary_HttpRequestException() throws Exception {
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenThrow(new IOException("Simulated connection error"));
+        .thenThrow(new IOException("Simulated connection error"));
 
     final List<ReportEntry> reports = reportService.getPipelineRunSummary("repo-url", "pipeline-name", 1);
 
@@ -130,12 +136,14 @@ class ReportServiceTest {
   /**
    * Tests successful stage report retrieval.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetStageReport_Success() throws Exception {
-    final String jsonResponse = "[{\"pipelineId\":\"stage1\",\"level\":\"SUCCESS\",\"message\":\"Stage completed.\",\"timestamp\":" + Instant.now().toEpochMilli() + "}]";
+    final String jsonResponse = "[{\"pipelineId\":\"stage1\",\"level\":\"SUCCESS\",\"message\":\"Stage completed.\",\"timestamp\":"
+        + Instant.now().toEpochMilli() + "}]";
 
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(jsonResponse);
 
@@ -148,12 +156,14 @@ class ReportServiceTest {
   /**
    * Tests successful job report retrieval.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetJobReport_Success() throws Exception {
-    final String jsonResponse = "[{\"pipelineId\":\"job1\",\"level\":\"SUCCESS\",\"message\":\"Job completed.\",\"timestamp\":" + Instant.now().toEpochMilli() + "}]";
+    final String jsonResponse = "[{\"pipelineId\":\"job1\",\"level\":\"SUCCESS\",\"message\":\"Job completed.\",\"timestamp\":"
+        + Instant.now().toEpochMilli() + "}]";
 
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(jsonResponse);
 
@@ -172,12 +182,14 @@ class ReportServiceTest {
   /**
    * Tests successful retrieval of pipeline run summary.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetPipelineRunSummary_Success() throws Exception {
-    final String jsonResponse = "[{\"pipelineId\":\"run1\",\"level\":\"SUCCESS\",\"message\":\"Run completed.\",\"timestamp\":" + Instant.now().toEpochMilli() + "}]";
+    final String jsonResponse = "[{\"pipelineId\":\"run1\",\"level\":\"SUCCESS\",\"message\":\"Run completed.\",\"timestamp\":"
+        + Instant.now().toEpochMilli() + "}]";
 
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(jsonResponse);
 
@@ -195,12 +207,14 @@ class ReportServiceTest {
   /**
    * Tests successful retrieval of pipeline runs.
    */
+  @SuppressWarnings("unchecked")
   @Test
   void testGetPipelineRuns_Success() throws Exception {
-    final String jsonResponse = "[{\"pipelineId\":\"pipeline1\",\"level\":\"SUCCESS\",\"message\":\"Pipeline runs.\",\"timestamp\":" + Instant.now().toEpochMilli() + "}]";
+    final String jsonResponse = "[{\"pipelineId\":\"pipeline1\",\"level\":\"SUCCESS\",\"message\":\"Pipeline runs.\",\"timestamp\":"
+        + Instant.now().toEpochMilli() + "}]";
 
     when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(jsonResponse);
 

@@ -4,13 +4,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Utility class for handling and reporting errors in pipeline reporting operations.
+ * Utility class for handling and reporting errors in pipeline reporting
+ * operations.
  * Provides standardized error reporting and formatting.
  */
 public class ReportErrorHandler {
 
-    private static final DateTimeFormatter TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     // Error message templates
     private static final String INVALID_REPO = "Invalid repository: %s";
@@ -23,7 +23,7 @@ public class ReportErrorHandler {
      * Reports an error for invalid repository configuration or access.
      *
      * @param repoUrl The repository URL that caused the error
-     * @param cause The underlying exception (optional)
+     * @param cause   The underlying exception (optional)
      */
     public static void reportInvalidRepository(String repoUrl, Throwable cause) {
         String message = String.format(INVALID_REPO, repoUrl);
@@ -44,7 +44,7 @@ public class ReportErrorHandler {
      * Reports an error when a specific pipeline run is not found.
      *
      * @param pipelineId The pipeline identifier
-     * @param runNumber The run number that wasn't found
+     * @param runNumber  The run number that wasn't found
      */
     public static void reportPipelineRunNotFound(String pipelineId, int runNumber) {
         String message = String.format(PIPELINE_RUN_NOT_FOUND, runNumber, pipelineId);
@@ -55,7 +55,7 @@ public class ReportErrorHandler {
      * Reports an error for invalid report format or structure.
      *
      * @param details Details about the format error
-     * @param cause The underlying exception (optional)
+     * @param cause   The underlying exception (optional)
      */
     public static void reportInvalidFormat(String details, Throwable cause) {
         String message = String.format(INVALID_FORMAT, details);
@@ -66,7 +66,7 @@ public class ReportErrorHandler {
      * Reports an error when unable to access the repository.
      *
      * @param repoUrl The repository URL that couldn't be accessed
-     * @param cause The underlying exception
+     * @param cause   The underlying exception
      */
     public static void reportRepositoryAccessError(String repoUrl, Throwable cause) {
         String message = String.format(ACCESS_ERROR, repoUrl);
@@ -87,7 +87,7 @@ public class ReportErrorHandler {
      * Reports an error with both the message and its cause.
      *
      * @param message The error message to be reported
-     * @param cause The underlying exception that caused the error
+     * @param cause   The underlying exception that caused the error
      */
     public static void reportError(String message, Throwable cause) {
         String timestamp = LocalDateTime.now().format(TIME_FORMATTER);

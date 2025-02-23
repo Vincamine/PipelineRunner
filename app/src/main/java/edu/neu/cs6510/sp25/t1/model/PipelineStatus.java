@@ -1,10 +1,10 @@
 package edu.neu.cs6510.sp25.t1.model;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Represents the current execution status of a CI/CD pipeline.
- * Stores key details such as execution progress, stage, and timestamps.
  */
 public class PipelineStatus {
     private final String pipelineId;
@@ -14,50 +14,96 @@ public class PipelineStatus {
     private String message;
     private final Instant startTime;
     private Instant lastUpdated;
+    private final List<StageInfo> stages;
+    private final List<JobInfo> jobs;
 
     /**
-     * Constructs a PipelineStatus with an unknown initial state.
-     *
-     * @param pipelineId The ID of the pipeline.
+     * Constructs a PipelineStatus with a computed state from stages and jobs.
      */
-    public PipelineStatus(String pipelineId) {
+    public PipelineStatus(String pipelineId, List<StageInfo> stages, List<JobInfo> jobs) {
         this.pipelineId = pipelineId;
-        this.state = PipelineState.UNKNOWN;
-        this.progress = 0;
+        this.state = calculatePipelineStatus(stages, jobs);
+        this.progress = calculateProgress(stages);
         this.startTime = Instant.now();
         this.lastUpdated = Instant.now();
+        this.stages = stages;
+        this.jobs = jobs;
     }
 
     /**
-     * Constructs a PipelineStatus with detailed attributes.
-     *
-     * @param pipelineId   The pipeline's unique ID.
-     * @param state        The current execution state.
-     * @param progress     The execution progress percentage (0-100).
-     * @param currentStage The current execution stage.
-     * @param startTime    The timestamp when the pipeline started.
-     * @param lastUpdated  The timestamp when the status was last updated.
+     * Constructs a PipelineStatus with a manually specified state, stages, and
+     * jobs.
      */
-    public PipelineStatus(String pipelineId, PipelineState state, int progress,
-            String currentStage, Instant startTime, Instant lastUpdated) {
+    public PipelineStatus(String pipelineId, PipelineState state, int progress, String message, List<StageInfo> stages,
+            List<JobInfo> jobs) {
         this.pipelineId = pipelineId;
         this.state = state;
-        this.progress = Math.max(0, Math.min(progress, 100)); // Ensure valid range
-        this.currentStage = currentStage;
-        this.startTime = startTime;
-        this.lastUpdated = lastUpdated;
-    }
-
-    public PipelineStatus(String string, PipelineState failed, int i, String string2) {
-        this.pipelineId = string;
-        this.state = failed;
-        this.progress = i;
-        this.currentStage = string2;
+        this.progress = progress;
+        this.message = message;
         this.startTime = Instant.now();
         this.lastUpdated = Instant.now();
+        this.stages = stages;
+        this.jobs = jobs;
     }
 
-    // Getters and Setters
+    /**
+     * Constructs a PipelineStatus with a manually specified state.
+     */
+    public PipelineStatus(String pipelineId, PipelineState state, int progress, String message) {
+        this.pipelineId = pipelineId;
+        this.state = state;
+        this.progress = progress;
+        this.message = message;
+        this.startTime = Instant.now();
+        this.lastUpdated = Instant.now();
+        this.stages = List.of(); // Empty stages since it's a manual update
+        this.jobs = List.of(); // Empty jobs list
+    }
+
+    /**
+     * Computes the final status of a pipeline based on its stages and jobs.
+     */
+    private PipelineState calculatePipelineStatus(List<StageInfo> stages, List<JobInfo> jobs) {
+        boolean hasFailed = false;
+        boolean hasCanceled = false;
+
+        for (JobInfo job : jobs) {
+            if ("FAILED".equals(job.getStatus()) && !job.isAllowFailure()) {
+                hasFailed = true;
+            }
+            if ("CANCELED".equals(job.getStatus())) {
+                hasCanceled = true;
+            }
+        }
+
+        for (StageInfo stage : stages) {
+            if ("FAILED".equals(stage.getStageStatus())) {
+                hasFailed = true;
+            }
+            if ("CANCELED".equals(stage.getStageStatus())) {
+                hasCanceled = true;
+            }
+        }
+
+        if (hasFailed)
+            return PipelineState.FAILED;
+        if (hasCanceled)
+            return PipelineState.CANCELED;
+        return PipelineState.SUCCESS;
+    }
+
+    /**
+     * Computes the execution progress percentage.
+     */
+    private int calculateProgress(List<StageInfo> stages) {
+        if (stages.isEmpty()) {
+            return 0;
+        }
+        long completedStages = stages.stream().filter(s -> "SUCCESS".equals(s.getStageStatus())).count();
+        return (int) ((completedStages * 100) / stages.size());
+    }
+
+    // Getters
     public String getPipelineId() {
         return pipelineId;
     }
@@ -86,23 +132,11 @@ public class PipelineStatus {
         return lastUpdated;
     }
 
-    public void setState(PipelineState state) {
-        this.state = state;
+    public List<StageInfo> getStages() {
+        return stages;
     }
 
-    public void setProgress(int progress) {
-        this.progress = Math.max(0, Math.min(progress, 100));
-    }
-
-    public void setCurrentStage(String currentStage) {
-        this.currentStage = currentStage;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public void setLastUpdated(Instant lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public List<JobInfo> getJobs() {
+        return jobs;
     }
 }
