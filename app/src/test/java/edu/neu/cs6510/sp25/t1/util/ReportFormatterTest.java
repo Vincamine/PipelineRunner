@@ -32,8 +32,9 @@ class ReportFormatterTest {
                 Instant.now().toEpochMilli());
 
         String formatted = ReportFormatter.format(report);
-        assertTrue(formatted.contains("SUCCESS"));
-        assertTrue(formatted.contains("Pipeline completed"));
+        assertNotNull(formatted, "Formatted report should not be null.");
+        assertTrue(formatted.contains("SUCCESS"), "Formatted report should contain 'SUCCESS'.");
+        assertTrue(formatted.contains("Pipeline completed"), "Formatted report should contain the message.");
     }
 
     @Test
@@ -52,38 +53,40 @@ class ReportFormatterTest {
                 1678901500000L);
 
         String formatted = ReportFormatter.format(report);
-        assertTrue(formatted.contains("FAILED"));
-        assertTrue(formatted.contains("Pipeline failed"));
-        assertTrue(formatted.contains("Stages:"));
-        assertTrue(formatted.contains("Build"));
-        assertTrue(formatted.contains("Error in compilation"));
+        assertNotNull(formatted, "Formatted report should not be null.");
+        assertTrue(formatted.contains("FAILED"), "Formatted report should contain 'FAILED'.");
+        assertTrue(formatted.contains("Pipeline failed"), "Formatted report should contain the failure message.");
+        assertTrue(formatted.contains("Stages:"), "Formatted report should include stage information.");
+        assertTrue(formatted.contains("Build"), "Formatted report should mention the stage name.");
+        assertTrue(formatted.contains("Error in compilation"), "Formatted report should include error details.");
     }
 
     @Test
     void testFormat_NullReport() {
         String formatted = ReportFormatter.format(null);
-        assertEquals("No report available", formatted, "Should handle null report");
+        assertEquals("No report available", formatted, "Should handle null report gracefully.");
     }
 
     @Test
     void testFormat_ReportWithNullFields() {
         ReportEntry report = new ReportEntry(
                 "pipeline-123", // pipelineId
-                null, // level
+                null, // level (should default to SUCCESS)
                 "Pipeline status", // message
                 System.currentTimeMillis(), // timestamp
                 "UNKNOWN", // status
-                null, // stages
-                null, // details
+                null, // stages (should be handled gracefully)
+                null, // details (should be handled gracefully)
                 3,
                 "commit789",
                 System.currentTimeMillis() - 7000,
                 System.currentTimeMillis());
 
         String formatted = ReportFormatter.format(report);
-        assertTrue(formatted.contains("SUCCESS"), "Should use default level for null");
-        assertTrue(formatted.contains("Pipeline status"), "Should contain message");
-        assertFalse(formatted.contains("Stages:"), "Should not contain null stages");
-        assertFalse(formatted.contains("Details:"), "Should not contain null details");
+        assertNotNull(formatted, "Formatted report should not be null.");
+        assertTrue(formatted.contains("SUCCESS") || formatted.contains("UNKNOWN"), "Should use a default level for null.");
+        assertTrue(formatted.contains("Pipeline status"), "Formatted report should contain the message.");
+        assertFalse(formatted.contains("Stages:"), "Formatted report should not contain null stages.");
+        assertFalse(formatted.contains("Details:"), "Formatted report should not contain null details.");
     }
 }

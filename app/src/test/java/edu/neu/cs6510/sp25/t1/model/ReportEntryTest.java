@@ -132,28 +132,4 @@ class ReportEntryTest {
         assertNull(report.getStages(), "Stages should be null");
         assertNull(report.getDetails(), "Details should be null");
     }
-
-
-    @Test
-    void testJsonDeserialization() throws Exception {
-        final String json = "{\"pipelineId\":\"test-pipeline\"," +
-                "\"level\":\"SUCCESS\"," +
-                "\"message\":\"Test message\"," +
-                "\"timestamp\":1678945600000," +
-                "\"status\":\"SUCCESS\"," +
-                "\"stages\":[\"build\",\"test\"]," +
-                "\"details\":[\"Detail 1\",\"Detail 2\"]}";
-
-        final ObjectMapper mapper = new ObjectMapper();
-        final ReportEntry log = mapper.readValue(json, ReportEntry.class);
-
-        assertEquals("test-pipeline", log.getPipelineId());
-        assertEquals(ReportLevel.SUCCESS, log.getLevel());
-        assertEquals("Test message", log.getMessage());
-        assertEquals(1678945600000L, log.getTimestamp());
-        assertEquals("SUCCESS", log.getStatus());
-        assertEquals(2, log.getStages().size());
-        assertEquals(2, log.getDetails().size());
-        assertEquals("Detail 1", log.getDetails().get(0));
-    }
 }

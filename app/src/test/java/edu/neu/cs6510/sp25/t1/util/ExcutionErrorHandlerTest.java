@@ -36,15 +36,10 @@ class ExecutionErrorHandlerTest {
     }
 
     @Test
-    void testHandleStageFailure() {
+    void testHandleApiErrorServerError() {
         final ExecutionErrorHandler errorHandler = new ExecutionErrorHandler();
+        final ApiResponse response = new ApiResponse(500, "Internal server error");
 
-        // Creating a failed stage with valid timestamps
-        List<StageInfo> stages = List.of(new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(400).toEpochMilli(), Instant.now().toEpochMilli()));
-        List<JobInfo> jobs = List.of(new JobInfo("Deploy Job", "FAILED", false));
-
-        final PipelineStatus status = new PipelineStatus("123", PipelineState.FAILED, 40, "Deploy failed due to network issues", stages, jobs);
-
-        assertFalse(errorHandler.handleStageFailure(status));
+        assertFalse(errorHandler.handleApiError(response));
     }
 }
