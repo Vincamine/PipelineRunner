@@ -3,7 +3,7 @@ pipeline:
   stages:
     - build
     - test
-job:
+jobs:
   - name: "BuildJob"
           stage: "build"
           image: "openjdk:11"

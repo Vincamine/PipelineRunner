@@ -24,7 +24,7 @@ class YamlLoaderTest {
     final Map<String, Object> yamlData = result.getData();
     assertNotNull(yamlData);
     assertTrue(yamlData.containsKey("pipeline"));
-    assertTrue(yamlData.containsKey("job"));
+    assertTrue(yamlData.containsKey("jobs"));
 
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) yamlData.get("pipeline");
@@ -44,7 +44,7 @@ class YamlLoaderTest {
 
     assertNotNull(yamlData);
     assertTrue(yamlData.containsKey("pipeline"));
-    assertTrue(yamlData.containsKey("job"));
+    assertTrue(yamlData.containsKey("jobs"));
 
     @SuppressWarnings("unchecked")
     final Map<String, Object> pipeline = (Map<String, Object>) yamlData.get("pipeline");
@@ -80,10 +80,10 @@ class YamlLoaderTest {
     assertNotNull(locations);
 
     assertTrue(locations.containsKey("pipeline.stages[0]"));
-    assertTrue(locations.containsKey("job[0]"));
+    assertTrue(locations.containsKey("jobs[0]"));
 
     assertTrue(locations.containsKey("pipeline.config.timeout"));
-    assertTrue(locations.containsKey("job[0].script[0]"));
+    assertTrue(locations.containsKey("jobs[0].script[0]"));
   }
 
   @Test

@@ -6,10 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for ReportEntry class.
@@ -24,7 +21,7 @@ class ReportEntryTest {
                 "Pipeline started",
                 Instant.now().toEpochMilli(),
                 "SUCCESS",
-                List.of(new StageInfo("Build", "SUCCESS", Instant.now().toEpochMilli(), Instant.now().toEpochMilli())),
+                List.of(new StageInfo("Build", "SUCCESS", Instant.now().toEpochMilli(), Instant.now().toEpochMilli(), List.of("Compile", "Package"))),
                 List.of("Initialization complete", "Resources allocated"),
                 2,
                 "def456",
@@ -40,6 +37,11 @@ class ReportEntryTest {
         assertEquals(2, log.getDetails().size());
         assertEquals(2, log.getRunNumber());
         assertEquals("def456", log.getGitCommitHash());
+
+        // Check jobs within the stage
+        assertEquals(2, log.getStages().get(0).getJobs().size());
+        assertEquals("Compile", log.getStages().get(0).getJobs().get(0));
+        assertEquals("Package", log.getStages().get(0).getJobs().get(1));
     }
 
     @Test
@@ -51,7 +53,7 @@ class ReportEntryTest {
                 "An error occurred",
                 1678945600000L,
                 "FAILED",
-                List.of(new StageInfo("Test", "FAILED", 1678945600000L, 1678945800000L)),
+                List.of(new StageInfo("Test", "FAILED", 1678945600000L, 1678945800000L, List.of("Unit Test", "Integration Test"))),
                 List.of("Build failed", "Tests skipped"),
                 3,
                 "xyz789",
@@ -61,6 +63,7 @@ class ReportEntryTest {
         final String json = mapper.writeValueAsString(log);
         assertTrue(json.contains("\"level\":\"FAILED\""));
         assertTrue(json.contains("\"details\":"));
+        assertTrue(json.contains("\"jobs\":[\"Unit Test\",\"Integration Test\"]"));
 
         final ReportEntry deserializedLog = mapper.readValue(json, ReportEntry.class);
         assertEquals("pipeline-123", deserializedLog.getPipelineId());
@@ -74,6 +77,11 @@ class ReportEntryTest {
         assertEquals("xyz789", deserializedLog.getGitCommitHash());
         assertEquals(1678945000000L, deserializedLog.getStartTime());
         assertEquals(1678946000000L, deserializedLog.getCompletionTime());
+
+        // Validate deserialized jobs
+        assertEquals(2, deserializedLog.getStages().get(0).getJobs().size());
+        assertEquals("Unit Test", deserializedLog.getStages().get(0).getJobs().get(0));
+        assertEquals("Integration Test", deserializedLog.getStages().get(0).getJobs().get(1));
     }
 
     @Test

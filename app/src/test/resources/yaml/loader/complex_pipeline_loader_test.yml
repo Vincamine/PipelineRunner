@@ -12,7 +12,7 @@ pipeline:
       JAVA_HOME: "/usr/lib/jvm/java-11"
       MAVEN_OPTS: "-Xmx2048m"
 
-job:
+jobs:
   - name: "BuildJob"
     stage: "build"
     image: "openjdk:11"

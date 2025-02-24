@@ -5,7 +5,7 @@ pipeline:
     - test
     - docs
 
-job:
+jobs:
   - name: "Build Frontend"
     stage: build
     image: node:16

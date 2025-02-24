@@ -5,7 +5,7 @@ pipeline:
     - test
     - docs
 
-job:
+jobs:
   - name: compile
     stage: build
     image: gcc:latest

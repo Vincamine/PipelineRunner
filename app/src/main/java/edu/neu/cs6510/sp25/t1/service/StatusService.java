@@ -29,14 +29,22 @@ public class StatusService {
             throw new IllegalArgumentException("Pipeline ID cannot be null or empty.");
         }
 
-        // Mocking a running pipeline with one stage in progress
-        List<StageInfo> stages = List.of(
-                new StageInfo("Build", "RUNNING", Instant.now().minusSeconds(200).toEpochMilli(), Instant.now().toEpochMilli())
-        );
-
-        List<JobInfo> jobs = List.of(
+        // Mocking job statuses
+        List<JobInfo> buildJobs = List.of(
                 new JobInfo("Compile Code", "RUNNING", false),
                 new JobInfo("Run Tests", "PENDING", false)
+        );
+
+        @SuppressWarnings("unused")
+        List<JobInfo> testJobs = List.of(
+                new JobInfo("Unit Tests", "SUCCESS", false),
+                new JobInfo("Integration Tests", "RUNNING", false)
+        );
+
+        // Mocking a running pipeline with two stages and their jobs
+        List<StageInfo> stages = List.of(
+                new StageInfo("Build", "RUNNING", Instant.now().minusSeconds(200).toEpochMilli(), Instant.now().toEpochMilli(), List.of("Compile Code", "Run Tests")),
+                new StageInfo("Test", "IN_PROGRESS", Instant.now().minusSeconds(100).toEpochMilli(), Instant.now().toEpochMilli(), List.of("Unit Tests", "Integration Tests"))
         );
 
         // TODO: Replace this with an actual API call when available
@@ -46,7 +54,7 @@ public class StatusService {
                 50, // Mocking progress as 50%
                 "Deploy to Staging",
                 stages,
-                jobs
+                buildJobs // You might need to aggregate all jobs or structure differently
         );
     }
 }

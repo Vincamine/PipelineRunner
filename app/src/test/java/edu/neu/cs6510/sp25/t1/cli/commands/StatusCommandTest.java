@@ -36,12 +36,26 @@ class StatusCommandTest {
                 50, // Progress percentage
                 "Pipeline is running...",
                 List.of(
-                        new StageInfo("Build", "SUCCESS", System.currentTimeMillis() - 5000, System.currentTimeMillis()),
-                        new StageInfo("Test", "RUNNING", System.currentTimeMillis() - 3000, 0) // 0 if not completed
+                        new StageInfo(
+                                "Build", 
+                                "SUCCESS", 
+                                System.currentTimeMillis() - 5000, 
+                                System.currentTimeMillis(), 
+                                List.of("Compile", "Package") // Added job list
+                        ),
+                        new StageInfo(
+                                "Test", 
+                                "RUNNING", 
+                                System.currentTimeMillis() - 3000, 
+                                0, // 0 if not completed
+                                List.of("Unit Test", "Integration Test") // Added job list
+                        )
                 ),
                 List.of(
                         new JobInfo("Compile", "SUCCESS", false),
-                        new JobInfo("Unit Test", "RUNNING", false)
+                        new JobInfo("Package", "SUCCESS", false),
+                        new JobInfo("Unit Test", "RUNNING", false),
+                        new JobInfo("Integration Test", "PENDING", false)
                 )
         );
     

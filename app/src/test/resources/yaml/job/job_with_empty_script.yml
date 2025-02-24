@@ -3,7 +3,7 @@ pipeline:
   stages:
     - build
     - test
-job:
+jobs:
   - name: build-app
     stage: build
     image: maven:3.8

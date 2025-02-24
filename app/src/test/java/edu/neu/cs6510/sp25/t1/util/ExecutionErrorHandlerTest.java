@@ -19,8 +19,14 @@ class ExecutionErrorHandlerTest {
         final ExecutionErrorHandler errorHandler = new ExecutionErrorHandler();
 
         // Creating a failed pipeline status with relevant information
-        List<StageInfo> stages = List.of(new StageInfo("Build", "FAILED", Instant.now().minusSeconds(300).toEpochMilli(), Instant.now().toEpochMilli()));
-        List<JobInfo> jobs = List.of(new JobInfo("Compile", "FAILED", false));
+        List<StageInfo> stages = List.of(
+                new StageInfo("Build", "FAILED", Instant.now().minusSeconds(300).toEpochMilli(), Instant.now().toEpochMilli(), 
+                              List.of("Compile", "Package"))
+        );
+        List<JobInfo> jobs = List.of(
+                new JobInfo("Compile", "FAILED", false),
+                new JobInfo("Package", "FAILED", false)
+        );
 
         final PipelineStatus status = new PipelineStatus("123", PipelineState.FAILED, 50, "Build failed due to missing dependencies", stages, jobs);
 

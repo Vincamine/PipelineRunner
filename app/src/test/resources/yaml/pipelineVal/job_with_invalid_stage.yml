@@ -2,7 +2,7 @@ pipeline:
   name: "InvalidStagePipeline"
   stages:
     - build
-job:
+jobs:
   - name: "TestJob"
     stage: "deploy"
     image: "python:3.9"
