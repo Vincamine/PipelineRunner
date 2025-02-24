@@ -54,9 +54,9 @@ public class PipelineValidator {
             // Validate the YAML file structure
             final boolean isValid = yamlPipelineValidator.validatePipeline(yamlPath.toString());
 
-            if (!isValid) {
-                System.err.println("Pipeline validation failed.");
-            }
+//            if (!isValid) {
+//                System.err.println("Pipeline validation failed.");
+//            }
 
             return isValid;
 

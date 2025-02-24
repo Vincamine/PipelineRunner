@@ -1,10 +1,32 @@
-[
-  {
-    "pipelineId": "pipeline1-run1",
-    "level": "SUCCESS",
-    "message": "Pipeline completed successfully",
-    "timestamp": 1708646400000,
-    "status": "SUCCESS",
-    "stages": ["build", "test"]
-  }
+[{
+  "pipelineId": "pipeline1-run1",
+  "level": "SUCCESS",
+  "message": "Pipeline completed successfully",
+  "timestamp": 1708646400000,
+  "status": "SUCCESS",
+  "stages": [
+    {
+      "stageName": "build",
+      "stageStatus": "SUCCESS",
+      "startTime": 1708646000000,
+      "completionTime": 1708646100000,
+      "jobs": ["compile", "package"]
+    },
+    {
+      "stageName": "test",
+      "stageStatus": "SUCCESS",
+      "startTime": 1708646200000,
+      "completionTime": 1708646300000,
+      "jobs": ["unit-test", "integration-test"]
+    }
+  ],
+  "details": [
+    "All stages completed successfully",
+    "Total execution time: 15m 30s"
+  ],
+  "runNumber": 1,
+  "gitCommitHash": "abc123",
+  "startTime": 1708646000000,
+  "completionTime": 1708646400000
+}
 ]
