@@ -13,6 +13,11 @@
 | [Check all other error reporting works](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/)       | 3    | 
 | [Validate report format and ensure correct output structure](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/107)    | 3    | 
 
+> 2nd link from the end in the above table links to the project issues. Seems incorrect. 
+> Last entry in the above table seems to be the link for the 2nd link from the end of the table. Something went wrong here. Please fix!
+
+
+> On completed work, seems like one PR resolved 3 issues. That seems like a lot for 1 PR. Please try to create PRs that are smaller in size and focused on one issue. 
 
 # Carry over tasks
 
@@ -42,13 +47,20 @@
 
 
 
+> I left some comments on individual issues on GitHub. We are meeting today (Feb 24th) and we will go over some of the comments I made. 
+
 # What worked this week?
 1. We assigned the issues very early with the requirement published; so that we can started the tasks as soon as possible. 
 2. We checked the past code and adjust the folder structures to ensure that it's reasonable and everything is in the correct position; also we improved javadoc to more detail. This would help long-term development so that's good. 
 
+> Good. Let's keep doing these. 
+
 # What did not work this week?
 
 1. Although we assigned the tasks very early, but still have one member didn't start early enough so the other person relating to the issues did the whole part. 
+
+> That is unfortunate. We should ensure if this was a one-time event or if this is recurring so that we can better allocate tasks and reach our weekly goals without overloading team members. 
+
 
 # Design updates
 
