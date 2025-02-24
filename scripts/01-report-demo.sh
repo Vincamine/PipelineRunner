@@ -21,7 +21,6 @@
 
 echo "Building the CI/CD tool..."
 ./gradlew clean build
-./gradlew clean shadowJar
 
 echo "----- Testing Report Command -----"
 

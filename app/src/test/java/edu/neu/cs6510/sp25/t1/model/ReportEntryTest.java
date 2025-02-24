@@ -21,7 +21,8 @@ class ReportEntryTest {
                 "Pipeline started",
                 Instant.now().toEpochMilli(),
                 "SUCCESS",
-                List.of(new StageInfo("Build", "SUCCESS", Instant.now().toEpochMilli(), Instant.now().toEpochMilli(), List.of("Compile", "Package"))),
+                List.of(new StageInfo("Build", "SUCCESS", Instant.now().toEpochMilli(), Instant.now().toEpochMilli(),
+                        List.of("Compile", "Package"))),
                 List.of("Initialization complete", "Resources allocated"),
                 2,
                 "def456",
@@ -53,7 +54,8 @@ class ReportEntryTest {
                 "An error occurred",
                 1678945600000L,
                 "FAILED",
-                List.of(new StageInfo("Test", "FAILED", 1678945600000L, 1678945800000L, List.of("Unit Test", "Integration Test"))),
+                List.of(new StageInfo("Test", "FAILED", 1678945600000L, 1678945800000L,
+                        List.of("Unit Test", "Integration Test"))),
                 List.of("Build failed", "Tests skipped"),
                 3,
                 "xyz789",
@@ -128,8 +130,8 @@ class ReportEntryTest {
                 "Pipeline status", // message
                 System.currentTimeMillis(), // timestamp
                 "UNKNOWN", // status
-                null, // stages
-                null, // details
+                null, // stages (should be treated as empty list)
+                null, // details (should be treated as empty list)
                 5,
                 "commitJKL",
                 System.currentTimeMillis() - 11000,
@@ -137,7 +139,10 @@ class ReportEntryTest {
 
         assertEquals(ReportLevel.SUCCESS, report.getLevel(), "Null level should default to SUCCESS");
         assertEquals("Pipeline status", report.getMessage(), "Message should match");
-        assertNull(report.getStages(), "Stages should be null");
-        assertNull(report.getDetails(), "Details should be null");
+
+        // Update expectations: Stages and details should be empty lists, not null
+        assertTrue(report.getStages().isEmpty(), "Stages should default to an empty list");
+        assertTrue(report.getDetails().isEmpty(), "Details should default to an empty list");
     }
+
 }

@@ -1,33 +1,30 @@
 package edu.neu.cs6510.sp25.t1.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
 import edu.neu.cs6510.sp25.t1.model.PipelineStatus;
 import edu.neu.cs6510.sp25.t1.model.PipelineState;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * Service to execute a CI/CD pipeline while respecting dependencies and failure
  * policies.
- * <p>
+ * 
  * The pipeline runs in the order defined in the YAML file:
- * <ul>
- * <li>Stages execute sequentially.</li>
- * <li>Jobs within each stage execute concurrently.</li>
- * <li>If a job (without allow_failure) fails, the pipeline halts
- * immediately.</li>
- * </ul>
+ * 
+ * - Stages execute sequentially.
+ * - Jobs within each stage execute concurrently.
+ * - If a job (without allow_failure) fails, the pipeline halts immediately.
+ * 
  */
 public class RunPipelineService {
     private final YamlPipelineValidator validator;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Constructs a pipeline execution service.
@@ -59,26 +56,26 @@ public class RunPipelineService {
             final Map<String, List<String>> dependencies = extractDependencies(pipelineConfig);
 
             @SuppressWarnings("unused")
-            final PipelineStatus status = new PipelineStatus("pipeline", PipelineState.RUNNING, 0,
+            final PipelineStatus status = new PipelineStatus("pipeline1", PipelineState.RUNNING, 0,
                     "Executing pipeline.");
 
             // Execute pipeline stage by stage
             for (String stage : stages) {
                 System.out.println("🚀 Executing stage: " + stage);
-                final boolean stageFailed = executeStage(stage, jobs.getOrDefault(stage, Collections.emptyList()),
-                        dependencies);
+                final boolean stageFailed = executeStage("pipeline1", 1, stage,
+                        jobs.getOrDefault(stage, Collections.emptyList()), dependencies);
 
                 if (stageFailed) {
                     System.err.println("Pipeline failed at stage: " + stage);
-                    return new PipelineStatus("pipeline", PipelineState.FAILED, 1, "Pipeline execution failed.");
+                    return new PipelineStatus("pipeline1", PipelineState.FAILED, 1, "Pipeline execution failed.");
                 }
             }
 
-            System.out.println("✅ Pipeline execution complete.");
-            return new PipelineStatus("pipeline", PipelineState.SUCCESS, 0, "Pipeline executed successfully.");
+            System.out.println("Pipeline execution complete.");
+            return new PipelineStatus("pipeline1", PipelineState.SUCCESS, 0, "Pipeline executed successfully.");
         } catch (Exception e) {
             ErrorHandler.reportError("Pipeline execution error: " + e.getMessage());
-            return new PipelineStatus("pipeline", PipelineState.FAILED, 1, "Execution error.");
+            return new PipelineStatus("pipeline1", PipelineState.FAILED, 1, "Execution error.");
         }
     }
 
@@ -158,34 +155,42 @@ public class RunPipelineService {
      * @param dependencies The job dependency mapping.
      * @return {@code true} if any job fails; otherwise, {@code false}.
      */
-    private boolean executeStage(String stage, List<String> jobs, Map<String, List<String>> dependencies) {
+    private boolean executeStage(String pipelineName, int runNumber, String stage, List<String> jobs,
+            Map<String, List<String>> dependencies) {
+        System.out.println("Processing stage: " + stage);
+        System.out.println("Jobs in this stage: " + jobs);
+
         final Set<String> completedJobs = new HashSet<>();
         final Queue<String> jobQueue = new LinkedList<>(jobs);
 
         while (!jobQueue.isEmpty()) {
             final String job = jobQueue.poll();
+            System.out.println("Attempting to execute job: " + job);
 
-            // Ensure dependencies are met before running job
             if (dependencies.containsKey(job)) {
-                final boolean unmetDependency = dependencies.get(job).stream()
+                boolean unmetDependency = dependencies.get(job).stream()
                         .anyMatch(dep -> !completedJobs.contains(dep));
                 if (unmetDependency) {
-                    jobQueue.offer(job); // Requeue job for later execution
+                    System.out.println("Job " + job + " re-queued due to unmet dependencies.");
+                    jobQueue.offer(job);
                     continue;
                 }
             }
 
-            // Simulate job execution (Replace with actual execution logic)
-            final boolean jobFailed = simulateJobExecution(job);
+            boolean jobFailed = simulateJobExecution(job);
+            System.out.println("Job " + job + " executed with status: " + (jobFailed ? "FAILED" : "SUCCESS"));
+
+            saveJobReport(pipelineName, runNumber, stage, job, jobFailed ? "FAILED" : "SUCCESS");
 
             if (jobFailed) {
-                return true; // If a job fails, return failure immediately
+                System.err.println("Job " + job + " failed. Aborting stage execution.");
+                return true;
             }
 
             completedJobs.add(job);
         }
 
-        return false; // Stage completed successfully
+        return false;
     }
 
     /**
@@ -195,7 +200,35 @@ public class RunPipelineService {
      * @return {@code true} if the job fails, {@code false} if successful.
      */
     private boolean simulateJobExecution(String job) {
-        System.out.println("🔄 Running job: " + job);
+        System.out.println("Running job: " + job);
         return false; // Simulating success (Modify based on actual execution)
     }
+
+    /**
+     * Saves a job execution report to disk.
+     *
+     * @param pipelineName Pipeline name.
+     * @param runNumber    Run number.
+     * @param stageName    Stage name.
+     * @param jobName      Job name.
+     * @param status       Job execution status.
+     */
+    private void saveJobReport(String pipelineName, int runNumber, String stageName, String jobName, String status) {
+        String directory = ".ci-cd-history/" + pipelineName + "/run-" + runNumber + "/stages/" + stageName + "/jobs/";
+        String filePath = directory + jobName + ".json";
+
+        try {
+            Files.createDirectories(Paths.get(directory)); // Ensure the directory exists
+            System.out.println("Directory created: " + directory);
+
+            String jobReportJson = objectMapper.writeValueAsString(
+                    Map.of("jobName", jobName, "status", status, "timestamp", System.currentTimeMillis()));
+
+            Files.writeString(Paths.get(filePath), jobReportJson);
+            System.out.println("Job report saved successfully: " + filePath);
+        } catch (IOException e) {
+            System.err.println("Error saving job report: " + e.getMessage());
+        }
+    }
+
 }

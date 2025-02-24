@@ -241,8 +241,11 @@ public class ReportService {
     private List<ReportEntry> fetchLocalReports(String filePath) {
         try {
             if (!Files.exists(Paths.get(filePath))) {
-                throw new IOException("Report file not found: " + filePath);
+                System.err.println("Report file not found: " + filePath);
+                return Collections.emptyList();
             }
+            System.out.println("Reading report file: " + filePath);
+
             String jsonContent = new String(Files.readAllBytes(Paths.get(filePath)));
             return objectMapper.readValue(jsonContent, new TypeReference<List<ReportEntry>>() {
             });

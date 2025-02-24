@@ -8,16 +8,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Tracks job status and whether failures are allowed.
  */
 public class JobInfo {
-    private final String jobName;
-    private final String status;  // "SUCCESS", "FAILED", or "CANCELED"
-    private final boolean allowFailure;
+    private String jobName;
+    private String status;
+    private boolean allowFailure;
+
+    /**
+     * Default constructor required for Jackson deserialization.
+     */
+    public JobInfo() {
+        // Default values can be set if necessary
+    }
 
     /**
      * Constructs a new JobInfo instance.
-     *
-     * @param jobName     The name of the job.
-     * @param status      The job status (e.g., SUCCESS, FAILED, CANCELED).
-     * @param allowFailure Whether this job allows failure.
      */
     @JsonCreator
     public JobInfo(
