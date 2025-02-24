@@ -63,6 +63,9 @@ java -jar app/build/libs/ci-tool.jar report --local --pipeline pipeline2 --run 1
 
 # Test error cases
 echo -e "\n>>> Testing missing repository"
+java -jar app/build/libs/ci-tool.jar report --repo
+
+echo -e "\n>>> Testing not specify --repo or --local"
 java -jar app/build/libs/ci-tool.jar report --pipeline pipeline1
 
 echo -e "\n>>> Testing non-existent pipeline"
