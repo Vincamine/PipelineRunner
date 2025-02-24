@@ -2,7 +2,7 @@ pipeline:
   name: self-cycle
   stages:
     - build
-job:
+jobs:
   - name: job1
     stage: build
     image: node:16

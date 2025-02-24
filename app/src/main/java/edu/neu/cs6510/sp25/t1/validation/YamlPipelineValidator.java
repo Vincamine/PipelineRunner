@@ -77,12 +77,15 @@ public class YamlPipelineValidator {
           .filter(String.class::isInstance)
           .map(String.class::cast)
           .toList();
-      // Try to get jobs from either 'job' or 'jobs' key
-      Object jobsObj = data.get("jobs"); // First try 'jobs'
+      // Expect 'jobs' only (remove support for 'job')
+      Object jobsObj = data.get("jobs");
       String jobKey = "jobs";
-      if (jobsObj == null) { // If 'jobs' not found, try 'job'
-        jobsObj = data.get("job");
-        jobKey = "job";
+
+      if (jobsObj == null) {
+        System.err.println(ErrorHandler.formatException(
+            ErrorHandler.createLocation(filePath, locations.get("jobs"), "jobs"),
+            "'jobs' section is required in the YAML configuration."));
+        return false;
       }
 
       // Use dynamic jobKey for location

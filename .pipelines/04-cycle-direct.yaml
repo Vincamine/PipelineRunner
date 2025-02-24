@@ -3,7 +3,7 @@ pipeline:
   stages:
     - build
     - test
-job:
+jobs:
   - name: job1
     stage: build
     image: node:16

@@ -2,7 +2,6 @@ package edu.neu.cs6510.sp25.t1.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import edu.neu.cs6510.sp25.t1.model.ReportEntry;
 import edu.neu.cs6510.sp25.t1.model.StageInfo;
 
@@ -19,7 +18,7 @@ public class ReportFormatter {
 
         StringBuilder formattedReport = new StringBuilder();
 
-        // Format pipeline details
+        // **Pipeline details**
         formattedReport.append(String.format("Pipeline: %s\n", safeString(report.getPipelineId(), "N/A")));
         formattedReport.append(String.format("Run Number: %d\n", report.getRunNumber()));
         formattedReport.append(String.format("Git Commit Hash: %s\n", safeString(report.getGitCommitHash(), "N/A")));
@@ -28,7 +27,7 @@ public class ReportFormatter {
         formattedReport.append(String.format("Completion Time: %s\n", formatDate(report.getCompletionTime())));
         formattedReport.append(String.format("Message: %s\n", safeString(report.getMessage(), "No message available")));
 
-        // Format stage details
+        // **Stage details**
         if (report.getStages() != null && !report.getStages().isEmpty()) {
             formattedReport.append("\nStages:\n");
             for (StageInfo stage : report.getStages()) {
@@ -36,10 +35,17 @@ public class ReportFormatter {
                 formattedReport.append(String.format("    Status: %s\n", safeString(stage.getStageStatus(), "UNKNOWN")));
                 formattedReport.append(String.format("    Start Time: %s\n", formatDate(stage.getStartTime())));
                 formattedReport.append(String.format("    Completion Time: %s\n", formatDate(stage.getCompletionTime())));
+
+                // **NEW: Include Jobs in each stage**
+                if (stage.getJobs() != null && !stage.getJobs().isEmpty()) {
+                    formattedReport.append(String.format("    Jobs: %s\n", String.join(", ", stage.getJobs())));
+                } else {
+                    formattedReport.append("    Jobs: None\n");
+                }
             }
         }
 
-        // Format details (errors or additional information)
+        // **Additional Details (like errors)**
         if (report.getDetails() != null && !report.getDetails().isEmpty()) {
             formattedReport.append("\nDetails:\n");
             for (String detail : report.getDetails()) {
@@ -50,10 +56,12 @@ public class ReportFormatter {
         return formattedReport.toString();
     }
 
+    // Helper function to handle null/empty strings
     private static String safeString(String value, String defaultValue) {
         return (value != null && !value.isEmpty()) ? value : defaultValue;
     }
 
+    // Helper function to format timestamps
     private static String formatDate(long timestamp) {
         return (timestamp > 0) ? DATE_FORMAT.format(new Date(timestamp)) : "N/A";
     }

@@ -2,7 +2,7 @@ pipeline:
   name: "InvalidStage"
   stages:
     - build
-job:
+jobs:
   - name: "UnknownStageJob"
     stage: "deploy"  # 'deploy' stage is missing
     image: "node:14"

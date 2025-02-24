@@ -2,7 +2,7 @@ pipeline:
   name: "DuplicateJobs"
   stages:
     - build
-job:
+jobs:
   - name: "BuildJob"
     stage: "build"
     image: "openjdk:11"

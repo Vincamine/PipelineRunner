@@ -1,7 +1,7 @@
 pipeline:
   name: TestPipeline
   #Missing 'stages' key on purpose
-job:
+jobs:
   - name: BuildJob
     stage: build
     script:

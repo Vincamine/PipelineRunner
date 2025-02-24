@@ -4,7 +4,7 @@ pipeline:
     - build
     - test
 
-job:
+jobs:
   - name: BuildJob
     stage: non_existent_stage  # Invalid stage reference
     image: maven:3.8.3-openjdk-17

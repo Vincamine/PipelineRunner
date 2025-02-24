@@ -47,7 +47,7 @@ class JobValidatorTest {
     validator = new JobValidator(stages);
 
     @SuppressWarnings("unchecked")
-    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
+    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("jobs");
 
     assertTrue(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
     assertEquals("", errContent.toString().trim());
@@ -65,7 +65,7 @@ class JobValidatorTest {
     validator = new JobValidator(stages);
 
     @SuppressWarnings("unchecked")
-    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
+    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("jobs");
 
     assertFalse(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
     assertTrue(errContent.toString().contains("Duplicate job name"));
@@ -83,7 +83,7 @@ class JobValidatorTest {
     validator = new JobValidator(stages);
 
     @SuppressWarnings("unchecked")
-    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
+    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("jobs");
 
     assertFalse(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
     assertTrue(errContent.toString().contains("non-existent stage"));
@@ -121,7 +121,7 @@ class JobValidatorTest {
     validator = new JobValidator(stages);
 
     @SuppressWarnings("unchecked")
-    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("job");
+    final List<Map<String, Object>> jobs = (List<Map<String, Object>>) result.getData().get("jobs");
 
     assertFalse(validator.validateJobs(jobs, result.getLocations(), yamlPath.toString()));
     // Check if the error message mentions the script being empty

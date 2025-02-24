@@ -21,7 +21,6 @@
 
 echo "Building the CI/CD tool..."
 ./gradlew clean build
-./gradlew clean shadowJar
 
 echo "----- Testing Report Command -----"
 
@@ -49,9 +48,9 @@ java -jar app/build/libs/ci-tool.jar report --local --pipeline pipeline1 --run 2
 echo -e "\n>>> Testing build stage"
 java -jar app/build/libs/ci-tool.jar report --local --pipeline pipeline1 --run 1 --stage build
 
-# Test compile job
-echo -e "\n>>> Testing compile job"
-java -jar app/build/libs/ci-tool.jar report --local --pipeline pipeline1 --run 1 --stage build --job compile
+# # Test compile job
+# echo -e "\n>>> Testing compile job"
+# java -jar app/build/libs/ci-tool.jar report --local --pipeline pipeline1 --run 1 --stage build --job compile
 
 # Test pipeline2 deploy
 echo -e "\n>>> Testing pipeline2 deploy"

@@ -1,49 +1,28 @@
 package edu.neu.cs6510.sp25.t1.service;
 
 import org.yaml.snakeyaml.Yaml;
+
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Service class responsible for parsing a pipeline YAML file and determining
- * execution order.
- * 
- * This class reads a YAML configuration file defining pipeline stages and jobs,
- * then generates an execution order while respecting dependencies.
- * 
- * Expected YAML Format:
- * 
- * pipeline:
- * name: my_pipeline
- * stages:
- * - build
- * - test
- * - deploy
- * jobs:
- * - name: compile
- * stage: build
- * needs: []
- * - name: test
- * stage: test
- * needs: [compile]
- * - name: deploy
- * stage: deploy
- * needs: [test]
- *
- * @see edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator
+ * This class generates the execution order of a CI/CD pipeline based on a YAML
+ * configuration.
+ * - It extracts pipeline stages and jobs, ensuring jobs are correctly mapped to
+ * their respective stages.
+ * - It also maintains dependencies (`needs`) to process job execution order
+ * properly.
  */
 public class PipelineExecutionOrderGenerator {
 
     /**
-     * Parses a pipeline YAML file and determines the execution order of jobs and
-     * stages.
+     * Generates the execution order of jobs based on the pipeline YAML
+     * configuration.
      *
-     * @param yamlFilePath The path to the pipeline YAML file.
-     * @return A {@link LinkedHashMap} representing the execution order.
-     * @throws IOException If the file cannot be read or is incorrectly formatted.
+     * @param yamlFilePath Path to the YAML configuration file.
+     * @return A map where each stage is mapped to its jobs and dependencies.
+     * @throws IOException If there's an error reading the file.
      */
     public Map<String, Map<String, Object>> generateExecutionOrder(String yamlFilePath) throws IOException {
         final Yaml yaml = new Yaml();
@@ -75,21 +54,32 @@ public class PipelineExecutionOrderGenerator {
             throw new IllegalArgumentException("Invalid YAML structure: 'jobs' should be a list.");
         }
 
-        return processJobs(jobsList, stages);
+        // Process jobs and generate execution order
+        Map<String, Map<String, Object>> executionOrder = processJobs(jobsList, stages);
+
+        // Debugging Output
+        System.out.println("Extracted Execution Order:");
+        for (Map.Entry<String, Map<String, Object>> entry : executionOrder.entrySet()) {
+            System.out.println("Stage: " + entry.getKey());
+            System.out.println("  Jobs: " + entry.getValue());
+        }
+
+        return executionOrder;
     }
 
     /**
-     * Processes jobs from the pipeline configuration and determines the execution
-     * order.
+     * Processes the jobs from the YAML configuration and maps them to their
+     * respective stages.
+     * It ensures jobs have valid stages and correctly maps their dependencies
+     * (`needs`).
      *
-     * @param jobsList The list of job configurations.
-     * @param stages   The list of defined pipeline stages.
-     * @return A LinkedHashMap maintaining the correct execution order.
+     * @param jobsList The list of job definitions from the YAML file.
+     * @param stages   The ordered list of stages in the pipeline.
+     * @return A map where each stage is mapped to its jobs and dependencies.
      */
     private Map<String, Map<String, Object>> processJobs(List<?> jobsList, List<String> stages) {
-        final Map<String, Map<String, Object>> executionOrder = new LinkedHashMap<>();
+        Map<String, Map<String, Object>> executionOrder = new LinkedHashMap<>();
 
-        // Initialize stages in execution order
         for (String stage : stages) {
             executionOrder.put(stage, new LinkedHashMap<>());
         }
@@ -98,6 +88,7 @@ public class PipelineExecutionOrderGenerator {
             if (!(jobObj instanceof Map<?, ?> job)) {
                 continue;
             }
+
             final String jobName = (String) job.get("name");
             final String stage = (String) job.get("stage");
 
@@ -105,9 +96,18 @@ public class PipelineExecutionOrderGenerator {
                 throw new IllegalArgumentException("Invalid job stage: " + stage);
             }
 
-            executionOrder.get(stage).put(jobName, new LinkedHashMap<>());
+            final List<String> needs = job.containsKey("needs") && job.get("needs") instanceof List<?>
+                    ? ((List<?>) job.get("needs")).stream()
+                            .filter(String.class::isInstance)
+                            .map(String.class::cast)
+                            .toList()
+                    : List.of();
+
+            executionOrder.get(stage).put(jobName, Map.of("needs", needs));
+            System.out.println("Job Mapped: " + jobName + " → Stage: " + stage + ", Dependencies: " + needs);
         }
 
         return executionOrder;
     }
+
 }

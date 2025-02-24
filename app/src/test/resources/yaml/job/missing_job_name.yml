@@ -2,7 +2,7 @@ pipeline:
   name: "MissingJobName"
   stages:
     - build
-job:
+jobs:
   - stage: "build"
     image: "openjdk:11"
     script:

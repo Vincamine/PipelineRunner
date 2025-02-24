@@ -13,13 +13,15 @@ class PipelineStatusTest {
     void testConstructorWithStagesAndJobs() {
         // Prepare mock data for stages and jobs
         List<StageInfo> stages = List.of(
-                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli()),
-                new StageInfo("Test", "RUNNING", Instant.now().minusSeconds(300).toEpochMilli(), 0) // Still running
+                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli(), List.of("Compile", "Package")),
+                new StageInfo("Test", "RUNNING", Instant.now().minusSeconds(300).toEpochMilli(), 0, List.of("Unit Test", "Integration Test")) // Still running
         );
 
         List<JobInfo> jobs = List.of(
                 new JobInfo("Compile", "SUCCESS", false),
-                new JobInfo("Unit Test", "RUNNING", false)
+                new JobInfo("Package", "SUCCESS", false),
+                new JobInfo("Unit Test", "RUNNING", false),
+                new JobInfo("Integration Test", "PENDING", false)
         );
 
         final PipelineStatus status = new PipelineStatus("pipeline-123", stages, jobs);
@@ -34,7 +36,7 @@ class PipelineStatusTest {
     @Test
     void testConstructorWithManualState() {
         List<StageInfo> stages = List.of(
-                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli())
+                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli(), List.of("Deployment"))
         );
 
         List<JobInfo> jobs = List.of(
@@ -54,14 +56,15 @@ class PipelineStatusTest {
     @Test
     void testProgressComputation() {
         List<StageInfo> stages = List.of(
-                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli()),
-                new StageInfo("Test", "SUCCESS", Instant.now().minusSeconds(400).toEpochMilli(), Instant.now().minusSeconds(300).toEpochMilli()),
-                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(200).toEpochMilli(), Instant.now().minusSeconds(100).toEpochMilli())
+                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli(), List.of("Compile")),
+                new StageInfo("Test", "SUCCESS", Instant.now().minusSeconds(400).toEpochMilli(), Instant.now().minusSeconds(300).toEpochMilli(), List.of("Unit Test")),
+                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(200).toEpochMilli(), Instant.now().minusSeconds(100).toEpochMilli(), List.of("Deploy App"))
         );
 
         List<JobInfo> jobs = List.of(
                 new JobInfo("Compile", "SUCCESS", false),
-                new JobInfo("Deploy", "FAILED", false)
+                new JobInfo("Unit Test", "SUCCESS", false),
+                new JobInfo("Deploy App", "FAILED", false)
         );
 
         final PipelineStatus status = new PipelineStatus("pipeline-789", stages, jobs);
@@ -86,13 +89,13 @@ class PipelineStatusTest {
     @Test
     void testStateComputation() {
         List<StageInfo> stages = List.of(
-                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli()),
-                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(400).toEpochMilli(), Instant.now().minusSeconds(300).toEpochMilli())
+                new StageInfo("Build", "SUCCESS", Instant.now().minusSeconds(600).toEpochMilli(), Instant.now().minusSeconds(500).toEpochMilli(), List.of("Compile")),
+                new StageInfo("Deploy", "FAILED", Instant.now().minusSeconds(400).toEpochMilli(), Instant.now().minusSeconds(300).toEpochMilli(), List.of("Deploy App"))
         );
 
         List<JobInfo> jobs = List.of(
                 new JobInfo("Compile", "SUCCESS", false),
-                new JobInfo("Deploy", "FAILED", false)
+                new JobInfo("Deploy App", "FAILED", false)
         );
 
         final PipelineStatus status = new PipelineStatus("pipeline-999", stages, jobs);

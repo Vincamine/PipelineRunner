@@ -45,7 +45,10 @@ class ReportFormatterTest {
                 "Pipeline failed",
                 1678901200000L,
                 "FAILED",
-                List.of(new StageInfo("Build", "FAILED", 1678901200000L, 1678901400000L)),
+                List.of(
+                        new StageInfo("Build", "FAILED", 1678901200000L, 1678901400000L, List.of("Compile", "Package")),
+                        new StageInfo("Test", "SUCCESS", 1678901500000L, 1678901700000L, List.of("Unit Test", "Integration Test"))
+                ),
                 List.of("Error in compilation", "Tests not executed"),
                 5,
                 "commit456",
@@ -59,6 +62,8 @@ class ReportFormatterTest {
         assertTrue(formatted.contains("Stages:"), "Formatted report should include stage information.");
         assertTrue(formatted.contains("Build"), "Formatted report should mention the stage name.");
         assertTrue(formatted.contains("Error in compilation"), "Formatted report should include error details.");
+        assertTrue(formatted.contains("Jobs: Compile, Package"), "Formatted report should list jobs in stages.");
+        assertTrue(formatted.contains("Jobs: Unit Test, Integration Test"), "Formatted report should list jobs for the Test stage.");
     }
 
     @Test
