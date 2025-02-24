@@ -76,3 +76,5 @@ java -jar app/build/libs/ci-tool.jar report --local --pipeline pipeline1 --run 1
 
 echo -e "\n>>> Testing job without stage"
 java -jar app/build/libs/ci-tool.jar report --local --pipeline pipeline1 --run 1 --job compile
+
+
