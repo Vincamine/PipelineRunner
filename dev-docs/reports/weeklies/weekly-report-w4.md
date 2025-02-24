@@ -10,11 +10,13 @@
 | [Implement repository-level pipeline execution summary (L4.1)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/103)  | 3    |
 | [Implement individual pipeline run summary (L4.2)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/104)          | 3    |
 | [Ensure reports CLI command follows proper error handling](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/105)      | 3    |
-| [Check all other error reporting works](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/)       | 3    | 
-| [Validate report format and ensure correct output structure](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/107)    | 3    | 
+| [Check all other error reporting works](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/107)       | 3    | 
+| [Validate report format and ensure correct output structure](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/106)    | 3    | 
 
 > 2nd link from the end in the above table links to the project issues. Seems incorrect. 
+> Yiwen: fixed
 > Last entry in the above table seems to be the link for the 2nd link from the end of the table. Something went wrong here. Please fix!
+> Yiwen: fixed
 
 
 > On completed work, seems like one PR resolved 3 issues. That seems like a lot for 1 PR. Please try to create PRs that are smaller in size and focused on one issue. 
@@ -38,7 +40,7 @@
 | [Create Backend](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/123) | 2 | MingtianFang |
 | [Implement Artifact Storage Mechanism](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/124) | 3 | Yiwen |
 | [Implement Artifact Retrieval Mechanism ](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/125) | 3 | Yiwen |
-| [Integrate Artifact Handling with Pipeline Execution](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/124) | 3 | Shenqian |
+| [Integrate Artifact Handling with Pipeline Execution](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/126) | 3 | Shenqian |
 | [Improve Backend Service for Managing Pipeline Execution](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/127) | 3 | Mingtianfang |
 | [Implement Authentication and Access Control for Backend](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/128) | 3 | Mingtianfang |
 | [Improve Structured Logging Across All CLI Commands](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/129) | 2 | Wenxue |
@@ -61,7 +63,7 @@
 
 > That is unfortunate. We should ensure if this was a one-time event or if this is recurring so that we can better allocate tasks and reach our weekly goals without overloading team members. 
 
-
+> Yiwen: we will make sure it is a one-time event. 
 # Design updates
 
 > If changes have been made to the overall design approach for the project this week, list the updates here. Link to documents (or updates to documents) that describe in detail what these changes are.

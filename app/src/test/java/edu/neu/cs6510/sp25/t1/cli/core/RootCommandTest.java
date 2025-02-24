@@ -33,4 +33,12 @@ class RootCommandTest {
         assertNotNull(cmd.getSubcommands().get("status"), "StatusCommand should be registered.");
         assertNotNull(cmd.getSubcommands().get("dry-run"), "DryRunCommand should be registered.");
     }
+
+    /** Ensures the version is printed successfully */
+    @Test
+    void testVersionCommand() {
+        final CommandLine cmd = new CommandLine(rootCommand);
+        final int exitCode = cmd.execute("--version");
+        assertEquals(0, exitCode, "Version command should execute successfully.");
+    }
 }

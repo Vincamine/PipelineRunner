@@ -85,7 +85,7 @@ public class RunPipelineService {
      * @param pipelineConfig The parsed YAML pipeline configuration.
      * @return A list of stage names.
      */
-    private List<String> extractStages(Map<String, Object> pipelineConfig) {
+    List<String> extractStages(Map<String, Object> pipelineConfig) {
         final Object stagesObj = pipelineConfig.get("stages");
         if (stagesObj instanceof List<?>) {
             return ((List<?>) stagesObj).stream()
@@ -102,7 +102,7 @@ public class RunPipelineService {
      * @param pipelineConfig The parsed YAML pipeline configuration.
      * @return A map where keys are stage names, and values are lists of job names.
      */
-    private Map<String, List<String>> extractJobs(Map<String, Object> pipelineConfig) {
+    Map<String, List<String>> extractJobs(Map<String, Object> pipelineConfig) {
         final Map<String, List<String>> jobs = new HashMap<>();
         final Object jobsObj = pipelineConfig.get("jobs");
         if (jobsObj instanceof Map<?, ?> jobMap) {
@@ -128,7 +128,7 @@ public class RunPipelineService {
      * @return A map where keys are job names, and values are lists of dependent job
      *         names.
      */
-    private Map<String, List<String>> extractDependencies(Map<String, Object> pipelineConfig) {
+    Map<String, List<String>> extractDependencies(Map<String, Object> pipelineConfig) {
         final Map<String, List<String>> dependencies = new HashMap<>();
         final Object dependenciesObj = pipelineConfig.get("dependencies");
         if (dependenciesObj instanceof Map<?, ?> dependencyMap) {
@@ -199,7 +199,7 @@ public class RunPipelineService {
      * @param job The job name.
      * @return {@code true} if the job fails, {@code false} if successful.
      */
-    private boolean simulateJobExecution(String job) {
+    boolean simulateJobExecution(String job) {
         System.out.println("Running job: " + job);
         return false; // Simulating success (Modify based on actual execution)
     }

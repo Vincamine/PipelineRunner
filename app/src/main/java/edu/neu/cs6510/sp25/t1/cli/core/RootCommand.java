@@ -41,8 +41,7 @@ public class RootCommand implements Runnable {
     /**
      * Filename for the CI/CD pipeline.
      */
-    @Option(names = { "-f", "--filename" }, description = "Specify the filename for the CI/CD pipeline.")
-    private String filename;
+    @Option(names = { "-f", "--filename" }, description = "Specify the filename for the CI/CD pipeline.") String filename;
 
     /**
      * Main entry point for the CLI tool.
@@ -81,7 +80,7 @@ public class RootCommand implements Runnable {
      *
      * @return true if the file path is valid, false otherwise.
      */
-    private boolean validateFilePath() {
+    boolean validateFilePath() {
         if (filename == null || filename.trim().isEmpty()) {
             System.err.println("Error: Filename must be specified with -f or --filename option");
             return false;
