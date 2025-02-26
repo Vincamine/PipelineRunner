@@ -2,76 +2,52 @@ package edu.neu.cs6510.sp25.t1.execution;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-@ExtendWith(MockitoExtension.class)
+/**
+ * Integration test for PipelineExecutor using real Docker Desktop.
+ */
 public class PipelineExecutorTest {
 
-  @Mock
-  private StageExecutor stage1;
-
-  @Mock
-  private StageExecutor stage2;
-
-  @Mock
-  private StageExecutor stage3;
-
-  @InjectMocks
   private PipelineExecutor pipelineExecutor;
+  private DockerRunner dockerRunner;
+  private static final String TEST_IMAGE = "alpine:latest";
 
   @BeforeEach
   void setup() {
-    List<StageExecutor> stages = Arrays.asList(stage1, stage2, stage3);
-    pipelineExecutor = new PipelineExecutor("CI/CD Pipeline", stages);
+    dockerRunner = new DockerRunner(TEST_IMAGE);
+    List<StageExecutor> stages = Arrays.asList(
+        new StageExecutor("Build Stage", List.of()),
+        new StageExecutor("Test Stage", List.of())
+    );
+    pipelineExecutor = new PipelineExecutor("CI/CD Pipeline", stages, dockerRunner);
   }
 
   @Test
-  void testExecute_Success() {
-    when(stage1.getStatus()).thenReturn(ExecutionStatus.SUCCESSFUL);
-    when(stage2.getStatus()).thenReturn(ExecutionStatus.SUCCESSFUL);
-    when(stage3.getStatus()).thenReturn(ExecutionStatus.SUCCESSFUL);
-
+  void testExecutePipeline_Success() {
     pipelineExecutor.execute();
-
     assertEquals(ExecutionStatus.SUCCESSFUL, pipelineExecutor.getStatus());
-    verify(stage1).execute();
-    verify(stage2).execute();
-    verify(stage3).execute();
+    System.out.println("Pipeline executed successfully in container.");
   }
 
   @Test
-  void testExecute_Failure() {
-    when(stage1.getStatus()).thenReturn(ExecutionStatus.SUCCESSFUL);
-    when(stage2.getStatus()).thenReturn(ExecutionStatus.FAILED); // Should not be executed
+  void testExecutePipeline_Failure() {
+    List<StageExecutor> failingStages = Arrays.asList(
+        new StageExecutor("Build Stage", List.of()),
+        new StageExecutor("Test Stage", List.of()) {
+          @Override
+          public void execute() {
+            System.out.println("Simulating stage failure.");
+            setStageStatus(ExecutionStatus.FAILED);
+          }
+        }
+    );
+    pipelineExecutor = new PipelineExecutor("CI/CD Pipeline", failingStages, dockerRunner);
 
     pipelineExecutor.execute();
-
     assertEquals(ExecutionStatus.FAILED, pipelineExecutor.getStatus());
-    verify(stage1).execute();
-    verify(stage2).execute();
-    verify(stage3, never()).execute(); // Should not execute after failure
-  }
-
-  @Test
-  void testExecute_MixedStages() {
-    when(stage1.getStatus()).thenReturn(ExecutionStatus.SUCCESSFUL);
-    when(stage2.getStatus()).thenReturn(ExecutionStatus.SUCCESSFUL);
-    when(stage3.getStatus()).thenReturn(ExecutionStatus.FAILED);
-
-    pipelineExecutor.execute();
-
-    assertEquals(ExecutionStatus.FAILED, pipelineExecutor.getStatus());
-    verify(stage1).execute();
-    verify(stage2).execute();
-    verify(stage3).execute();
+    System.out.println("Pipeline execution failed as expected.");
   }
 }

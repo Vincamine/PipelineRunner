@@ -41,4 +41,8 @@ public class StageExecutor {
   public ExecutionStatus getStatus() {
     return status;
   }
+
+  public void setStageStatus(ExecutionStatus status) {
+    this.status = status;
+  }
 }
