@@ -38,6 +38,9 @@ dependencies {
 
     // YAML file parser
     implementation("org.yaml:snakeyaml:2.0")
+
+    // docker process
+    implementation("com.github.docker-java:docker-java:3.3.4")
 }
 
 sourceSets {
