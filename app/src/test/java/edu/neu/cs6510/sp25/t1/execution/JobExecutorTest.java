@@ -19,8 +19,9 @@ public class JobExecutorTest {
 
   @BeforeEach
   void setup() {
-    dockerClient = DockerClientBuilder.getInstance("tcp://localhost:2375").build(); // Default: Windows Docker API
-    // For macOS/Linux, use: DockerClientBuilder.getInstance("unix:///var/run/docker.sock").build();
+//    dockerClient = DockerClientBuilder.getInstance("tcp://localhost:2375").build(); // Default: Windows Docker API
+    // For macOS/Linux, use:
+    dockerClient = DockerClientBuilder.getInstance("unix:///var/run/docker.sock").build();
     jobExecutor = new JobExecutor(JOB_NAME, DOCKER_IMAGE, SCRIPT, dockerClient);
   }
 
@@ -42,6 +43,7 @@ public class JobExecutorTest {
 
   @AfterEach
   void cleanup() {
+    // use docker events --filter event=create to monitor docker created logs
     // Cleanup Docker resources if necessary
     System.out.println("Test completed.");
   }
