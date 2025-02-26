@@ -12,9 +12,11 @@ import com.github.dockerjava.core.DockerClientBuilder;
 public class DockerRunner {
   private final DockerClient dockerClient;
   private final String image;
+  // private final String localDockerWindows = "tcp://localhost:2375";
+  private final String localDockerLinux = "unix:///var/run/docker.sock";
 
   public DockerRunner(String image) {
-    this.dockerClient = DockerClientBuilder.getInstance("tcp://localhost:2375").build();
+    this.dockerClient = DockerClientBuilder.getInstance(localDockerLinux).build();
     this.image = image;
   }
 
