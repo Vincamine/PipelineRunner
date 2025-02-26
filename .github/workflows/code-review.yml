@@ -8,6 +8,12 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+        
     steps:
       - uses: actions/checkout@v3
       
@@ -19,6 +25,15 @@ jobs:
           
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+
+      - name: Set up Docker
+        run: |
+          sudo systemctl start docker
+          sudo chmod 666 /var/run/docker.sock
+          docker version
+
+      - name: Verify Docker Setup
+        run: docker ps -a  # Ensure Docker is running
         
       - name: Check Code Style
         run: ./gradlew checkstyleMain checkstyleTest
@@ -28,6 +43,8 @@ jobs:
 
       - name: Run Tests
         run: ./gradlew test
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
         
       - name: Enforce 70% Test Coverage
         run: ./gradlew jacocoTestCoverageVerification
