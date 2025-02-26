@@ -128,7 +128,7 @@ public class RunCommand implements Runnable {
             } catch (InterruptedException e) {
                 System.err.println("Job failed: " + job);
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Job execution interrupted: " + job, e); // ✅ Instead of System.exit(1)
+                throw new RuntimeException("Job execution interrupted: " + job, e);
             }
         }
     }
