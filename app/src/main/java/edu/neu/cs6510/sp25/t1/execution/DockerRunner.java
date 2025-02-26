@@ -39,4 +39,8 @@ public class DockerRunner {
       throw new RuntimeException("Failed to start Docker container: " + e.getMessage(), e);
     }
   }
+
+  public DockerClient getDockerClient() {
+    return dockerClient;
+  }
 }

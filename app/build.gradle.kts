@@ -41,6 +41,7 @@ dependencies {
 
     // docker process
     implementation("com.github.docker-java:docker-java:3.3.4")
+
 }
 
 sourceSets {

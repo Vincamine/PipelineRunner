@@ -1,10 +1,17 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
+import edu.neu.cs6510.sp25.t1.execution.DockerRunner;
+import edu.neu.cs6510.sp25.t1.execution.PipelineExecutor;
+import edu.neu.cs6510.sp25.t1.execution.StageExecutor;
 import edu.neu.cs6510.sp25.t1.util.ErrorHandler;
 import edu.neu.cs6510.sp25.t1.util.GitValidator;
+import edu.neu.cs6510.sp25.t1.util.PipelineParser;
 import edu.neu.cs6510.sp25.t1.validation.YamlPipelineValidator;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * CLI command to trigger a CI/CD pipeline execution.
@@ -76,7 +83,7 @@ public class RunCommand implements Runnable {
     /**
      * Executes the pipeline locally.
      */
-    private void executeLocalRun() {
+    private void executeLocalRun() throws IOException {
         System.out.println("Validating local repository...");
 
         if (!GitValidator.isGitRepository()) {
@@ -117,20 +124,26 @@ public class RunCommand implements Runnable {
      * 
      * @throws RuntimeException if job execution is interrupted.
      */
-    private void executeLocalJobs() {
-        final String[] jobs = { "build-app", "run-tests", "deploy-app" };
+    private void executeLocalJobs() throws IOException {
+        System.out.println("Validating pipeline file: " + pipelineFile);
 
-        for (String job : jobs) {
-            System.out.println("Running job: " + job);
-            try {
-                Thread.sleep(2000); // Simulate job execution time
-                System.out.println("Job completed: " + job);
-            } catch (InterruptedException e) {
-                System.err.println("Job failed: " + job);
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Job execution interrupted: " + job, e);
-            }
+        if (!validator.validatePipeline(pipelineFile)) {
+            throw new IllegalArgumentException("Pipeline file validation failed.");
         }
+
+        System.out.println("Pipeline validation successful.");
+        // Start the Docker container for the pipeline execution
+        DockerRunner dockerRunner = new DockerRunner(pipelineFile);
+
+        // Extract pipeline details from the YAML file
+        PipelineParser parser = new PipelineParser(pipelineFile, dockerRunner.getDockerClient());
+        String pipelineName = parser.getPipelineName();
+        List<StageExecutor> stages = parser.getStages();
+
+        PipelineExecutor pipelineExecutor = new PipelineExecutor(pipelineName, stages, dockerRunner);
+
+        System.out.println("Executing pipeline: " + pipelineName);
+        pipelineExecutor.execute();
     }
 
 }
