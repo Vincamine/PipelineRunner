@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.model;
+package edu.neu.cs6510.sp25.t1.logging;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
