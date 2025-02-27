@@ -1,0 +1,16 @@
+pipeline:
+  name: Sample Pipeline
+  stages:
+    - build
+    - test
+jobs:
+  - name: Build Job
+    stage: build
+    image: alpine:latest
+    script:
+      - echo "Building..."
+  - name: Test Job
+    stage: test
+    image: alpine:latest
+    script:
+      - echo "Testing..."

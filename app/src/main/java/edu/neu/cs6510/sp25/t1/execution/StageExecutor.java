@@ -45,4 +45,8 @@ public class StageExecutor {
   public void setStageStatus(ExecutionStatus status) {
     this.status = status;
   }
+
+  public String getStageName() {
+    return stageName;
+  }
 }

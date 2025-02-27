@@ -11,6 +11,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -68,6 +69,7 @@ public class RunCommand implements Runnable {
         System.out.println("CI/CD pipeline execution started.");
 
         try {
+            System.out.println("isLocalRun: " + isLocalRun);
             if (isLocalRun) {
                 executeLocalRun();
             } else {
@@ -92,6 +94,7 @@ public class RunCommand implements Runnable {
 
         GitValidator.validateGitRepo();
 
+        System.out.println("validate result:"+!validatePipelineFile(pipelineFile));
         if (!validatePipelineFile(pipelineFile)) {
             throw new IllegalArgumentException("Pipeline file validation failed.");
         }
@@ -125,15 +128,13 @@ public class RunCommand implements Runnable {
      * @throws RuntimeException if job execution is interrupted.
      */
     private void executeLocalJobs() throws IOException {
-        System.out.println("Validating pipeline file: " + pipelineFile);
 
-        if (!validator.validatePipeline(pipelineFile)) {
-            throw new IllegalArgumentException("Pipeline file validation failed.");
-        }
-
+        // Extract the YAML file name (without extension)
+        String yamlFileName = Paths.get(pipelineFile).getFileName().toString().replace(".yml", "").replace(".yaml", "");
         System.out.println("Pipeline validation successful.");
+
         // Start the Docker container for the pipeline execution
-        DockerRunner dockerRunner = new DockerRunner(pipelineFile);
+        DockerRunner dockerRunner = new DockerRunner(yamlFileName);
 
         // Extract pipeline details from the YAML file
         PipelineParser parser = new PipelineParser(pipelineFile, dockerRunner.getDockerClient());

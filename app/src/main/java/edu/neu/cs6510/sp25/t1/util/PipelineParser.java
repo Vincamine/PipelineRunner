@@ -5,6 +5,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import edu.neu.cs6510.sp25.t1.execution.StageExecutor;
@@ -21,34 +22,67 @@ public class PipelineParser {
   public PipelineParser(String yamlFilePath, DockerClient dockerClient) throws IOException {
     this.dockerClient = dockerClient;
     Yaml yaml = new Yaml();
+
     try (FileInputStream fis = new FileInputStream(yamlFilePath)) {
       Map<String, Object> pipelineData = yaml.load(fis);
-      this.pipelineName = (String) ((Map<String, Object>) pipelineData.get("pipeline")).get("name");
-      this.stages = parseStages((List<String>) ((Map<String, Object>) pipelineData.get("pipeline")).get("stages"), pipelineData);
+      Map<String, Object> pipeline = (Map<String, Object>) pipelineData.get("pipeline");
+
+      this.pipelineName = (String) pipeline.get("name");
+      this.stages = parseStages((List<Map<String, Object>>) pipeline.get("stages"), pipelineData);
     }
   }
 
-  private List<StageExecutor> parseStages(List<String> stageNames, Map<String, Object> pipelineData) {
+  /**
+   * Parses the stages from the YAML file and creates StageExecutor objects.
+   */
+  private List<StageExecutor> parseStages(List<Map<String, Object>> stageList, Map<String, Object> pipelineData) {
     List<StageExecutor> stageExecutors = new ArrayList<>();
-    for (String stage : stageNames) {
-      List<JobExecutor> jobExecutors = parseJobs(stage, pipelineData);
-      stageExecutors.add(new StageExecutor(stage, jobExecutors));
+
+    if (stageList == null || stageList.isEmpty()) {
+      throw new IllegalArgumentException("Pipeline must have at least one stage.");
     }
+
+    for (Map<String, Object> stageMap : stageList) {
+      if (!stageMap.containsKey("name")) {
+        throw new IllegalArgumentException("Stage is missing a 'name' field.");
+      }
+
+      String stageName = (String) stageMap.get("name");
+      List<JobExecutor> jobExecutors = parseJobs(stageName, pipelineData);
+      stageExecutors.add(new StageExecutor(stageName, jobExecutors));
+    }
+
     return stageExecutors;
   }
 
-  private List<JobExecutor> parseJobs(String stage, Map<String, Object> pipelineData) {
+  /**
+   * Parses the jobs for a given stage.
+   */
+  private List<JobExecutor> parseJobs(String stageName, Map<String, Object> pipelineData) {
     List<JobExecutor> jobs = new ArrayList<>();
-    List<Map<String, Object>> jobList = (List<Map<String, Object>>) pipelineData.get("jobs");
+
+    LinkedHashMap<String, Object> pipeline = (LinkedHashMap<String, Object>) pipelineData.get("pipeline");
+    List<Map<String, Object>> jobList = (List<Map<String, Object>>) pipeline.get("jobs");
+
+    if (jobList == null) {
+      throw new IllegalArgumentException("Pipeline must have at least one job.");
+    }
+
     for (Map<String, Object> job : jobList) {
-      if (stage.equals(job.get("stage"))) {
+      if (!job.containsKey("stage") || !job.containsKey("name") || !job.containsKey("image") || !job.containsKey("script")) {
+        throw new IllegalArgumentException("Job is missing required fields: 'name', 'stage', 'image', 'script'.");
+      }
+
+      if (stageName.equals(job.get("stage"))) {
         String name = (String) job.get("name");
         String image = (String) job.get("image");
         List<String> scriptList = (List<String>) job.get("script");
         String[] script = scriptList.toArray(new String[0]);
+
         jobs.add(new JobExecutor(name, image, script, dockerClient));
       }
     }
+
     return jobs;
   }
 
