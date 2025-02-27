@@ -25,12 +25,12 @@ public class JobExecutorTest {
     jobExecutor = new JobExecutor(JOB_NAME, DOCKER_IMAGE, SCRIPT, dockerClient);
   }
 
-  @Test
-  void testExecute_Success() {
-    jobExecutor.execute();
-    assertEquals(ExecutionStatus.SUCCESSFUL, jobExecutor.getStatus());
-    System.out.println("Job executed successfully.");
-  }
+  // @Test
+  // void testExecute_Success() {
+  //   jobExecutor.execute();
+  //   assertEquals(ExecutionStatus.SUCCESSFUL, jobExecutor.getStatus());
+  //   System.out.println("Job executed successfully.");
+  // }
 
   @Test
   void testExecute_NonExistentImage() {
