@@ -1,14 +1,9 @@
-plugins {
-    application
-}
-
 dependencies {
     implementation(project(":common"))
 
-    // Docker support for running jobs in containers
+    // Docker Java API for process management
     implementation("com.github.docker-java:docker-java:3.3.4")
-}
 
-application {
-    mainClass.set("edu.neu.cs6510.sp25.t1.WorkerApplication")
+    // Google Guava (Utility library)
+    implementation("com.google.guava:guava:32.1.2-jre")
 }

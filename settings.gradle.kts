@@ -11,8 +11,9 @@ plugins {
 }
 
 rootProject.name = "t1-cicd"
-include("cli")
-include("backend")
-include("worker")
+
 include("common")
+include("backend")
+include("cli")
+include("worker")
 

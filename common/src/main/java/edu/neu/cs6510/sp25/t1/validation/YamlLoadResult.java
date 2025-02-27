@@ -9,7 +9,7 @@ import java.util.Map;
  * information.
  * 
  */
-class YamlLoadResult {
+public class YamlLoadResult {
 
   private final Map<String, Object> data;
   private final Map<String, Mark> locations;

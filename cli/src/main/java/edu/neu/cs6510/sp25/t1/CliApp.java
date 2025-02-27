@@ -41,7 +41,7 @@ import picocli.CommandLine;
  * @see edu.neu.cs6510.sp25.t1.cli.commands.RunCommand
  * @see edu.neu.cs6510.sp25.t1.cli.commands.CheckCommand
  */
-public class App {
+public class CliApp {
 
     /**
      * Main entry point for the CI/CD CLI tool.
