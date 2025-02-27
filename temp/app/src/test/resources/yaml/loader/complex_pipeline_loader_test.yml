@@ -1,0 +1,48 @@
+pipeline:
+  name: "TestPipeline"
+  description: "Complex pipeline configuration"
+  stages:
+    - build
+    - test
+    - deploy
+  config:
+    timeout: 3600
+    retry: 3
+    environment:
+      JAVA_HOME: "/usr/lib/jvm/java-11"
+      MAVEN_OPTS: "-Xmx2048m"
+
+jobs:
+  - name: "BuildJob"
+    stage: "build"
+    image: "openjdk:11"
+    script:
+      - "mvn clean install"
+    dependencies: []
+    artifacts:
+      paths:
+        - "target/*.jar"
+      expire_in: "1 week"
+
+  - name: "TestJob"
+    stage: "test"
+    image: "openjdk:11"
+    script:
+      - "mvn test"
+    dependencies:
+      - "BuildJob"
+    coverage:
+      reports:
+        - "target/site/jacoco/index.html"
+
+  - name: "DeployJob"
+    stage: "deploy"
+    image: "openjdk:11"
+    script:
+      - "mvn deploy"
+    dependencies:
+      - "TestJob"
+    environment:
+      name: "production"
+      url: "https://example.com"
+    when: "manual"

@@ -1,0 +1,8 @@
+pipeline:
+  name: "MissingScriptPipeline"
+  stages:
+    - build
+jobs:
+  - name: "BuildJob"
+    stage: "build"
+    image: "openjdk:11"

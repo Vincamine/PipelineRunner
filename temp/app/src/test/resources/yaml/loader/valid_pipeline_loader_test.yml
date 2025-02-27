@@ -1,0 +1,12 @@
+pipeline:
+  name: "TestPipeline"
+  stages:
+    - build
+    - test
+    - deploy
+jobs:
+  - name: "BuildJob"
+    stage: "build"
+    image: "openjdk:11"
+    script:
+      - "mvn clean install"

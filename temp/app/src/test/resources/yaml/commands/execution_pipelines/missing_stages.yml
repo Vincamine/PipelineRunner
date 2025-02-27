@@ -1,0 +1,8 @@
+pipeline:
+  name: TestPipeline
+  #Missing 'stages' key on purpose
+jobs:
+  - name: BuildJob
+    stage: build
+    script:
+      - mvn clean compile

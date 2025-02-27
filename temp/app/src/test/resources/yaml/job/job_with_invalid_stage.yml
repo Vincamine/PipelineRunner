@@ -1,0 +1,10 @@
+pipeline:
+  name: "InvalidStage"
+  stages:
+    - build
+jobs:
+  - name: "UnknownStageJob"
+    stage: "deploy"  # 'deploy' stage is missing
+    image: "node:14"
+    script:
+      - "npm install"

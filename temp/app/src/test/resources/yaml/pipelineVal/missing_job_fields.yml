@@ -1,0 +1,7 @@
+pipeline:
+  name: "MissingFields"
+  stages:
+    - build
+jobs:
+  - name: "BuildJob"
+    stage: "build"

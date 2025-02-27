@@ -1,0 +1,15 @@
+pipeline:
+  name: "DuplicateJobs"
+  stages:
+    - build
+jobs:
+  - name: "BuildJob"
+    stage: "build"
+    image: "openjdk:11"
+    script:
+      - "mvn clean install"
+  - name: "BuildJob"  # Duplicate name
+    stage: "build"
+    image: "openjdk:11"
+    script:
+      - "echo Duplicate"

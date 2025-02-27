@@ -1,0 +1,21 @@
+pipeline:
+  name: "CyclicDependencies"
+  stages:
+    - build
+    - test
+jobs:
+  - name: "BuildJob"
+    stage: "build"
+    image: "openjdk:11"
+    script:
+      - "mvn clean install"
+    needs:
+      - "TestJob"
+
+  - name: "TestJob"
+    stage: "test"
+    image: "python:3.9"
+    script:
+      - "pytest tests/"
+    needs:
+      - "BuildJob"

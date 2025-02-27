@@ -1,0 +1,6 @@
+pipeline:
+  name: "ValidPipeline"
+  stages:
+    - build
+    - test
+    - deploy
