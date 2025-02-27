@@ -273,27 +273,129 @@ The Common module will contain shared code and models used by multiple component
 
 ## 9. Development Roadmap
 
-### Phase 1: Core Infrastructure
+### Phase 1: Core Infrastructure - Minimal Viable Product (MVP)
+1. CLI Module 
+      - Implement a simple command-line interface.
+      - Support commands to run pipelines locally.
+      - Provide basic logs for execution.
+2. Backend Module 
+      - Implement basic API endpoints for triggering pipeline execution.
+      - Provide local execution support without external dependencies.
+3. Worker Module
+      - Implement job execution logic.
+      - Enable job isolation using Docker.
+4. Reporting
+      - Store basic execution logs. 
+      - Generate simple reports for pipeline execution.
 
-- Basic CLI, Backend, and Worker implementation
-- Local pipeline execution support
-- Simple reporting capabilities
+* **Key Validation Step:**
+      - Ensure a **basic CI/CD pipeline runs successfully** end-to-end using **CLI + Backend + Worker.**
+      - Use unit and integration tests to validate.
 
-### Phase 2: Enhanced Features
+### Phase 2: Enhanced Features - Pipeline Configurations within Git Repositories
+1. Repository Management
+      - Add Git integration to manage repositories.
+      - Allow defining pipelines per repository.
+2. Repository Grouping
+      - Introduce support for managing multiple repositories together.
+      - Enable batch execution across multiple repositories.
+3. Cross-Repository Operations
+      - Add support for dependency tracking between repositories.
+      - Support triggering a pipeline from another pipeline.
+4. Enhanced Reporting
+      - Generate detailed execution reports.
+      - Provide real-time monitoring using logs, dashboards, or UI.
+* **Key Validation Step:**
+      - Ensure **multiple repositories** can execute **pipelines independently and collaboratively**.
+      - Validate that reporting provides useful **insights into execution and errors**.
 
-- Repository management implementation
-- Repository grouping
-- Cross-repository operations
-- Enhanced reporting
 
-### Phase 3: Enterprise Features
+### Phase 3: Enterprise Features - Security, Performace and scalability
 
-- Role-based access control
-- Advanced dependency management
-- Performance optimizations
-- High availability configuration
+1. Role-Based Access Control (RBAC)
+      - Implement user authentication and authorization.
+      - Define user roles and permissions for executing pipelines.
+      - Ensure secure access control for multi-user environments.
+      - Support API token-based authentication for automation and integrations.
+2. Advanced Dependency Management
+      - Introduce dynamic job scheduling based on job dependencies.
+      - Enable conditional execution of jobs based on success/failure.
+      - Optimize job execution order to minimize pipeline runtime.
+      - Implement parallel execution for independent jobs within a pipeline.
+3. Performance Optimizations
+      - Improve pipeline execution speed by caching dependencies.
+      - Implement incremental builds to avoid unnecessary re-execution.
+      - Optimize Docker container usage to minimize startup times.
+      - Introduce resource monitoring and optimization to prevent bottlenecks.
+4. High Availability (HA) Configuration
+      - Ensure fault tolerance by allowing failed jobs to retry.
+      - Implement distributed execution for large-scale workflows.
+      - Enable load balancing for job execution across worker nodes.
+      - Support database replication and failover for system stability.
+* **Key Validation Step**
+      - Validate that RBAC restricts access to pipelines based on user roles.
+      - Ensure dependency resolution and job scheduling work optimally.
+      - Verify that pipeline execution is faster due to caching and optimizations.
+      - Test high availability configurations under simulated failures.
+* This phase ensures the CI/CD system is scalable, secure, and performant, making it suitable for enterprise environments. 
 
-## 10. Conclusion
+## 10. Estimated Timeline
+### Assumptions:
+1. Each developer works 10 hours per week.
+2. The total team effort per week is 40 hours.
+3. Tasks are broken down based on estimated effort and dependencies.
+4. Some tasks run in parallel across team members.
+5. Each phase includes development, testing, and validation.
+
+| Phase | Description | Estimated Duration |
+|--------|------------------------------------------------------|------------------|
+| **Phase 1** | Core Infrastructure - Minimal Viable Product (MVP) | **4 weeks** |
+| **Phase 2** | Enhanced Features - Pipeline Configurations within Git Repositories | **6 weeks** |
+| **Phase 3** | Enterprise Features - Security, Performance, and Scalability | **8 weeks** |
+
+### **Phase 1: Core Infrastructure - Minimal Viable Product (MVP)**
+
+| Task | Description | Assigned Team | Estimated Duration |
+|------|------------|---------------|------------------|
+| **CLI Module** | Implement a simple command-line interface. Support commands to run pipelines locally. Provide basic logs for execution. | Member 1 | 2 weeks |
+| **Backend Module** | Implement basic API endpoints for triggering pipeline execution. Provide local execution support without external dependencies. | Member 2 | 2 weeks |
+| **Worker Module** | Implement job execution logic. Enable job isolation using Docker. | Member 3 | 2 weeks |
+| **Reporting** | Store basic execution logs. Generate simple reports for pipeline execution. | Member 4 | 2 weeks |
+| **Validation** | Ensure a basic CI/CD pipeline runs successfully end-to-end using CLI + Backend + Worker. Use unit and integration tests to validate. | Entire Team | 1 week |
+
+### **Phase 2: Enhanced Features - Pipeline Configurations within Git Repositories**
+
+| Task | Description | Assigned Team | Estimated Duration |
+|------|------------|---------------|------------------|
+| **Repository Management** | Add Git integration to manage repositories. Allow defining pipelines per repository. | Member 1 | 2 weeks |
+| **Repository Grouping** | Introduce support for managing multiple repositories together. Enable batch execution across multiple repositories. | Member 2 | 2 weeks |
+| **Cross-Repository Operations** | Add support for dependency tracking between repositories. Support triggering a pipeline from another pipeline. | Member 3 | 2 weeks |
+| **Enhanced Reporting** | Generate detailed execution reports. Provide real-time monitoring using logs, dashboards, or UI. | Member 4 | 2 weeks |
+| **Validation** | Ensure multiple repositories can execute pipelines independently and collaboratively. Validate that reporting provides useful insights into execution and errors. | Entire Team | 1 week |
+
+### **Phase 3: Enterprise Features - Security, Performance, and Scalability**
+
+| Task | Description | Assigned Team | Estimated Duration |
+|------|------------|---------------|------------------|
+| **Role-Based Access Control (RBAC)** | Implement user authentication and authorization for different pipeline actions. | Member 1 | 2 weeks |
+| **Advanced Dependency Management** | Implement advanced pipeline dependency tracking across jobs and repositories. | Member 2 | 2 weeks |
+| **Performance Optimizations** | Improve execution speed and reduce system overhead. Implement caching and efficient resource utilization. | Member 3 | 2 weeks |
+| **High Availability Configuration** | Implement failover strategies and load balancing for improved reliability. | Member 4 | 2 weeks |
+| **Final Validation & Testing** | Conduct end-to-end testing, security reviews, and scalability assessments. | Entire Team | 2 weeks |
+
+### **Total Estimated Timeline**: **18 weeks**
+
+### **Workload Breakdown**
+- **Team Size**: 4 members
+- **Work Hours**: 2 hours per day, 5 days a week
+- **Total Work Hours per Member**: 10 hours per week
+- **Total Work Hours for Team**: 40 hours per week
+- **Total Estimated Workload**: ~720 hours (18 weeks x 40 hours/week)
+
+This timeline allows for flexibility in case of unexpected delays and ensures proper validation at each phase.
+
+
+## 11. Conclusion
 
 This monorepo-based architecture with CLI, Backend, and Worker components provides a flexible, scalable CI/CD system that meets all the client requirements. By keeping all components in a single repository with a multi-module structure, we achieve better coordination and consistency while still maintaining separation of concerns. The modular design allows us to leverage Java 21's modern features like virtual threads to ensure efficient resource utilization and high concurrency, especially important for the Backend and Worker components.
 
