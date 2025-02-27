@@ -1,18 +1,22 @@
 package edu.neu.cs6510.sp25.t1.model;
 
 /**
- * Defines possible states for a pipeline execution.
+ * Defines possible states for a pipeline execution. All excutestatus changed into this file. 
  */
 public enum PipelineState {
-    PENDING("Pipeline is waiting to start"),
-    RUNNING("Pipeline is currently executing"),
-    SUCCESS("Pipeline completed successfully"),
-    FAILED("Pipeline failed during execution"),
-    CANCELED("Pipeline was manually canceled"), 
-    UNKNOWN("Status cannot be determined");
+    PENDING("Pipeline Execution is waiting to start"),
+    RUNNING("Pipeline Execution is currently executing"),
+    SUCCESS("Pipeline Execution completed successfully"),
+    FAILED("Pipeline Execution failed during execution"),
+    CANCELED("Pipeline Execution was manually canceled"), 
+    UNKNOWN("Execution Status cannot be determined");
 
     private final String description;
 
+    /**
+     * Constructor to initialize the pipeline state with a description.
+     * @param description
+     */
     PipelineState(String description) {
         this.description = description;
     }

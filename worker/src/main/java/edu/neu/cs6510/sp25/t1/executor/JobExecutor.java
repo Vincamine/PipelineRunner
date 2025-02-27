@@ -1,4 +1,5 @@
-package edu.neu.cs6510.sp25.t1.execution;
+package edu.neu.cs6510.sp25.t1.executor;
+import edu.neu.cs6510.sp25.t1.model.ExecutionStatus;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
@@ -9,6 +10,7 @@ import com.github.dockerjava.core.command.WaitContainerResultCallback;
 
 /**
  * Handles the execution of individual jobs in a Docker container.
+ * Runs a job inside a Docker container.
  */
 public class JobExecutor {
   private final String jobName;
@@ -17,6 +19,13 @@ public class JobExecutor {
   private ExecutionStatus status;
   private final DockerClient dockerClient;
 
+  /**
+   * Constructor to initialize JobExecutor with the specified parameters.
+   * @param jobName
+   * @param dockerImage
+   * @param script
+   * @param dockerClient
+   */
   public JobExecutor(String jobName, String dockerImage, String[] script, DockerClient dockerClient) {
     this.jobName = jobName;
     this.dockerImage = dockerImage;
@@ -27,6 +36,8 @@ public class JobExecutor {
 
   /**
    * Executes the job inside a Docker container.
+   * @throws InterruptedException
+   * @throws IOException
    */
   public void execute() {
     System.out.println("Starting job: " + jobName);
@@ -58,6 +69,10 @@ public class JobExecutor {
     }
   }
 
+  /**
+   * Getter: Returns the status of the job execution
+   * @return The status of the job execution.
+   */
   public ExecutionStatus getStatus() {
     return status;
   }

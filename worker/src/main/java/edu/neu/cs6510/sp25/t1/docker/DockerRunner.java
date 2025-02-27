@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.execution;
+package edu.neu.cs6510.sp25.t1.docker;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
@@ -8,6 +8,7 @@ import com.github.dockerjava.core.DockerClientBuilder;
 
 /**
  * Responsible for creating and starting a Docker container for a pipeline execution.
+ * Manages Docker container execution for pipeline execution.
  */
 public class DockerRunner {
   private final DockerClient dockerClient;
@@ -15,6 +16,10 @@ public class DockerRunner {
   private final String localDockerWindows = "tcp://localhost:2375";
   private final String localDockerLinux = "unix:///var/run/docker.sock";
 
+  /**
+   * Constructor to initialize DockerRunner with the specified image.
+   * @param image The Docker image to use for the container.
+   */
   public DockerRunner(String image) {
     this.dockerClient = DockerClientBuilder.getInstance(localDockerWindows).build();
     this.image = image;
@@ -42,6 +47,10 @@ public class DockerRunner {
     }
   }
 
+  /**
+   * Getter: Returns the Docker client instance.
+   * @return The Docker client instance.
+   */
   public DockerClient getDockerClient() {
     return dockerClient;
   }
