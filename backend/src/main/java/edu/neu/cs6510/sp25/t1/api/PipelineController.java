@@ -1,7 +1,7 @@
 package edu.neu.cs6510.sp25.t1.api;
 
-import edu.neu.cs6510.sp25.t1.backend.service.RunPipelineService;
-import edu.neu.cs6510.sp25.t1.backend.model.PipelineStatusResponse;
+import edu.neu.cs6510.sp25.t1.service.RunPipelineService;
+import edu.neu.cs6510.sp25.t1.model.PipelineStatusResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

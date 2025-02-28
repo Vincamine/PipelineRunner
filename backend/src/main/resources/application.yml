@@ -1,0 +1,47 @@
+server:
+  port: 8080  # Backend API will run on port 8080
+
+spring:
+  application:
+    name: cicd-backend  # Name of the backend application
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cicd_system  # PostgreSQL Database URL
+    username: backend_user  # Database user
+    password: backend_password  # Database password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update  # Automatically updates the schema (change to "validate" for production)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  redis:
+    host: localhost  # Redis server host
+    port: 6379  # Redis server port
+
+grpc:
+  worker-service:
+    address: localhost  # Worker gRPC service hostname
+    port: 50051  # Worker gRPC service port
+
+logging:
+  level:
+    root: INFO  # Default logging level
+    edu.neu.cs6510.sp25.t1: DEBUG  # Enable debugging for this project
+
+security:
+  jwt:
+    secret-key: "your-secure-secret-key"  # JWT secret key for authentication
+    expiration-ms: 86400000  # Token expiration time in milliseconds (24 hours)
+
+git:
+  repository-root: "/var/lib/cicd/repositories"  # Base directory for cloning repositories
+
+artifacts:
+  storage-path: "/var/lib/cicd/artifacts"  # Path where artifacts are stored
+  retention-days: 7  # Number of days to retain artifacts
+
+worker:
+  max-retries: 3  # Number of retries for failed jobs
+  retry-delay-ms: 5000  # Delay before retrying a failed job (in milliseconds)
+  timeout-seconds: 1800  # Maximum time a job can run before timing out (30 minutes)

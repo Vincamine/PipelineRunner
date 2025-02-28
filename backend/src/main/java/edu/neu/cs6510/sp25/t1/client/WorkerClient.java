@@ -2,9 +2,9 @@ package edu.neu.cs6510.sp25.t1.client;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import edu.neu.cs6510.sp25.t1.grpc.Worker.PipelineRequest;
+import edu.neu.cs6510.sp25.t1.grpc.Worker.PipelineResponse;
 import edu.neu.cs6510.sp25.t1.grpc.WorkerServiceGrpc;
-import edu.neu.cs6510.sp25.t1.grpc.PipelineRequest;
-import edu.neu.cs6510.sp25.t1.grpc.PipelineResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -22,14 +22,19 @@ public class WorkerClient {
         workerStub = WorkerServiceGrpc.newBlockingStub(channel);
     }
 
-    public void sendJobToWorker(String repoId, String pipelineId, String configFilePath) {
+    public void sendJobToWorker(String repoUrl, String branch, String commit) {
+        // Build request using correct field names from worker.proto
         PipelineRequest request = PipelineRequest.newBuilder()
-                .setRepoId(repoId)
-                .setPipelineId(pipelineId)
-                .setConfigFilePath(configFilePath)
+                .setRepoUrl(repoUrl)   // Corrected field name
+                .setBranch(branch)     // Corrected field name
+                .setCommit(commit)     // Corrected field name
                 .build();
 
-        PipelineResponse response = workerStub.executePipeline(request);
-        logger.info("Worker response: " + response.getMessage());
+        // Use correct gRPC method name
+        PipelineResponse response = workerStub.runPipeline(request);
+
+        // Fix response logging (use available fields)
+        logger.info("Worker response - Status: " + response.getStatus());
+        logger.info("Worker response - Logs: " + response.getLogs());
     }
 }

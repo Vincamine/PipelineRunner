@@ -1,7 +1,7 @@
-package edu.neu.cs6510.sp25.t1.backend.service;
+package edu.neu.cs6510.sp25.t1.service;
 
-import edu.neu.cs6510.sp25.t1.backend.client.WorkerClient;
-import edu.neu.cs6510.sp25.t1.backend.model.PipelineStatusResponse;
+import edu.neu.cs6510.sp25.t1.client.WorkerClient;
+import edu.neu.cs6510.sp25.t1.model.PipelineStatusResponse;
 import org.springframework.stereotype.Service;
 
 import java.io.File;

@@ -1,0 +1,10 @@
+server:
+  port: 8081
+grpc:
+  worker-port: 50051
+docker:
+  image-pull-policy: "Always"
+  volume-mounts: "/workspace"
+artifacts:
+  storage-path: "/artifacts"
+  retention-days: 7
