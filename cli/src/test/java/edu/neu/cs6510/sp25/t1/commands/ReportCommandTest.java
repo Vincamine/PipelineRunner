@@ -11,6 +11,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -99,9 +100,11 @@ class ReportCommandTest {
     void testReportCommand_MissingPipelineArgument() {
         int exitCode = cmd.execute("--output", "json");
 
-        assertEquals(2, exitCode); // Picocli returns 2 for missing required arguments
+        assertEquals(2, exitCode, "Expected Picocli to return exit code 2 for missing required arguments");
+
         String output = outputStream.toString().trim();
-        assert output.contains("Missing required option: '--pipeline=<pipeline>'");
+        assertTrue(output.contains("Error: Missing required option '--pipeline=<pipeline>' or '--list-pipelines'"),
+                "Expected missing argument error message to be printed");
     }
 
     @Test

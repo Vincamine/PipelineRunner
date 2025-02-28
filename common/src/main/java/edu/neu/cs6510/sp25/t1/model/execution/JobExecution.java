@@ -38,6 +38,20 @@ public class JobExecution {
     }
 
     /**
+     * Constructs a new JobExecution instance with default values for integration testing.
+     * @param jobName
+     * @param status
+     */
+    public JobExecution(String jobName, String status) {
+        this.jobDefinition = new JobDefinition(jobName, "default-stage", "default-image", List.of(), List.of(), false);
+        this.status = status;
+        this.allowFailure = false;
+        this.dependencies = List.of();
+        this.startTime = Instant.now();
+    }
+    
+
+    /**
      * Marks the job as completed by setting the completion time.
      */
     public void complete() {

@@ -12,6 +12,8 @@ public class RunPipelineRequest {
     private String pipeline;
     private boolean local;
     private Map<String, String> overrides;
+    private String configPath;
+
 
     /**
      * Default constructor.
@@ -130,4 +132,21 @@ public class RunPipelineRequest {
     public void setOverrides(Map<String, String> overrides) {
         this.overrides = overrides;
     }
+
+    /**
+     * Get config path.
+     * @return configPath
+     */
+    public String getConfigPath() {
+        return configPath;
+    }
+    
+    /**
+     * Set config path.
+     * @param configPath
+     */
+    public void setConfigPath(String configPath) {
+        this.configPath = configPath;
+    }
+    
 }

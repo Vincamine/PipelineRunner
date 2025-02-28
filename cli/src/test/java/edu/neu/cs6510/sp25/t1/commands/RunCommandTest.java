@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class RunCommandTest {
@@ -40,10 +41,10 @@ class RunCommandTest {
         System.out.println("Calling run command without --pipeline");
 
         CommandLine cmd = new CommandLine(runCommand);
-        int exitCode = cmd.execute();  // No arguments
+        int exitCode = cmd.execute(); // No arguments
 
         System.out.println("Expected: 2 (Invalid arguments), Actual: " + exitCode);
-        assertEquals(2, exitCode);
+        assertEquals(2, exitCode); // Now properly validates missing arguments
     }
 
     @Test
@@ -58,6 +59,6 @@ class RunCommandTest {
         int exitCode = cmd.execute("--pipeline", "testPipeline");
 
         System.out.println("Expected: 1, Actual: " + exitCode);
-        assertEquals(1, exitCode);
+        assertEquals(1, exitCode); // Ensure failure is properly handled
     }
 }

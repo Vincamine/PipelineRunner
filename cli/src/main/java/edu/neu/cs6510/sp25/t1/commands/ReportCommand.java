@@ -6,8 +6,7 @@ import picocli.CommandLine;
 /**
  * CLI command for fetching pipeline execution history.
  *
- * This command allows users to retrieve past pipeline executions from the CI/CD
- * system.
+ * This command allows users to retrieve past pipeline executions from the CI/CD system.
  * It supports:
  * - Listing all available pipelines
  * - Fetching execution history of a specific pipeline
@@ -27,21 +26,18 @@ public class ReportCommand extends BaseCommand {
 
     /**
      * Lists all pipelines available in the system.
-     * Required by Picocli.
      */
     @CommandLine.Option(names = "--list-pipelines", description = "List all pipelines")
     private boolean listPipelines;
 
     /**
      * Specifies the pipeline name whose execution history is being queried.
-     * Required by Picocli.
      */
     @CommandLine.Option(names = "--pipeline", description = "Specify pipeline name")
     private String pipeline;
 
     /**
      * Specifies a particular run ID of the pipeline.
-     * Required by Picocli.
      */
     @CommandLine.Option(names = "--run", description = "Specify run ID")
     private String runId;
@@ -49,57 +45,50 @@ public class ReportCommand extends BaseCommand {
     /**
      * Constructs a new ReportCommand with a reference to the backend client.
      *
-     * @param backendClient The backend client used to fetch pipeline execution
-     *                      data.
+     * @param backendClient The backend client used to fetch pipeline execution data.
      */
     public ReportCommand(CliBackendClient backendClient) {
         this.backendClient = backendClient;
     }
 
     /**
-     * Executes the report command by retrieving pipeline execution data based on
-     * the given parameters.
+     * Executes the report command by retrieving pipeline execution data based on the given parameters.
      *
      * Behavior:
      * - If `--list-pipelines` is provided, it returns a list of all pipelines.
-     * - If `--pipeline` is provided without `--run`, it returns execution history
-     * for that pipeline.
-     * - If both `--pipeline` and `--run` are provided, it returns details of that
-     * specific run.
-     * - If none of the above are provided, an error message is displayed.
+     * - If `--pipeline` is provided without `--run`, it returns execution history for that pipeline.
+     * - If both `--pipeline` and `--run` are provided, it returns details of that specific run.
+     * - If neither `--list-pipelines` nor `--pipeline` is provided, an error message is displayed.
      *
-     * The response is formatted based on the `--output` option (plaintext, JSON,
-     * YAML).
+     * The response is formatted based on the `--output` option (plaintext, JSON, YAML).
      *
-     * @return Exit code: 0 if successful, 1 if an error occurs.
+     * @return Exit code: 0 if successful, 2 if a required argument is missing, 1 if an error occurs.
      */
     @Override
     public Integer call() {
+        // Ensure that at least one of --list-pipelines or --pipeline is provided
+        if (!listPipelines && (pipeline == null || pipeline.isEmpty())) {
+            System.err.println("Error: Missing required option '--pipeline=<pipeline>' or '--list-pipelines'");
+            return 2;  // Picocli's standard exit code for missing arguments
+        }
+
         try {
             String response;
 
             if (listPipelines) {
                 response = backendClient.getAllPipelines();
-            } else if (pipeline != null) {
-                if (runId == null) {
-                    response = backendClient.getPipelineExecutions(pipeline, outputFormat);
-                } else {
-                    response = backendClient.getPipelineExecutions(pipeline + "/" + runId, outputFormat);
-                }
             } else {
-                // Picocli now automatically handles missing required arguments
-                System.err.println("Invalid command. Use --help for options.");
-                return 1;
+                response = runId == null
+                        ? backendClient.getPipelineExecutions(pipeline, outputFormat)
+                        : backendClient.getPipelineExecutions(pipeline + "/" + runId, outputFormat);
             }
 
-            // Uses BaseCommand’s formatting (plaintext, JSON, YAML)
             System.out.println(formatOutput(response));
             return 0;
         } catch (Exception e) {
             logger.error("Failed to retrieve report", e);
             System.err.println("Error fetching report: " + e.getMessage());
-            return 1;
+            return 1; // General failure exit code
         }
     }
-
 }

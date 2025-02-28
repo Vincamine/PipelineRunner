@@ -12,6 +12,7 @@ repositories {
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.2"))
     implementation(project(":common"))
+    implementation(project(":worker"))
 
     implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
     implementation("org.springframework.boot:spring-boot-starter:3.2.2")

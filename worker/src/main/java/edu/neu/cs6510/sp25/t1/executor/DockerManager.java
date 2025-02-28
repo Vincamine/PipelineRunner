@@ -15,6 +15,10 @@ public class DockerManager {
     private final DockerClient dockerClient;
     private static final Logger logger = LoggerFactory.getLogger(DockerManager.class);
 
+    public DockerManager() {
+        this.dockerClient = null;
+    }
+
     public DockerManager(DockerClient dockerClient) {
         this.dockerClient = dockerClient;
     }

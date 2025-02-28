@@ -39,15 +39,20 @@ public class RunCommand extends BaseCommand {
             System.err.println("Error: No pipeline configuration file provided.");
             return 2; // Invalid arguments
         }
+        
         try {
+            System.out.println("Executing pipeline with config: " + pipeline);
             RunPipelineRequest request = new RunPipelineRequest(repo, branch, commit, pipeline, local);
+            
+            System.out.println("Sending request to backend...");
             var response = backendClient.runPipeline(request);
-
+    
             System.out.println("Pipeline Execution Started:");
             System.out.println(formatOutput(response));
-
+    
             return 0; // Success
         } catch (Exception e) {
+            System.err.println("Failed to execute pipeline: " + e.getMessage());
             logger.error("Failed to execute pipeline", e);
             return 1; // General failure
         }
