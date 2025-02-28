@@ -97,14 +97,16 @@ public abstract class BaseCommand implements Callable<Integer> {
             return "Error: No response received.";
         }
         try {
-            if ("json".equalsIgnoreCase(outputFormat)) {
-                ObjectMapper objectMapper = new ObjectMapper();
-                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
-            } else if ("yaml".equalsIgnoreCase(outputFormat)) {
-                YAMLMapper yamlMapper = new YAMLMapper();
-                return yamlMapper.writeValueAsString(response);
-            } else {
-                return response.toString();
+            ObjectMapper objectMapper = new ObjectMapper();
+            YAMLMapper yamlMapper = new YAMLMapper();
+
+            switch (outputFormat.toLowerCase()) {
+                case "json":
+                    return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
+                case "yaml":
+                    return yamlMapper.writeValueAsString(response);
+                default:
+                    return response.toString();
             }
         } catch (Exception e) {
             logger.error("Failed to format output", e);

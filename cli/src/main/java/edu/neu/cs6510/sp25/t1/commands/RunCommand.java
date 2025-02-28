@@ -12,7 +12,7 @@ public class RunCommand extends BaseCommand {
     @CommandLine.Option(names = "--local", description = "Run pipeline locally")
     private boolean local;
 
-    @CommandLine.Option(names = "--pipeline", description = "Pipeline name to run", required = true)
+    @CommandLine.Option(names = "--pipeline", description = "Pipeline name to run")
     private String pipeline;
 
     /**
@@ -36,7 +36,7 @@ public class RunCommand extends BaseCommand {
     public Integer call() {
         // Validate required parameters
         if (pipeline == null || pipeline.isEmpty()) {
-            System.err.println("Error: --pipeline option is required.");
+            System.err.println("Error: No pipeline configuration file provided.");
             return 2; // Invalid arguments
         }
         try {

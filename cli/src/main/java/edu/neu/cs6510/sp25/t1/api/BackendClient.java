@@ -1,6 +1,7 @@
 package edu.neu.cs6510.sp25.t1.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ public class BackendClient {
     private final String baseUrl;
     private final OkHttpClient client;
     private final ObjectMapper objectMapper;
+    private final YAMLMapper yamlMapper;
 
     /**
      * Constructor with parameters.
@@ -23,6 +25,19 @@ public class BackendClient {
         this.baseUrl = baseUrl;
         this.client = new OkHttpClient();
         this.objectMapper = new ObjectMapper();
+        this.yamlMapper = new YAMLMapper();
+    }
+
+    /**
+     * Handles API responses and ensures proper error reporting.
+     */
+    private String handleResponse(Response response) throws IOException {
+        String responseBody = response.body() != null ? response.body().string() : "";
+
+        if (!response.isSuccessful()) {
+            return "Error: " + response.code() + " - " + response.message() + "\n" + responseBody;
+        }
+        return responseBody;
     }
 
     /**
@@ -39,11 +54,7 @@ public class BackendClient {
                 .build();
 
         try (Response response = client.newCall(req).execute()) {
-            String responseBody = response.body() != null ? response.body().string() : "";
-
-            if (!response.isSuccessful()) {
-                return new PipelineCheckResponse(false, List.of("Server responded with error: " + response.code()));
-            }
+            String responseBody = handleResponse(response);
             return objectMapper.readValue(responseBody, PipelineCheckResponse.class);
         }
     }
@@ -52,7 +63,7 @@ public class BackendClient {
      * Performs a dry run of the pipeline to simulate execution.
      * 
      * @param configFile Path to the pipeline configuration file.
-     * @return The simulated execution order in YAML format.
+     * @return The simulated execution order.
      * @throws IOException If there is an error communicating with the backend.
      */
     public String dryRunPipeline(String configFile) throws IOException {
@@ -62,12 +73,7 @@ public class BackendClient {
                 .build();
 
         try (Response response = client.newCall(req).execute()) {
-            String responseBody = response.body() != null ? response.body().string() : "";
-
-            if (!response.isSuccessful()) {
-                return "Error: Server responded with code " + response.code();
-            }
-            return responseBody;
+            return handleResponse(response);
         }
     }
 
@@ -79,7 +85,7 @@ public class BackendClient {
      * @throws IOException If there is an error communicating with the backend.
      */
     public String runPipeline(RunPipelineRequest request) throws IOException {
-        String json = objectMapper.writeValueAsString(request); // ✅ Use existing objectMapper
+        String json = objectMapper.writeValueAsString(request);
 
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
         Request req = new Request.Builder()
@@ -88,10 +94,30 @@ public class BackendClient {
                 .build();
 
         try (Response response = client.newCall(req).execute()) {
-            String responseBody = response.body() != null ? response.body().string() : "";
+            return handleResponse(response);
+        }
+    }
 
-            if (!response.isSuccessful()) {
-                return "Error: Server responded with code " + response.code();
+    /**
+     * Fetch past executions of a pipeline.
+     * 
+     * @param pipeline The pipeline name.
+     * @param format   The output format: json, yaml, or plaintext.
+     * @return The execution history in the requested format.
+     * @throws IOException If there is an error communicating with the backend.
+     */
+    public String getPipelineExecutions(String pipeline, String format) throws IOException {
+        Request req = new Request.Builder()
+                .url(baseUrl + "/api/v1/pipelines/" + pipeline + "/executions")
+                .get()
+                .build();
+
+        try (Response response = client.newCall(req).execute()) {
+            String responseBody = handleResponse(response);
+            if ("yaml".equalsIgnoreCase(format)) {
+                return yamlMapper.writeValueAsString(objectMapper.readTree(responseBody));
+            } else if ("json".equalsIgnoreCase(format)) {
+                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectMapper.readTree(responseBody));
             }
             return responseBody;
         }

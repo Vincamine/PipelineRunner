@@ -1,5 +1,7 @@
 package edu.neu.cs6510.sp25.t1.commands;
 
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+
 import edu.neu.cs6510.sp25.t1.api.BackendClient;
 import picocli.CommandLine;
 
@@ -50,13 +52,15 @@ public class DryRunCommand extends BaseCommand {
         try {
             var response = backendClient.dryRunPipeline(configFile);
 
+            if ("yaml".equalsIgnoreCase(outputFormat)) {
+                YAMLMapper yamlMapper = new YAMLMapper();
+                response = yamlMapper.writeValueAsString(response);
+            }
+
             System.out.println("Pipeline Execution Plan:");
             System.out.println(response);
 
-            if (response.startsWith("Error")) {
-                return 3;
-            }
-            return 0;
+            return response.startsWith("Error") ? 3 : 0;
         } catch (Exception e) {
             logger.error("Failed to perform dry-run", e);
             return 1;

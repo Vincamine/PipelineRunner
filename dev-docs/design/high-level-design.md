@@ -1,14 +1,17 @@
 # 25Spring CS6510 Team 1 - CI/CD System
-- **Title:** High Level Architecture design file
-- **Date:** Feb 27, 2025
-- **Author:** Yiwen Wang, Mingtianfang Li
-- **Version:** 1.1
+
+- **Title:** Updated High Level Architecture
+- **Date:** February 28, 2025
+- **Author:** Yiwen Wang, Mingtianfang Li (Updated version)
+- **Version:** 1.2
 
 **Revision History**
-|Date|Version|Description|Author|
-|:----:|:----:|:----:|:----:|
-|Jan 31, 2025|1.0|Initial release| Yiwen Wang, Mingtianfang Li|
-|Feb 27, 2025|1.1|Structure change to mono repo| Yiwen Wang|
+
+|     Date     | Version |                  Description                   |           Author            |
+| :----------: | :-----: | :--------------------------------------------: | :-------------------------: |
+| Jan 31, 2025 |   1.0   |                Initial release                 | Yiwen Wang, Mingtianfang Li |
+| Feb 27, 2025 |   1.1   |         Structure change to mono repo          |         Yiwen Wang          |
+| Feb 28, 2025 |   1.2   | Replaced gRPC with REST for all communications |       Updated version       |
 
 # High Level Design Document: Custom CI/CD System (Monorepo)
 
@@ -133,9 +136,10 @@ The Worker Service will execute pipeline jobs within containers.
 
 - **Java 21**: Chosen for efficient concurrent execution with virtual threads, which allows the worker to handle multiple job executions simultaneously with minimal resource overhead.
 - **Docker Java API**: Selected for container management because it provides comprehensive control over Docker operations directly from Java. This eliminates the need for shell commands and improves security and reliability.
-- **gRPC**: Implemented for efficient backend-worker communication due to its high performance, binary protocol, and strong typing. gRPC significantly reduces network overhead compared to REST and supports bidirectional streaming for real-time updates.
+- **Spring Boot Web**: Used to implement RESTful APIs for communication with the Backend service, providing a consistent technology stack across components.
+- **Spring WebClient**: Implemented for non-blocking HTTP communication with the Backend for job status updates and artifact uploads.
 - **Prometheus**: Used for metrics collection because it provides a pull-based model that works well in dynamic environments. It offers robust monitoring capabilities with minimal overhead.
-- **Spring Boot (Core)**: Chosen for the Worker as well, but with minimal web dependencies. This provides consistent configuration management, dependency injection, and application lifecycle across components.
+- **Spring Boot (Core)**: Chosen for the Worker as well, to provide consistent configuration management, dependency injection, and application lifecycle across components.
 
 ### 2.4 Common Module (Module: common)
 
@@ -145,7 +149,7 @@ The Common module will contain shared code and models used by multiple component
 
 - Shared data models
 - Common utilities
-- Protocol definitions
+- API interfaces
 - Configuration models
 
 #### Design Considerations:
@@ -157,10 +161,10 @@ The Common module will contain shared code and models used by multiple component
 
 #### Technology Choices:
 
-- **Protocol Buffers**: Selected for defining the communication protocol between Backend and Worker due to its language-neutral, platform-neutral, extensible mechanism for serializing structured data. It provides strong typing and efficient serialization/deserialization.
 - **Jackson Annotations**: Used for JSON model annotations to ensure consistent serialization behavior across components.
 - **SLF4J**: Implemented as a logging facade to allow consistent logging patterns while enabling different logging implementations in each component.
 - **SnakeYAML**: Chosen for YAML parsing of pipeline configurations because of its comprehensive YAML support and good performance characteristics.
+- **Spring HTTP Client Commons**: Used for shared HTTP client configurations and utilities between Backend and Worker services.
 
 ## 3. Communication Protocols
 
@@ -173,10 +177,11 @@ The Common module will contain shared code and models used by multiple component
 
 ### 3.2 Backend to Worker Communication
 
-- **gRPC**: Selected for Backend-to-Worker communication because its high performance and bidirectional streaming capabilities are ideal for long-running job execution and real-time status updates.
-- **Bidirectional streaming**: Enables real-time updates during job execution without polling.
+- **RESTful HTTP/HTTPS API**: Selected for Backend-to-Worker communication to maintain consistency with the CLI-to-Backend approach and simplify the technology stack.
+- **WebSockets**: Used for real-time bidirectional communication for job status updates and log streaming.
+- **Job polling with long polling**: Implemented to allow Workers to retrieve new jobs efficiently without constant polling.
 - **TLS encryption**: Ensures secure communication between components, protecting sensitive data in transit.
-- **Worker registration and heartbeat protocol**: Implemented to ensure system resilience, allowing dynamic worker discovery and health monitoring.
+- **Worker registration and heartbeat endpoints**: Used for system resilience, allowing dynamic worker discovery and health monitoring.
 
 ## 4. Data Flow
 
@@ -186,10 +191,11 @@ The Common module will contain shared code and models used by multiple component
 2. CLI validates arguments and sends request to Backend API
 3. Backend validates request and retrieves repository information
 4. Backend schedules jobs and assigns them to available Workers
-5. Workers execute jobs in containers and stream results back
-6. Backend collects results and updates pipeline status
-7. CLI polls or receives webhook notification of completion
-8. CLI displays results to the user
+5. Workers execute jobs in containers and send status updates to Backend via REST API
+6. Workers stream logs to Backend using WebSockets
+7. Backend collects results and updates pipeline status
+8. CLI polls or receives webhook notification of completion
+9. CLI displays results to the user
 
 ### 4.2 Reporting Flow
 
@@ -274,37 +280,40 @@ The Common module will contain shared code and models used by multiple component
 ## 9. Development Roadmap
 
 ### Phase 1: Core Infrastructure - Minimal Viable Product (MVP)
+
 1. CLI Module 
-      - Implement a simple command-line interface.
-      - Support commands to run pipelines locally.
-      - Provide basic logs for execution.
+   - Implement a simple command-line interface.
+   - Support commands to run pipelines locally.
+   - Provide basic logs for execution.
 2. Backend Module 
-      - Implement basic API endpoints for triggering pipeline execution.
-      - Provide local execution support without external dependencies.
+   - Implement basic API endpoints for triggering pipeline execution.
+   - Provide local execution support without external dependencies.
 3. Worker Module
-      - Implement job execution logic.
-      - Enable job isolation using Docker.
+   - Implement job execution logic.
+   - Enable job isolation using Docker.
 4. Reporting
-      - Store basic execution logs. 
-      - Generate simple reports for pipeline execution.
+   - Store basic execution logs. 
+   - Generate simple reports for pipeline execution.
 
 * **Key Validation Step:**
       - Ensure a **basic CI/CD pipeline runs successfully** end-to-end using **CLI + Backend + Worker.**
       - Use unit and integration tests to validate.
 
 ### Phase 2: Enhanced Features - Pipeline Configurations within Git Repositories
+
 1. Repository Management
-      - Add Git integration to manage repositories.
-      - Allow defining pipelines per repository.
+   - Add Git integration to manage repositories.
+   - Allow defining pipelines per repository.
 2. Repository Grouping
-      - Introduce support for managing multiple repositories together.
-      - Enable batch execution across multiple repositories.
+   - Introduce support for managing multiple repositories together.
+   - Enable batch execution across multiple repositories.
 3. Cross-Repository Operations
-      - Add support for dependency tracking between repositories.
-      - Support triggering a pipeline from another pipeline.
+   - Add support for dependency tracking between repositories.
+   - Support triggering a pipeline from another pipeline.
 4. Enhanced Reporting
-      - Generate detailed execution reports.
-      - Provide real-time monitoring using logs, dashboards, or UI.
+   - Generate detailed execution reports.
+   - Provide real-time monitoring using logs, dashboards, or UI.
+
 * **Key Validation Step:**
       - Ensure **multiple repositories** can execute **pipelines independently and collaboratively**.
       - Validate that reporting provides useful **insights into execution and errors**.
@@ -313,25 +322,26 @@ The Common module will contain shared code and models used by multiple component
 ### Phase 3: Enterprise Features - Security, Performace and scalability
 
 1. Role-Based Access Control (RBAC)
-      - Implement user authentication and authorization.
-      - Define user roles and permissions for executing pipelines.
-      - Ensure secure access control for multi-user environments.
-      - Support API token-based authentication for automation and integrations.
+   - Implement user authentication and authorization.
+   - Define user roles and permissions for executing pipelines.
+   - Ensure secure access control for multi-user environments.
+   - Support API token-based authentication for automation and integrations.
 2. Advanced Dependency Management
-      - Introduce dynamic job scheduling based on job dependencies.
-      - Enable conditional execution of jobs based on success/failure.
-      - Optimize job execution order to minimize pipeline runtime.
-      - Implement parallel execution for independent jobs within a pipeline.
+   - Introduce dynamic job scheduling based on job dependencies.
+   - Enable conditional execution of jobs based on success/failure.
+   - Optimize job execution order to minimize pipeline runtime.
+   - Implement parallel execution for independent jobs within a pipeline.
 3. Performance Optimizations
-      - Improve pipeline execution speed by caching dependencies.
-      - Implement incremental builds to avoid unnecessary re-execution.
-      - Optimize Docker container usage to minimize startup times.
-      - Introduce resource monitoring and optimization to prevent bottlenecks.
+   - Improve pipeline execution speed by caching dependencies.
+   - Implement incremental builds to avoid unnecessary re-execution.
+   - Optimize Docker container usage to minimize startup times.
+   - Introduce resource monitoring and optimization to prevent bottlenecks.
 4. High Availability (HA) Configuration
-      - Ensure fault tolerance by allowing failed jobs to retry.
-      - Implement distributed execution for large-scale workflows.
-      - Enable load balancing for job execution across worker nodes.
-      - Support database replication and failover for system stability.
+   - Ensure fault tolerance by allowing failed jobs to retry.
+   - Implement distributed execution for large-scale workflows.
+   - Enable load balancing for job execution across worker nodes.
+   - Support database replication and failover for system stability.
+
 * **Key Validation Step**
       - Validate that RBAC restricts access to pipelines based on user roles.
       - Ensure dependency resolution and job scheduling work optimally.
@@ -339,53 +349,34 @@ The Common module will contain shared code and models used by multiple component
       - Test high availability configurations under simulated failures.
 * This phase ensures the CI/CD system is scalable, secure, and performant, making it suitable for enterprise environments. 
 
+
+5. Potential Gaps and Suggestions:
+      - Error Reporting for CLI: Ensure errors include <filename>:<line>:<column>: <error-message> for easy debugging.
+      - Pipeline Execution Duplication Check: Implement a mechanism to detect duplicate executions.
+      - Artifact Upload Validation: Ensure uploaded artifacts respect patterns (*.java, **/doc/ etc.).
+      - WebSocket Authentication: Ensure secure WebSocket connections for log streaming.
+      - CI/CD Configuration Validation in Backend: Validate .pipeline/pipeline.yaml before execution.
+
 ## 10. Estimated Timeline
+
 ### Assumptions:
+
 1. Each developer works 10 hours per week.
 2. The total team effort per week is 40 hours.
 3. Tasks are broken down based on estimated effort and dependencies.
 4. Some tasks run in parallel across team members.
 5. Each phase includes development, testing, and validation.
 
-| Phase | Description | Estimated Duration |
-|--------|------------------------------------------------------|------------------|
-| **Phase 1** | Core Infrastructure - Minimal Viable Product (MVP) | **4 weeks** |
-| **Phase 2** | Enhanced Features - Pipeline Configurations within Git Repositories | **6 weeks** |
-| **Phase 3** | Enterprise Features - Security, Performance, and Scalability | **8 weeks** |
-
-### **Phase 1: Core Infrastructure - Minimal Viable Product (MVP)**
-
-| Task | Description | Assigned Team | Estimated Duration |
-|------|------------|---------------|------------------|
-| **CLI Module** | Implement a simple command-line interface. Support commands to run pipelines locally. Provide basic logs for execution. | Member 1 | 2 weeks |
-| **Backend Module** | Implement basic API endpoints for triggering pipeline execution. Provide local execution support without external dependencies. | Member 2 | 2 weeks |
-| **Worker Module** | Implement job execution logic. Enable job isolation using Docker. | Member 3 | 2 weeks |
-| **Reporting** | Store basic execution logs. Generate simple reports for pipeline execution. | Member 4 | 2 weeks |
-| **Validation** | Ensure a basic CI/CD pipeline runs successfully end-to-end using CLI + Backend + Worker. Use unit and integration tests to validate. | Entire Team | 1 week |
-
-### **Phase 2: Enhanced Features - Pipeline Configurations within Git Repositories**
-
-| Task | Description | Assigned Team | Estimated Duration |
-|------|------------|---------------|------------------|
-| **Repository Management** | Add Git integration to manage repositories. Allow defining pipelines per repository. | Member 1 | 2 weeks |
-| **Repository Grouping** | Introduce support for managing multiple repositories together. Enable batch execution across multiple repositories. | Member 2 | 2 weeks |
-| **Cross-Repository Operations** | Add support for dependency tracking between repositories. Support triggering a pipeline from another pipeline. | Member 3 | 2 weeks |
-| **Enhanced Reporting** | Generate detailed execution reports. Provide real-time monitoring using logs, dashboards, or UI. | Member 4 | 2 weeks |
-| **Validation** | Ensure multiple repositories can execute pipelines independently and collaboratively. Validate that reporting provides useful insights into execution and errors. | Entire Team | 1 week |
-
-### **Phase 3: Enterprise Features - Security, Performance, and Scalability**
-
-| Task | Description | Assigned Team | Estimated Duration |
-|------|------------|---------------|------------------|
-| **Role-Based Access Control (RBAC)** | Implement user authentication and authorization for different pipeline actions. | Member 1 | 2 weeks |
-| **Advanced Dependency Management** | Implement advanced pipeline dependency tracking across jobs and repositories. | Member 2 | 2 weeks |
-| **Performance Optimizations** | Improve execution speed and reduce system overhead. Implement caching and efficient resource utilization. | Member 3 | 2 weeks |
-| **High Availability Configuration** | Implement failover strategies and load balancing for improved reliability. | Member 4 | 2 weeks |
-| **Final Validation & Testing** | Conduct end-to-end testing, security reviews, and scalability assessments. | Entire Team | 2 weeks |
+| Phase       | Description                                                  | Estimated Duration |
+| ----------- | ------------------------------------------------------------ | ------------------ |
+| **Phase 1** | Core Infrastructure - Minimal Viable Product (MVP)           | **4 weeks**        |
+| **Phase 2** | Enhanced Features - Pipeline Configurations within Git Repositories | **6 weeks**        |
+| **Phase 3** | Enterprise Features - Security, Performance, and Scalability | **8 weeks**        |
 
 ### **Total Estimated Timeline**: **18 weeks**
 
 ### **Workload Breakdown**
+
 - **Team Size**: 4 members
 - **Work Hours**: 2 hours per day, 5 days a week
 - **Total Work Hours per Member**: 10 hours per week
@@ -399,3 +390,4 @@ This timeline allows for flexibility in case of unexpected delays and ensures pr
 
 This monorepo-based architecture with CLI, Backend, and Worker components provides a flexible, scalable CI/CD system that meets all the client requirements. By keeping all components in a single repository with a multi-module structure, we achieve better coordination and consistency while still maintaining separation of concerns. The modular design allows us to leverage Java 21's modern features like virtual threads to ensure efficient resource utilization and high concurrency, especially important for the Backend and Worker components.
 
+The use of RESTful APIs for all communication provides a consistent and well-understood approach to component interaction, simplifying both implementation and maintenance. By standardizing on HTTP-based communication, we gain benefits like easy debugging, compatibility with existing tools and proxies, and straightforward handling of security concerns.

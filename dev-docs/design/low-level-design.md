@@ -1,13 +1,16 @@
 # 25Spring CS6510 Team 1 - CI/CD System
+
 - **Title:** Low-Level Design Document: Custom CI/CD System (Monorepo)
-- **Date:** Feb 27, 2025
-- **Author:** Yiwen Wang
-- **Version:** 1.0
+- **Date:** February 28, 2025
+- **Author:** Yiwen Wang (Updated version)
+- **Version:** 1.2
 
 **Revision History**
-|Date|Version|Description|Author|
-|:----:|:----:|:----:|:----:|
-|Feb 27, 2025|1.1|Structure change to mono repo| Yiwen Wang|
+
+|     Date     | Version |                  Description                   |     Author      |
+| :----------: | :-----: | :--------------------------------------------: | :-------------: |
+| Feb 27, 2025 |   1.1   |         Structure change to mono repo          |   Yiwen Wang    |
+| Feb 28, 2025 |   1.2   | Replaced gRPC with REST for all communications | Yiwen Wang |
 
 # Low-Level Design Document: Custom CI/CD System (Monorepo)
 
@@ -59,7 +62,8 @@ cicd-system/
 │       │   │       ├── executor/          # Job execution
 │       │   │       ├── docker/            # Docker integration
 │       │   │       ├── artifact/          # Artifact handling
-│       │   │       ├── backend/           # Backend communication
+│       │   │       ├── api/               # REST API controllers
+│       │   │       ├── client/            # Backend REST client
 │       │   │       └── WorkerApplication.java # Entry point
 │       │   └── resources/
 │       └── test/
@@ -72,9 +76,8 @@ cicd-system/
 │       │   │       ├── model/             # Shared domain models
 │       │   │       ├── util/              # Shared utilities
 │       │   │       ├── validation/        # Shared validation logic
-│       │   │       └── config/            # Configuration models
-│       │   ├── proto/                     # Protocol definitions for gRPC
-│       │   │   └── worker.proto           # Worker service protocol
+│       │   │       ├── config/            # Configuration models
+│       │   │       └── api/               # Shared API interfaces and DTOs
 │       │   └── resources/
 │       └── test/
 └── docs/                       # Project documentation
@@ -92,7 +95,6 @@ plugins {
     id 'java-library' apply false
     id 'org.springframework.boot' version '3.2.2' apply false
     id 'io.spring.dependency-management' version '1.1.4' apply false
-    id 'com.google.protobuf' version '0.9.4' apply false
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
@@ -129,11 +131,11 @@ subprojects {
 ext {
     springBootVersion = '3.2.2'
     jacksonVersion = '2.16.1'
-    grpcVersion = '1.60.0'
     snakeYamlVersion = '2.2'
     logbackVersion = '1.4.14'
     jgitVersion = '6.7.0.202309050840-r'
     dockerJavaVersion = '3.3.4'
+    webSocketVersion = '6.3.0'
 }
 ```
 
@@ -163,7 +165,6 @@ include 'common'
 ```gradle
 plugins {
     id 'java-library'
-    id 'com.google.protobuf'
 }
 
 dependencies {
@@ -174,34 +175,16 @@ dependencies {
     // YAML parsing
     api "org.yaml:snakeyaml:${rootProject.snakeYamlVersion}"
     
-    // Protocol buffers and gRPC
-    implementation "io.grpc:grpc-protobuf:${rootProject.grpcVersion}"
-    implementation "io.grpc:grpc-stub:${rootProject.grpcVersion}"
-}
-
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.25.1"
-    }
-    plugins {
-        grpc {
-            artifact = "io.grpc:protoc-gen-grpc-java:${rootProject.grpcVersion}"
-        }
-    }
-    generateProtoTasks {
-        all()*.plugins {
-            grpc {}
-        }
-    }
+    // Spring Web (for shared API interfaces)
+    implementation 'org.springframework:spring-web:6.1.3'
 }
 ```
 
 **Technology Choices:**
 
-- **Protocol Buffers**: Chosen for its efficient binary serialization format, strong typing, and cross-language compatibility. It provides a compact, fast, and forward-compatible mechanism for serializing structured data.
-- **gRPC**: Selected for high-performance RPC communication between Backend and Worker components. gRPC uses HTTP/2 for transport, supports streaming, and works well in microservices architectures.
 - **Jackson**: Used for JSON processing due to its performance, flexibility, and excellent integration with Java objects. Jackson provides robust data binding and offers specialized modules for date/time handling.
 - **SnakeYAML**: Chosen for YAML parsing due to its comprehensive YAML support, permissive license, and good performance. It's used for reading pipeline configuration files.
+- **Spring Web**: Used for shared API interface definitions and REST client configurations.
 
 #### 2.3.2 cli/build.gradle
 
@@ -272,6 +255,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     
     // Database
     implementation 'org.postgresql:postgresql'
@@ -283,8 +267,12 @@ dependencies {
     // Git operations
     implementation "org.eclipse.jgit:org.eclipse.jgit:${rootProject.jgitVersion}"
     
-    // gRPC for worker communication
-    implementation "io.grpc:grpc-netty-shaded:${rootProject.grpcVersion}"
+    // WebSocket
+    implementation "org.springframework:spring-websocket:${rootProject.webSocketVersion}"
+    implementation "org.springframework:spring-messaging:${rootProject.webSocketVersion}"
+    
+    // WebClient for worker communication
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -308,6 +296,8 @@ bootJar {
 - **Flyway**: Selected for database migration management to ensure database schema consistency across environments and track schema changes over time.
 - **Redis**: Used for caching and distributed locks because of its high performance, versatile data structures, and ability to improve application response times.
 - **JGit**: Implemented for Git operations as a pure Java implementation that doesn't require external git installations, making deployment simpler.
+- **WebSockets**: Used for real-time bidirectional communication with Workers, particularly for log streaming.
+- **Spring WebFlux**: Chosen for non-blocking HTTP client capabilities to communicate with Worker services efficiently.
 - **TestContainers**: Chosen for integration testing to provide real, isolated instances of databases and other dependencies in tests, improving test reliability and realism.
 
 #### 2.3.4 worker/build.gradle
@@ -322,15 +312,20 @@ dependencies {
     implementation project(':common')
     
     // Spring Boot
-    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    
+    // WebClient for backend communication
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     
     // Docker Java API
     implementation "com.github.docker-java:docker-java-core:${rootProject.dockerJavaVersion}"
     implementation "com.github.docker-java:docker-java-transport-httpclient5:${rootProject.dockerJavaVersion}"
     
-    // gRPC for backend communication
-    implementation "io.grpc:grpc-netty-shaded:${rootProject.grpcVersion}"
+    // WebSocket
+    implementation "org.springframework:spring-websocket:${rootProject.webSocketVersion}"
+    implementation "org.springframework:spring-messaging:${rootProject.webSocketVersion}"
     
     // Git operations
     implementation "org.eclipse.jgit:org.eclipse.jgit:${rootProject.jgitVersion}"
@@ -352,9 +347,10 @@ bootJar {
 **Technology Choices:**
 
 - **Docker Java API**: Selected for Docker container management because it provides comprehensive control over Docker operations directly from Java. This eliminates the need for shell commands and improves security and reliability.
-- **Spring Boot (Core)**: Used for the Worker component, but with minimal web dependencies. The core Spring Boot functionality provides dependency injection, configuration management, and robust application lifecycle handling.
+- **Spring Boot Web**: Used to implement RESTful APIs for worker operations and communication with the Backend service.
+- **Spring WebFlux WebClient**: Chosen for non-blocking HTTP communication with Backend, improving scalability and resource utilization.
+- **WebSocket**: Implemented for real-time log streaming and status updates to the Backend service.
 - **Micrometer with Prometheus**: Chosen for metrics collection because it provides a vendor-neutral metrics facade with dimensional metrics that work well with Prometheus. This enables comprehensive monitoring of worker performance and health.
-- **gRPC Netty**: Implemented for network communication with high performance, leveraging the Netty non-blocking I/O framework for optimal throughput and concurrency.
 
 ## 3. Class Diagrams
 
@@ -426,19 +422,19 @@ bootJar {
 +----------------+       +----------------+       +----------------+
         |
         v
-+----------------+
-| WorkerClient   |
-+----------------+
-| + sendJob()    |
-| + getStatus()  |
-+----------------+
++----------------+       +----------------+
+| WorkerClient   |       | WebSocketHandler|
++----------------+       +----------------+
+| + sendJob()    |       | + handleMessage()|
+| + getStatus()  |       | + sendMessage()  |
++----------------+       +----------------+
 ```
 
 ### 3.4 Worker Module Classes
 
 ```
 +----------------+       +----------------+       +----------------+
-| WorkerServer   |       | JobExecutor    |       | DockerManager  |
+| RestController |       | JobExecutor    |       | DockerManager  |
 +----------------+       +----------------+       +----------------+
 | + receiveJob() |------>| + execute()    |------>| + createContainer() |
 | + reportStatus()|      | + handleError()|       | + runCommand()      |
@@ -447,9 +443,9 @@ bootJar {
                                 |
                                 v
 +----------------+       +----------------+       +----------------+
-| ArtifactHandler|       | LogCollector   |       | BackendClient  |
+| ArtifactHandler|       | WebSocketClient|       | BackendClient  |
 +----------------+       +----------------+       +----------------+
-| + collectArtifacts() | | + collectLogs()|       | + reportStatus()|
+| + collectArtifacts() | | + sendLogs()   |       | + reportStatus()|
 | + uploadArtifacts()  | | + streamLogs() |       | + getConfig()   |
 +----------------+       +----------------+       +----------------+
 ```
@@ -492,51 +488,98 @@ public class PipelineRunResponse {
 }
 ```
 
-### 4.2 Backend to Worker Interface (common/src/main/proto/worker.proto)
+### 4.2 Backend to Worker REST API Interface
 
-```protobuf
-syntax = "proto3";
+```java
+package edu.neu.cs6510.sp25.t1.common.api;
 
-package edu.neu.cs6510.sp25.t1.worker;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-option java_multiple_files = true;
-
-service WorkerService {
-  rpc ExecuteJob(ExecuteJobRequest) returns (stream JobStatusUpdate);
-  rpc RegisterWorker(RegisterRequest) returns (RegisterResponse);
-  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
-  rpc CancelJob(CancelJobRequest) returns (CancelJobResponse);
+// Worker API Controller Interface
+public interface WorkerApi {
+    
+    @PostMapping("/api/jobs")
+    ResponseEntity<JobResponse> executeJob(@RequestBody ExecuteJobRequest request);
+    
+    @GetMapping("/api/jobs/{jobId}")
+    ResponseEntity<JobStatusResponse> getJobStatus(@PathVariable String jobId);
+    
+    @PostMapping("/api/workers/register")
+    ResponseEntity<RegisterResponse> registerWorker(@RequestBody RegisterRequest request);
+    
+    @PostMapping("/api/workers/heartbeat")
+    ResponseEntity<HeartbeatResponse> heartbeat(@RequestBody HeartbeatRequest request);
+    
+    @DeleteMapping("/api/jobs/{jobId}")
+    ResponseEntity<CancelJobResponse> cancelJob(@PathVariable String jobId);
 }
 
-message ExecuteJobRequest {
-  string job_id = 1;
-  string repository_url = 2;
-  string commit_hash = 3;
-  DockerConfig docker = 4;
-  repeated string commands = 5;
-  repeated ArtifactPath artifacts = 6;
-  bool allow_failure = 7;
-  map<string, string> environment = 8;
+// Data Transfer Objects
+public class ExecuteJobRequest {
+    private String jobId;
+    private String repositoryUrl;
+    private String commitHash;
+    private DockerConfig docker;
+    private List<String> commands;
+    private List<ArtifactPath> artifacts;
+    private boolean allowFailure;
+    private Map<String, String> environment;
+    
+    // Constructor, getters, and setters omitted for brevity
 }
 
-message JobStatusUpdate {
-  string job_id = 1;
-  JobStatus status = 2;
-  string output_chunk = 3;
-  repeated ArtifactResult artifacts = 4;
-  int32 exit_code = 5;
-  string error_message = 6;
+public class JobStatusResponse {
+    private String jobId;
+    private JobStatus status;
+    private Integer exitCode;
+    private String errorMessage;
+    private List<ArtifactResult> artifacts;
+    
+    // Constructor, getters, and setters omitted for brevity
 }
 
-enum JobStatus {
-  PENDING = 0;
-  RUNNING = 1;
-  SUCCESS = 2;
-  FAILED = 3;
-  CANCELED = 4;
+public enum JobStatus {
+    PENDING,
+    RUNNING,
+    SUCCESS,
+    FAILED,
+    CANCELED
 }
 
 // Other message definitions omitted for brevity
+```
+
+### 4.3 WebSocket Interface for Log Streaming
+
+```java
+package edu.neu.cs6510.sp25.t1.common.api;
+
+// WebSocket message models
+public class LogMessage {
+    private String jobId;
+    private String content;
+    private LogLevel level;
+    private Instant timestamp;
+    
+    // Constructor, getters, and setters omitted for brevity
+}
+
+public enum LogLevel {
+    INFO,
+    WARNING,
+    ERROR,
+    DEBUG
+}
+
+public class JobStatusUpdateMessage {
+    private String jobId;
+    private JobStatus status;
+    private String message;
+    private Instant timestamp;
+    
+    // Constructor, getters, and setters omitted for brevity
+}
 ```
 
 ## 5. Key Implementation Details
@@ -692,5 +735,97 @@ public class PipelineController {
 }
 ```
 
-### 5.4 Worker Job Executor
-// to be continued 
+### 5.4 Worker REST Controller
+
+```java
+package edu.neu.cs6510.sp25.t1.worker.api;
+
+import edu.neu.cs6510.sp25.t1.common.api.*;
+import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutorService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api")
+public class WorkerController implements WorkerApi {
+    
+    private final JobExecutorService jobExecutorService;
+    
+    @Autowired
+    public WorkerController(JobExecutorService jobExecutorService) {
+        this.jobExecutorService = jobExecutorService;
+    }
+    
+    @Override
+    @PostMapping("/jobs")
+    public ResponseEntity<JobResponse> executeJob(@RequestBody ExecuteJobRequest request) {
+        JobResponse response = jobExecutorService.startJob(request);
+        return ResponseEntity.ok(response);
+    }
+    
+    @Override
+    @GetMapping("/jobs/{jobId}")
+    public ResponseEntity<JobStatusResponse> getJobStatus(@PathVariable String jobId) {
+        JobStatusResponse response = jobExecutorService.getJobStatus(jobId);
+        if (response == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(response);
+    }
+    
+    @Override
+    @PostMapping("/workers/register")
+    public ResponseEntity<RegisterResponse> registerWorker(@RequestBody RegisterRequest request) {
+        RegisterResponse response = new RegisterResponse();
+        response.setWorkerId(request.getWorkerId());
+        response.setRegistered(true);
+        return ResponseEntity.ok(response);
+    }
+    
+    @Override
+    @PostMapping("/workers/heartbeat")
+    public ResponseEntity<HeartbeatResponse> heartbeat(@RequestBody HeartbeatRequest request) {
+        HeartbeatResponse response = new HeartbeatResponse();
+        response.setAcknowledged(true);
+        return ResponseEntity.ok(response);
+    }
+    
+    @Override
+    @DeleteMapping("/jobs/{jobId}")
+    public ResponseEntity<CancelJobResponse> cancelJob(@PathVariable String jobId) {
+        boolean canceled = jobExecutorService.cancelJob(jobId);
+        CancelJobResponse response = new CancelJobResponse();
+        response.setCanceled(canceled);
+        
+        if (!canceled) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+}
+```
+
+### 5.5 Backend WebSocket Configuration
+
+```java
+package edu.neu.cs6510.sp25.t1.backend.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        // Set prefix for endpoints that the client can subscribe to
+        registry.enableSimpleBroker("/topic");
+        //
+```
+
