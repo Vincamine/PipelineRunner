@@ -15,9 +15,9 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class BackendClientTest {
+class CliBackendClientTest {
     private static MockWebServer mockWebServer;
-    private BackendClient backendClient;
+    private CliBackendClient backendClient;
     @SuppressWarnings("unused")
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -35,7 +35,7 @@ class BackendClientTest {
     @BeforeEach
     void setUp() {
         String baseUrl = mockWebServer.url("/").toString(); // Use mock server URL
-        backendClient = new BackendClient(baseUrl);
+        backendClient = new CliBackendClient(baseUrl);
     }
 
     @Test

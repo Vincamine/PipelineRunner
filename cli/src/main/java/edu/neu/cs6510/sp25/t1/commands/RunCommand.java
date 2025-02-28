@@ -1,13 +1,13 @@
 package edu.neu.cs6510.sp25.t1.commands;
 
 import edu.neu.cs6510.sp25.t1.api.RunPipelineRequest;
-import edu.neu.cs6510.sp25.t1.api.BackendClient;
+import edu.neu.cs6510.sp25.t1.api.CliBackendClient;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "run", description = "Execute a pipeline")
 public class RunCommand extends BaseCommand {
 
-    private final BackendClient backendClient;
+    private final CliBackendClient backendClient;
 
     @CommandLine.Option(names = "--local", description = "Run pipeline locally")
     private boolean local;
@@ -20,7 +20,7 @@ public class RunCommand extends BaseCommand {
      * Creates a new `BackendClient` to interact with the API.
      */
     public RunCommand() {
-        this.backendClient = new BackendClient("http://localhost:8080"); // Default backend client
+        this.backendClient = new CliBackendClient("http://localhost:8080"); // Default backend client
     }
 
     /**
@@ -28,7 +28,7 @@ public class RunCommand extends BaseCommand {
      * 
      * @param backendClient The mocked backend client instance.
      */
-    public RunCommand(BackendClient backendClient) {
+    public RunCommand(CliBackendClient backendClient) {
         this.backendClient = backendClient; // Injected backend client for testing
     }
 

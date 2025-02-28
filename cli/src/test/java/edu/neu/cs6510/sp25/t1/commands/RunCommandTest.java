@@ -1,7 +1,7 @@
 package edu.neu.cs6510.sp25.t1.commands;
 
 import edu.neu.cs6510.sp25.t1.api.RunPipelineRequest;
-import edu.neu.cs6510.sp25.t1.api.BackendClient;
+import edu.neu.cs6510.sp25.t1.api.CliBackendClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
@@ -10,12 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class RunCommandTest {
-    private BackendClient mockBackendClient;
+    private CliBackendClient mockBackendClient;
     private RunCommand runCommand;
 
     @BeforeEach
     void setUp() {
-        mockBackendClient = mock(BackendClient.class);
+        mockBackendClient = mock(CliBackendClient.class);
         runCommand = new RunCommand(mockBackendClient);
     }
 

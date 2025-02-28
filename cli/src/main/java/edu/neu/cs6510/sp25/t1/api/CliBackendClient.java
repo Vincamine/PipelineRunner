@@ -3,14 +3,12 @@ package edu.neu.cs6510.sp25.t1.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import okhttp3.*;
-
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Client for interacting with the backend API.
  */
-public class BackendClient {
+public class CliBackendClient {
     private final String baseUrl;
     private final OkHttpClient client;
     private final ObjectMapper objectMapper;
@@ -21,7 +19,7 @@ public class BackendClient {
      * 
      * @param baseUrl The backend server base URL.
      */
-    public BackendClient(String baseUrl) {
+    public CliBackendClient(String baseUrl) {
         this.baseUrl = baseUrl;
         this.client = new OkHttpClient();
         this.objectMapper = new ObjectMapper();
@@ -35,7 +33,7 @@ public class BackendClient {
         String responseBody = response.body() != null ? response.body().string() : "";
 
         if (!response.isSuccessful()) {
-            return "Error: " + response.code() + " - " + response.message() + "\n" + responseBody;
+            throw new IOException("API Error: " + response.code() + " - " + response.message() + "\n" + responseBody);
         }
         return responseBody;
     }
@@ -107,19 +105,52 @@ public class BackendClient {
      * @throws IOException If there is an error communicating with the backend.
      */
     public String getPipelineExecutions(String pipeline, String format) throws IOException {
-        Request req = new Request.Builder()
-                .url(baseUrl + "/api/v1/pipelines/" + pipeline + "/executions")
-                .get()
-                .build();
+        String url = baseUrl + "/api/v1/pipelines";
+
+        if (!"all".equals(pipeline)) {
+            url += "/" + pipeline + "/executions";
+        }
+
+        Request req = new Request.Builder().url(url).get().build();
 
         try (Response response = client.newCall(req).execute()) {
             String responseBody = handleResponse(response);
-            if ("yaml".equalsIgnoreCase(format)) {
-                return yamlMapper.writeValueAsString(objectMapper.readTree(responseBody));
-            } else if ("json".equalsIgnoreCase(format)) {
-                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectMapper.readTree(responseBody));
-            }
-            return responseBody;
+            return formatResponse(responseBody, format);
         }
     }
+
+    /**
+     * Formats the API response based on the requested output format.
+     * 
+     * @param responseBody The raw API response.
+     * @param format       The requested output format.
+     * @return Formatted response string.
+     * @throws IOException If formatting fails.
+     */
+    private String formatResponse(String responseBody, String format) throws IOException {
+        if ("yaml".equalsIgnoreCase(format)) {
+            return yamlMapper.writeValueAsString(objectMapper.readTree(responseBody));
+        } else if ("json".equalsIgnoreCase(format)) {
+            return objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(objectMapper.readTree(responseBody));
+        }
+        return responseBody;
+    }
+
+    /**
+     * Fetches a list of all pipelines.
+     * 
+     * @return A JSON string containing all pipelines.
+     * @throws IOException If there is an error communicating with the backend.
+     */
+    public String getAllPipelines() throws IOException {
+        String url = baseUrl + "/api/v1/pipelines";
+
+        Request req = new Request.Builder().url(url).get().build();
+
+        try (Response response = client.newCall(req).execute()) {
+            return handleResponse(response);
+        }
+    }
+
 }

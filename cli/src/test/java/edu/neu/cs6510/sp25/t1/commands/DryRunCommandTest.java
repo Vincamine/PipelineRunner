@@ -1,6 +1,6 @@
 package edu.neu.cs6510.sp25.t1.commands;
 
-import edu.neu.cs6510.sp25.t1.api.BackendClient;
+import edu.neu.cs6510.sp25.t1.api.CliBackendClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
@@ -14,14 +14,14 @@ import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
 class DryRunCommandTest {
-    private BackendClient mockBackendClient;
+    private CliBackendClient mockBackendClient;
     private DryRunCommand dryRunCommand;
     private String validPipelinePath;
     private String invalidPipelinePath;
 
     @BeforeEach
     void setUp() throws URISyntaxException {
-        mockBackendClient = mock(BackendClient.class);
+        mockBackendClient = mock(CliBackendClient.class);
         dryRunCommand = new DryRunCommand(mockBackendClient);
 
         validPipelinePath = Paths.get(getClass().getClassLoader()

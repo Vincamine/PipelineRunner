@@ -1,31 +1,23 @@
 package edu.neu.cs6510.sp25.t1.api;
 
-import java.io.Serializable;
+/**
+ * Represents a job status update request body.
+ * This class is used for sending job status updates to the backend.
+ */
+public class JobStatusUpdate {
+    private final String jobName;
+    private final String status;
 
-public class JobStatusUpdate implements Serializable {
-    private String jobId;
-    private String status;
-    private String output;
-    private int exitCode;
-
-    public JobStatusUpdate() {}
-
-    public JobStatusUpdate(String jobId, String status, String output, int exitCode) {
-        this.jobId = jobId;
+    public JobStatusUpdate(String jobName, String status) {
+        this.jobName = jobName;
         this.status = status;
-        this.output = output;
-        this.exitCode = exitCode;
     }
 
-    public String getJobId() { return jobId; }
-    public void setJobId(String jobId) { this.jobId = jobId; }
+    public String getJobName() {
+        return jobName;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public String getOutput() { return output; }
-    public void setOutput(String output) { this.output = output; }
-
-    public int getExitCode() { return exitCode; }
-    public void setExitCode(int exitCode) { this.exitCode = exitCode; }
+    public String getStatus() {
+        return status;
+    }
 }

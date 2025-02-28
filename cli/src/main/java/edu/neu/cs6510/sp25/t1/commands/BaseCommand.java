@@ -100,14 +100,19 @@ public abstract class BaseCommand implements Callable<Integer> {
             ObjectMapper objectMapper = new ObjectMapper();
             YAMLMapper yamlMapper = new YAMLMapper();
 
-            switch (outputFormat.toLowerCase()) {
-                case "json":
-                    return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
-                case "yaml":
-                    return yamlMapper.writeValueAsString(response);
-                default:
-                    return response.toString();
+            if (response instanceof String) {
+                String responseString = (String) response;
+                if (outputFormat.equalsIgnoreCase("json")) {
+                    // Ensure the response is properly formatted as JSON
+                    return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+                            objectMapper.readTree(responseString));
+                } else if (outputFormat.equalsIgnoreCase("yaml")) {
+                    // Fix: Ensure we parse YAML correctly
+                    String yaml = yamlMapper.writeValueAsString(yamlMapper.readTree(responseString));
+                    return yaml.startsWith("---") ? yaml.substring(4) : yaml;
+                }
             }
+            return response.toString();
         } catch (Exception e) {
             logger.error("Failed to format output", e);
             return "Error formatting output.";

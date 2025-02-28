@@ -1,15 +1,15 @@
 package edu.neu.cs6510.sp25.t1.commands;
 
-import edu.neu.cs6510.sp25.t1.api.BackendClient;
+import edu.neu.cs6510.sp25.t1.api.CliBackendClient;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "check", description = "Validate the pipeline configuration file")
 public class CheckCommand extends BaseCommand {
     @CommandLine.Parameters(index = "0", description = "Path to the pipeline configuration file")
     private String configFile;
-    private final BackendClient backendClient;
+    private final CliBackendClient backendClient;
 
-    public CheckCommand(BackendClient backendClient) {
+    public CheckCommand(CliBackendClient backendClient) {
         this.backendClient = backendClient;
     }
 

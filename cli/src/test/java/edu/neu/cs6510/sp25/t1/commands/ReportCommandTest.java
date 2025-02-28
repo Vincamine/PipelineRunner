@@ -1,9 +1,13 @@
 package edu.neu.cs6510.sp25.t1.commands;
 
-import edu.neu.cs6510.sp25.t1.api.BackendClient;
+import edu.neu.cs6510.sp25.t1.api.CliBackendClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,19 +21,31 @@ import java.io.PrintStream;
  * Unit tests for ReportCommand.
  */
 class ReportCommandTest {
-    private BackendClient backendClient;
+    private CliBackendClient backendClient;
     private CommandLine cmd;
     private ByteArrayOutputStream outputStream;
 
     @BeforeEach
     void setUp() {
-        backendClient = Mockito.mock(BackendClient.class);
+        backendClient = Mockito.mock(CliBackendClient.class);
         cmd = new CommandLine(new ReportCommand(backendClient));
 
         // Redirect system output for testing
         outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
         System.setErr(new PrintStream(outputStream));
+    }
+
+    @Test
+    void testReportCommand_ListPipelines() throws Exception {
+        String mockResponse = "Pipelines:\n- build\n- test\n- deploy";
+        when(backendClient.getAllPipelines()).thenReturn(mockResponse);
+
+        int exitCode = cmd.execute("--list-pipelines");
+
+        assertEquals(0, exitCode);
+        String output = outputStream.toString().trim();
+        assertEquals(mockResponse, output);
     }
 
     @Test
@@ -41,7 +57,7 @@ class ReportCommandTest {
 
         assertEquals(0, exitCode);
         String output = outputStream.toString().trim();
-        assertEquals("Execution History:\nPipeline: build\nRun 1: Success\nRun 2: Failed", output);
+        assertEquals(mockResponse, output);
     }
 
     @Test
@@ -53,7 +69,12 @@ class ReportCommandTest {
 
         assertEquals(0, exitCode);
         String output = outputStream.toString().trim();
-        assertEquals("Execution History:\n" + mockResponse, output);
+
+        // Normalize JSON formatting before comparing
+        ObjectMapper objectMapper = new ObjectMapper();
+        String expectedJson = objectMapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(objectMapper.readTree(mockResponse));
+        assertEquals(expectedJson, output);
     }
 
     @Test
@@ -65,7 +86,13 @@ class ReportCommandTest {
 
         assertEquals(0, exitCode);
         String output = outputStream.toString().trim();
-        assertEquals("Execution History:\n" + mockResponse, output);
+
+        // Parse YAML into a common data structure before comparing
+        YAMLMapper yamlMapper = new YAMLMapper();
+        Object expectedYaml = yamlMapper.readTree(mockResponse);
+        Object actualYaml = yamlMapper.readTree(output);
+
+        assertEquals(expectedYaml, actualYaml);
     }
 
     @Test
@@ -86,6 +113,6 @@ class ReportCommandTest {
 
         assertEquals(1, exitCode);
         String output = outputStream.toString().trim();
-        assert output.contains("Error fetching pipeline execution history: Backend unavailable");
+        assert output.contains("Error fetching report: Backend unavailable");
     }
 }

@@ -2,19 +2,19 @@ package edu.neu.cs6510.sp25.t1.commands;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-import edu.neu.cs6510.sp25.t1.api.BackendClient;
+import edu.neu.cs6510.sp25.t1.api.CliBackendClient;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "dry-run", description = "Simulate pipeline execution")
 public class DryRunCommand extends BaseCommand {
 
-    private final BackendClient backendClient;
+    private final CliBackendClient backendClient;
 
     /**
      * Default constructor using default BackendClient - for unit testing.
      */
     public DryRunCommand() {
-        this.backendClient = new BackendClient("http://localhost:8080");
+        this.backendClient = new CliBackendClient("http://localhost:8080");
     }
 
     /**
@@ -22,7 +22,7 @@ public class DryRunCommand extends BaseCommand {
      *
      * @param backendClient The mocked backend client instance.
      */
-    public DryRunCommand(BackendClient backendClient) {
+    public DryRunCommand(CliBackendClient backendClient) {
         this.backendClient = backendClient;
     }
 
