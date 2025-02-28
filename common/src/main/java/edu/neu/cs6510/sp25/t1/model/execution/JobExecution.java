@@ -85,4 +85,13 @@ public class JobExecution {
      * @return list of job dependencies
      */
     public List<String> getDependencies() { return dependencies; }
+
+    /**
+     * Getter for job definition.
+     * @return job definition
+     */
+    public JobDefinition getJobDefinition() {
+        return jobDefinition;
+    }
+    
 }

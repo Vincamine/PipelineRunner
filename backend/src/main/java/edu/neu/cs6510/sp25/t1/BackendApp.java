@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1;
 
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

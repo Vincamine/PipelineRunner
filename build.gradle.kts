@@ -52,6 +52,19 @@ subprojects {
             xml.required.set(true)
             html.required.set(true)
         }
+    
+        // Exclude Spring Boot entry points from JaCoCo coverage report
+        classDirectories.setFrom(
+            files(classDirectories.files.map {
+                fileTree(it) {
+                    exclude(
+                        "**/BackendApp.class",  // Ignore BackendApp.java (Spring Boot entry point)
+                        "**/WorkerApp.class",   // Ignore Worker entry point
+                        "**/CliApp.class",      // Ignore CLI entry point
+                    )
+                }
+            })
+        )
     }
 
     tasks.jacocoTestCoverageVerification {
@@ -59,19 +72,26 @@ subprojects {
         violationRules {
             rule {
                 element = "CLASS"
+                excludes = listOf(
+                    "edu.neu.cs6510.sp25.t1.BackendApp",  // Ignore BackendApp
+                    "edu.neu.cs6510.sp25.t1.WorkerApp",   // Ignore WorkerApp 
+                    "edu.neu.cs6510.sp25.t1.CliApp",      // Ignore CLI App 
+                )
+
                 limit {
-                    counter = "LINE"  // Check line coverage
+                    counter = "LINE"
                     value = "COVEREDRATIO"
-                    minimum = "0.7".toBigDecimal()  // 70% required
+                    minimum = "0.7".toBigDecimal()
                 }
                 limit {
-                    counter = "BRANCH"  // Check branch coverage
+                    counter = "BRANCH"
                     value = "COVEREDRATIO"
                     minimum = "0.7".toBigDecimal()
                 }
             }
         }
     }
+
 
     tasks.check {
         dependsOn(tasks.test)
