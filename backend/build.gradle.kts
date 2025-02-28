@@ -1,3 +1,8 @@
+plugins {
+    java
+    application
+}
+
 dependencies {
     implementation(project(":common"))
 

@@ -1,3 +1,8 @@
+plugins {
+    java
+    application
+}
+
 dependencies {
     // Jackson for JSON processing
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
@@ -6,4 +11,7 @@ dependencies {
 
     // Google Guava
     implementation("com.google.guava:guava:32.1.2-jre")
+
+    // YAML parser
+    implementation("org.yaml:snakeyaml:2.0")
 }

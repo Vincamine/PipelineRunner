@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.model;
+package edu.neu.cs6510.sp25.t1.util;
 
 import java.net.HttpURLConnection;
 

@@ -1,21 +1,33 @@
 package edu.neu.cs6510.sp25.t1.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Defines possible states for a pipeline execution. All excutestatus changed into this file. 
+ * Represents the state of a pipeline execution
  */
 public enum PipelineState {
     PENDING("Pipeline Execution is waiting to start"),
     RUNNING("Pipeline Execution is currently executing"),
     SUCCESS("Pipeline Execution completed successfully"),
     FAILED("Pipeline Execution failed during execution"),
-    CANCELED("Pipeline Execution was manually canceled"), 
+    CANCELED("Pipeline Execution was manually canceled"),
     UNKNOWN("Execution Status cannot be determined");
 
     private final String description;
+    private static final Map<String, PipelineState> STRING_TO_ENUM = new HashMap<>();
+
+    // Populate the map with enum values
+    static {
+        for (PipelineState state : values()) {
+            STRING_TO_ENUM.put(state.name().toLowerCase(), state);
+        }
+    }
 
     /**
-     * Constructor to initialize the pipeline state with a description.
-     * @param description
+     * Constructor for PipelineState enum.
+     * 
+     * @param description A string describing the pipeline state.
      */
     PipelineState(String description) {
         this.description = description;
@@ -23,7 +35,7 @@ public enum PipelineState {
 
     /**
      * Retrieves the description of the pipeline state.
-     *
+     * 
      * @return A string describing the pipeline state.
      */
     public String getDescription() {
@@ -32,21 +44,15 @@ public enum PipelineState {
 
     /**
      * Converts a string status to a `PipelineState` enum value.
+     * Uses a lookup map for better performance.
      *
      * @param value The string representation of the pipeline state.
-     * @return The corresponding `PipelineState` enum.
+     * @return The corresponding `PipelineState` enum, or `UNKNOWN` if not found.
      */
     public static PipelineState fromString(String value) {
         if (value == null) {
             return UNKNOWN;
         }
-        switch (value.toLowerCase()) {
-            case "pending": return PENDING;
-            case "running": return RUNNING;
-            case "success": return SUCCESS;
-            case "failed": return FAILED;
-            case "canceled": return CANCELED;
-            default: return UNKNOWN;
-        }
+        return STRING_TO_ENUM.getOrDefault(value.toLowerCase(), UNKNOWN);
     }
 }

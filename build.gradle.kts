@@ -56,8 +56,17 @@ subprojects {
         dependsOn(tasks.jacocoTestReport)
         violationRules {
             rule {
+                element = "CLASS"
                 limit {
-                    minimum = "0.7".toBigDecimal()
+                    counter = "LINE"  // Check line coverage
+                    value = "COVEREDRATIO"
+                    minimum = "0.7".toBigDecimal()  // 70% line coverage required
+                }
+
+                limit {
+                    counter = "BRANCH"  // Check branch coverage
+                    value = "COVEREDRATIO"
+                    minimum = "0.7".toBigDecimal()  // 70% branch coverage required
                 }
             }
         }
