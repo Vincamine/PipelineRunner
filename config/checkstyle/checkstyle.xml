@@ -52,9 +52,7 @@
 
         <!-- Basic class design -->
         <module name="InterfaceIsType"/>
-        <module name="VisibilityModifier">
-            <property name="allowPackagePrivate" value="true"/>
-        </module>
+        <module name="VisibilityModifier"/>
 
     </module>
 </module>

@@ -1,13 +1,13 @@
 package edu.neu.cs6510.sp25.t1.backend.api;
 
+import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
 import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
-import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
-
-import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/pipelines")
@@ -18,20 +18,29 @@ public class PipelineController {
         this.pipelineService = pipelineService;
     }
 
+    /**
+     * Starts a pipeline execution and returns a DTO.
+     *
+     * @param request The pipeline execution request.
+     * @return A DTO representation of the pipeline execution.
+     */
     @PostMapping("/run")
-    public ResponseEntity<PipelineExecution> runPipeline(@RequestBody RunPipelineRequest request) {
-        PipelineExecution execution = pipelineService.startPipeline(request.getPipeline());
-        return ResponseEntity.ok(execution);
+    public ResponseEntity<PipelineDTO> runPipeline(@RequestBody RunPipelineRequest request) {
+        Optional<PipelineDTO> dto = pipelineService.startPipeline(request.getPipeline());
+        return dto.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-
+    /**
+     * Retrieves the execution status of a pipeline.
+     *
+     * @param pipelineName The pipeline name.
+     * @return A DTO with the pipeline execution status.
+     */
     @GetMapping("/{pipelineName}/status")
-    public ResponseEntity<Map<String, String>> getStatus(@PathVariable String pipelineName) {
-        PipelineExecution execution = pipelineService.getPipelineExecution(pipelineName);
-        if (execution == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(Map.of("name", execution.getPipelineName(), "status", execution.getState().name()));
+    public ResponseEntity<PipelineDTO> getStatus(@PathVariable String pipelineName) {
+        Optional<PipelineDTO> dto = pipelineService.getPipelineExecution(pipelineName);
+        return dto.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
-
 }

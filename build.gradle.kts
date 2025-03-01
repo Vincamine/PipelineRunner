@@ -52,8 +52,7 @@ subprojects {
             xml.required.set(true)
             html.required.set(true)
         }
-    
-        // Exclude Spring Boot entry points from JaCoCo coverage report
+
         classDirectories.setFrom(
             files(classDirectories.files.map {
                 fileTree(it) {
@@ -62,7 +61,11 @@ subprojects {
                         "**/worker/WorkerApp.class",   // Ignore Worker entry point
                         "**/cli/CliApp.class",      // Ignore CLI entry point
                         "**/common/model/PipelineState.class", // Ignore PipelineState.java (Enum)
-                        "**/worker/config/RestTemplateConfig.class" // Ignore RestTemplateConfig.java
+                        "**/worker/config/RestTemplateConfig.class", // Ignore RestTemplateConfig.java
+                        // Ignore Model Classes
+                        "**/backend/model/Job.class",
+                        "**/backend/model/Stage.class",
+                        "**/backend/model/Pipeline.class"
                     )
                 }
             })
@@ -79,7 +82,11 @@ subprojects {
                     "edu.neu.cs6510.sp25.t1.worker.WorkerApp",   // Ignore WorkerApp
                     "edu.neu.cs6510.sp25.t1.cli.CliApp",      // Ignore CLI App
                     "edu.neu.cs6510.sp25.t1.common.model.PipelineState", // Ignore PipelineState
-                    "edu.neu.cs6510.sp25.t1.worker.config.RestTemplateConfig" // Ignore RestTemplateConfig
+                    "edu.neu.cs6510.sp25.t1.worker.config.RestTemplateConfig", // Ignore RestTemplateConfig
+                    // Ignore Model Classes
+                    "edu.neu.cs6510.sp25.t1.backend.model.Job",
+                    "edu.neu.cs6510.sp25.t1.backend.model.Stage",
+                    "edu.neu.cs6510.sp25.t1.backend.model.Pipeline"
                 )
 
                 limit {

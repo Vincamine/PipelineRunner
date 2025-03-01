@@ -1,47 +1,60 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
 import org.springframework.stereotype.Service;
-
+import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
+import edu.neu.cs6510.sp25.t1.backend.repository.PipelineRepository;
 import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
-import edu.neu.cs6510.sp25.t1.common.model.definition.JobDefinition;
-import edu.neu.cs6510.sp25.t1.common.model.definition.StageDefinition;
-import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
 import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
-import edu.neu.cs6510.sp25.t1.common.model.execution.StageExecution;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.Map;
 
+
+/**
+ * Service for managing pipeline execution.
+ */
 @Service
 public class PipelineExecutionService {
+    private final PipelineRepository pipelineRepository;
     private final Map<String, PipelineExecution> executionStore = new ConcurrentHashMap<>();
 
-    public PipelineExecution startPipeline(String pipelineName) { // Removed pipelineId, only need name
-        List<JobDefinition> jobDefinitions = List.of(
-                new JobDefinition("job1", pipelineName, "default-image", List.of(), List.of(), false));
-
-        List<JobExecution> jobs = jobDefinitions.stream()
-                .map(def -> new JobExecution(def, "PENDING", false, List.of()))
-                .collect(Collectors.toList());
-
-        List<StageExecution> stages = List.of(
-                new StageExecution(new StageDefinition(pipelineName, jobDefinitions), jobs));
-
-        PipelineExecution execution = new PipelineExecution(pipelineName, stages, jobs);
-        executionStore.put(execution.getPipelineName(), execution);
-        return execution;
+    public PipelineExecutionService(PipelineRepository pipelineRepository) {
+        this.pipelineRepository = pipelineRepository;
     }
 
-    public PipelineExecution getPipelineExecution(String pipelineName) { // Use name instead of ID
-        return executionStore.get(pipelineName);
+    /**
+     * Starts a pipeline execution and returns a DTO.
+     *
+     * @param pipelineName The name of the pipeline.
+     * @return A DTO representing the started pipeline.
+     */
+    public Optional<PipelineDTO> startPipeline(String pipelineName) {
+        return pipelineRepository.findById(pipelineName).map(PipelineDTO::fromEntity);
     }
 
+    /**
+     * Gets the status of a pipeline execution as a DTO.
+     *
+     * @param pipelineName The pipeline name.
+     * @return A PipelineDTO representing the execution status.
+     */
+    public Optional<PipelineDTO> getPipelineExecution(String pipelineName) {
+        return Optional.ofNullable(executionStore.get(pipelineName))
+                .map(execution -> new PipelineDTO(execution.getPipelineName(), List.of()));
+    }
+
+    /**
+     * Updates the execution state of a pipeline.
+     *
+     * @param pipelineName The pipeline name.
+     * @param state        The new execution state.
+     */
     public void updatePipelineStatus(String pipelineName, ExecutionState state) {
-        PipelineExecution execution = executionStore.get(pipelineName);
-        if (execution != null) {
-            execution.updateState();
-        }
+        executionStore.computeIfPresent(pipelineName, (key, execution) -> {
+            execution.updateState();  // Update the execution state
+            return execution;
+        });
     }
 }

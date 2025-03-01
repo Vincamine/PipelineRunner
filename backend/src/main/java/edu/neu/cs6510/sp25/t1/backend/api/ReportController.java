@@ -1,15 +1,14 @@
 package edu.neu.cs6510.sp25.t1.backend.api;
 
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-
+import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
 import edu.neu.cs6510.sp25.t1.backend.service.ReportService;
-import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
-
     private final ReportService reportService;
 
     public ReportController(ReportService reportService) {
@@ -17,17 +16,17 @@ public class ReportController {
     }
 
     @GetMapping("/pipelines")
-    public List<String> getAllPipelines() {
+    public List<PipelineDTO> getAllPipelines() {
         return reportService.getAllPipelines();
     }
 
     @GetMapping("/{pipeline}")
-    public List<PipelineExecution> getPipelineExecutions(@PathVariable String pipeline) {
+    public List<PipelineDTO> getPipelineExecutions(@PathVariable String pipeline) {
         return reportService.getPipelineExecutions(pipeline);
     }
 
-    @GetMapping("/{pipeline}/{runId}")
-    public PipelineExecution getPipelineRun(@PathVariable String pipeline, @PathVariable String runId) {
-        return reportService.getPipelineRun(pipeline, runId);
+    @GetMapping("/{pipeline}/latest")
+    public PipelineDTO getLatestPipelineRun(@PathVariable String pipeline) {
+        return reportService.getLatestPipelineRun(pipeline);
     }
 }

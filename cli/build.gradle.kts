@@ -25,6 +25,7 @@ dependencies {
     // Picocli for CLI
     implementation("info.picocli:picocli:4.7.4")
     annotationProcessor("info.picocli:picocli-codegen:4.7.4")
+    implementation("io.lettuce:lettuce-core:6.5.4.RELEASE")
 
     // Apache HTTP Client
     implementation("org.apache.httpcomponents.client5:httpclient5:5.2")

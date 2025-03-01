@@ -39,11 +39,11 @@ dependencies {
     // **JPA (Jakarta Persistence API)**
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:3.2.2")
     implementation("org.hibernate.orm:hibernate-core:6.4.0.Final")
-    runtimeOnly("org.postgresql:postgresql:42.6.0") // Change to your preferred database
+    runtimeOnly("org.postgresql:postgresql:42.6.0")
 
     // **Spring Data Redis**
     implementation("org.springframework.boot:spring-boot-starter-data-redis:3.2.2")
-    implementation("io.lettuce.core:lettuce-core:6.3.2") // Lettuce Redis client
+    implementation("io.lettuce:lettuce-core:6.5.4.RELEASE")
 
     // **Jakarta Persistence API (JPA Annotations)**
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")

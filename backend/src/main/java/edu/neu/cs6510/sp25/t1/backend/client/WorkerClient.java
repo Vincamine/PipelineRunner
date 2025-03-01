@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.client;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -7,25 +8,33 @@ import org.springframework.web.client.RestTemplate;
 import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
 
 /**
- * Client for sending job execution requests to the Worker service.
+ * WorkerClient is a REST client that sends jobs to the worker.
  */
 @Component
 public class WorkerClient {
     private final RestTemplate restTemplate;
-    private final String workerUrl = "http://localhost:8081/api/jobs"; // Default URL
+
+    @Value("${worker.api.url}") // Load worker URL from application.yml
+    private String workerUrl;
 
     /**
-     * Constructor for dependency injection.
+     * Constructor
+     * @param restTemplate RestTemplate
      */
     public WorkerClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
     /**
-     * Sends a job execution request to the Worker.
+     * Send a job to the worker.
+     * @param job JobExecution
      */
     public void sendJob(JobExecution job) {
-        ResponseEntity<String> response = restTemplate.postForEntity(workerUrl, job, String.class);
-        System.out.println("Worker Response: " + response.getBody());
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(workerUrl, job, String.class);
+            System.out.println("Worker Response: " + response.getBody());
+        } catch (Exception e) {
+            System.err.println("Failed to send job to worker: " + e.getMessage());
+        }
     }
 }

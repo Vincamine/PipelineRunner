@@ -4,21 +4,25 @@ server:
 spring:
   application:
     name: cicd-backend  # Name of the backend application
-    port: 6379  # Redis server port
-datasource:
+
+  datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cicd_db}
     username: ${DATABASE_USER:postgres}
     password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
-    jpa:
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Use 'update' for local dev, 'validate' in production
+    properties:
       hibernate:
-        ddl-auto: validate  # Use 'update' in local dev, 'validate' in production
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.PostgreSQLDialect
-    flyway:
-      enabled: true
-      locations: classpath:db/migration
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  data:
     redis:
       host: localhost  # Redis server host
       port: 6379  # Redis server port
@@ -33,14 +37,13 @@ security:
     secret-key: "your-secure-secret-key"  # JWT secret key for authentication
     expiration-ms: 86400000  # Token expiration time in milliseconds (24 hours)
 
-git:
-  repository-root: "/var/lib/cicd/repositories"  # Base directory for cloning repositories
-
-artifacts:
-  storage-path: "/var/lib/cicd/artifacts"  # Path where artifacts are stored
-  retention-days: 7  # Number of days to retain artifacts
-
-worker:
-  max-retries: 3  # Number of retries for failed jobs
-  retry-delay-ms: 5000  # Delay before retrying a failed job (in milliseconds)
-  timeout-seconds: 1800  # Maximum time a job can run before timing out (30 minutes)
+cicd:
+  git:
+    repository-root: "/var/lib/cicd/repositories"  # Base directory for cloning repositories
+  artifacts:
+    storage-path: "/var/lib/cicd/artifacts"  # Path where artifacts are stored
+    retention-days: 7  # Number of days to retain artifacts
+  worker:
+    max-retries: 3  # Number of retries for failed jobs
+    retry-delay-ms: 5000  # Delay before retrying a failed job (in milliseconds)
+    timeout-seconds: 1800  # Maximum time a job can run before timing out (30 minutes)
