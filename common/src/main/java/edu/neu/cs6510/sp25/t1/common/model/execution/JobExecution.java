@@ -45,6 +45,22 @@ public class JobExecution {
   /**
    * Constructs a new JobExecution instance based on its name and status for integration testing.
    *
+   * @param jobName      The name of the job.
+   * @param status       The status of the job.
+   * @param allowFailure Whether the job is allowed to fail.
+   */
+  public JobExecution(String jobName, String status, boolean allowFailure) {
+    this.jobDefinition = new JobDefinition(jobName, "default-stage", "default-image", List.of(), List.of(), false);
+    this.status = status;
+    this.allowFailure = allowFailure;
+    this.dependencies = List.of();
+    this.startTime = Instant.now();
+  }
+
+
+  /**
+   * Constructs a new JobExecution instance based on its name and status for integration testing.
+   *
    * @param jobName The name of the job.
    * @param status  The status of the job.
    */

@@ -65,9 +65,11 @@ subprojects {
 
                         // Ignore Configuration Classes (Only for dependency injection)
                         "**/backend/config/CicdConfigProperties.class",
+                        "**/backend/config/GitConfig.class",
+                        "**/backend/config/ArtifactsConfig.class",
+                        "**/backend/config/WorkerConfig.class",
                         "**/backend/config/JwtConfigProperties.class",
-                        "**/backend/config/RestTemplateConfig.class",
-                        "**/worker/config/RestTemplateConfig.class",
+                        "**/common/config/RestTemplateConfig.class",
 
                         // Ignore Model Classes (JPA Entities without logic)
                         "**/backend/model/Job.class",
@@ -102,9 +104,11 @@ subprojects {
 
                     // Ignore Configuration Classes (Only for dependency injection)
                     "edu.neu.cs6510.sp25.t1.backend.config.CicdConfigProperties",
+                    "edu.neu.cs6510.sp25.t1.backend.config.GitConfig",
+                    "edu.neu.cs6510.sp25.t1.backend.config.ArtifactsConfig",
+                    "edu.neu.cs6510.sp25.t1.backend.config.WorkerConfig",
                     "edu.neu.cs6510.sp25.t1.backend.config.JwtConfigProperties",
-                    "edu.neu.cs6510.sp25.t1.backend.config.RestTemplateConfig",
-                    "edu.neu.cs6510.sp25.t1.worker.config.RestTemplateConfig",
+                    "edu.neu.cs6510.sp25.t1.common.config.RestTemplateConfig",
 
                     // Ignore Model Classes (JPA Entities without logic)
                     "edu.neu.cs6510.sp25.t1.backend.model.Job",
@@ -135,12 +139,13 @@ subprojects {
 
     tasks.check {
         dependsOn(tasks.test)
-//        dependsOn(tasks.jacocoTestCoverageVerification) // Ensures coverage check runs on build, comment out for now
+        dependsOn(tasks.jacocoTestCoverageVerification) // Ensures coverage check runs on build, comment out for now
     }
 
     checkstyle {
         toolVersion = "10.12.3"
         configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+        configProperties["checkstyle.suppressions.file"] = file("$rootDir/config/checkstyle/checkstyle-suppressions.xml").absolutePath
     }
 
     tasks.withType<Checkstyle> {

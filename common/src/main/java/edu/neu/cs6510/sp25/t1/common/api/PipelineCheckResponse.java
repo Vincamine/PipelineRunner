@@ -62,7 +62,7 @@ public class PipelineCheckResponse {
    * @param errors List of errors.
    */
   public void setErrors(List<String> errors) {
-    this.errors = errors;
+    this.errors = (errors != null) ? errors : List.of(); // Ensures it's never null
   }
 
   /**

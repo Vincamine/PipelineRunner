@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import edu.neu.cs6510.sp25.t1.common.api.PipelineCheckResponse;
 import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
@@ -29,7 +30,11 @@ public class CliBackendClient {
    */
   public CliBackendClient(String baseUrl) {
     this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-    this.client = new OkHttpClient();
+    this.client = new OkHttpClient.Builder()
+            .readTimeout(10, TimeUnit.SECONDS)  // Increase read timeout
+            .writeTimeout(10, TimeUnit.SECONDS) // Increase write timeout
+            .connectTimeout(10, TimeUnit.SECONDS) // Increase connect timeout
+            .build();
     this.objectMapper = new ObjectMapper();
     this.yamlMapper = new YAMLMapper();
   }

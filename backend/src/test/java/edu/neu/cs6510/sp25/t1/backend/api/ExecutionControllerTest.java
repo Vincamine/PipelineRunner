@@ -23,7 +23,7 @@ class ExecutionControllerTest {
   private ExecutionController executionController;
 
   @TempDir
-  Path tempDir; // Temporary directory for test files
+  private Path tempDir; // Temporary directory for test files
 
   @BeforeEach
   void setUp() {

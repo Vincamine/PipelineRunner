@@ -21,6 +21,11 @@ public class PipelineExecutionService {
   private final PipelineRepository pipelineRepository;
   private final Map<String, PipelineExecution> executionStore = new ConcurrentHashMap<>();
 
+
+  /**
+   * Constructor.
+   * @param pipelineRepository The pipeline repository.
+   */
   public PipelineExecutionService(PipelineRepository pipelineRepository) {
     this.pipelineRepository = pipelineRepository;
   }
@@ -44,6 +49,14 @@ public class PipelineExecutionService {
   public Optional<PipelineDTO> getPipelineExecution(String pipelineName) {
     return Optional.ofNullable(executionStore.get(pipelineName))
             .map(execution -> new PipelineDTO(execution.getPipelineName(), List.of()));
+  }
+
+  /**
+   * Get execution store.
+   * @return Map
+   */
+  public Map<String, PipelineExecution> getExecutionStore() {
+    return executionStore;
   }
 
   /**

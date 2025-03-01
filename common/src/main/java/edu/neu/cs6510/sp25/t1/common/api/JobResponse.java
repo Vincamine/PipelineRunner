@@ -98,7 +98,8 @@ public class JobResponse {
     return "JobResponse{" +
             "jobId='" + jobId + '\'' +
             ", exitCode=" + exitCode +
-            ", success=" + isSuccess() + // Uses the method dynamically
+            ", output='" + output + '\'' +
+            ", success=" + isSuccess() +
             ", collectedArtifacts=" + collectedArtifacts +
             ", errorMessage='" + errorMessage + '\'' +
             '}';

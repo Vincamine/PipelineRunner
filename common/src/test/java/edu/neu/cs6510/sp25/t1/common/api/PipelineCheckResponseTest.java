@@ -47,4 +47,29 @@ class PipelineCheckResponseTest {
     assertTrue(result.contains("Error1"));
     assertTrue(result.contains("true"));
   }
+
+  @Test
+  void testNullErrorsList() {
+    PipelineCheckResponse response = new PipelineCheckResponse(true, null);
+
+    assertNotNull(response.getErrors());
+    assertTrue(response.getErrors().isEmpty());
+  }
+
+  @Test
+  void testSetErrorsToNull() {
+    PipelineCheckResponse response = new PipelineCheckResponse();
+    response.setErrors(null);
+
+    assertNotNull(response.getErrors());
+    assertTrue(response.getErrors().isEmpty());
+  }
+
+  @Test
+  void testSetValidFalse() {
+    PipelineCheckResponse response = new PipelineCheckResponse();
+    response.setValid(false);
+
+    assertFalse(response.isValid());
+  }
 }

@@ -8,7 +8,8 @@ repositories {
 }
 
 dependencies {
-    // No Spring Boot here!
+    // Spring Boot Dependencies (Required for RestTemplate)
+    implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
 
     // Jackson for JSON processing
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
@@ -18,6 +19,6 @@ dependencies {
     // Snakeyaml
     implementation("org.yaml:snakeyaml:2.0")
 
-    // annotation
+    // Annotations (Java EE)
     implementation("javax.annotation:javax.annotation-api:1.3.2")
 }

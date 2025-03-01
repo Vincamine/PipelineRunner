@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CliBackendClientTest {
 
@@ -47,6 +46,7 @@ class CliBackendClientTest {
     mockWebServer.shutdown();
   }
 
+  // ✅ CheckPipelineConfig: Successful case
   @Test
   void testCheckPipelineConfig_Success() throws IOException {
     PipelineCheckResponse mockResponse = new PipelineCheckResponse(true, null);
@@ -68,12 +68,11 @@ class CliBackendClientTest {
     assertTrue(exception.getMessage().contains("API Error"));
   }
 
+  // ✅ DryRunPipeline: Successful case
   @Test
   void testDryRunPipeline_Success() throws IOException {
     String mockExecutionPlan = "Step1 -> Step2 -> Step3";
-    mockWebServer.enqueue(new MockResponse()
-            .setBody(mockExecutionPlan)
-            .setResponseCode(200));
+    mockWebServer.enqueue(new MockResponse().setBody(mockExecutionPlan).setResponseCode(200));
 
     String response = client.dryRunPipeline("config.yml");
 
@@ -86,15 +85,14 @@ class CliBackendClientTest {
     mockWebServer.enqueue(new MockResponse().setResponseCode(500).setBody("Server Error"));
 
     IOException exception = assertThrows(IOException.class, () -> client.dryRunPipeline("config.yml"));
-    assertTrue(exception.getMessage().contains("API Error"));
+    assertTrue(exception.getMessage().contains("500"), "Expected error code 500 in exception message");
   }
+
 
   @Test
   void testRunPipeline_Success() throws IOException {
     RunPipelineRequest request = new RunPipelineRequest("pipeline-name");
-    mockWebServer.enqueue(new MockResponse()
-            .setBody("{\"status\":\"RUNNING\"}")
-            .setResponseCode(200));
+    mockWebServer.enqueue(new MockResponse().setBody("{\"status\":\"RUNNING\"}").setResponseCode(200));
 
     String response = client.runPipeline(request);
 
@@ -102,6 +100,7 @@ class CliBackendClientTest {
     assertTrue(response.contains("RUNNING"));
   }
 
+  // ✅ RunPipeline: Failure case
   @Test
   void testRunPipeline_Failure() {
     RunPipelineRequest request = new RunPipelineRequest("pipeline-name");
@@ -111,12 +110,11 @@ class CliBackendClientTest {
     assertTrue(exception.getMessage().contains("API Error"));
   }
 
+  // ✅ GetPipelineExecutions: Successful case
   @Test
   void testGetPipelineExecutions_Success() throws IOException {
     String mockExecutions = "[{\"pipeline\":\"test-pipeline\",\"status\":\"SUCCESS\"}]";
-    mockWebServer.enqueue(new MockResponse()
-            .setBody(mockExecutions)
-            .setResponseCode(200));
+    mockWebServer.enqueue(new MockResponse().setBody(mockExecutions).setResponseCode(200));
 
     String response = client.getPipelineExecutions("test-pipeline", "json");
 
@@ -132,12 +130,11 @@ class CliBackendClientTest {
     assertTrue(exception.getMessage().contains("API Error"));
   }
 
+
   @Test
   void testGetAllPipelines_Success() throws IOException {
     String mockPipelines = "[{\"name\":\"pipeline1\"},{\"name\":\"pipeline2\"}]";
-    mockWebServer.enqueue(new MockResponse()
-            .setBody(mockPipelines)
-            .setResponseCode(200));
+    mockWebServer.enqueue(new MockResponse().setBody(mockPipelines).setResponseCode(200));
 
     String response = client.getAllPipelines();
 
@@ -146,6 +143,7 @@ class CliBackendClientTest {
     assertTrue(response.contains("pipeline2"));
   }
 
+  // ✅ GetAllPipelines: Failure case
   @Test
   void testGetAllPipelines_Failure() {
     mockWebServer.enqueue(new MockResponse().setResponseCode(500).setBody("Internal Server Error"));
@@ -153,4 +151,30 @@ class CliBackendClientTest {
     IOException exception = assertThrows(IOException.class, () -> client.getAllPipelines());
     assertTrue(exception.getMessage().contains("API Error"));
   }
+
+  @Test
+  void testFormatResponse_Yaml() throws IOException {
+    String jsonInput = "{\"pipeline\":\"test\"}";
+    mockWebServer.enqueue(new MockResponse()
+            .setBody(jsonInput)
+            .setResponseCode(200));
+
+    String result = client.getPipelineExecutions("test-pipeline", "yaml");
+
+    assertNotNull(result);
+    assertTrue(result.contains("pipeline"));
+  }
+
+
+  @Test
+  void testFormatResponse_PlainText() throws IOException {
+    String jsonInput = "{\"pipeline\":\"test\"}";
+    mockWebServer.enqueue(new MockResponse().setBody(jsonInput).setResponseCode(200));
+
+    String result = client.getPipelineExecutions("test-pipeline", "plaintext");
+
+    assertNotNull(result);
+    assertEquals(jsonInput, result);
+  }
+
 }
