@@ -8,8 +8,6 @@ repositories {
     mavenCentral()
 }
 
-
-
 dependencies {
     implementation(project(":common"))
     implementation(project(":backend"))

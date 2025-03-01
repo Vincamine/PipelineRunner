@@ -2,6 +2,7 @@ package edu.neu.cs6510.sp25.t1.backend.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "jobs")

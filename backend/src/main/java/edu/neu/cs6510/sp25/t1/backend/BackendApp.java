@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
  * keep this file in currrent folder under src/main/java/edu/neu/cs6510/sp25/t1/backend for the application to run
  */
 @SpringBootApplication
-@ComponentScan("edu.neu.cs6510.sp25.t1") // Scan all packages for components
+@ComponentScan("edu.neu.cs6510.sp25.t1") // Scan all packages/modules for components
 public class BackendApp {
     public static void main(String[] args) {
         SpringApplication.run(BackendApp.class, args);

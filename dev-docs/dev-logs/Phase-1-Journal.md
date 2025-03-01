@@ -1,16 +1,4 @@
-# 25Spring CS6510 Team 1 - CI/CD System
-
-- **Title:** Phase 1 Journey
-- **Date:** February 28, 2025
-- **Author:** Yiwen Wang, Mingtianfang Li (Updated version)
-- **Version:** 1.2
-
-**Revision History**
-
-|     Date     | Version |                  Description                   |           Author            |
-| :----------: | :-----: | :--------------------------------------------: | :-------------------------: |
-| Feb 28, 2025 |   1.0   |                Initial release                 | Yiwen Wang |
-
+# 25Spring CS6510 Team 1 - CI/CD System - Phase 1 Journal 
 
 ## Phase 1: Core Infrastructure - Minimal Viable Product (MVP)
 
@@ -31,3 +19,8 @@
 * **Key Validation Step:** (End to End integration is not completed, other completed)
       - Ensure a **basic CI/CD pipeline runs successfully** end-to-end using **CLI + Backend + Worker.**
       - Use unit and integration tests to validate.
+
+
+## Feb 28, 2025
+1. completed 1-4 with unit testing, validated integration for: backend-cli, backend-worker
+2. TODO: integration test for end to end. 

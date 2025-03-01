@@ -4,14 +4,15 @@ import java.util.Map;
 
 /**
  * Represents a request to run a pipeline.
+ * This class is used for sending pipeline execution requests to the backend.
  */
 public class RunPipelineRequest {
-    private String repo;
-    private String branch;
-    private String commit;
-    private String pipeline;
-    private boolean local;
-    private Map<String, String> overrides;
+    private String repo; // Repository URL.
+    private String branch; // Git branch name to execute.
+    private String commit; // Commit SHA to execute.
+    private String pipeline; // Pipeline name to execute.
+    private boolean local; //  If true, runs locally.
+    private Map<String, String> overrides; // Custom configuration overrides.
     private String configPath;
 
     /**

@@ -6,7 +6,7 @@ import edu.neu.cs6510.sp25.t1.common.model.PipelineState;
 import edu.neu.cs6510.sp25.t1.common.model.definition.JobDefinition;
 import edu.neu.cs6510.sp25.t1.common.model.definition.StageDefinition;
 import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
+import edu.neu.cs6510.sp25.t1.backend.model.execution.PipelineExecution;
 import edu.neu.cs6510.sp25.t1.common.model.execution.StageExecution;
 
 import java.util.List;
@@ -18,33 +18,28 @@ import java.util.stream.Collectors;
 public class PipelineExecutionService {
     private final Map<String, PipelineExecution> executionStore = new ConcurrentHashMap<>();
 
-    public PipelineExecution startPipeline(String pipelineId, String pipelineName) {
-        // 🚀 Initialize job definitions
+    public PipelineExecution startPipeline(String pipelineName) { // Removed pipelineId, only need name
         List<JobDefinition> jobDefinitions = List.of(
-            new JobDefinition("job1", pipelineName, "default-image", List.of(), List.of(), false)
-        ); 
+                new JobDefinition("job1", pipelineName, "default-image", List.of(), List.of(), false));
 
-        // 🚀 Convert job definitions into job executions
         List<JobExecution> jobs = jobDefinitions.stream()
-            .map(def -> new JobExecution(def, "PENDING", false, List.of()))
-            .collect(Collectors.toList());
+                .map(def -> new JobExecution(def, "PENDING", false, List.of()))
+                .collect(Collectors.toList());
 
-        // 🚀 Initialize stage execution (✅ FIX: Pass `StageDefinition` with `JobDefinitions`)
         List<StageExecution> stages = List.of(
-            new StageExecution(new StageDefinition(pipelineName, jobDefinitions), jobs)
-        ); 
+                new StageExecution(new StageDefinition(pipelineName, jobDefinitions), jobs));
 
-        PipelineExecution execution = new PipelineExecution(pipelineId, stages, jobs);
-        executionStore.put(execution.getPipelineId(), execution);
+        PipelineExecution execution = new PipelineExecution(pipelineName, stages, jobs);
+        executionStore.put(execution.getPipelineName(), execution);
         return execution;
     }
 
-    public PipelineExecution getPipelineExecution(String pipelineId) {
-        return executionStore.get(pipelineId);
+    public PipelineExecution getPipelineExecution(String pipelineName) { // Use name instead of ID
+        return executionStore.get(pipelineName);
     }
 
-    public void updatePipelineStatus(String pipelineId, PipelineState state) {
-        PipelineExecution execution = executionStore.get(pipelineId);
+    public void updatePipelineStatus(String pipelineName, PipelineState state) {
+        PipelineExecution execution = executionStore.get(pipelineName);
         if (execution != null) {
             execution.updateState();
         }

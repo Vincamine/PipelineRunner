@@ -5,6 +5,7 @@ import java.util.Map;
 
 /**
  * Represents the structure of a CI/CD pipeline configuration.
+ * This class is used for defining the pipeline stages and global variables.
  */
 public class PipelineDefinition {
     private String name;

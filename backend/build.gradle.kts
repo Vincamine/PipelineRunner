@@ -10,18 +10,14 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.2"))
     implementation(project(":common"))
     implementation(project(":worker"))
-
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.2"))
+    
+    // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
     implementation("org.springframework.boot:spring-boot-starter:3.2.2")
     implementation("org.springframework.boot:spring-boot-starter-validation:3.2.2")
-
-    // gRPC dependencies
-    implementation("io.grpc:grpc-netty-shaded:1.60.0")
-    implementation("io.grpc:grpc-protobuf:1.60.0")
-    implementation("io.grpc:grpc-stub:1.60.0")
 
     // Jackson for JSON processing
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
@@ -29,6 +25,28 @@ dependencies {
     // Logging with SLF4J and Logback
     implementation("org.slf4j:slf4j-api:2.0.11")
     implementation("ch.qos.logback:logback-classic:1.4.14")
+
+    // **Spring Boot Testing Dependencies**
+    testImplementation("org.springframework.boot:spring-boot-starter-test:3.2.2")
+    testImplementation("org.springframework.boot:spring-boot-starter-webflux:3.2.2") // For MockMvc testing
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
+
+    // **Spring Web Test Support**
+    testImplementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
+
+    // **JPA (Jakarta Persistence API)**
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:3.2.2")
+    implementation("org.hibernate.orm:hibernate-core:6.4.0.Final")
+    runtimeOnly("org.postgresql:postgresql:42.6.0") // Change to your preferred database
+
+    // **Spring Data Redis**
+    implementation("org.springframework.boot:spring-boot-starter-data-redis:3.2.2")
+    implementation("io.lettuce.core:lettuce-core:6.3.2") // Lettuce Redis client
+
+    // **Jakarta Persistence API (JPA Annotations)**
+    implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
 }
 
 tasks.jar {

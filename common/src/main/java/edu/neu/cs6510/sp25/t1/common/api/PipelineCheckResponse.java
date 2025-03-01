@@ -4,10 +4,11 @@ import java.util.List;
 
 /**
  * Represents the response from a pipeline check.
+ * This class is used for checking pipeline correctness before execution.
  */
 public class PipelineCheckResponse {
-    private boolean valid;
-    private List<String> errors;
+    private boolean valid; // Indicates if the pipeline is valid.
+    private List<String> errors; // List of errors if the pipeline is not valid.
 
     /**
      * Default constructor. Ensures errors list is initialized.
@@ -25,7 +26,7 @@ public class PipelineCheckResponse {
      */
     public PipelineCheckResponse(boolean valid, List<String> errors) {
         this.valid = valid;
-        this.errors = (errors != null) ? errors : List.of(); 
+        this.errors = (errors != null) ? errors : List.of();
     }
 
     /**
@@ -64,6 +65,11 @@ public class PipelineCheckResponse {
         this.errors = errors;
     }
 
+    /**
+     * String representation of the PipelineCheckResponse.
+     * 
+     * @return String representation.
+     */
     @Override
     public String toString() {
         return "PipelineCheckResponse{" +
