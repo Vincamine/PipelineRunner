@@ -58,7 +58,7 @@ subprojects {
             files(classDirectories.files.map {
                 fileTree(it) {
                     exclude(
-                        "**/BackendApp.class",  // Ignore BackendApp.java (Spring Boot entry point)
+                        "**/backend/BackendApp.class",  // Ignore BackendApp.java (Spring Boot entry point)
                         "**/WorkerApp.class",   // Ignore Worker entry point
                         "**/CliApp.class",      // Ignore CLI entry point
                     )
@@ -73,7 +73,7 @@ subprojects {
             rule {
                 element = "CLASS"
                 excludes = listOf(
-                    "edu.neu.cs6510.sp25.t1.BackendApp",  // Ignore BackendApp
+                    "edu.neu.cs6510.sp25.t1.backend.BackendApp",  // Ignore BackendApp
                     "edu.neu.cs6510.sp25.t1.WorkerApp",   // Ignore WorkerApp 
                     "edu.neu.cs6510.sp25.t1.CliApp",      // Ignore CLI App 
                 )
@@ -95,6 +95,7 @@ subprojects {
 
     tasks.check {
         dependsOn(tasks.test)
+        // dependsOn(tasks.jacocoTestCoverageVerification)
     }
 
     checkstyle {
@@ -123,10 +124,10 @@ subprojects {
 
     tasks.javadoc {
         options.encoding = "UTF-8"
-        isFailOnError = false  // Avoids breaking the build for doc issues
+        isFailOnError = false 
     }
 
     tasks.withType<JavaCompile> {
-        options.compilerArgs.add("-Xlint:deprecation")  // Warnings for deprecated API usage
+        options.compilerArgs.add("-Xlint:deprecation")
     }
 }

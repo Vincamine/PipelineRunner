@@ -82,15 +82,24 @@ public class CliBackendClient {
      * @return The backend response as a String.
      * @throws IOException If there is an error communicating with the backend.
      */
+    /**
+     * Runs a pipeline execution via the backend.
+     *
+     * @param request The pipeline execution request details.
+     * @return The backend response as a String.
+     * @throws IOException If there is an error communicating with the backend.
+     */
     public String runPipeline(RunPipelineRequest request) throws IOException {
-        String json = objectMapper.writeValueAsString(request);
+        // Convert RunPipelineRequest to JSON
+        String jsonRequest = objectMapper.writeValueAsString(request);
 
-        RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
+        // Create the HTTP POST request
         Request req = new Request.Builder()
                 .url(baseUrl + "/api/v1/pipelines/run")
-                .post(body)
+                .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
                 .build();
 
+        // Execute the request
         try (Response response = client.newCall(req).execute()) {
             return handleResponse(response);
         }

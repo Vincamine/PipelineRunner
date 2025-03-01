@@ -1,6 +1,8 @@
 package edu.neu.cs6510.sp25.t1.api;
 
 import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,7 +17,7 @@ class RunPipelineRequestTest {
         assertNull(request.getCommit(), "Default constructor should set commit to null.");
         assertNull(request.getPipeline(), "Default constructor should set pipeline to null.");
         assertFalse(request.isLocal(), "Default constructor should set local to false.");
-        assertNull(request.getOverrides(), "Default constructor should set overrides to null.");
+        assertEquals(Collections.emptyMap(), request.getOverrides(), "Default constructor should set overrides to an empty map.");
     }
 
     @Test

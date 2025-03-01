@@ -18,15 +18,16 @@ public class PipelineController {
     }
 
     @PostMapping("/run")
-    public ResponseEntity<PipelineExecution> runPipeline(@RequestParam String pipelineId) {
-        PipelineExecution execution = pipelineService.startPipeline(pipelineId, "build");
+    public ResponseEntity<PipelineExecution> runPipeline(@RequestBody RunPipelineRequest request) {
+        PipelineExecution execution = pipelineService.startPipeline(request.getPipeline(), "build");
         return ResponseEntity.ok(execution);
     }
 
     @GetMapping("/{id}/status")
     public ResponseEntity<Map<String, String>> getStatus(@PathVariable String id) {
         PipelineExecution execution = pipelineService.getPipelineExecution(id);
-        if (execution == null) return ResponseEntity.notFound().build();
+        if (execution == null)
+            return ResponseEntity.notFound().build();
         return ResponseEntity.ok(Map.of("id", execution.getPipelineId(), "status", execution.getState().name()));
     }
 }

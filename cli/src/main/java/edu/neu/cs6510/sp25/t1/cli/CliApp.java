@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1;
+package edu.neu.cs6510.sp25.t1.cli;
 
 import edu.neu.cs6510.sp25.t1.commands.CheckCommand;
 import edu.neu.cs6510.sp25.t1.commands.DryRunCommand;

@@ -43,7 +43,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("edu.neu.cs6510.sp25.t1.cli.App")
+    mainClass.set("edu.neu.cs6510.sp25.t1.cli.CliApp")
 }
 
 tasks.named<Jar>("shadowJar") {

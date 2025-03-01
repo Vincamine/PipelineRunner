@@ -39,17 +39,18 @@ public class RunCommand extends BaseCommand {
             System.err.println("Error: No pipeline configuration file provided.");
             return 2; // Invalid arguments
         }
-        
+
         try {
             System.out.println("Executing pipeline with config: " + pipeline);
-            RunPipelineRequest request = new RunPipelineRequest(repo, branch, commit, pipeline, local);
-            
+
+            // 🔹 Fix: Create a request object before calling `runPipeline()`
+            RunPipelineRequest request = new RunPipelineRequest(pipeline);
+
             System.out.println("Sending request to backend...");
-            var response = backendClient.runPipeline(request);
-    
+            String response = backendClient.runPipeline(request);
             System.out.println("Pipeline Execution Started:");
             System.out.println(formatOutput(response));
-    
+
             return 0; // Success
         } catch (Exception e) {
             System.err.println("Failed to execute pipeline: " + e.getMessage());
@@ -58,7 +59,6 @@ public class RunCommand extends BaseCommand {
         }
     }
 }
-
 
 // package edu.neu.cs6510.sp25.t1.commands;
 

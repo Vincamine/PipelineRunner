@@ -1,26 +1,39 @@
-pipeline:
-  name: "example-pipeline"
-  stages:
-    - build
-    - test
-    - deploy
+name: "My CI/CD Pipeline"
+globals:
+  project: "t1-cicd"
+  environment: "dev"
 
-jobs:
-  - name: build-app
-    stage: build
-    image: maven:3.8
-    script:
-      - mvn clean
-      - mvn compile
+stages:
+  - name: "build"
+    jobs:
+      - name: "compile"
+        image: "openjdk:21-jdk-slim"
+        script:
+          - "javac -d out src/main/java/**/*.java"
+        allowFailure: false
 
-  - name: run-tests
-    stage: test
-    image: maven:3.8
-    script:
-      - mvn test
+      - name: "unit-tests"
+        image: "openjdk:21-jdk-slim"
+        script:
+          - "./gradlew test"
+        needs: ["compile"]
+        allowFailure: false
 
-  - name: deploy-app
-    stage: deploy
-    image: alpine
-    script:
-      - echo "Deploying application..."
+  - name: "package"
+    jobs:
+      - name: "build-jar"
+        image: "gradle:8.12-jdk21"
+        script:
+          - "./gradlew bootJar"
+        needs: ["unit-tests"]
+        allowFailure: false
+
+  - name: "deploy"
+    jobs:
+      - name: "dockerize"
+        image: "docker:latest"
+        script:
+          - "docker build -t my-cicd-app ."
+          - "docker run -d -p 8080:8080 my-cicd-app"
+        needs: ["build-jar"]
+        allowFailure: false

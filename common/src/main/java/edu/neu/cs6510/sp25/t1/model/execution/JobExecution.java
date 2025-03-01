@@ -15,14 +15,11 @@ public class JobExecution {
     private boolean allowFailure;
     private Instant startTime;
     private Instant completionTime;
+    @SuppressWarnings("unused")
     private List<String> dependencies;
 
     /**
      * Constructs a new JobExecution instance based on its definition.
-     * @param jobDefinition the job definition
-     * @param status the initial status of the job
-     * @param allowFailure whether the job can fail without failing the pipeline
-     * @param dependencies the list of job names that this job depends on
      */
     @JsonCreator
     public JobExecution(
@@ -38,74 +35,24 @@ public class JobExecution {
     }
 
     /**
-     * Constructs a new JobExecution instance with default values for integration testing.
-     * @param jobName
-     * @param status
+     * Marks the job as started.
      */
-    public JobExecution(String jobName, String status) {
-        this.jobDefinition = new JobDefinition(jobName, "default-stage", "default-image", List.of(), List.of(), false);
-        this.status = status;
-        this.allowFailure = false;
-        this.dependencies = List.of();
+    public void start() {
+        this.status = "RUNNING";
         this.startTime = Instant.now();
     }
-    
 
     /**
-     * Marks the job as completed by setting the completion time.
+     * Marks the job as completed.
      */
-    public void complete() {
+    public void complete(String finalStatus) {
+        this.status = finalStatus;
         this.completionTime = Instant.now();
     }
 
-    /**
-     * Getter for job name.
-     * @return job name
-     */
     public String getJobName() { return jobDefinition.getName(); }
-
-    /**
-     * Getter for stage name.
-     * @return stage name
-     */
-    public String getStageName() { return jobDefinition.getStageName(); }
-
-    /**
-     * Getter for job execution status.
-     * @return job status
-     */
     public String getStatus() { return status; }
-
-    /**
-     * Checks if the job allows failure.
-     * @return true if failure is allowed, false otherwise
-     */
     public boolean isAllowFailure() { return allowFailure; }
-
-    /**
-     * Getter for job start time.
-     * @return job start time
-     */
     public Instant getStartTime() { return startTime; }
-
-    /**
-     * Getter for job completion time.
-     * @return job completion time
-     */
     public Instant getCompletionTime() { return completionTime; }
-
-    /**
-     * Getter for dependencies.
-     * @return list of job dependencies
-     */
-    public List<String> getDependencies() { return dependencies; }
-
-    /**
-     * Getter for job definition.
-     * @return job definition
-     */
-    public JobDefinition getJobDefinition() {
-        return jobDefinition;
-    }
-    
 }
