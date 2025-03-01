@@ -14,24 +14,24 @@ import picocli.CommandLine;
         DryRunCommand.class
 })
 public class CliApp implements Runnable {
-    @CommandLine.Option(names = { "-v", "--verbose" }, description = "Enable verbose output.")
-    boolean verbose;
+  @CommandLine.Option(names = {"-v", "--verbose"}, description = "Enable verbose output.")
+  boolean verbose;
 
-    /**
-     * Main entry point for the CLI application.
-     */
-    @Override
-    public void run() {
-        System.out.println("CI/CD CLI Tool - Use --help for available commands.");
-    }
+  /**
+   * Main entry point for the CLI application.
+   */
+  @Override
+  public void run() {
+    System.out.println("CI/CD CLI Tool - Use --help for available commands.");
+  }
 
-    /**
-     * Main method to run the CLI application.
-     * 
-     * @param args
-     */
-    public static void main(String[] args) {
-        int exitCode = new CommandLine(new CliApp()).execute(args);
-        System.exit(exitCode);
-    }
+  /**
+   * Main method to run the CLI application.
+   *
+   * @param args
+   */
+  public static void main(String[] args) {
+    int exitCode = new CommandLine(new CliApp()).execute(args);
+    System.exit(exitCode);
+  }
 }
