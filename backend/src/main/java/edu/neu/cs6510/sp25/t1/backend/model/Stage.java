@@ -55,6 +55,7 @@ public class Stage {
   /**
    * Retrieves the ID of the stage.
    * This ID is unique within the database.
+   *
    * @return The ID of the stage.
    */
   public Long getId() {
@@ -64,6 +65,7 @@ public class Stage {
   /**
    * Retrieves the name of the stage.
    * This name is unique within the pipeline.
+   *
    * @return The name of the stage.
    */
   public String getName() {
@@ -72,6 +74,7 @@ public class Stage {
 
   /**
    * Retrieves the pipeline associated with the stage.
+   *
    * @return The pipeline associated with the stage.
    */
   public Pipeline getPipeline() {
@@ -80,6 +83,7 @@ public class Stage {
 
   /**
    * Retrieves the list of jobs in the stage.
+   *
    * @return The list of jobs in the stage.
    */
   public List<Job> getJobs() {
@@ -88,6 +92,7 @@ public class Stage {
 
   /**
    * Sets the ID of the stage.
+   *
    * @param id The ID of the stage.
    */
   public void setId(Long id) {
@@ -96,6 +101,7 @@ public class Stage {
 
   /**
    * Sets the name of the stage.
+   *
    * @param name The name of the stage.
    */
   public void setName(String name) {
@@ -104,6 +110,7 @@ public class Stage {
 
   /**
    * Sets the pipeline associated with the stage.
+   *
    * @param pipeline The pipeline associated with the stage.
    */
   public void setPipeline(Pipeline pipeline) {
@@ -112,6 +119,7 @@ public class Stage {
 
   /**
    * Sets the list of jobs in the stage.
+   *
    * @param jobs The list of jobs in the stage.
    */
   public void setJobs(List<Job> jobs) {

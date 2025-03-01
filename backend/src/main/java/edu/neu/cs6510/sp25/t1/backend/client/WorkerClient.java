@@ -12,29 +12,31 @@ import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
  */
 @Component
 public class WorkerClient {
-    private final RestTemplate restTemplate;
+  private final RestTemplate restTemplate;
 
-    @Value("${worker.api.url}") // Load worker URL from application.yml
-    private String workerUrl;
+  @Value("${worker.api.url}") // Load worker URL from application.yml
+  private String workerUrl;
 
-    /**
-     * Constructor
-     * @param restTemplate RestTemplate
-     */
-    public WorkerClient(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+  /**
+   * Constructor
+   *
+   * @param restTemplate RestTemplate
+   */
+  public WorkerClient(RestTemplate restTemplate) {
+    this.restTemplate = restTemplate;
+  }
+
+  /**
+   * Send a job to the worker.
+   *
+   * @param job JobExecution
+   */
+  public void sendJob(JobExecution job) {
+    try {
+      ResponseEntity<String> response = restTemplate.postForEntity(workerUrl, job, String.class);
+      System.out.println("Worker Response: " + response.getBody());
+    } catch (Exception e) {
+      System.err.println("Failed to send job to worker: " + e.getMessage());
     }
-
-    /**
-     * Send a job to the worker.
-     * @param job JobExecution
-     */
-    public void sendJob(JobExecution job) {
-        try {
-            ResponseEntity<String> response = restTemplate.postForEntity(workerUrl, job, String.class);
-            System.out.println("Worker Response: " + response.getBody());
-        } catch (Exception e) {
-            System.err.println("Failed to send job to worker: " + e.getMessage());
-        }
-    }
+  }
 }

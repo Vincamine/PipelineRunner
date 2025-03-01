@@ -12,11 +12,40 @@ public class JwtConfigProperties {
   private String secretKey;
   private long expirationMs;
 
-  // Getters and Setters
-  public String getSecretKey() { return secretKey; }
-  public void setSecretKey(String secretKey) { this.secretKey = secretKey; }
+  /**
+   * Get the secret key.
+   *
+   * @return Secret key
+   */
+  public String getSecretKey() {
+    return secretKey;
+  }
 
-  public long getExpirationMs() { return expirationMs; }
-  public void setExpirationMs(long expirationMs) { this.expirationMs = expirationMs; }
+  /**
+   * Set the secret key.
+   *
+   * @param secretKey Secret key
+   */
+  public void setSecretKey(String secretKey) {
+    this.secretKey = secretKey;
+  }
+
+  /**
+   * Get the expiration time in milliseconds.
+   *
+   * @return Expiration time in milliseconds
+   */
+  public long getExpirationMs() {
+    return expirationMs;
+  }
+
+  /**
+   * Set the expiration time in milliseconds.
+   *
+   * @param expirationMs Expiration time in milliseconds
+   */
+  public void setExpirationMs(long expirationMs) {
+    this.expirationMs = expirationMs;
+  }
 }
 

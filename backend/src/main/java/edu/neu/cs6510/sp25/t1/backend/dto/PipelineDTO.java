@@ -41,6 +41,7 @@ public class PipelineDTO {
 
   /**
    * Retrieves the name of the pipeline.
+   *
    * @return The name of the pipeline.
    */
   public String getName() {
@@ -49,6 +50,7 @@ public class PipelineDTO {
 
   /**
    * Retrieves the stages of the pipeline.
+   *
    * @return The stages of the pipeline.
    */
   public List<StageDTO> getStages() {
@@ -57,6 +59,7 @@ public class PipelineDTO {
 
   /**
    * Sets the name of the pipeline.
+   *
    * @param name The name of the pipeline.
    */
   public void setName(String name) {
@@ -65,6 +68,7 @@ public class PipelineDTO {
 
   /**
    * Sets the stages of the pipeline.
+   *
    * @param stages The stages of the pipeline.
    */
   public void setStages(List<StageDTO> stages) {

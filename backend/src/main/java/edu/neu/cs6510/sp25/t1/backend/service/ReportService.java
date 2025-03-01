@@ -1,12 +1,16 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
 import edu.neu.cs6510.sp25.t1.backend.repository.PipelineRepository;
 import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
-import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Service for managing pipeline execution reports.

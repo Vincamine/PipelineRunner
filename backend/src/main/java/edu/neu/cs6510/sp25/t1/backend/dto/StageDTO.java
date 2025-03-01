@@ -45,6 +45,7 @@ public class StageDTO {
 
   /**
    * get the name of the stage
+   *
    * @return name
    */
   public String getName() {
@@ -53,6 +54,7 @@ public class StageDTO {
 
   /**
    * get the name of the pipeline
+   *
    * @return pipelineName
    */
   public String getPipelineName() {
@@ -61,6 +63,7 @@ public class StageDTO {
 
   /**
    * get the jobs of the stage
+   *
    * @return jobs
    */
   public List<JobDTO> getJobs() {
@@ -69,6 +72,7 @@ public class StageDTO {
 
   /**
    * set the name of the stage
+   *
    * @param name The name of the stage
    */
   public void setName(String name) {
@@ -77,6 +81,7 @@ public class StageDTO {
 
   /**
    * set the name of the pipeline
+   *
    * @param pipelineName The name of the pipeline
    */
   public void setPipelineName(String pipelineName) {
@@ -85,6 +90,7 @@ public class StageDTO {
 
   /**
    * set the jobs of the stage
+   *
    * @param jobs The jobs of the stage
    */
   public void setJobs(List<JobDTO> jobs) {

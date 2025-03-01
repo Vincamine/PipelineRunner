@@ -15,13 +15,13 @@ import java.util.Map;
 @RequestMapping("/health")
 public class HealthController {
 
-    /**
-     * Endpoint to check the health status of the application.
-     *
-     * @return A map containing the health status of the application.
-     */
-    @GetMapping
-    public Map<String, String> healthCheck() {
-        return Map.of("status", "UP");
-    }
+  /**
+   * Endpoint to check the health status of the application.
+   *
+   * @return A map containing the health status of the application.
+   */
+  @GetMapping
+  public Map<String, String> healthCheck() {
+    return Map.of("status", "UP");
+  }
 }

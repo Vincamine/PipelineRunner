@@ -40,6 +40,7 @@ public class Pipeline {
 
   /**
    * Retrieves the name of the pipeline.
+   *
    * @return The name of the pipeline.
    */
   public String getName() {
@@ -48,6 +49,7 @@ public class Pipeline {
 
   /**
    * Retrieves the stage of the pipeline.
+   *
    * @return The stage of the pipeline.
    */
   public List<Stage> getStages() {
@@ -56,6 +58,7 @@ public class Pipeline {
 
   /**
    * sets the name of the pipeline.
+   *
    * @param name The name of the pipeline.
    */
   public void setName(String name) {
@@ -64,6 +67,7 @@ public class Pipeline {
 
   /**
    * sets the stages of the pipeline.
+   *
    * @param stages The stages of the pipeline.
    */
   public void setStages(List<Stage> stages) {

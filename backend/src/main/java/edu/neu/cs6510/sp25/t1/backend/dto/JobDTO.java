@@ -16,9 +16,10 @@ public class JobDTO {
 
   /**
    * Constructs a new JobDTO.
-   * @param jobName The name of the job.
-   * @param image The Docker image to use for the job.
-   * @param script The script to run in the job.
+   *
+   * @param jobName      The name of the job.
+   * @param image        The Docker image to use for the job.
+   * @param script       The script to run in the job.
    * @param allowFailure Whether the pipeline should continue if this job fails.
    */
   public JobDTO(String jobName, String image, List<String> script, boolean allowFailure) {
@@ -30,6 +31,7 @@ public class JobDTO {
 
   /**
    * Convert Job entity to DTO
+   *
    * @param job The Job entity to convert
    */
   public static JobDTO fromEntity(Job job) {
@@ -38,6 +40,7 @@ public class JobDTO {
 
   /**
    * get the name of the job
+   *
    * @return jobName
    */
   public String getJobName() {
@@ -46,6 +49,7 @@ public class JobDTO {
 
   /**
    * get the image of the job
+   *
    * @return image
    */
   public String getImage() {
@@ -54,6 +58,7 @@ public class JobDTO {
 
   /**
    * get the script of the job
+   *
    * @return script
    */
   public List<String> getScript() {
@@ -62,6 +67,7 @@ public class JobDTO {
 
   /**
    * get the allowFailure of the job
+   *
    * @return allowFailure
    */
   public boolean isAllowFailure() {
@@ -70,6 +76,7 @@ public class JobDTO {
 
   /**
    * set the name of the job
+   *
    * @param jobName The name of the job
    */
   public void setJobName(String jobName) {
@@ -78,6 +85,7 @@ public class JobDTO {
 
   /**
    * set the image of the job
+   *
    * @param image The Docker image to use for the job
    */
   public void setImage(String image) {
@@ -86,6 +94,7 @@ public class JobDTO {
 
   /**
    * set the script of the job
+   *
    * @param script The script to run in the job
    */
   public void setScript(List<String> script) {
@@ -94,6 +103,7 @@ public class JobDTO {
 
   /**
    * set the allowFailure of the job
+   *
    * @param allowFailure Whether the pipeline should continue if this job fails
    */
   public void setAllowFailure(boolean allowFailure) {

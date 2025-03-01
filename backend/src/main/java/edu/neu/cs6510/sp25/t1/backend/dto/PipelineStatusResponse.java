@@ -9,7 +9,8 @@ public class PipelineStatusResponse {
 
   /**
    * Creates a new PipelineStatusResponse.
-   * @param name The name of the pipeline.
+   *
+   * @param name   The name of the pipeline.
    * @param status The status of the pipeline.
    */
   public PipelineStatusResponse(String name, String status) {
@@ -19,8 +20,19 @@ public class PipelineStatusResponse {
 
   /**
    * Gets the name of the pipeline.
+   *
    * @return The name of the pipeline.
    */
-  public String getName() { return name; }
-  public String getStatus() { return status; }
+  public String getName() {
+    return name;
+  }
+
+  /**
+   * Gets the status of the pipeline.
+   *
+   * @return The status of the pipeline.
+   */
+  public String getStatus() {
+    return status;
+  }
 }

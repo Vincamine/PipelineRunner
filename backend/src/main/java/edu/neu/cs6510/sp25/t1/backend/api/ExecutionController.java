@@ -18,17 +18,18 @@ import java.util.List;
 @RequestMapping("/api/executions")
 public class ExecutionController {
 
-    /**
-     * Retrieves the execution logs from a file.
-     * @return A list of log entries.
-     */
-    @GetMapping("/logs")
-    public ResponseEntity<List<String>> getExecutionLogs() {
-        try {
-            List<String> logs = Files.readAllLines(Paths.get("job-executions.log"));
-            return ResponseEntity.ok(logs);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of("Error reading logs"));
-        }
+  /**
+   * Retrieves the execution logs from a file.
+   *
+   * @return A list of log entries.
+   */
+  @GetMapping("/logs")
+  public ResponseEntity<List<String>> getExecutionLogs() {
+    try {
+      List<String> logs = Files.readAllLines(Paths.get("job-executions.log"));
+      return ResponseEntity.ok(logs);
+    } catch (IOException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of("Error reading logs"));
     }
+  }
 }
