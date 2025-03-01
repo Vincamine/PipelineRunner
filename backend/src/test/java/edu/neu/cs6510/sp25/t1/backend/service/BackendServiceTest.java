@@ -3,7 +3,7 @@ package edu.neu.cs6510.sp25.t1.backend.service;
 import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 

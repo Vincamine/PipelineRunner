@@ -98,6 +98,7 @@ public class JobExecutor {
 
   /**
    * Extracted method to allow mocking
+   * @return FileWriter
    */
   protected FileWriter createFileWriter() throws IOException {
     return new FileWriter("job-executions.log", true);

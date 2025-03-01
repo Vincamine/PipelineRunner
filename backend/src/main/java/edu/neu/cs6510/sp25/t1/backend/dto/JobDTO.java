@@ -33,6 +33,7 @@ public class JobDTO {
    * Convert Job entity to DTO
    *
    * @param job The Job entity to convert
+   * @return The JobDTO
    */
   public static JobDTO fromEntity(Job job) {
     return new JobDTO(job.getName(), job.getImage(), job.getScript(), job.isAllowFailure());

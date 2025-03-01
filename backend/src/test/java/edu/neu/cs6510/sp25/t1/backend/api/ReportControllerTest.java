@@ -29,6 +29,6 @@ class ReportControllerTest {
 
     assertNotNull(response);
     assertEquals(1, response.size());
-    assertEquals("testPipeline", response.get(0).getName());
+    assertEquals("testPipeline", response.getFirst().getName());
   }
 }

@@ -40,7 +40,7 @@ class ExecutionControllerTest {
       assertEquals(HttpStatus.OK, response.getStatusCode());
       assertNotNull(response.getBody());
       assertEquals(2, response.getBody().size());
-      assertEquals("Log entry 1", response.getBody().get(0));
+      assertEquals("Log entry 1", response.getBody().getFirst());
     }
   }
 
@@ -55,7 +55,7 @@ class ExecutionControllerTest {
       assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
       assertNotNull(response.getBody());
       assertEquals(1, response.getBody().size());
-      assertEquals("Error reading logs", response.getBody().get(0));
+      assertEquals("Error reading logs", response.getBody().getFirst());
     }
   }
 }

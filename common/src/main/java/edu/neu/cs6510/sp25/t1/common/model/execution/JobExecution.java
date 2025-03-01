@@ -25,6 +25,9 @@ public class JobExecution {
    * Constructs a new JobExecution instance based on its definition.
    *
    * @param jobDefinition The definition of the job.
+   * @param status        The status of the job.
+   * @param allowFailure  Whether the job is allowed to fail.
+   * @param dependencies  The list of dependencies for the job.
    */
   @JsonCreator
   public JobExecution(
@@ -43,6 +46,7 @@ public class JobExecution {
    * Constructs a new JobExecution instance based on its name and status for integration testing.
    *
    * @param jobName The name of the job.
+   * @param status  The status of the job.
    */
   public JobExecution(String jobName, String status) {
     this.jobDefinition = new JobDefinition(jobName, "default-stage", "default-image", List.of(), List.of(), false);

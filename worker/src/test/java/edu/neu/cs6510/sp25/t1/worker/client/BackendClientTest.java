@@ -3,7 +3,6 @@ package edu.neu.cs6510.sp25.t1.worker.client;
 import edu.neu.cs6510.sp25.t1.common.api.JobStatusUpdate;
 import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 

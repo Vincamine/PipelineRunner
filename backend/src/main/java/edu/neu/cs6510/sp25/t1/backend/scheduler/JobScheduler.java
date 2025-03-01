@@ -29,7 +29,7 @@ public class JobScheduler {
   /**
    * Adds a job to the queue.
    *
-   * @param job
+   * @param job The job to add.
    */
   public void addJob(JobExecution job) {
     jobQueue.offer(job);

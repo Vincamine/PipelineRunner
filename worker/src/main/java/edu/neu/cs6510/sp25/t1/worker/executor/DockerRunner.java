@@ -25,8 +25,9 @@ public class DockerRunner {
 
   /**
    * Extracted method to allow mocking in tests.
+   * @return A new ProcessBuilder with the given image and commands.
    */
-  protected ProcessBuilder createProcessBuilder() {  // ✅ Now returns a ProcessBuilder
+  protected ProcessBuilder createProcessBuilder() {
     return new ProcessBuilder(
             "docker", "run", "--rm", "--name", containerName, image, "sh", "-c", String.join(" && ", commands)
     );

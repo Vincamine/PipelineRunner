@@ -5,8 +5,8 @@ package edu.neu.cs6510.sp25.t1.backend.dto;
  * Used for API communication to prevent direct exposure of JPA entities.
  */
 public class PipelineExecutionSummary {
-  private String pipelineName;
-  private String status;
+  private final String pipelineName;
+  private final String status;
 
   /**
    * Constructs a new PipelineExecutionSummary.

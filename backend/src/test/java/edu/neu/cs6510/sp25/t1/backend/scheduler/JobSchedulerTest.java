@@ -1,7 +1,6 @@
-package edu.neu.cs6510.sp25.t1.backend.service;
+package edu.neu.cs6510.sp25.t1.backend.scheduler;
 
 import edu.neu.cs6510.sp25.t1.backend.client.WorkerClient;
-import edu.neu.cs6510.sp25.t1.backend.scheduler.JobScheduler;
 import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

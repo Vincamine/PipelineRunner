@@ -24,9 +24,7 @@ class JobStatusUpdateTest {
 
   @Test
   void testJobStatusUpdateWithNullJobName() {
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      new JobStatusUpdate(null, "RUNNING");
-    });
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> new JobStatusUpdate(null, "RUNNING"));
 
     assertTrue(exception.getMessage().contains("Job name cannot be null"));
   }
