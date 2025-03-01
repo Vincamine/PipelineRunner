@@ -1,10 +1,9 @@
 package edu.neu.cs6510.sp25.t1.backend;
 
-import edu.neu.cs6510.sp25.t1.model.execution.JobExecution;
-
-import edu.neu.cs6510.sp25.t1.executor.JobExecutor;
-import edu.neu.cs6510.sp25.t1.client.BackendClient;
-import edu.neu.cs6510.sp25.t1.executor.DockerManager;
+import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
+import edu.neu.cs6510.sp25.t1.worker.executor.DockerManager;
+import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutor;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

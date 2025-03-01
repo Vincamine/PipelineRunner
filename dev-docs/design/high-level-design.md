@@ -11,7 +11,7 @@
 | :----------: | :-----: | :--------------------------------------------: | :-------------------------: |
 | Jan 31, 2025 |   1.0   |                Initial release                 | Yiwen Wang, Mingtianfang Li |
 | Feb 27, 2025 |   1.1   |         Structure change to mono repo          |         Yiwen Wang          |
-| Feb 28, 2025 |   1.2   | Replaced gRPC with REST for all communications |       Updated version       |
+| Feb 28, 2025 |   1.2   | Replaced gRPC with REST for all communications |       Yiwen Wang      |
 
 # High Level Design Document: Custom CI/CD System (Monorepo)
 

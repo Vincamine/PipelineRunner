@@ -1,9 +1,0 @@
-pipeline:
-  name: "MissingStagePipeline"
-  stages:
-    - build
-jobs:
-  - name: "BuildJob"
-    image: "openjdk:11"
-    script:
-      - "mvn clean install"

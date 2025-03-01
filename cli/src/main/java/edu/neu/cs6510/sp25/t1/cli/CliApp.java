@@ -1,8 +1,8 @@
 package edu.neu.cs6510.sp25.t1.cli;
 
-import edu.neu.cs6510.sp25.t1.commands.CheckCommand;
-import edu.neu.cs6510.sp25.t1.commands.DryRunCommand;
-import edu.neu.cs6510.sp25.t1.commands.RunCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.CheckCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.DryRunCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
 import picocli.CommandLine;
 
 /**

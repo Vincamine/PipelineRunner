@@ -5,9 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
-import edu.neu.cs6510.sp25.t1.api.CliBackendClient;
-import edu.neu.cs6510.sp25.t1.api.RunPipelineRequest;
-import edu.neu.cs6510.sp25.t1.commands.RunCommand;
+import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
+import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
