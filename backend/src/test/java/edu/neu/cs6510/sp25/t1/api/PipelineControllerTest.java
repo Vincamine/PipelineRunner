@@ -23,16 +23,20 @@ public class PipelineControllerTest {
 
     @Test
     void testRunPipeline() {
+        RunPipelineRequest request = new RunPipelineRequest();
+        request.setPipeline("123");
+
         PipelineExecution mockExecution = new PipelineExecution("123", null, null);
         when(pipelineService.startPipeline("123", "build")).thenReturn(mockExecution);
 
-        ResponseEntity<PipelineExecution> response = controller.runPipeline("123");
+        ResponseEntity<PipelineExecution> response = controller.runPipeline(request); // ✅ Pass request object
 
         assertNotNull(response.getBody());
         assertEquals("123", response.getBody().getPipelineId());
         assertEquals(PipelineState.PENDING, response.getBody().getState());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void testGetStatus() {
         PipelineExecution mockExecution = new PipelineExecution("456", null, null);
@@ -43,6 +47,7 @@ public class PipelineControllerTest {
         assertEquals(200, response.getStatusCodeValue());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void testGetStatus_NotFound() {
         when(pipelineService.getPipelineExecution("789")).thenReturn(null);

@@ -35,6 +35,17 @@ public class JobExecution {
     }
 
     /**
+     * Constructs a new JobExecution instance based on its name and status for integration testing.
+     */
+    public JobExecution(String jobName, String status) {
+        this.jobDefinition = new JobDefinition(jobName, "default-stage", "default-image", List.of(), List.of(), false);
+        this.status = status;
+        this.allowFailure = false;
+        this.dependencies = List.of();
+        this.startTime = Instant.now();
+    }
+
+    /**
      * Marks the job as started.
      */
     public void start() {
@@ -55,4 +66,6 @@ public class JobExecution {
     public boolean isAllowFailure() { return allowFailure; }
     public Instant getStartTime() { return startTime; }
     public Instant getCompletionTime() { return completionTime; }
+
+    public JobDefinition getJobDefinition() { return jobDefinition; }
 }
