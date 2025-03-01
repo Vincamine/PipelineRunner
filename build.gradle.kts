@@ -62,6 +62,7 @@ subprojects {
                         "**/worker/WorkerApp.class",   // Ignore Worker entry point
                         "**/cli/CliApp.class",      // Ignore CLI entry point
                         "**/common/model/PipelineState.class", // Ignore PipelineState.java (Enum)
+                        "**/worker/config/RestTemplateConfig.class" // Ignore RestTemplateConfig.java
                     )
                 }
             })
@@ -78,7 +79,7 @@ subprojects {
                     "edu.neu.cs6510.sp25.t1.worker.WorkerApp",   // Ignore WorkerApp
                     "edu.neu.cs6510.sp25.t1.cli.CliApp",      // Ignore CLI App
                     "edu.neu.cs6510.sp25.t1.common.model.PipelineState", // Ignore PipelineState
-
+                    "edu.neu.cs6510.sp25.t1.worker.config.RestTemplateConfig" // Ignore RestTemplateConfig
                 )
 
                 limit {
