@@ -1,7 +1,10 @@
 package edu.neu.cs6510.sp25.t1.common.api;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 
 class WorkerRegistrationRequestTest {
 

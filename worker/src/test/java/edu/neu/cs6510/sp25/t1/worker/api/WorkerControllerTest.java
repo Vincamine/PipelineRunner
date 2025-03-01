@@ -5,8 +5,14 @@ import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutor;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.any;
 
 class WorkerControllerTest {
 
@@ -18,7 +24,7 @@ class WorkerControllerTest {
         JobRequest request = new JobRequest("job1", "pipeline1", "testJob", "commit123", null, null);
         ResponseEntity<String> response = controller.executeJob(request);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals("Job execution started successfully.", response.getBody());
         verify(jobExecutor, times(1)).executeJob(request);
     }
@@ -28,7 +34,7 @@ class WorkerControllerTest {
         JobRequest request = new JobRequest(null, "pipeline1", "", "commit123", null, null);
         ResponseEntity<String> response = controller.executeJob(request);
 
-        assertEquals(400, response.getStatusCodeValue());
+        assertEquals(400, response.getStatusCode().value());
         assertEquals("Error: Job name cannot be null or empty.", response.getBody());
     }
 
@@ -38,7 +44,7 @@ class WorkerControllerTest {
         doThrow(new RuntimeException("Job failed")).when(jobExecutor).executeJob(any());
 
         ResponseEntity<String> response = controller.executeJob(request);
-        assertEquals(500, response.getStatusCodeValue());
+        assertEquals(500, response.getStatusCode().value());
         assertTrue(response.getBody().contains("Job execution failed"));
     }
 }

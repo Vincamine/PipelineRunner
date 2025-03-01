@@ -1,16 +1,20 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
-import edu.neu.cs6510.sp25.t1.backend.model.Pipeline;
-import edu.neu.cs6510.sp25.t1.backend.repository.PipelineRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
+import edu.neu.cs6510.sp25.t1.backend.model.Pipeline;
+import edu.neu.cs6510.sp25.t1.backend.repository.PipelineRepository;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 
 class ReportServiceTest {
 

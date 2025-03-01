@@ -3,7 +3,9 @@ package edu.neu.cs6510.sp25.t1.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
 import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;

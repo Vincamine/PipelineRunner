@@ -1,9 +1,12 @@
 package edu.neu.cs6510.sp25.t1.common.model.execution;
 
-import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.List;
+
+import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PipelineExecutionTest {
 

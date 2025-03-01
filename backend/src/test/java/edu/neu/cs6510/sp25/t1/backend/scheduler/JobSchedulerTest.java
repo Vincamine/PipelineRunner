@@ -1,11 +1,15 @@
 package edu.neu.cs6510.sp25.t1.backend.scheduler;
 
-import edu.neu.cs6510.sp25.t1.backend.client.WorkerClient;
-import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
+import edu.neu.cs6510.sp25.t1.backend.client.WorkerClient;
+import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 
 class JobSchedulerTest {
 

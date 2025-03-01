@@ -1,9 +1,13 @@
 package edu.neu.cs6510.sp25.t1.common.model.execution;
 
-import edu.neu.cs6510.sp25.t1.common.model.definition.JobDefinition;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.List;
+
+import edu.neu.cs6510.sp25.t1.common.model.definition.JobDefinition;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class JobExecutionTest {
 

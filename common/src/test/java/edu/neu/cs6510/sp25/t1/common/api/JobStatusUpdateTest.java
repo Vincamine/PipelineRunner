@@ -1,9 +1,13 @@
 package edu.neu.cs6510.sp25.t1.common.api;
 
-import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 class JobStatusUpdateTest {
 
