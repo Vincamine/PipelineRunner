@@ -8,15 +8,15 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      - postgres
     environment:
       SPRING_PROFILES_ACTIVE: "dev"
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/cicd_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cicd_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
     restart: always
 
-  db:
+  postgres:
     image: postgres:15
     container_name: cicd-db
     restart: always

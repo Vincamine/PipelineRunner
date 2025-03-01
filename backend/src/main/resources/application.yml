@@ -4,25 +4,24 @@ server:
 spring:
   application:
     name: cicd-backend  # Name of the backend application
-  datasource:
-    url: jdbc:postgresql://localhost:5432/cicd_system  # PostgreSQL Database URL
-    username: backend_user  # Database user
-    password: backend_password  # Database password
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update  # Automatically updates the schema (change to "validate" for production)
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-  redis:
-    host: localhost  # Redis server host
     port: 6379  # Redis server port
-
-grpc:
-  worker-service:
-    address: localhost  # Worker gRPC service hostname
-    port: 50051  # Worker gRPC service port
+datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cicd_db}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    jpa:
+      hibernate:
+        ddl-auto: validate  # Use 'update' in local dev, 'validate' in production
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+    flyway:
+      enabled: true
+      locations: classpath:db/migration
+    redis:
+      host: localhost  # Redis server host
+      port: 6379  # Redis server port
 
 logging:
   level:
