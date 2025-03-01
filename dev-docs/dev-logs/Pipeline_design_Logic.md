@@ -1,13 +1,15 @@
 # **CI/CD Pipeline Design Logic**
-
-- **Version 1.0**
-- According to the Whole project requirements by Feb 28, 2025
+- Version: 1.0
+- Updated with the Project requirements by Feb 28, 2025
+- Author: Yiwen Wang
+- **Version 1.1**
+- Updated with Stage and Job Logic as of Feb 28, 2025
 
 ## **1. Overview**
 This document outlines the design logic for the CI/CD pipeline system. The system is designed to allow developers to execute CI/CD workflows both **locally** and **on remote servers**, integrating with Git repositories for configuration management.
 
 ## **2. Pipeline Identification**
-- Each **pipeline** is uniquely identified by its **name** within a repository. 
+- Each **pipeline** is uniquely identified by its **name** within a repository.
 - The **pipeline name** is stored in `.pipelines/pipeline.yaml`.
 - **No separate Pipeline ID is required** since the name ensures uniqueness.
 
@@ -64,7 +66,63 @@ xx report --pipeline build-and-test
 ```
 Backend returns a list of previous executions for that pipeline name.
 
-## **5. Execution Components**
+## **5. Stage and Job Logic**
+### **📌 Stage Logic**
+- **Stages execute sequentially**, following the order defined in the YAML.
+- A **stage must contain at least one job**.
+- **A stage starts only after the previous stage completes successfully**.
+
+### **📌 Job Logic**
+- **Jobs are the smallest execution units** inside a stage.
+- Jobs **execute inside Docker containers**, requiring a `image`.
+- Jobs **run in parallel unless they define dependencies (`needs`)**.
+- Jobs must define at least **one script command** to execute.
+- **Job failure handling:**
+  - If `allowFailure=false`, pipeline **stops on failure**.
+  - If `allowFailure=true`, pipeline **continues execution**.
+
+### **📌 Example Execution Order**
+#### **YAML Configuration:**
+```yaml
+pipeline:
+  name: "build-and-test"
+  stages:
+    - build
+    - test
+    - deploy
+
+jobs:
+  - name: compile
+    stage: build
+    image: gradle:8.12-jdk21
+    script:
+      - ./gradlew classes
+
+  - name: unittests
+    stage: test
+    image: gradle:8.12-jdk21
+    script:
+      - ./gradlew test
+    needs:
+      - compile  # Must wait for compile job
+
+  - name: deploy
+    stage: deploy
+    image: ubuntu:latest
+    script:
+      - echo "Deploying..."
+    needs:
+      - unittests  # Must wait for unittests to complete
+```
+
+### **📌 Execution Order**
+| Stage  | Jobs (Parallel) | Dependencies |
+|--------|---------------|-------------|
+| **build** | compile | - |
+| **test** | unittests | compile must complete |
+| **deploy** | deploy | unittests must complete |
+
+## **6. Execution Components**
 ### **Pipeline Execution Tracking**
 - **PipelineExecution** tracks the current execution state.
 - **PipelineState Enum** manages execution states:
@@ -105,13 +163,14 @@ Response:
 }
 ```
 
-## **6. Summary of Design Changes**
-✅ **Pipeline ID Removed**: Only the pipeline **name** is used for identification.
-✅ **Execution Tracking by Name**: All execution-related tracking uses `pipelineName`.
-✅ **REST API Updates**: Routes now reference `/{pipelineName}/status` instead of `/{id}/status`.
-✅ **CLI Adjustments**: Commands reference pipelines by name rather than ID.
+## **7. Summary of Design Changes**
+✅ **Pipeline ID Removed**: Only the pipeline **name** is used for identification.  
+✅ **Execution Tracking by Name**: All execution-related tracking uses `pipelineName`.  
+✅ **REST API Updates**: Routes now reference `/{pipelineName}/status` instead of `/{id}/status`.  
+✅ **CLI Adjustments**: Commands reference pipelines by name rather than ID.  
+✅ **Stage and Job Logic Added**: Stages run sequentially, jobs run in parallel (unless dependencies exist).
 
-## **7. Future Enhancements**
+## **8. Future Enhancements**
 - Implement a **database-backed execution history** instead of in-memory storage.
 - Introduce **user-defined pipeline execution metadata** (e.g., triggered by PRs, scheduled runs).
 

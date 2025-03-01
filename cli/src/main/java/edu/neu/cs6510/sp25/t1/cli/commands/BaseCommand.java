@@ -44,7 +44,7 @@ public abstract class BaseCommand implements Callable<Integer> {
     /**
      * Set the config file - for unit testing.
      * 
-     * @param configFile
+     * @param configFile The path to the pipeline configuration file.
      */
     public void setConfigFile(String configFile) {
         this.configFile = configFile;

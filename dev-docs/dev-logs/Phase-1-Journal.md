@@ -1,5 +1,7 @@
 # 25Spring CS6510 Team 1 - CI/CD System - Phase 1 Journal 
-
+- Version: 1.0
+- Updated with the Project requirements by Feb 28, 2025
+- Author: Yiwen Wang
 ## Phase 1: Core Infrastructure - Minimal Viable Product (MVP)
 
 1. CLI Module (completed)

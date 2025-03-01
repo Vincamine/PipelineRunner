@@ -2,11 +2,11 @@ package edu.neu.cs6510.sp25.t1.backend.service;
 
 import org.springframework.stereotype.Service;
 
-import edu.neu.cs6510.sp25.t1.common.model.PipelineState;
+import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
 import edu.neu.cs6510.sp25.t1.common.model.definition.JobDefinition;
 import edu.neu.cs6510.sp25.t1.common.model.definition.StageDefinition;
 import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.backend.model.execution.PipelineExecution;
+import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
 import edu.neu.cs6510.sp25.t1.common.model.execution.StageExecution;
 
 import java.util.List;
@@ -38,7 +38,7 @@ public class PipelineExecutionService {
         return executionStore.get(pipelineName);
     }
 
-    public void updatePipelineStatus(String pipelineName, PipelineState state) {
+    public void updatePipelineStatus(String pipelineName, ExecutionState state) {
         PipelineExecution execution = executionStore.get(pipelineName);
         if (execution != null) {
             execution.updateState();

@@ -1,7 +1,7 @@
 package edu.neu.cs6510.sp25.t1.service;
 
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
-import edu.neu.cs6510.sp25.t1.common.model.PipelineState;
+import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
 import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,7 @@ public class PipelineExecutionServiceTest {
 
         assertNotNull(execution);
         assertEquals("123", execution.getPipelineId());
-        assertEquals(PipelineState.PENDING, execution.getState());
+        assertEquals(ExecutionState.PENDING, execution.getState());
     }
 
     @Test

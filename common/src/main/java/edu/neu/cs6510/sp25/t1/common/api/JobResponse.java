@@ -7,102 +7,100 @@ import java.util.List;
  * Contains information about the job ID, exit code, output, success status,
  * collected artifacts, and error message if any.
  * Used for sending the response back to the client.
+ * sent from the worker back to the backend.
  */
 public class JobResponse {
-    private String jobId; // unique identifier for the job.
-    private int exitCode; // exit code of the job execution.
-    private String output; // output of the job execution.
-    private boolean success; // flag to indicate if the job was successful.
-    private List<String> collectedArtifacts; // list of collected artifacts.
-    private String errorMessage; // error message if the job failed.
+  private final String jobId; // Unique identifier for the job execution.
+  private final int exitCode; // Process exit code (0 = success, non-zero = failure).
+  private final String output; // Console/log output from execution.
+  private final List<String> collectedArtifacts; // Paths to collected artifacts.
+  private final String errorMessage; // Error message if execution failed.
 
-    /**
-     * Constructor to initialize the JobResponse object.
-     * 
-     * @param jobId
-     * @param exitCode
-     * @param output
-     * @param success
-     * @param collectedArtifacts
-     * @param errorMessage
-     */
-    public JobResponse(String jobId, int exitCode, String output, boolean success,
-            List<String> collectedArtifacts, String errorMessage) {
-        this.jobId = jobId;
-        this.exitCode = exitCode;
-        this.output = output;
-        this.success = success;
-        this.collectedArtifacts = collectedArtifacts;
-        this.errorMessage = errorMessage;
-    }
+  /**
+   * Constructor to initialize the JobResponse object.
+   *
+   * @param jobId              Unique job execution ID.
+   * @param exitCode           Exit code of the job execution (0 = success).
+   * @param output             Console output from the job execution.
+   * @param collectedArtifacts List of artifacts collected during execution.
+   * @param errorMessage       Error message if the job failed.
+   */
+  public JobResponse(String jobId, int exitCode, String output,
+                     List<String> collectedArtifacts, String errorMessage) {
+    this.jobId = jobId;
+    this.exitCode = exitCode;
+    this.output = output != null ? output : ""; // Avoid null values
+    this.collectedArtifacts = collectedArtifacts != null ? collectedArtifacts : List.of();
+    this.errorMessage = errorMessage != null ? errorMessage : "";
+  }
 
-    /**
-     * Getters for jobId.
-     * 
-     * @return
-     */
-    public String getJobId() {
-        return jobId;
-    }
+  /**
+   * Get the job ID.
+   *
+   * @return Job ID.
+   */
+  public String getJobId() {
+    return jobId;
+  }
 
-    /**
-     * Getters for exitCode.
-     * 
-     * @return
-     */
-    public int getExitCode() {
-        return exitCode;
-    }
+  /**
+   * Get the exit code of the job execution.
+   *
+   * @return Exit code.
+   */
+  public int getExitCode() {
+    return exitCode;
+  }
 
-    /**
-     * Getters for output.
-     * 
-     * @return String output
-     */
-    public String getOutput() {
-        return output;
-    }
+  /**
+   * Get the output from the job execution.
+   *
+   * @return Output.
+   */
+  public String getOutput() {
+    return output;
+  }
 
-    /**
-     * Getters for success.
-     * 
-     * @return boolean success
-     */
-    public boolean isSuccess() {
-        return success;
-    }
+  /**
+   * Get the list of collected artifacts.
+   *
+   * @return List of artifacts.
+   */
+  public List<String> getCollectedArtifacts() {
+    return collectedArtifacts;
+  }
 
-    /**
-     * Getters for collectedArtifacts.
-     * 
-     * @return List<String> collectedArtifacts
-     */
-    public List<String> getCollectedArtifacts() {
-        return collectedArtifacts;
-    }
+  /**
+   * Get the error message if the job execution failed.
+   *
+   * @return Error message.
+   */
+  public String getErrorMessage() {
+    return errorMessage;
+  }
 
-    /**
-     * Getters for errorMessage.
-     * 
-     * @return String errorMessage
-     */
-    public String getErrorMessage() {
-        return errorMessage;
-    }
+  /**
+   * Determines if the job execution was successful based on exit code.
+   *
+   * @return `true` if `exitCode == 0`, otherwise `false`.
+   */
+  public boolean isSuccess() {
+    return exitCode == 0;
+  }
 
-    /**
-     * Override toString method for better readability.
-     * 
-     * @return String representation of JobResponse
-     */
-    @Override
-    public String toString() {
-        return "JobResponse{" +
-                "jobId='" + jobId + '\'' +
-                ", exitCode=" + exitCode +
-                ", success=" + success +
-                ", collectedArtifacts=" + collectedArtifacts +
-                ", errorMessage='" + errorMessage + '\'' +
-                '}';
-    }
+  /**
+   * String representation of the JobResponse object.
+   *
+   * @return String representation.
+   */
+  @Override
+  public String toString() {
+    return "JobResponse{" +
+            "jobId='" + jobId + '\'' +
+            ", exitCode=" + exitCode +
+            ", success=" + isSuccess() + // Uses the method dynamically
+            ", collectedArtifacts=" + collectedArtifacts +
+            ", errorMessage='" + errorMessage + '\'' +
+            '}';
+  }
 }

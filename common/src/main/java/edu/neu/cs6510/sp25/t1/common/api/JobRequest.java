@@ -4,133 +4,108 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents a job request to be processed by the worker.
- * Used for submitting a job execution request.
+ * Represents a job execution request sent to the worker.
+ * This request provides execution-specific details while referencing
+ * the pre-defined job configuration.
+ * sent from the backend to the worker.
  */
 public class JobRequest {
-    private String jobId; // unique identifier for the job.
-    private String repositoryUrl; // URL of the repository to be processed.
-    private String commitHash; // commit hash of the repository.
-    private String dockerImage; // Docker image to be used for the job.
-    private List<String> commands; // list of commands to be executed.
-    private Map<String, String> environmentVariables; // environment variables for the job.
-    private List<String> artifactPaths; // paths to the artifacts to be collected.
-    private boolean allowFailure; // flag to allow failure of the job.
+  private final String jobId; // Unique execution ID
+  private final String pipelineName; // Pipeline this job belongs to
+  private final String jobName; // Reference to the job in pipeline config
+  private final String commitHash; // Specific commit for execution
+  private final Map<String, String> environmentVariables; // Runtime variables
+  private final List<String> artifactPaths; // Paths to store collected artifacts
 
-    /**
-     * Constructor for JobRequest.
-     * 
-     * @param jobId
-     * @param repositoryUrl
-     * @param commitHash
-     * @param dockerImage
-     * @param commands
-     * @param environmentVariables
-     * @param artifactPaths
-     * @param allowFailure
-     */
-    public JobRequest(String jobId, String repositoryUrl, String commitHash, String dockerImage,
-            List<String> commands, Map<String, String> environmentVariables,
-            List<String> artifactPaths, boolean allowFailure) {
-        this.jobId = jobId;
-        this.repositoryUrl = repositoryUrl;
-        this.commitHash = commitHash;
-        this.dockerImage = dockerImage;
-        this.commands = commands;
-        this.environmentVariables = environmentVariables;
-        this.artifactPaths = artifactPaths;
-        this.allowFailure = allowFailure;
-    }
+  /**
+   * Constructor for JobRequest.
+   *
+   * @param jobId                Unique execution ID
+   * @param pipelineName         Name of the pipeline
+   * @param jobName              Name of the job in pipeline configuration
+   * @param commitHash           Commit hash for execution
+   * @param environmentVariables Environment variables for job execution
+   * @param artifactPaths        Paths to artifacts produced by job execution
+   */
+  public JobRequest(String jobId, String pipelineName, String jobName,
+                    String commitHash, Map<String, String> environmentVariables,
+                    List<String> artifactPaths) {
+    this.jobId = jobId;
+    this.pipelineName = pipelineName;
+    this.jobName = jobName;
+    this.commitHash = commitHash;
+    this.environmentVariables = environmentVariables != null ? environmentVariables : Map.of();
+    this.artifactPaths = artifactPaths != null ? artifactPaths : List.of();
+  }
 
-    /**
-     * Getters for jobId.
-     * 
-     * @return jobId
-     */
-    public String getJobId() {
-        return jobId;
-    }
+  /**
+   * Get the job ID.
+   *
+   * @return the job ID
+   */
+  public String getJobId() {
+    return jobId;
+  }
 
-    /**
-     * Getters for repositoryUrl.
-     * 
-     * @return repositoryUrl
-     */
-    public String getRepositoryUrl() {
-        return repositoryUrl;
-    }
+  /**
+   * Get the pipeline name.
+   *
+   * @return the pipeline name
+   */
+  public String getPipelineName() {
+    return pipelineName;
+  }
 
-    /**
-     * Getters for commitHash.
-     * 
-     * @return commitHash
-     */
-    public String getCommitHash() {
-        return commitHash;
-    }
+  /**
+   * Get the job name.
+   *
+   * @return the job name
+   */
+  public String getJobName() {
+    return jobName;
+  }
 
-    /**
-     * Getters for dockerImage.
-     * 
-     * @return dockerImage
-     */
-    public String getDockerImage() {
-        return dockerImage;
-    }
+  /**
+   * Get the commit hash.
+   *
+   * @return the commit hash
+   */
+  public String getCommitHash() {
+    return commitHash;
+  }
 
-    /**
-     * Getters for commands.
-     * 
-     * @return commands
-     */
-    public List<String> getCommands() {
-        return commands;
-    }
+  /**
+   * Get the environment variables.
+   *
+   * @return the environment variables
+   */
+  public Map<String, String> getEnvironmentVariables() {
+    return environmentVariables;
+  }
 
-    /**
-     * Getters for environmentVariables.
-     * 
-     * @return environmentVariables
-     */
-    public Map<String, String> getEnvironmentVariables() {
-        return environmentVariables;
-    }
+  /**
+   * Get the artifact paths.
+   *
+   * @return the artifact paths
+   */
+  public List<String> getArtifactPaths() {
+    return artifactPaths;
+  }
 
-    /**
-     * Getters for artifactPaths.
-     * 
-     * @return artifactPaths
-     */
-    public List<String> getArtifactPaths() {
-        return artifactPaths;
-    }
-
-    /**
-     * Getters for allowFailure.
-     * 
-     * @return allowFailure
-     */
-    public boolean isAllowFailure() {
-        return allowFailure;
-    }
-
-    /**
-     * String representation of the JobRequest object.
-     * 
-     * @return String representation of the JobRequest object
-     * 
-     */
-    @Override
-    public String toString() {
-        return "JobRequest{" +
-                "jobId='" + jobId + '\'' +
-                ", repositoryUrl='" + repositoryUrl + '\'' +
-                ", commitHash='" + commitHash + '\'' +
-                ", dockerImage='" + dockerImage + '\'' +
-                ", commands=" + commands +
-                ", environmentVariables=" + environmentVariables +
-                ", artifactPaths=" + artifactPaths +
-                ", allowFailure=" + allowFailure +
-                '}';
-    }
+  /**
+   * String representation of the JobRequest.
+   *
+   * @return String representation
+   */
+  @Override
+  public String toString() {
+    return "JobRequest{" +
+            "jobId='" + jobId + '\'' +
+            ", pipelineName='" + pipelineName + '\'' +
+            ", jobName='" + jobName + '\'' +
+            ", commitHash='" + commitHash + '\'' +
+            ", environmentVariables=" + environmentVariables +
+            ", artifactPaths=" + artifactPaths +
+            '}';
+  }
 }

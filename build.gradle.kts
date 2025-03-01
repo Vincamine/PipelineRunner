@@ -59,8 +59,9 @@ subprojects {
                 fileTree(it) {
                     exclude(
                         "**/backend/BackendApp.class",  // Ignore BackendApp.java (Spring Boot entry point)
-                        "**/WorkerApp.class",   // Ignore Worker entry point
-                        "**/CliApp.class",      // Ignore CLI entry point
+                        "**/worker/WorkerApp.class",   // Ignore Worker entry point
+                        "**/cli/CliApp.class",      // Ignore CLI entry point
+                        "**/common/model/PipelineState.class", // Ignore PipelineState.java (Enum)
                     )
                 }
             })
@@ -74,8 +75,10 @@ subprojects {
                 element = "CLASS"
                 excludes = listOf(
                     "edu.neu.cs6510.sp25.t1.backend.BackendApp",  // Ignore BackendApp
-                    "edu.neu.cs6510.sp25.t1.WorkerApp",   // Ignore WorkerApp 
-                    "edu.neu.cs6510.sp25.t1.CliApp",      // Ignore CLI App 
+                    "edu.neu.cs6510.sp25.t1.worker.WorkerApp",   // Ignore WorkerApp
+                    "edu.neu.cs6510.sp25.t1.cli.CliApp",      // Ignore CLI App
+                    "edu.neu.cs6510.sp25.t1.common.model.PipelineState", // Ignore PipelineState
+
                 )
 
                 limit {
