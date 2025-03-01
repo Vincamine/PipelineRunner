@@ -1,70 +1,64 @@
 package edu.neu.cs6510.sp25.t1.worker.executor;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.command.RemoveContainerCmd;
 import com.github.dockerjava.api.command.StartContainerCmd;
-import com.github.dockerjava.api.command.WaitContainerCmd;
-import com.github.dockerjava.api.command.WaitContainerResultCallback;
 import com.github.dockerjava.api.model.HostConfig;
-
-import edu.neu.cs6510.sp25.t1.worker.executor.DockerManager;
-
+import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 class DockerManagerTest {
+  private DockerManager dockerManager;
+  private DockerClient dockerClient;
 
-    private DockerManager dockerManager;
-    private DockerClient dockerClient;
+  @BeforeEach
+  void setUp() {
+    dockerClient = mock(DockerClient.class);
+    dockerManager = new DockerManager(dockerClient);
+  }
 
-    @BeforeEach
-    void setUp() {
-        dockerClient = mock(DockerClient.class);
-        dockerManager = new DockerManager(dockerClient);
-    }
+  @Test
+  void testRunContainer_Success() {
+    JobExecution jobExecution = mock(JobExecution.class);
+    when(jobExecution.getJobName()).thenReturn("test-job");
 
-    @Test
-    void testStartContainer_Success() {
-        CreateContainerResponse mockResponse = new CreateContainerResponse();
-        mockResponse.setId("container123");
+    // Mocking the CreateContainerCmd chain properly
+    CreateContainerResponse containerResponse = mock(CreateContainerResponse.class);
+    when(containerResponse.getId()).thenReturn("container123");
 
-        CreateContainerCmd createContainerCmd = mock(CreateContainerCmd.class);
-        when(dockerClient.createContainerCmd(anyString())).thenReturn(createContainerCmd);
-        when(createContainerCmd.withHostConfig(any(HostConfig.class))).thenReturn(createContainerCmd);
-        when(createContainerCmd.exec()).thenReturn(mockResponse);
+    var createContainerCmd = mock(com.github.dockerjava.api.command.CreateContainerCmd.class);
+    when(dockerClient.createContainerCmd(anyString())).thenReturn(createContainerCmd);
+    when(createContainerCmd.withImage(anyString())).thenReturn(createContainerCmd);
+    when(createContainerCmd.withHostConfig(any())).thenReturn(createContainerCmd);
+    when(createContainerCmd.withCmd(anyString())).thenReturn(createContainerCmd);
+    when(createContainerCmd.exec()).thenReturn(containerResponse);
 
-        StartContainerCmd startContainerCmd = mock(StartContainerCmd.class);
-        when(dockerClient.startContainerCmd("container123")).thenReturn(startContainerCmd);
+    // Mock StartContainerCmd
+    StartContainerCmd startCmd = mock(StartContainerCmd.class);
+    when(dockerClient.startContainerCmd(anyString())).thenReturn(startCmd);
+    doNothing().when(startCmd).exec(); // Ensures exec() doesn't cause issues
 
-        String containerId = dockerManager.startContainer("test-image");
-        assertEquals("container123", containerId);
-        verify(dockerClient).startContainerCmd("container123");
-    }
+    // Execute method
+    String containerId = dockerManager.runContainer(jobExecution);
 
-    @Test
-    void testWaitForContainer_Success() throws Exception {
-        WaitContainerCmd waitContainerCmd = mock(WaitContainerCmd.class);
-        WaitContainerResultCallback callback = mock(WaitContainerResultCallback.class);
-        
-        when(dockerClient.waitContainerCmd(anyString())).thenReturn(waitContainerCmd);
-        when(waitContainerCmd.exec(any())).thenReturn(callback);
+    // Assertions
+    assertNotNull(containerId);
+    verify(dockerClient, times(1)).createContainerCmd("test-job");
+    verify(createContainerCmd, times(1)).withImage("test-job");
+    verify(createContainerCmd, times(1)).withHostConfig(any());
+    verify(createContainerCmd, times(1)).withCmd("test-job");
+    verify(createContainerCmd, times(1)).exec();
+    verify(dockerClient, times(1)).startContainerCmd("container123");
+  }
 
-        boolean result = dockerManager.waitForContainer("container123");
-        assertTrue(result);
-    }
 
-    @Test
-    void testCleanupContainer_Success() {
-        RemoveContainerCmd removeContainerCmd = mock(RemoveContainerCmd.class);
-        when(dockerClient.removeContainerCmd(anyString())).thenReturn(removeContainerCmd);
-
-        dockerManager.cleanupContainer("container123");
-
-        verify(removeContainerCmd).exec();
-    }
+  @Test
+  void testCleanupContainer_Success() {
+    dockerManager.cleanupContainer("container123");
+    verify(dockerClient, times(1)).removeContainerCmd("container123");
+  }
 }

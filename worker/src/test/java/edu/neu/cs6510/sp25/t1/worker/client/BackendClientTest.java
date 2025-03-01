@@ -1,64 +1,36 @@
 package edu.neu.cs6510.sp25.t1.worker.client;
 
-import org.junit.jupiter.api.BeforeEach;
+import edu.neu.cs6510.sp25.t1.common.api.JobStatusUpdate;
+import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-
-import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
 
 import static org.mockito.Mockito.*;
 
 class BackendClientTest {
 
-    private BackendClient backendClient;
-
-    @Mock
-    private RestTemplate restTemplate;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        backendClient = new BackendClient(restTemplate);
-    }
+    private final RestTemplate restTemplate = mock(RestTemplate.class);
+    private final BackendClient backendClient = new BackendClient(restTemplate);
 
     @Test
     void testSendJobStatus_Success() {
-        String jobName = "test-job";
-        String status = "SUCCESS";
+        when(restTemplate.postForEntity(anyString(), any(JobStatusUpdate.class), eq(String.class)))
+                .thenReturn(ResponseEntity.ok("Success"));
 
-        ResponseEntity<String> mockResponse = ResponseEntity.ok("Job status updated");
-        when(restTemplate.postForEntity(anyString(), any(), eq(String.class))).thenReturn(mockResponse);
+        backendClient.sendJobStatus("job1", ExecutionState.RUNNING);
 
-        backendClient.sendJobStatus(jobName, status);
-
-        verify(restTemplate, times(1)).postForEntity(anyString(), any(), eq(String.class));
+        verify(restTemplate, times(1)).postForEntity(anyString(), any(JobStatusUpdate.class), eq(String.class));
     }
 
     @Test
-    void testSendJobStatus_Failure() {
-        String jobName = "test-job";
-        String status = "FAILED";
+    void testSendJobStatus_FailureAfterRetries() {
+        when(restTemplate.postForEntity(anyString(), any(JobStatusUpdate.class), eq(String.class)))
+                .thenThrow(new RuntimeException("Network error"));
 
-        ResponseEntity<String> mockResponse = ResponseEntity.badRequest().body("Failed to update job status");
-        when(restTemplate.postForEntity(anyString(), any(), eq(String.class))).thenReturn(mockResponse);
+        backendClient.sendJobStatus("job1", ExecutionState.FAILED);
 
-        backendClient.sendJobStatus(jobName, status);
-
-        verify(restTemplate, times(1)).postForEntity(anyString(), any(), eq(String.class));
-    }
-
-    @Test
-    void testSendJobStatus_Exception() {
-        String jobName = "test-job";
-        String status = "ERROR";
-
-        when(restTemplate.postForEntity(anyString(), any(), eq(String.class))).thenThrow(new RuntimeException("Network error"));
-
-        backendClient.sendJobStatus(jobName, status);
-
-        verify(restTemplate, times(1)).postForEntity(anyString(), any(), eq(String.class));
+        verify(restTemplate, times(3)).postForEntity(anyString(), any(JobStatusUpdate.class), eq(String.class));
     }
 }

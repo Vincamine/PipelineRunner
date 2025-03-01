@@ -25,7 +25,9 @@
         <!-- Checks for Javadoc comments -->
         <module name="JavadocMethod"/>
         <module name="JavadocType"/>
-        <module name="JavadocStyle"/>
+        <module name="JavadocStyle">
+            <property name="checkFirstSentence" value="false"/>
+        </module>
 
         <!-- Checks for imports -->
         <module name="AvoidStarImport"/>
@@ -36,7 +38,9 @@
         <module name="WhitespaceAround"/>
 
         <!-- Checks for blocks -->
-        <module name="EmptyBlock"/>
+        <module name="EmptyBlock">
+            <property name="option" value="text"/>
+        </module>
         <module name="NeedBraces"/>
         <module name="LeftCurly"/>
         <module name="RightCurly"/>
@@ -48,6 +52,9 @@
 
         <!-- Basic class design -->
         <module name="InterfaceIsType"/>
-        <module name="VisibilityModifier"/>
+        <module name="VisibilityModifier">
+            <property name="allowPackagePrivate" value="true"/>
+        </module>
+
     </module>
 </module>

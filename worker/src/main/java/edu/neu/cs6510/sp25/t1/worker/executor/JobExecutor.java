@@ -1,68 +1,105 @@
 package edu.neu.cs6510.sp25.t1.worker.executor;
 
-import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.neu.cs6510.sp25.t1.common.api.JobRequest;
+import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.model.definition.JobDefinition;
+import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
 
+/**
+ * JobExecutor is responsible for executing a job request.
+ */
 @Service
 public class JobExecutor {
+  private static final Logger logger = LoggerFactory.getLogger(JobExecutor.class);
+  private final DockerManager dockerManager;
+  private final BackendClient backendClient;
 
-    private static final Logger logger = LoggerFactory.getLogger(JobExecutor.class);
+  /**
+   * Constructor
+   *
+   * @param dockerManager DockerManager
+   * @param backendClient BackendClient
+   */
+  @Autowired
+  public JobExecutor(DockerManager dockerManager, BackendClient backendClient) {
+    this.dockerManager = dockerManager;
+    this.backendClient = backendClient;
+  }
 
-    private final DockerManager dockerManager;
-    private final BackendClient backendClient;
-
-    @Autowired
-    public JobExecutor(DockerManager dockerManager, BackendClient backendClient) {
-        this.dockerManager = dockerManager;
-        this.backendClient = backendClient;
+  /**
+   * Execute a job request.
+   *
+   * @param jobRequest JobRequest
+   */
+  public void executeJob(JobRequest jobRequest) {
+    if (jobRequest.getJobName() == null || jobRequest.getJobName().isBlank()) {
+      logger.error("Invalid job request: missing job name.");
+      return;
     }
 
-    public void executeJob(JobExecution jobExecution) {
-        String containerId = dockerManager.runContainer(jobExecution);
-        
-        if (containerId != null) {
-            backendClient.sendJobStatus(jobExecution.getJobName(), "RUNNING");
-            boolean success = dockerManager.waitForContainer(containerId);
+    backendClient.sendJobStatus(jobRequest.getJobName(), ExecutionState.RUNNING);
 
-            if (success) {
-                backendClient.sendJobStatus(jobExecution.getJobName(), "SUCCESS");
-            } else {
-                backendClient.sendJobStatus(jobExecution.getJobName(), "FAILED");
-            }
+    JobExecution jobExecution = new JobExecution(
+            new JobDefinition(jobRequest.getJobName(), "default-stage", "default-image",
+                    List.of(), List.of(), false), // Default values
+            ExecutionState.RUNNING.name(),
+            false,
+            List.of()
+    );
 
-            dockerManager.cleanupContainer(containerId);
-        } else {
-            backendClient.sendJobStatus(jobExecution.getJobName(), "FAILED");
-        }
+    String containerId = dockerManager.runContainer(jobExecution);
 
-        logExecution(jobExecution);
+    if (containerId != null) {
+      boolean success = dockerManager.waitForContainer(containerId);
+
+      if (success) {
+        backendClient.sendJobStatus(jobRequest.getJobName(), ExecutionState.SUCCESS);
+      } else {
+        backendClient.sendJobStatus(jobRequest.getJobName(), ExecutionState.FAILED);
+      }
+
+      dockerManager.cleanupContainer(containerId);
+    } else {
+      backendClient.sendJobStatus(jobRequest.getJobName(), ExecutionState.FAILED);
     }
 
-    private void logExecution(JobExecution jobExecution) {
-        try (FileWriter file = new FileWriter("job-executions.log", true)) {
-            String logEntry = String.format(
-                    "{ \"jobName\": \"%s\", \"status\": \"%s\", \"startTime\": \"%s\", \"endTime\": \"%s\" }\n",
-                    jobExecution.getJobName(),
-                    jobExecution.getStatus(),
-                    jobExecution.getStartTime(),
-                    jobExecution.getCompletionTime()
-            );
-            file.write(logEntry);
-            logger.info("Job execution logged: {}", logEntry);
-        } catch (IOException e) {
-            logger.error("Failed to write job execution log", e);
-        }
-    }
+    logExecution(jobRequest);
+  }
 
-    public String getImage(JobExecution jobExecution) {
-        return jobExecution.getJobDefinition().getImage();
+
+  /**
+   * Log job execution to a file.
+   *
+   * @param jobRequest JobRequest
+   */
+  private void logExecution(JobRequest jobRequest) {
+    try (FileWriter file = createFileWriter()) {  // ✅ Now using an extractable method
+      String logEntry = String.format(
+              "{ \"jobName\": \"%s\", \"status\": \"%s\" }\n",
+              jobRequest.getJobName(),
+              ExecutionState.UNKNOWN
+      );
+      file.write(logEntry);
+      logger.info("Job execution logged: {}", logEntry);
+    } catch (IOException e) {
+      logger.error("Failed to write job execution log", e);
     }
+  }
+
+  /**
+   * Extracted method to allow mocking
+   */
+  protected FileWriter createFileWriter() throws IOException {
+    return new FileWriter("job-executions.log", true);
+  }
 }

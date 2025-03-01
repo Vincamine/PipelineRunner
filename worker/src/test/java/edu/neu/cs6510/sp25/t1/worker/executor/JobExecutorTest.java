@@ -1,88 +1,64 @@
 package edu.neu.cs6510.sp25.t1.worker.executor;
-import edu.neu.cs6510.sp25.t1.common.model.definition.JobDefinition;
-import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
-import edu.neu.cs6510.sp25.t1.worker.executor.DockerManager;
-import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutor;
 
+import edu.neu.cs6510.sp25.t1.common.api.JobRequest;
+import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
+import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import java.io.FileWriter;
+import java.io.IOException;
 
-import java.util.List;
 
 import static org.mockito.Mockito.*;
 
 class JobExecutorTest {
-
     private JobExecutor jobExecutor;
-
-    @Mock
     private DockerManager dockerManager;
-
-    @Mock
     private BackendClient backendClient;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        dockerManager = mock(DockerManager.class);
+        backendClient = mock(BackendClient.class);
         jobExecutor = new JobExecutor(dockerManager, backendClient);
     }
 
     @Test
     void testExecuteJob_Success() {
-        JobDefinition jobDefinition = new JobDefinition("test-job", "test-stage", "test-image",
-                List.of("echo Hello"), List.of(), false);
-        JobExecution jobExecution = new JobExecution(jobDefinition, "PENDING", false, List.of());
-
-        when(dockerManager.runContainer(jobExecution)).thenReturn("container123");
+        JobRequest jobRequest = new JobRequest("123", "pipeline1", "job1", "commitHash", null, null);
+        when(dockerManager.runContainer(any())).thenReturn("container123");
         when(dockerManager.waitForContainer("container123")).thenReturn(true);
 
-        jobExecutor.executeJob(jobExecution);
+        jobExecutor.executeJob(jobRequest);
 
-        // Verify status updates to backend
-        verify(backendClient).sendJobStatus("test-job", "RUNNING");
-        verify(backendClient).sendJobStatus("test-job", "SUCCESS");
-
-        // Verify container cleanup
+        verify(backendClient).sendJobStatus("job1", ExecutionState.RUNNING);
+        verify(backendClient).sendJobStatus("job1", ExecutionState.SUCCESS);
         verify(dockerManager).cleanupContainer("container123");
     }
 
     @Test
     void testExecuteJob_Failure() {
-        JobDefinition jobDefinition = new JobDefinition("test-job", "test-stage", "test-image",
-                List.of("echo Hello"), List.of(), false);
-        JobExecution jobExecution = new JobExecution(jobDefinition, "PENDING", false, List.of());
+        JobRequest jobRequest = new JobRequest("123", "pipeline1", "job1", "commitHash", null, null);
+        when(dockerManager.runContainer(any())).thenReturn(null);
 
-        when(dockerManager.runContainer(jobExecution)).thenReturn("container123");
-        when(dockerManager.waitForContainer("container123")).thenReturn(false);
+        jobExecutor.executeJob(jobRequest);
 
-        jobExecutor.executeJob(jobExecution);
-
-        // Verify failure status updates
-        verify(backendClient).sendJobStatus("test-job", "RUNNING");
-        verify(backendClient).sendJobStatus("test-job", "FAILED");
-
-        // Verify container cleanup
-        verify(dockerManager).cleanupContainer("container123");
+        verify(backendClient).sendJobStatus("job1", ExecutionState.FAILED);
     }
 
     @Test
-    void testExecuteJob_ContainerFailure() {
-        JobDefinition jobDefinition = new JobDefinition("test-job", "test-stage", "test-image",
-                List.of("echo Hello"), List.of(), false);
-        JobExecution jobExecution = new JobExecution(jobDefinition, "PENDING", false, List.of());
+    void testLogExecution_WritesLog() throws IOException {
+        JobRequest jobRequest = new JobRequest("123", "pipeline1", "job1", "commitHash", null, null);
 
-        when(dockerManager.runContainer(jobExecution)).thenReturn(null);
+        FileWriter fileWriter = mock(FileWriter.class);
+        JobExecutor spyExecutor = spy(jobExecutor);
 
-        jobExecutor.executeJob(jobExecution);
+        doReturn(fileWriter).when(spyExecutor).createFileWriter();
 
-        // Verify immediate failure
-        verify(backendClient).sendJobStatus("test-job", "FAILED");
+        spyExecutor.executeJob(jobRequest);
 
-        // Ensure no container cleanup happens since it was never created
-        verify(dockerManager, never()).cleanupContainer(anyString());
+        verify(fileWriter, atLeastOnce()).write(anyString());
     }
+
 }

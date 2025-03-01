@@ -1,58 +1,45 @@
 package edu.neu.cs6510.sp25.t1.worker.executor;
-// package edu.neu.cs6510.sp25.t1.docker;
 
-// import com.github.dockerjava.api.DockerClient;
-// import com.github.dockerjava.api.command.CreateContainerResponse;
-// import com.github.dockerjava.api.exception.DockerException;
-// import com.github.dockerjava.api.model.HostConfig;
-// import com.github.dockerjava.core.DockerClientBuilder;
+import java.io.IOException;
+import java.util.List;
 
-// /**
-//  * Responsible for creating and starting a Docker container for a pipeline execution.
-//  * Manages Docker container execution for pipeline execution.
-//  */
-// public class DockerRunner {
-//   private final DockerClient dockerClient;
-//   private final String image;
-//   private final String localDockerWindows = "tcp://localhost:2375";
-//   private final String localDockerLinux = "unix:///var/run/docker.sock";
+/**
+ * A simple class to run a docker container with a given image and commands.
+ */
+public class DockerRunner {
+  private final String containerName;
+  private final String image;
+  private final List<String> commands;
 
-//   /**
-//    * Constructor to initialize DockerRunner with the specified image.
-//    * @param image The Docker image to use for the container.
-//    */
-//   public DockerRunner(String image) {
-//     this.dockerClient = DockerClientBuilder.getInstance(localDockerWindows).build();
-//     this.image = image;
-//   }
+  /**
+   * Create a new DockerRunner with the given image and commands.
+   *
+   * @param image    The image to run.
+   * @param commands The commands to run in the container.
+   */
+  public DockerRunner(String image, List<String> commands) {
+    this.image = image;
+    this.containerName = "ci-job-" + System.currentTimeMillis();
+    this.commands = commands;
+  }
 
-//   /**
-//    * Starts a new Docker container using the specified image.
-//    * @param command The command to run inside the container.
-//    * @return The container ID if successful.
-//    */
-//   public String startContainer(String... command) {
-//     try {
-//       System.out.println("Starting container with image: " + image);
-//       CreateContainerResponse container = dockerClient.createContainerCmd(image)
-//           .withHostConfig(HostConfig.newHostConfig())
-//           .withCmd(command)
-//           .exec();
+  /**
+   * Extracted method to allow mocking in tests.
+   */
+  protected ProcessBuilder createProcessBuilder() {  // ✅ Now returns a ProcessBuilder
+    return new ProcessBuilder(
+            "docker", "run", "--rm", "--name", containerName, image, "sh", "-c", String.join(" && ", commands)
+    );
+  }
 
-//       String containerId = container.getId();
-//       dockerClient.startContainerCmd(containerId).exec();
-//       System.out.println("Container started: " + containerId);
-//       return containerId;
-//     } catch (DockerException e) {
-//       throw new RuntimeException("Failed to start Docker container: " + e.getMessage(), e);
-//     }
-//   }
-
-//   /**
-//    * Getter: Returns the Docker client instance.
-//    * @return The Docker client instance.
-//    */
-//   public DockerClient getDockerClient() {
-//     return dockerClient;
-//   }
-// }
+  /**
+   * Run the container with the given image and commands.
+   *
+   * @throws IOException          If there is an error starting the process.
+   * @throws InterruptedException If the process is interrupted.
+   */
+  public void run() throws IOException, InterruptedException {
+    Process process = createProcessBuilder().start();
+    process.waitFor();
+  }
+}
