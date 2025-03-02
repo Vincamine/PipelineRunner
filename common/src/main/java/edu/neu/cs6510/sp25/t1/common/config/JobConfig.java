@@ -16,9 +16,10 @@ public class JobConfig {
   private final List<String> script;
   private final List<String> needs; // Dependencies
   private final boolean allowFailure;
+  private final List<String> artifacts; // ✅ New field for artifact paths
 
   /**
-   * Constructor for JobDefinition.
+   * Constructor for JobConfig.
    *
    * @param name         Job name
    * @param stageName    Stage name
@@ -26,6 +27,7 @@ public class JobConfig {
    * @param script       List of commands to run
    * @param needs        List of dependencies
    * @param allowFailure Whether the job can fail without failing the pipeline
+   * @param artifacts    Optional list of artifact paths to be stored
    */
   @JsonCreator
   public JobConfig(
@@ -34,13 +36,15 @@ public class JobConfig {
           @JsonProperty("image") String image,
           @JsonProperty("script") List<String> script,
           @JsonProperty("needs") List<String> needs,
-          @JsonProperty("allowFailure") boolean allowFailure) {
+          @JsonProperty("allowFailure") boolean allowFailure,
+          @JsonProperty("artifacts") List<String> artifacts) {
     this.name = name;
     this.stageName = stageName;
     this.image = image;
     this.script = script;
     this.needs = needs != null ? needs : List.of();
     this.allowFailure = allowFailure;
+    this.artifacts = artifacts != null ? artifacts : List.of();
   }
 
   /**
@@ -95,5 +99,14 @@ public class JobConfig {
    */
   public boolean isAllowFailure() {
     return allowFailure;
+  }
+
+  /**
+   * Getter for artifacts.
+   *
+   * @return List of artifacts (empty list if none exist)
+   */
+  public List<String> getArtifacts() {
+    return artifacts;
   }
 }

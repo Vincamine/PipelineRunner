@@ -1,16 +1,20 @@
 # **CI/CD Pipeline Design Logic**
-- Version: 1.0
-- Updated with the Project requirements by Feb 28, 2025
+- Version: 1.1
+- Updated with the Project requirements by March 2, 2025
 - Author: Yiwen Wang
-- **Version 1.1**
-- Updated with Stage and Job Logic as of Feb 28, 2025
+- **Version 1.2**
+- Updated with Stage, Job, Execution, and Validation Logic as of March 2, 2025
 
 ## **1. Overview**
 This document outlines the design logic for the CI/CD pipeline system. The system is designed to allow developers to execute CI/CD workflows both **locally** and **on remote servers**, integrating with Git repositories for configuration management.
 
+It includes updates on **validation logic, execution tracking, error reporting, and dependency handling** to ensure robust and scalable CI/CD processes.
+
 ## **2. Pipeline Identification**
 - Each **pipeline** is uniquely identified by its **name** within a repository.
-- The **pipeline name** is stored in `.pipelines/pipeline.yaml`.
+- Multiple pipelines are allowed per repository.
+- Each pipeline must have a unique name inside the .pipelines/ directory.
+- If a duplicate name is found, validation fails.
 - **No separate Pipeline ID is required** since the name ensures uniqueness.
 
 ## **3. Pipeline Configuration (YAML Format)**
@@ -36,7 +40,8 @@ xx run --repo https://github.com/company/project --pipeline build-and-test
 1. **CLI sends a request** to the backend with the pipeline name.
 2. **Backend fetches the pipeline configuration** from the `.pipelines/pipeline.yaml` file.
 3. **PipelineExecutionService starts execution** of the pipeline using the `PipelineExecution` class.
-4. **Stages execute in sequence**, jobs within a stage execute in parallel (unless dependencies exist).
+4. If a duplicate pipeline name exists, execution fails immediately.
+5**Stages execute in sequence**, jobs within a stage execute in parallel (unless dependencies exist).
 
 ### **Step 2: Fetching Execution Status**
 Developers can check the current status of a pipeline:
@@ -56,8 +61,9 @@ Response:
 ```
 
 ### **Step 3: Handling Failures**
-- If **a job fails** (`allowFailure=false`), pipeline **stops immediately**.
+- If **a job fails** (`allowFailure=false`), the pipeline **stops immediately**.
 - If **a job fails** (`allowFailure=true`), the pipeline **continues execution**.
+- If a **dependency cycle** is detected, execution **fails immediately** with an error message.
 
 ### **Step 4: Fetching Execution History**
 Developers can retrieve past execution records:
@@ -74,12 +80,12 @@ Backend returns a list of previous executions for that pipeline name.
 
 ### **📌 Job Logic**
 - **Jobs are the smallest execution units** inside a stage.
-- Jobs **execute inside Docker containers**, requiring a `image`.
+- Jobs **execute inside Docker containers**, requiring an `image`.
 - Jobs **run in parallel unless they define dependencies (`needs`)**.
 - Jobs must define at least **one script command** to execute.
 - **Job failure handling:**
-  - If `allowFailure=false`, pipeline **stops on failure**.
-  - If `allowFailure=true`, pipeline **continues execution**.
+  - If `allowFailure=false`, the pipeline **stops on failure**.
+  - If `allowFailure=true`, the pipeline **continues execution**.
 
 ### **📌 Example Execution Order**
 #### **YAML Configuration:**
@@ -168,11 +174,14 @@ Response:
 ✅ **Execution Tracking by Name**: All execution-related tracking uses `pipelineName`.  
 ✅ **REST API Updates**: Routes now reference `/{pipelineName}/status` instead of `/{id}/status`.  
 ✅ **CLI Adjustments**: Commands reference pipelines by name rather than ID.  
-✅ **Stage and Job Logic Added**: Stages run sequentially, jobs run in parallel (unless dependencies exist).
+✅ **Stage and Job Logic Added**: Stages run sequentially, jobs run in parallel (unless dependencies exist).  
+✅ **Validation Errors Now Include Line Numbers**.  
+✅ **Cycle Detection Added to Prevent Infinite Job Loops**.
 
 ## **8. Future Enhancements**
 - Implement a **database-backed execution history** instead of in-memory storage.
 - Introduce **user-defined pipeline execution metadata** (e.g., triggered by PRs, scheduled runs).
+- Add **real-time logging and monitoring** for pipeline execution insights.
 
 This design ensures a **clear, simple, and scalable** CI/CD system that aligns with project requirements.
 

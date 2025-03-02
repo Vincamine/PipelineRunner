@@ -11,9 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
-import edu.neu.cs6510.sp25.t1.common.parser.YamlParser;
-import edu.neu.cs6510.sp25.t1.common.validation.PipelineValidator;
-import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.validation.validator.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

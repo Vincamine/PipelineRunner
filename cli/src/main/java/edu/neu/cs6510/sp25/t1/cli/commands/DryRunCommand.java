@@ -1,85 +1,94 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-import java.io.File;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import edu.neu.cs6510.sp25.t1.common.config.JobConfig;
 import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
-import edu.neu.cs6510.sp25.t1.common.parser.YamlParser;
-import edu.neu.cs6510.sp25.t1.common.validation.PipelineValidator;
-import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.config.StageConfig;
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import picocli.CommandLine;
 
 /**
- * Command to simulate pipeline execution.
- * Parse and validate before simulating execution.
+ * CLI command to simulate pipeline execution.
+ * <p>
+ * Purpose: Prints the execution plan of a pipeline without actually executing any jobs.
+ * <p>
+ * Output: The execution plan is printed in a structured YAML format.
  */
-@CommandLine.Command(name = "dry-run", description = "Simulate pipeline execution")
+@CommandLine.Command(name = "dry-run", description = "Simulate pipeline execution without running jobs.")
 public class DryRunCommand extends BaseCommand {
 
-  private final CliBackendClient backendClient;
+  private final ObjectMapper yamlMapper = new YAMLMapper();
 
   /**
-   * Default constructor using default BackendClient.
-   */
-  public DryRunCommand() {
-    this.backendClient = new CliBackendClient("http://localhost:8080");
-  }
-
-  /**
-   * Constructor for dependency injection (used for unit testing).
+   * Executes the dry-run command to simulate pipeline execution order.
    *
-   * @param backendClient The mocked backend client instance.
-   */
-  public DryRunCommand(CliBackendClient backendClient) {
-    this.backendClient = backendClient;
-  }
-
-  /**
-   * Executes the CLI command to interact with the CI/CD system.
-   *
-   * @return 0 if successful, 1 if an error occurred, 2 if no file provided, 3 if validation failed; required by picocli.
+   * @return Exit code:
+   * <p>
+   * - 0 - Success
+   * - 1 - General failure
+   * - 2 - Missing file or incorrect directory
+   * - 3 - Validation failure
    */
   @Override
   public Integer call() {
-    if (configFile == null || configFile.isEmpty()) {
-      System.err.println("Error: No pipeline configuration file provided.");
+    if (!validateInputs()) {
       return 2;
     }
 
     try {
-      File yamlFile = new File(configFile);
-      if (!yamlFile.exists()) {
-        System.err.println("Error: YAML file not found at " + configFile);
-        return 2;
-      }
-
-      // Parse YAML
-      PipelineConfig pipelineConfig = YamlParser.parseYaml(yamlFile);
-
-      // Validate pipeline structure
-      PipelineValidator.validate(pipelineConfig);
-
-      // Send to backend for dry-run simulation
-      String response = backendClient.dryRunPipeline(configFile);
-
-      // Format response
-      if ("yaml".equalsIgnoreCase(outputFormat)) {
-        YAMLMapper yamlMapper = new YAMLMapper();
-        response = yamlMapper.writeValueAsString(response);
-      }
-
-      System.out.println("Pipeline Execution Plan:");
-      System.out.println(response);
-
-      return response.startsWith("Error") ? 3 : 0;
+      // Load pipeline configuration
+      PipelineConfig pipelineConfig = loadAndValidatePipelineConfig();
+      simulateExecution(pipelineConfig);
+      return 0;
     } catch (ValidationException e) {
-      System.err.println("Validation Error: " + e.getMessage());
+      logError(String.format("%s: Validation Error: %s", configFile, e.getMessage()));
       return 3;
     } catch (Exception e) {
-      System.err.println("Failed to perform dry-run: " + e.getMessage());
+      logError(String.format("%s: Error processing pipeline: %s", configFile, e.getMessage()));
       return 1;
     }
+  }
+
+  /**
+   * Simulates pipeline execution by printing the planned execution order in YAML format.
+   *
+   * @param pipelineConfig The pipeline configuration.
+   */
+  private void simulateExecution(PipelineConfig pipelineConfig) {
+    logInfo("🔍 Simulating execution for pipeline: " + pipelineConfig.getName());
+
+    Map<String, Object> executionPlan = new LinkedHashMap<>();
+
+    for (StageConfig stageConfig : pipelineConfig.getStages()) {
+      Map<String, Object> stageDetails = new LinkedHashMap<>();
+
+      for (JobConfig job : stageConfig.getJobs()) {
+        Map<String, Object> jobDetails = new LinkedHashMap<>();
+        jobDetails.put("image", job.getImage());
+        jobDetails.put("script", job.getScript());
+
+        if (!job.getArtifacts().isEmpty()) {
+          jobDetails.put("artifacts", job.getArtifacts());
+        }
+
+        stageDetails.put(job.getName(), jobDetails);
+      }
+
+      executionPlan.put(stageConfig.getName(), stageDetails);
+    }
+
+    try {
+      String yamlOutput = yamlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(executionPlan);
+      System.out.println("\nPipeline Execution Plan:\n" + yamlOutput);
+    } catch (Exception e) {
+      logError("Failed to generate YAML output: " + e.getMessage());
+    }
+
+    logInfo("Simulation Complete.");
   }
 }

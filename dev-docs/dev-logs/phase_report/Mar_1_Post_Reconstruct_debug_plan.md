@@ -124,32 +124,32 @@ Showcase the working CI/CD system in a structured demo.
 - [ ] Provide `--check` option to validate config files without execution.
 
 ### **3. Validation of Pipeline YAML Definitions**
-- [ ] YAML v1.2 format support.
-- [ ] Validate keys:
-   - [ ] `pipeline` (required, includes `name`, `stages`).
-   - [ ] `stages` (required, execution order defined by list order).
-   - [ ] `job` (at least one per stage, including `name`, `stage`, `image`, `script`, `needs`).
-- [ ] Enforce constraints:
-   - [ ] Unique pipeline names per repo.
-   - [ ] At least one stage defined.
-   - [ ] Unique job names within a stage.
-   - [ ] No cyclic dependencies.
-   - [ ] Valid `needs` references.
+- [x] YAML v1.2 format support.
+- [x] Validate keys:
+   - [x] `pipeline` (required, includes `name`, `stages`).
+   - [x] `stages` (required, execution order defined by list order).
+   - [x] `job` (at least one per stage, including `name`, `stage`, `image`, `script`, `needs`).
+- [x] Enforce constraints:
+   - [x] Unique pipeline names inside repo.
+   - [x] At least one stage defined.
+   - [x] Unique job names within a stage.
+   - [x] No cyclic dependencies.
+   - [x] Valid `needs` references.
 
 ### **4. Error Reporting**
-- [ ] CLI must:
-   - [ ] Report errors with `<filename>:<line-number>:<column-number>:<error-message>` format.
-   - [ ] Detect cycles in job dependencies.
-   - [ ] Identify type mismatches in configuration values.
+- [x] CLI must:
+   - [x] Report errors with `<filename>:<line-number>:<column-number>:<error-message>` format.
+   - [x] Detect cycles in job dependencies.
+   - [x] Identify type mismatches in configuration values.
 
 ### **5. CLI Commands for Dry-Run and Local Execution**
-- [ ] Implement:
-   - [ ] `dry-run`: Simulates execution without running jobs.
-   - [ ] `run`: Executes pipeline locally.
+- [x] Implement:
+   - [x] `dry-run`: Simulates execution without running jobs.
+   - [x] `run`: cli command for run for a local repo to be executed on the local machine
 
 ### **6. Execution Flow**
-- [ ] No parallel execution (sequential processing only).
-- [ ] Ensure `needs` dependencies are obeyed.
+- [x] No parallel execution (sequential processing only).
+- [x] Ensure `needs` dependencies are obeyed.
 
 ### **7. CLI Command for Reporting Past Pipeline Runs**
 - [ ] Implement CLI `report` command.

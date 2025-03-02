@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import edu.neu.cs6510.sp25.t1.backend.entity.PipelineExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.entity.PipelineExecution;
 import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 
 /**
@@ -15,7 +15,7 @@ import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
  * This is different from PipelineRepository, which handles pipeline definitions.
  */
 @Repository
-public interface PipelineExecutionRepository extends JpaRepository<PipelineExecutionEntity, UUID> {
+public interface PipelineExecutionRepository extends JpaRepository<PipelineExecution, UUID> {
 
   /**
    * Finds all executions for a specific pipeline name.

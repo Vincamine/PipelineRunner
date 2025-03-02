@@ -43,7 +43,14 @@ public class ReportCommand extends BaseCommand {
   private String runId;
 
   /**
-   * Constructs a new ReportCommand with a reference to the backend client.
+   * Default constructor using the default BackendClient.
+   */
+  public ReportCommand() {
+    this.backendClient = new CliBackendClient("http://localhost:8080");
+  }
+
+  /**
+   * Constructor for dependency injection (used for unit testing).
    *
    * @param backendClient The backend client used to fetch pipeline execution data.
    */
@@ -62,14 +69,19 @@ public class ReportCommand extends BaseCommand {
    * <p>
    * The response is formatted based on the `--output` option (plaintext, JSON, YAML).
    *
-   * @return Exit code: 0 if successful, 2 if a required argument is missing, 1 if an error occurs.
+   * @return Exit code:
+   *         - 0: Success
+   *         - 1: General error
+   *         - 2: Missing required argument
    */
   @Override
   public Integer call() {
-    // Ensure that at least one of --list-pipelines or --pipeline is provided
+    if (validateInputs()) {// the git repo check is done here
+      return 2; // Exit code for missing file or wrong directory
+    }
     if (!listPipelines && (pipeline == null || pipeline.isEmpty())) {
-      System.err.println("Error: Missing required option '--pipeline=<pipeline>' or '--list-pipelines'");
-      return 2;  // Picocli's standard exit code for missing arguments
+      logError("Error: Missing required option '--pipeline=<pipeline>' or '--list-pipelines'");
+      return 2; // Picocli's standard exit code for missing arguments
     }
 
     try {
@@ -78,16 +90,17 @@ public class ReportCommand extends BaseCommand {
       if (listPipelines) {
         response = backendClient.getAllPipelines();
       } else {
-        response = runId == null
+        response = (runId == null)
                 ? backendClient.getPipelineExecutions(pipeline, outputFormat)
                 : backendClient.getPipelineExecutions(pipeline + "/" + runId, outputFormat);
       }
 
+      logInfo("Report successfully retrieved.");
       System.out.println(formatOutput(response));
       return 0;
+
     } catch (Exception e) {
-      logger.error("Failed to retrieve report", e);
-      System.err.println("Error fetching report: " + e.getMessage());
+      logError("Failed to retrieve report: " + e.getMessage());
       return 1; // General failure exit code
     }
   }

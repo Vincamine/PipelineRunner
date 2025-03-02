@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "pipeline_executions")
-public class PipelineExecutionEntity {
+public class PipelineExecution {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -13,9 +13,9 @@ public class PipelineExecutionEntity {
   private String pipelineName;
   private String status;
 
-  public PipelineExecutionEntity() {}
+  public PipelineExecution() {}
 
-  public PipelineExecutionEntity(String pipelineName, String status) {
+  public PipelineExecution(String pipelineName, String status) {
     this.pipelineName = pipelineName;
     this.status = status;
   }

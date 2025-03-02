@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConfigurationProperties(prefix = "cicd")
-public class CicdConfigProperties {
+public class CicdConfig {
   private GitConfig git;
   private ArtifactsConfig artifacts;
   private WorkerConfig worker;

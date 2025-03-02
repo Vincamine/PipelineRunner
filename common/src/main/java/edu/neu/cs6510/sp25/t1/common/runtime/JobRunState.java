@@ -58,6 +58,19 @@ public class JobRunState {
     this.startTime = Instant.now();
   }
 
+  /**
+   * Constructs a new JobExecution instance based on its definition for integration testing.
+   *
+   * @param jobConfig The definition of the job.
+   */
+  public JobRunState(JobConfig jobConfig) {
+    this.jobConfig = jobConfig;
+    this.status = ExecutionState.PENDING.name();
+    this.allowFailure = jobConfig.isAllowFailure();
+    this.dependencies = jobConfig.getNeeds();
+    this.startTime = Instant.now();
+  }
+
 
   /**
    * Constructs a new JobExecution instance based on its name and status for integration testing.

@@ -3,11 +3,17 @@ package edu.neu.cs6510.sp25.t1.cli.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import edu.neu.cs6510.sp25.t1.common.api.PipelineCheckResponse;
 import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
+import edu.neu.cs6510.sp25.t1.common.api.UpdateExecutionStateRequest;
+import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
+import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -18,10 +24,11 @@ import okhttp3.Response;
  * Client for interacting with the backend API.
  */
 public class CliBackendClient {
+  private static final Logger logger = LoggerFactory.getLogger(CliBackendClient.class);
   private final String baseUrl;
   private final OkHttpClient client;
   private final ObjectMapper objectMapper;
-  private final YAMLMapper yamlMapper;
+  private final YAMLMapper yamlMapper = new YAMLMapper();
 
   /**
    * Constructor with parameters.
@@ -31,12 +38,11 @@ public class CliBackendClient {
   public CliBackendClient(String baseUrl) {
     this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     this.client = new OkHttpClient.Builder()
-            .readTimeout(10, TimeUnit.SECONDS)  // Increase read timeout
-            .writeTimeout(10, TimeUnit.SECONDS) // Increase write timeout
-            .connectTimeout(10, TimeUnit.SECONDS) // Increase connect timeout
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
             .build();
     this.objectMapper = new ObjectMapper();
-    this.yamlMapper = new YAMLMapper();
   }
 
   /**
@@ -49,6 +55,7 @@ public class CliBackendClient {
     String responseBody = response.body() != null ? response.body().string() : "";
 
     if (!response.isSuccessful()) {
+      logger.error("API Error: {} - {}", response.code(), response.message());
       throw new IOException("API Error: " + response.code() + " - " + response.message() + "\n" + responseBody);
     }
     return responseBody;
@@ -99,16 +106,13 @@ public class CliBackendClient {
    * @throws IOException If there is an error communicating with the backend.
    */
   public String runPipeline(RunPipelineRequest request) throws IOException {
-    // Convert RunPipelineRequest to JSON
     String jsonRequest = objectMapper.writeValueAsString(request);
 
-    // Create the HTTP POST request
     Request req = new Request.Builder()
             .url(baseUrl + "/api/v1/pipelines/run")
             .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
             .build();
 
-    // Execute the request
     try (Response response = client.newCall(req).execute()) {
       return handleResponse(response);
     }
@@ -168,4 +172,107 @@ public class CliBackendClient {
       return handleResponse(response);
     }
   }
+
+  /**
+   * Updates the execution state of a pipeline, stage, or job.
+   *
+   * @param request The execution state update request.
+   */
+  public void updateExecutionState(UpdateExecutionStateRequest request) {
+    try {
+      String jsonRequest = objectMapper.writeValueAsString(request);
+
+      Request req = new Request.Builder()
+              .url(baseUrl + "/api/v1/execution/state")
+              .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
+              .build();
+
+      try (Response response = client.newCall(req).execute()) {
+        handleResponse(response);
+        logger.info("Updated execution state: {}", request);
+      }
+    } catch (IOException e) {
+      logger.error("Failed to update execution state: {}", e.getMessage());
+    }
+  }
+
+
+  /**
+   * Logs the start of a pipeline execution.
+   *
+   * @param pipelineRunState The pipeline execution state.
+   */
+  public void logPipelineExecutionStart(PipelineRunState pipelineRunState) {
+    logExecution("/api/v1/pipelines/log/start", pipelineRunState);
+  }
+
+  /**
+   * Logs the success of a pipeline execution.
+   *
+   * @param pipelineRunState The pipeline execution state.
+   */
+  public void logPipelineExecutionSuccess(PipelineRunState pipelineRunState) {
+    logExecution("/api/v1/pipelines/log/success", pipelineRunState);
+  }
+
+  /**
+   * Logs the failure of a pipeline execution.
+   *
+   * @param pipelineRunState The pipeline execution state.
+   */
+  public void logPipelineExecutionFailure(PipelineRunState pipelineRunState) {
+    logExecution("/api/v1/pipelines/log/failure", pipelineRunState);
+  }
+
+  /**
+   * Logs the start of a job execution.
+   *
+   * @param jobRunState The job execution state.
+   */
+  public void logJobExecutionStart(JobRunState jobRunState) {
+    logExecution("/api/v1/jobs/log/start", jobRunState);
+  }
+
+  /**
+   * Logs the success of a job execution.
+   *
+   * @param jobRunState The job execution state.
+   */
+  public void logJobExecutionSuccess(JobRunState jobRunState) {
+    logExecution("/api/v1/jobs/log/success", jobRunState);
+  }
+
+  /**
+   * Logs the failure of a job execution.
+   *
+   * @param jobRunState The job execution state.
+   */
+  public void logJobExecutionFailure(JobRunState jobRunState) {
+    logExecution("/api/v1/jobs/log/failure", jobRunState);
+  }
+
+  /**
+   * Generic method to log execution states to the backend.
+   *
+   * @param endpoint The API endpoint for logging execution.
+   * @param state    The execution state object (pipeline or job).
+   */
+  private void logExecution(String endpoint, Object state) {
+    try {
+      String jsonRequest = objectMapper.writeValueAsString(state);
+
+      Request req = new Request.Builder()
+              .url(baseUrl + endpoint)
+              .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
+              .build();
+
+      try (Response response = client.newCall(req).execute()) {
+        handleResponse(response);
+        logger.info("Logged execution: {} -> {}", endpoint, state);
+      }
+    } catch (IOException e) {
+      logger.error("Failed to log execution to {}: {}", endpoint, e.getMessage());
+    }
+  }
 }
+

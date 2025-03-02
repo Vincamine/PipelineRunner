@@ -9,7 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
-import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;

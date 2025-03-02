@@ -8,6 +8,8 @@ import java.util.Map;
 import edu.neu.cs6510.sp25.t1.common.config.JobConfig;
 import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
 import edu.neu.cs6510.sp25.t1.common.config.StageConfig;
+import edu.neu.cs6510.sp25.t1.common.validation.validator.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;

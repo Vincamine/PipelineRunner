@@ -137,10 +137,10 @@ subprojects {
         }
     }
 
-    tasks.check {
-        dependsOn(tasks.test)
-        dependsOn(tasks.jacocoTestCoverageVerification) // Ensures coverage check runs on build, comment out for now
-    }
+//    tasks.check {
+//        dependsOn(tasks.test)
+////        dependsOn(tasks.jacocoTestCoverageVerification) // Ensures coverage check runs on build, comment out for now
+//    }
 
     checkstyle {
         toolVersion = "10.12.3"

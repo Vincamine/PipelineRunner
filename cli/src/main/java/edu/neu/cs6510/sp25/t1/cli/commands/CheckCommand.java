@@ -1,62 +1,50 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import java.io.File;
-
 import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
-import edu.neu.cs6510.sp25.t1.common.parser.YamlParser;
-import edu.neu.cs6510.sp25.t1.common.validation.PipelineValidator;
-import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import picocli.CommandLine;
 
 /**
  * Command to check the validity of a pipeline YAML file.
- * Only parses and validates YAML locally.
- * Validate YAML without running it.
- * does not interact with the CI/CD system backend.
+ * - Parses and validates the pipeline YAML locally.
+ * - Does NOT interact with the CI/CD system backend.
  */
-@CommandLine.Command(name = "check", description = "Validate the pipeline configuration file")
+@CommandLine.Command(name = "check", description = "Validate the pipeline configuration file.")
 public class CheckCommand extends BaseCommand {
 
   /**
-   * Constructor for dependency injection (used for unit testing).
+   * Default constructor.
    */
   public CheckCommand() {
   }
 
-
   /**
    * Validates the pipeline configuration file.
    *
-   * @return 0 if successful, 1 if an error occurred, 2 if no file provided, 3 if validation failed; required by picocli.
+   * @return Exit code:
+   * - 0: Validation successful
+   * - 1: General error
+   * - 2: File not found or unreadable
+   * - 3: Validation failed
    */
   @Override
   public Integer call() {
-    if (configFile == null || configFile.isEmpty()) {
-      System.err.println("Error: No pipeline configuration file provided.");
-      return 2;
+    if (validateInputs()) {// the git repo check is done here
+      return 2; // Exit code for missing file or wrong directory
     }
-
     try {
-      File yamlFile = new File(configFile);
-      if (!yamlFile.exists()) {
-        System.err.println("Error: YAML file not found at " + configFile);
-        return 2;
-      }
+      // Use shared method from BaseCommand
+      PipelineConfig pipelineConfig = loadAndValidatePipelineConfig();
 
-      // Parse YAML file
-      PipelineConfig pipelineConfig = YamlParser.parseYaml(yamlFile);
-
-      // Validate pipeline structure
-      PipelineValidator.validate(pipelineConfig);
-
-      System.out.println("Pipeline configuration is valid!");
+      logInfo("Pipeline configuration is valid: " + configFile);
       return 0;
 
     } catch (ValidationException e) {
-      System.err.println("Validation Error: " + e.getMessage());
+      logError(String.format("%s: Validation Error: %s", configFile, e.getMessage()));
       return 3;
+
     } catch (Exception e) {
-      System.err.println("Error processing YAML file: " + e.getMessage());
+      logError(String.format("%s: Error processing YAML file: %s", configFile, e.getMessage()));
       return 1;
     }
   }
