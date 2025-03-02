@@ -29,8 +29,9 @@ public class Stage {
   private String name;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "pipeline_id", nullable = false)
+  @JoinColumn(name = "pipeline_name", referencedColumnName = "name", nullable = false)
   private Pipeline pipeline;
+
 
   @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<Job> jobs;

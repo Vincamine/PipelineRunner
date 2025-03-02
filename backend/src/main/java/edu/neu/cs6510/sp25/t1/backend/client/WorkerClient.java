@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.client;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,7 @@ public class WorkerClient {
    *
    * @param restTemplate RestTemplate
    */
+  @Autowired
   public WorkerClient(RestTemplate restTemplate) {
     this.restTemplate = restTemplate;
   }

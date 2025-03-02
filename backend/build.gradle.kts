@@ -3,6 +3,7 @@ plugins {
     application
     id("org.springframework.boot") version "3.2.2"
     id("io.spring.dependency-management") version "1.1.4"
+    id("org.flywaydb.flyway") version "9.22.3"
 }
 
 repositories {
@@ -40,6 +41,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:3.2.2")
     implementation("org.hibernate.orm:hibernate-core:6.4.0.Final")
     runtimeOnly("org.postgresql:postgresql:42.6.0")
+
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.postgresql:postgresql")
 
     // **Spring Data Redis**
     implementation("org.springframework.boot:spring-boot-starter-data-redis:3.2.2")

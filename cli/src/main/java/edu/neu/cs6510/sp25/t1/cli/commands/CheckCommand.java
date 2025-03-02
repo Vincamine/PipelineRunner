@@ -9,6 +9,17 @@ public class CheckCommand extends BaseCommand {
   private String configFile;
   private final CliBackendClient backendClient;
 
+  /**
+   * Default constructor using default BackendClient - for unit testing.
+   */
+  public CheckCommand() {
+    this.backendClient = new CliBackendClient("http://localhost:8080"); // Default backend client
+  }
+
+  /**
+   * Constructor for dependency injection (used for unit testing).
+   * @param backendClient The mocked backend client instance.
+   */
   public CheckCommand(CliBackendClient backendClient) {
     this.backendClient = backendClient;
   }

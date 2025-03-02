@@ -43,7 +43,6 @@ public class RunCommand extends BaseCommand {
     try {
       System.out.println("Executing pipeline with config: " + pipeline);
 
-      // 🔹 Fix: Create a request object before calling `runPipeline()`
       RunPipelineRequest request = new RunPipelineRequest(pipeline);
 
       System.out.println("Sending request to backend...");
