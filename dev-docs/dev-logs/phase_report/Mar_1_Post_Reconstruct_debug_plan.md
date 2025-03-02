@@ -111,3 +111,75 @@ Showcase the working CI/CD system in a structured demo.
 - Recording tool for demo video.
 
 ---
+## CI/CD Pipeline CLI Development Checklist
+
+### **1. Design and Implement CLI Client**
+- [ ] Create CLI tool with required functionalities.
+- [ ] Ensure it integrates correctly with backend services.
+
+### **2. CLI Processing of Pipeline Configuration Files**
+- [ ] CLI must be run from the root of a Git repository.
+- [ ] Support configuration files stored in `.pipelines/`.
+- [ ] Allow specifying config file via `--filename | -f`.
+- [ ] Provide `--check` option to validate config files without execution.
+
+### **3. Validation of Pipeline YAML Definitions**
+- [ ] YAML v1.2 format support.
+- [ ] Validate keys:
+   - [ ] `pipeline` (required, includes `name`, `stages`).
+   - [ ] `stages` (required, execution order defined by list order).
+   - [ ] `job` (at least one per stage, including `name`, `stage`, `image`, `script`, `needs`).
+- [ ] Enforce constraints:
+   - [ ] Unique pipeline names per repo.
+   - [ ] At least one stage defined.
+   - [ ] Unique job names within a stage.
+   - [ ] No cyclic dependencies.
+   - [ ] Valid `needs` references.
+
+### **4. Error Reporting**
+- [ ] CLI must:
+   - [ ] Report errors with `<filename>:<line-number>:<column-number>:<error-message>` format.
+   - [ ] Detect cycles in job dependencies.
+   - [ ] Identify type mismatches in configuration values.
+
+### **5. CLI Commands for Dry-Run and Local Execution**
+- [ ] Implement:
+   - [ ] `dry-run`: Simulates execution without running jobs.
+   - [ ] `run`: Executes pipeline locally.
+
+### **6. Execution Flow**
+- [ ] No parallel execution (sequential processing only).
+- [ ] Ensure `needs` dependencies are obeyed.
+
+### **7. CLI Command for Reporting Past Pipeline Runs**
+- [ ] Implement CLI `report` command.
+- [ ] Generate:
+   - [ ] Summary of pipeline run for repository (L4.1, L4.2).
+- [ ] Show past pipeline runs:
+   - [ ] CLI retrieves past runs of any pipeline of a repository.
+   - [ ] Show summary of all past pipeline runs.
+   - [ ] Support querying specific pipeline runs by name or number.
+
+### **8. Extended Reporting for Stage/Job-Level Summaries**
+- [ ] Extend CLI `report` command to include:
+   - [ ] Stage-level pipeline run summary (L4.3).
+   - [ ] Job-level pipeline run summary (L4.4).
+- [ ] Implement:
+   - [ ] Retrieval of stage summary from a pipeline.
+   - [ ] Retrieval of job summary within a stage.
+
+### **9. Pipeline Execution Inside Docker Containers**
+- [ ] Replace mocked/shell escape Docker calls with:
+   - [ ] Official language libraries (e.g., Go/Python).
+   - [ ] Direct interaction with Docker Service REST API.
+
+### **10. Reports Stored in a Persistent Data Store**
+- [ ] Implement reports with:
+   - [ ] SQL/NoSQL storage for historical access.
+
+### **Out of Scope**
+- [x] Ignore:
+   - `allow failures` feature.
+   - Multiple configuration files per repo.
+   - Job output storage & artifact uploads.
+

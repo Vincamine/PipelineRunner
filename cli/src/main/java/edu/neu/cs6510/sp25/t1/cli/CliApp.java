@@ -28,7 +28,7 @@ public class CliApp implements Runnable {
   /**
    * Main method to run the CLI application.
    *
-   * @param args
+   * @param args Command line arguments.
    */
   public static void main(String[] args) {
     int exitCode = new CommandLine(new CliApp()).execute(args);
