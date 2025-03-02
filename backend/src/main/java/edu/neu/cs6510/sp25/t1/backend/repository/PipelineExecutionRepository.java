@@ -5,17 +5,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.entity.PipelineExecution;
-import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 
-/**
- * Repository for managing pipeline execution records.
- * This is different from PipelineRepository, which handles pipeline definitions.
- */
 @Repository
-public interface PipelineExecutionRepository extends JpaRepository<PipelineExecution, UUID> {
+public interface PipelineExecutionRepository extends JpaRepository<PipelineExecution, Long> {
 
   /**
    * Finds all executions for a specific pipeline name.
@@ -23,13 +17,14 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
    * @param pipelineName The name of the pipeline.
    * @return List of executions.
    */
-  List<PipelineRunState> findByPipelineName(String pipelineName);
+  List<PipelineExecution> findByPipelineName(String pipelineName);
 
   /**
    * Finds the latest execution by pipeline name.
    *
    * @param pipelineName The name of the pipeline.
-   * @return Optional pipeline execution.
+   * @return Optional containing the latest execution.
    */
-  Optional<PipelineRunState> findFirstByPipelineNameOrderByStartTimeDesc(String pipelineName);
+  Optional<PipelineExecution> findFirstByPipelineNameOrderByCreatedAtDesc(String pipelineName);
+
 }

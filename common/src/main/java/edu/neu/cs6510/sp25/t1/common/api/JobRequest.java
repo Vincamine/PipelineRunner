@@ -126,4 +126,26 @@ public class JobRequest {
   public void addNeeds(String need) {
     this.needs.add(need);
   }
+
+  /**
+   * Determines if the job should be executed locally instead of using Docker.
+   *
+   * @return true if the job should run locally, false otherwise.
+   */
+  public boolean isRunLocal() {
+    return environmentVariables.containsKey("RUN_LOCAL") &&
+            Boolean.parseBoolean(environmentVariables.get("RUN_LOCAL"));
+  }
+
+  /**
+   * Retrieves the script to execute.
+   *
+   * @return The list of script commands.
+   */
+  public List<String> getScript() {
+    return environmentVariables.containsKey("SCRIPT")
+            ? List.of(environmentVariables.get("SCRIPT").split(";"))
+            : List.of();
+  }
+
 }

@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
 
@@ -28,4 +29,6 @@ public interface JobExecutionRepository extends JpaRepository<JobRunState, Strin
    * @return List of JobExecution records matching the status.
    */
   List<JobRunState> findByStatus(String status);
+
+  Optional<JobRunState> findByJobName(String jobName);
 }

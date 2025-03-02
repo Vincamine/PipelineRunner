@@ -1,70 +1,83 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import edu.neu.cs6510.sp25.t1.backend.entity.PipelineExecution;
+import edu.neu.cs6510.sp25.t1.backend.repository.PipelineExecutionRepository;
+import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Optional;
 
-import edu.neu.cs6510.sp25.t1.backend.dto.PipelineExecutionSummary;
-import edu.neu.cs6510.sp25.t1.backend.repository.PipelineExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.repository.PipelineRepository;
-import edu.neu.cs6510.sp25.t1.backend.executor.PipelineExecutor;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
-import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
-
 /**
- * Service for managing pipeline execution.
+ * Service for handling pipeline execution logic.
  */
 @Service
 public class PipelineExecutionService {
-  private final PipelineRepository pipelineRepository;
+  private static final Logger logger = LoggerFactory.getLogger(PipelineExecutionService.class);
   private final PipelineExecutionRepository pipelineExecutionRepository;
-  private final PipelineExecutor pipelineExecutor;
 
-  /**
-   * Constructor.
-   * @param pipelineRepository The pipeline repository.
-   * @param pipelineExecutionRepository The execution repository.
-   * @param pipelineExecutor The executor responsible for pipeline execution.
-   */
-  public PipelineExecutionService(
-          PipelineRepository pipelineRepository,
-          PipelineExecutionRepository pipelineExecutionRepository,
-          PipelineExecutor pipelineExecutor) {
-    this.pipelineRepository = pipelineRepository;
+  public PipelineExecutionService(PipelineExecutionRepository pipelineExecutionRepository) {
     this.pipelineExecutionRepository = pipelineExecutionRepository;
-    this.pipelineExecutor = pipelineExecutor;
   }
 
   /**
-   * Starts a new pipeline execution.
-   *
-   * @param pipelineName The name of the pipeline.
-   * @return A DTO representing the started pipeline execution.
-   */
-  @Transactional
-  public Optional<PipelineExecutionSummary> startPipeline(String pipelineName) {
-    return pipelineRepository.findById(pipelineName).map(pipeline -> {
-      PipelineRunState execution = new PipelineRunState(pipelineName);
-      execution.setState(ExecutionState.PENDING);
-
-      execution = pipelineExecutionRepository.save(execution);
-
-      // Execute pipeline asynchronously
-      pipelineExecutor.executePipeline(execution);
-
-      return PipelineExecutionSummary.fromEntity(execution);
-    });
-  }
-
-  /**
-   * Retrieves execution status of a pipeline.
+   * Starts execution for a given pipeline.
    *
    * @param pipelineName The pipeline name.
-   * @return A DTO with the execution status.
+   * @return The execution summary if successful.
    */
-  public Optional<PipelineExecutionSummary> getPipelineExecution(String pipelineName) {
-    return pipelineExecutionRepository.findFirstByPipelineNameOrderByStartTimeDesc(pipelineName)
-            .map(PipelineExecutionSummary::fromEntity);
+  @Transactional
+  public Optional<PipelineRunState> startPipeline(String pipelineName) {
+    logger.info("Starting pipeline execution: {}", pipelineName);
+
+    PipelineExecution pipelineExecution = new PipelineExecution(pipelineName, ExecutionState.RUNNING, Instant.now());
+    pipelineExecutionRepository.save(pipelineExecution);
+
+    return Optional.of(convertToPipelineRunState(pipelineExecution));
+  }
+
+  /**
+   * Retrieves the execution details of a pipeline.
+   *
+   * @param pipelineName The pipeline name.
+   * @return Optional containing pipeline execution state.
+   */
+  @Transactional(readOnly = true)
+  public Optional<PipelineRunState> getPipelineExecution(String pipelineName) {
+    return pipelineExecutionRepository.findFirstByPipelineNameOrderByCreatedAtDesc(pipelineName)
+            .map(this::convertToPipelineRunState);
+  }
+
+  /**
+   * Logs pipeline execution state updates.
+   *
+   * @param pipelineName The pipeline name.
+   * @param state        The new execution state.
+   */
+  @Transactional
+  public void logPipelineExecution(String pipelineName, String state) {
+    Optional<PipelineExecution> pipelineExecutionOpt = pipelineExecutionRepository.findFirstByPipelineNameOrderByCreatedAtDesc(pipelineName);
+
+    if (pipelineExecutionOpt.isPresent()) {
+      PipelineExecution pipelineExecution = pipelineExecutionOpt.get();
+      pipelineExecution.setState(ExecutionState.valueOf(state));
+      pipelineExecutionRepository.save(pipelineExecution);
+      logger.info("Updated pipeline execution state: {} -> {}", pipelineName, state);
+    } else {
+      logger.warn("Pipeline execution not found: {}", pipelineName);
+    }
+  }
+
+  /**
+   * Converts a PipelineExecution entity to a PipelineRunState.
+   */
+  private PipelineRunState convertToPipelineRunState(PipelineExecution execution) {
+    return new PipelineRunState(
+            execution.getPipelineName()
+    );
   }
 }

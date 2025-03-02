@@ -1,12 +1,14 @@
 package edu.neu.cs6510.sp25.t1.backend.executor;
 
-import edu.neu.cs6510.sp25.t1.backend.repository.PipelineExecutionRepository;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
-import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import java.time.Instant;
+
+import edu.neu.cs6510.sp25.t1.backend.entity.PipelineExecution;
+import edu.neu.cs6510.sp25.t1.backend.repository.PipelineExecutionRepository;
+import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 
 /**
  * Responsible for executing pipelines, tracking execution progress,
@@ -28,15 +30,21 @@ public class PipelineExecutor {
    */
   @Transactional
   public void executePipeline(PipelineRunState pipelineRunState) {
-    pipelineRunState.setState(ExecutionState.RUNNING);
-    pipelineExecutionRepository.save(pipelineRunState);
+    PipelineExecution pipelineExecution = new PipelineExecution(
+            pipelineRunState.getPipelineName(),
+            ExecutionState.RUNNING, // ✅ Pass `ExecutionState` enum instead of `String`
+            Instant.now() // ✅ Provide the missing `createdAt` timestamp
+    );
+
+    pipelineExecutionRepository.save(pipelineExecution);
 
     // TODO: Implement logic for running pipeline stages and jobs
 
     // For now, assume execution completes successfully
-    pipelineRunState.setState(ExecutionState.SUCCESS);
-    pipelineExecutionRepository.save(pipelineRunState);
+    pipelineExecution.setState(ExecutionState.SUCCESS);
+    pipelineExecutionRepository.save(pipelineExecution);
   }
+
 
   /**
    * Updates the execution state of a pipeline.
@@ -45,7 +53,7 @@ public class PipelineExecutor {
    * @param newState    The new execution state.
    */
   @Transactional
-  public void updatePipelineExecutionState(UUID executionId, ExecutionState newState) {
+  public void updatePipelineExecutionState(Long executionId, ExecutionState newState) {
     pipelineExecutionRepository.findById(executionId).ifPresent(execution -> {
       execution.setState(newState);
       pipelineExecutionRepository.save(execution);

@@ -16,7 +16,7 @@ import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
 import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
 
 /**
- * JobExecutor is responsible for executing a job request.
+ * JobExecutor is responsible for executing a job request, either in a container or locally.
  */
 @Service
 public class JobExecutor {
@@ -37,7 +37,7 @@ public class JobExecutor {
   }
 
   /**
-   * Execute a job request.
+   * Executes a job request, either in a container or locally.
    *
    * @param jobRequest JobRequest
    */
@@ -48,21 +48,20 @@ public class JobExecutor {
     }
 
     backendClient.sendJobStatus(jobRequest.getJobName(), ExecutionState.QUEUED);
-
     List<String> dependencies = jobRequest.getNeeds();
 
     // Wait for dependencies before moving to RUNNING
     if (!dependencies.isEmpty()) {
       logger.info("Job {} is waiting for dependencies: {}", jobRequest.getJobName(), dependencies);
-
       int attempts = 0;
       while (!areDependenciesComplete(dependencies)) {
-        if (attempts++ >= 5) {  // Add a timeout limit (e.g., 5 retries)
+        if (attempts++ >= 5) {
           logger.error("Job {} failed: Dependencies did not complete in time", jobRequest.getJobName());
+          backendClient.sendJobStatus(jobRequest.getJobName(), ExecutionState.FAILED);
           return;
         }
         try {
-          Thread.sleep(2000);  // Wait before retrying
+          Thread.sleep(2000);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
           logger.error("Job execution interrupted", e);
@@ -71,7 +70,7 @@ public class JobExecutor {
       }
     }
 
-    // Only now, after dependencies resolve, send RUNNING
+    // Move job to RUNNING state
     backendClient.sendJobStatus(jobRequest.getJobName(), ExecutionState.RUNNING);
 
     JobRunState jobRunState = new JobRunState(
@@ -79,23 +78,68 @@ public class JobExecutor {
                     List.of(), dependencies, false),
             ExecutionState.RUNNING.name(),
             false,
-            List.of()
+            dependencies,
+            true
     );
 
-    String containerId = dockerManager.runContainer(jobRunState);
 
-    if (containerId != null) {
-      boolean success = dockerManager.waitForContainer(containerId);
-      ExecutionState finalState = success ? ExecutionState.SUCCESS : ExecutionState.FAILED;
-      backendClient.sendJobStatus(jobRequest.getJobName(), finalState);
-      dockerManager.cleanupContainer(containerId);
+
+    boolean success;
+
+    // Determine execution method
+    if (jobRequest.isRunLocal()) {
+      success = runLocalScript(jobRequest);
     } else {
-      backendClient.sendJobStatus(jobRequest.getJobName(), ExecutionState.FAILED);
+      String containerId = dockerManager.runContainer(jobRunState);
+      if (containerId != null) {
+        success = dockerManager.waitForContainer(containerId);
+        dockerManager.cleanupContainer(containerId);
+      } else {
+        success = false;
+      }
     }
 
-    logExecution(jobRequest);
+    // Update job execution state based on success
+    ExecutionState finalState = success ? ExecutionState.SUCCESS : ExecutionState.FAILED;
+    backendClient.sendJobStatus(jobRequest.getJobName(), finalState);
+
+    logExecution(jobRequest, finalState);
   }
 
+  /**
+   * Runs a job script locally instead of using Docker.
+   *
+   * @param jobRequest JobRequest containing the script details.
+   * @return true if the script executed successfully, false otherwise.
+   */
+  private boolean runLocalScript(JobRequest jobRequest) {
+    logger.info("Running job locally: {}", jobRequest.getJobName());
+
+    List<String> script = jobRequest.getScript();
+    if (script.isEmpty()) {
+      logger.error("Job {} has no script to execute", jobRequest.getJobName());
+      return false;
+    }
+
+    try {
+      for (String command : script) {
+        logger.info("Executing command: {}", command);
+        ProcessBuilder processBuilder = new ProcessBuilder("/bin/sh", "-c", command);
+        processBuilder.inheritIO();  // Capture stdout and stderr
+        Process process = processBuilder.start();
+        int exitCode = process.waitFor();
+
+        if (exitCode != 0) {
+          logger.error("Job {} failed with exit code {}", jobRequest.getJobName(), exitCode);
+          return false;
+        }
+      }
+      return true;
+    } catch (IOException | InterruptedException e) {
+      logger.error("Failed to execute job {} locally", jobRequest.getJobName(), e);
+      return false;
+    }
+  }
 
   /**
    * Checks if all dependencies are completed successfully.
@@ -113,18 +157,18 @@ public class JobExecutor {
     return true;
   }
 
-
   /**
-   * Log job execution to a file.
+   * Logs job execution to a file.
    *
    * @param jobRequest JobRequest
+   * @param executionState Execution result state
    */
-  private void logExecution(JobRequest jobRequest) {
-    try (FileWriter file = createFileWriter()) {  // ✅ Now using an extractable method
+  private void logExecution(JobRequest jobRequest, ExecutionState executionState) {
+    try (FileWriter file = createFileWriter()) {
       String logEntry = String.format(
               "{ \"jobName\": \"%s\", \"status\": \"%s\" }\n",
               jobRequest.getJobName(),
-              ExecutionState.UNKNOWN
+              executionState.name()
       );
       file.write(logEntry);
       logger.info("Job execution logged: {}", logEntry);
@@ -134,9 +178,10 @@ public class JobExecutor {
   }
 
   /**
-   * Extracted method to allow mocking
+   * Extracted method to allow mocking in tests.
    *
-   * @return FileWriter
+   * @return FileWriter instance
+   * @throws IOException If file access fails
    */
   protected FileWriter createFileWriter() throws IOException {
     return new FileWriter("job-executions.log", true);

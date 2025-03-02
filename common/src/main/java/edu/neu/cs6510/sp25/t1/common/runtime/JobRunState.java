@@ -11,8 +11,9 @@ import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
 
 /**
  * Represents a job execution instance within a pipeline stage.
- * This class is used to track the status of a job execution.
- * It contains the job definition, status, start time, completion time, and dependencies.
+ * This class tracks the execution status of a job, including its start time,
+ * completion time, dependencies, and whether it should be executed in Docker
+ * or locally in a non-containerized environment.
  */
 public class JobRunState {
   private final JobConfig jobConfig;
@@ -21,73 +22,55 @@ public class JobRunState {
   private Instant startTime;
   private Instant completionTime;
   private final List<String> dependencies;
+  private final boolean runInDocker;  // Flag to determine execution environment
 
   /**
    * Constructs a new JobExecution instance based on its definition.
    *
-   * @param jobConfig The definition of the job.
-   * @param status        The status of the job.
-   * @param allowFailure  Whether the job is allowed to fail.
-   * @param dependencies  The list of dependencies for the job.
+   * @param jobConfig    The definition of the job.
+   * @param status       The status of the job.
+   * @param allowFailure Whether the job is allowed to fail.
+   * @param dependencies The list of dependencies for the job.
+   * @param runInDocker  Whether the job should be executed in a Docker container.
    */
   @JsonCreator
   public JobRunState(
           @JsonProperty("jobDefinition") JobConfig jobConfig,
           @JsonProperty("status") String status,
           @JsonProperty("allowFailure") boolean allowFailure,
-          @JsonProperty("dependencies") List<String> dependencies) {
+          @JsonProperty("dependencies") List<String> dependencies,
+          @JsonProperty("runInDocker") boolean runInDocker) {
     this.jobConfig = jobConfig;
     this.status = status;
     this.allowFailure = allowFailure;
-    this.dependencies = dependencies;
+    this.dependencies = dependencies != null ? dependencies : List.of();
+    this.runInDocker = runInDocker;
     this.startTime = Instant.now();
   }
 
   /**
-   * Constructs a new JobExecution instance based on its name and status for integration testing.
+   * Constructs a new JobExecution instance based on its definition for testing.
+   *
+   * @param jobConfig The definition of the job.
+   */
+  public JobRunState(JobConfig jobConfig) {
+    this(jobConfig, ExecutionState.PENDING.name(), jobConfig.isAllowFailure(), jobConfig.getNeeds(), true);
+  }
+
+  /**
+   * Constructs a new JobExecution instance based on its name and status for testing.
    *
    * @param jobName      The name of the job.
    * @param status       The status of the job.
    * @param allowFailure Whether the job is allowed to fail.
    */
   public JobRunState(String jobName, String status, boolean allowFailure) {
-    this.jobConfig = new JobConfig(jobName, "default-stage", "default-image", List.of(), List.of(), false);
-    this.status = status;
-    this.allowFailure = allowFailure;
-    this.dependencies = List.of();
-    this.startTime = Instant.now();
+    this(new JobConfig(jobName, "default-stage", "default-image", List.of(), List.of(), allowFailure),
+            status, allowFailure, List.of(), true);
   }
 
   /**
-   * Constructs a new JobExecution instance based on its definition for integration testing.
-   *
-   * @param jobConfig The definition of the job.
-   */
-  public JobRunState(JobConfig jobConfig) {
-    this.jobConfig = jobConfig;
-    this.status = ExecutionState.PENDING.name();
-    this.allowFailure = jobConfig.isAllowFailure();
-    this.dependencies = jobConfig.getNeeds();
-    this.startTime = Instant.now();
-  }
-
-
-  /**
-   * Constructs a new JobExecution instance based on its name and status for integration testing.
-   *
-   * @param jobName The name of the job.
-   * @param status  The status of the job.
-   */
-  public JobRunState(String jobName, String status) {
-    this.jobConfig = new JobConfig(jobName, "default-stage", "default-image", List.of(), List.of(), false);
-    this.status = status;
-    this.allowFailure = false;
-    this.dependencies = List.of();
-    this.startTime = Instant.now();
-  }
-
-  /**
-   * Constructs a new JobExecution instance based on its name for integration testing.
+   * Constructs a new JobExecution instance based on its name.
    *
    * @param jobName The name of the job.
    */
@@ -96,7 +79,8 @@ public class JobRunState {
                     List.of(), List.of(), false),
             ExecutionState.PENDING.name(),
             false,
-            List.of()
+            List.of(),
+            true
     );
   }
 
@@ -104,7 +88,7 @@ public class JobRunState {
    * Marks the job as started.
    */
   public void start() {
-    this.status = "RUNNING";
+    this.status = ExecutionState.RUNNING.name();
     this.startTime = Instant.now();
   }
 
@@ -119,25 +103,34 @@ public class JobRunState {
   }
 
   /**
-   * get the job name
+   * Checks if the job should run inside a Docker container.
    *
-   * @return job name
+   * @return true if the job should be executed in Docker, false otherwise.
+   */
+  public boolean shouldRunInDocker() {
+    return runInDocker;
+  }
+
+  /**
+   * Gets the job name.
+   *
+   * @return the job name
    */
   public String getJobName() {
     return jobConfig.getName();
   }
 
   /**
-   * get the status
+   * Gets the job status.
    *
-   * @return status
+   * @return the job status
    */
   public String getStatus() {
     return status;
   }
 
   /**
-   * check if the job is allowed to fail
+   * Checks if the job is allowed to fail.
    *
    * @return true if allowed to fail, false otherwise
    */
@@ -146,27 +139,27 @@ public class JobRunState {
   }
 
   /**
-   * get the start time
+   * Gets the start time of the job.
    *
-   * @return start time
+   * @return the start time
    */
   public Instant getStartTime() {
     return startTime;
   }
 
   /**
-   * get the completion time
+   * Gets the completion time of the job.
    *
-   * @return completion time
+   * @return the completion time
    */
   public Instant getCompletionTime() {
     return completionTime;
   }
 
   /**
-   * get the job definition
+   * Gets the job definition.
    *
-   * @return job definition
+   * @return the job definition
    */
   public JobConfig getJobDefinition() {
     return jobConfig;

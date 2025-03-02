@@ -48,6 +48,31 @@ public class JobConfig {
   }
 
   /**
+   * Constructor for JobConfig without artifacts(optional).
+   * @param name Job name
+   * @param stageName Stage name
+   * @param image Docker image
+   * @param script List of commands to run
+   * @param needs List of dependencies
+   * @param allowFailure Whether the job can fail without failing the pipeline
+   */
+  @JsonCreator
+  public JobConfig(
+          @JsonProperty("name") String name,
+          @JsonProperty("stage") String stageName,
+          @JsonProperty("image") String image,
+          @JsonProperty("script") List<String> script,
+          @JsonProperty("needs") List<String> needs,
+          @JsonProperty("allowFailure") boolean allowFailure) {
+    this.name = name;
+    this.stageName = stageName;
+    this.image = image;
+    this.script = script;
+    this.needs = needs != null ? needs : List.of();
+    this.allowFailure = allowFailure;
+  }
+
+  /**
    * Getter for name.
    *
    * @return name
