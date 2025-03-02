@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.Optional;
 
-import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
 
 /**
  * Service for managing job status caching in Redis.

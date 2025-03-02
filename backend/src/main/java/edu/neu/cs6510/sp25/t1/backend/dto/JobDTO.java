@@ -2,7 +2,7 @@ package edu.neu.cs6510.sp25.t1.backend.dto;
 
 import java.util.List;
 
-import edu.neu.cs6510.sp25.t1.backend.model.Job;
+import edu.neu.cs6510.sp25.t1.backend.entity.Job;
 
 /**
  * Data Transfer Object (DTO) for Job.

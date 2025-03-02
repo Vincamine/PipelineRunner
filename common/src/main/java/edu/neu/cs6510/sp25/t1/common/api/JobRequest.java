@@ -16,6 +16,7 @@ public class JobRequest {
   private final String commitHash; // Specific commit for execution
   private final Map<String, String> environmentVariables; // Runtime variables
   private final List<String> artifactPaths; // Paths to store collected artifacts
+  private List<String> needs; // List of dependent job names
 
   /**
    * Constructor for JobRequest.
@@ -36,6 +37,7 @@ public class JobRequest {
     this.commitHash = commitHash;
     this.environmentVariables = environmentVariables != null ? environmentVariables : Map.of();
     this.artifactPaths = artifactPaths != null ? artifactPaths : List.of();
+    this.needs = List.of();
   }
 
   /**
@@ -107,5 +109,21 @@ public class JobRequest {
             ", environmentVariables=" + environmentVariables +
             ", artifactPaths=" + artifactPaths +
             '}';
+  }
+
+  /**
+   * Get the dependencies of this job.
+   *
+   * @return List of job names that must complete before this job starts.
+   */
+  public List<String> getNeeds() {
+    return needs;
+  }
+
+  /**
+   * Add a dependency to this job.
+   */
+  public void addNeeds(String need) {
+    this.needs.add(need);
   }
 }

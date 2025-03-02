@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
 import edu.neu.cs6510.sp25.t1.backend.repository.PipelineRepository;
-import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
+import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 
 /**
  * Service for managing pipeline execution reports.
@@ -18,7 +18,7 @@ import edu.neu.cs6510.sp25.t1.common.model.execution.PipelineExecution;
 @Service
 public class ReportService {
   private final PipelineRepository pipelineRepository;
-  private final Map<String, List<PipelineExecution>> pipelineExecutions = new HashMap<>();
+  private final Map<String, List<PipelineRunState>> pipelineExecutions = new HashMap<>();
 
   public ReportService(PipelineRepository pipelineRepository) {
     this.pipelineRepository = pipelineRepository;

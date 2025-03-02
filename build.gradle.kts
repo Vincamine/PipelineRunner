@@ -81,7 +81,7 @@ subprojects {
                         "**/backend/dto/PipelineDTO.class",
                         "**/backend/dto/PipelineExecutionSummary.class",
                         "**/backend/dto/PipelineStatusResponse.class",
-                        "**/backend/dto/StageDTO.class"
+                        "**/backend/dto/StageDTO.class",
                     )
                 }
             })

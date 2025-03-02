@@ -2,16 +2,26 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import java.io.File;
+
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.validation.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
 import picocli.CommandLine;
 
+/**
+ * Command to simulate pipeline execution.
+ * Parse and validate before simulating execution.
+ */
 @CommandLine.Command(name = "dry-run", description = "Simulate pipeline execution")
 public class DryRunCommand extends BaseCommand {
 
   private final CliBackendClient backendClient;
 
   /**
-   * Default constructor using default BackendClient - for unit testing.
+   * Default constructor using default BackendClient.
    */
   public DryRunCommand() {
     this.backendClient = new CliBackendClient("http://localhost:8080");
@@ -28,20 +38,8 @@ public class DryRunCommand extends BaseCommand {
 
   /**
    * Executes the CLI command to interact with the CI/CD system.
-   * <p>
-   * Picocli requires an integer return code to indicate success or failure:
-   * - `0` -> Success: The command executed successfully.
-   * - `1` -> General failure: An unexpected error occurred.
-   * - `2` -> Invalid arguments: Handled automatically by Picocli.
-   * - `3+` -> Custom error codes (e.g., `3` for validation errors, `4` for
-   * network issues).
-   * <p>
-   * This method communicates with the backend service to perform the requested
-   * operation.
-   * - `DryRunCommand`: Simulates execution and displays the execution order.
-   * <p>
-   * If successful, it prints a confirmation message. Otherwise, it displays
-   * errors.
+   *
+   * @return 0 if successful, 1 if an error occurred, 2 if no file provided, 3 if validation failed; required by picocli.
    */
   @Override
   public Integer call() {
@@ -49,9 +47,24 @@ public class DryRunCommand extends BaseCommand {
       System.err.println("Error: No pipeline configuration file provided.");
       return 2;
     }
-    try {
-      var response = backendClient.dryRunPipeline(configFile);
 
+    try {
+      File yamlFile = new File(configFile);
+      if (!yamlFile.exists()) {
+        System.err.println("Error: YAML file not found at " + configFile);
+        return 2;
+      }
+
+      // Parse YAML
+      PipelineConfig pipelineConfig = YamlParser.parseYaml(yamlFile);
+
+      // Validate pipeline structure
+      PipelineValidator.validate(pipelineConfig);
+
+      // Send to backend for dry-run simulation
+      String response = backendClient.dryRunPipeline(configFile);
+
+      // Format response
       if ("yaml".equalsIgnoreCase(outputFormat)) {
         YAMLMapper yamlMapper = new YAMLMapper();
         response = yamlMapper.writeValueAsString(response);
@@ -61,8 +74,11 @@ public class DryRunCommand extends BaseCommand {
       System.out.println(response);
 
       return response.startsWith("Error") ? 3 : 0;
+    } catch (ValidationException e) {
+      System.err.println("Validation Error: " + e.getMessage());
+      return 3;
     } catch (Exception e) {
-      logger.error("Failed to perform dry-run", e);
+      System.err.println("Failed to perform dry-run: " + e.getMessage());
       return 1;
     }
   }

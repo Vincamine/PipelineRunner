@@ -1,68 +1,104 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
-import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
+import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.validation.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 class RunCommandTest {
-    private CliBackendClient mockBackendClient;
-    private RunCommand runCommand;
+  private RunCommand runCommand;
+  private CommandLine cmd;
+  private CliBackendClient backendClient;
 
-    @BeforeEach
-    void setUp() {
-        mockBackendClient = mock(CliBackendClient.class);
-        runCommand = new RunCommand(mockBackendClient);
+  @TempDir
+  private Path tempDir;
+
+  @BeforeEach
+  void setUp() {
+    backendClient = mock(CliBackendClient.class);
+    runCommand = new RunCommand(backendClient);
+    cmd = new CommandLine(runCommand);
+  }
+
+  @Test
+  void shouldReturnErrorWhenNoFileProvided() {
+    runCommand.configFile = null;
+    assertEquals(2, runCommand.call());
+  }
+
+  @Test
+  void shouldReturnErrorWhenFileDoesNotExist() {
+    runCommand.configFile = "nonexistent.yaml";
+    assertEquals(2, runCommand.call());
+  }
+
+  @Test
+  void shouldReturnValidationErrorWhenYamlParsingFails() throws Exception {
+    File tempFile = tempDir.resolve("invalid.yaml").toFile();
+    Files.write(tempFile.toPath(), "invalid-content".getBytes());
+    runCommand.configFile = tempFile.getAbsolutePath();
+
+    try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class)) {
+      parserMock.when(() -> YamlParser.parseYaml(tempFile)).thenThrow(new ValidationException("Invalid YAML"));
+
+      assertEquals(3, runCommand.call());
     }
+  }
 
-    @Test
-    void testRunValidPipeline() throws Exception {
-        String mockResponse = "Pipeline execution started successfully.";
-        when(mockBackendClient.runPipeline(any(RunPipelineRequest.class))).thenReturn(mockResponse);
+  @Test
+  void shouldReturnErrorWhenBackendFails() throws Exception {
+    File tempFile = tempDir.resolve("valid.yaml").toFile();
+    Files.write(tempFile.toPath(), "pipeline: test-pipeline".getBytes());
+    runCommand.configFile = tempFile.getAbsolutePath();
 
-        System.out.println("Mock response set: " + mockResponse);
-        System.out.println("Calling run command with: --pipeline testPipeline");
+    PipelineConfig mockPipelineConfig = mock(PipelineConfig.class);
+    when(mockPipelineConfig.getName()).thenReturn("test-pipeline");
 
-        CommandLine cmd = new CommandLine(runCommand);
-        int exitCode = cmd.execute("--pipeline", "testPipeline");
+    try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class);
+         MockedStatic<PipelineValidator> validatorMock = mockStatic(PipelineValidator.class)) {
 
-        System.out.println("Expected: 0, Actual: " + exitCode);
-        verify(mockBackendClient, times(1)).runPipeline(any(RunPipelineRequest.class));
-        assertEquals(0, exitCode);
+      parserMock.when(() -> YamlParser.parseYaml(tempFile)).thenReturn(mockPipelineConfig);
+      when(backendClient.runPipeline(any(RunPipelineRequest.class))).thenThrow(new IOException("Backend error"));
+
+      assertEquals(1, runCommand.call());
     }
+  }
 
-    @Test
-    void testRunMissingPipelineArgument() {
-        System.out.println("Calling run command without --pipeline");
+  @Test
+  void shouldReturnSuccessWhenPipelineRunsSuccessfully() throws IOException {
+    File tempFile = tempDir.resolve("valid.yaml").toFile();
+    Files.write(tempFile.toPath(), "pipeline: test-pipeline".getBytes());
+    runCommand.configFile = tempFile.getAbsolutePath();
 
-        CommandLine cmd = new CommandLine(runCommand);
-        int exitCode = cmd.execute(); // No arguments
+    PipelineConfig mockPipelineConfig = mock(PipelineConfig.class);
+    when(mockPipelineConfig.getName()).thenReturn("test-pipeline");
 
-        System.out.println("Expected: 2 (Invalid arguments), Actual: " + exitCode);
-        assertEquals(2, exitCode); // Now properly validates missing arguments
+    try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class);
+         MockedStatic<PipelineValidator> validatorMock = mockStatic(PipelineValidator.class)) {
+
+      parserMock.when(() -> YamlParser.parseYaml(tempFile)).thenReturn(mockPipelineConfig);
+      when(backendClient.runPipeline(any(RunPipelineRequest.class))).thenReturn("Pipeline Execution Started");
+
+      assertEquals(0, runCommand.call());
     }
-
-    @Test
-    void testRunHandlesExceptions() throws Exception {
-        when(mockBackendClient.runPipeline(any(RunPipelineRequest.class)))
-                .thenThrow(new RuntimeException("Backend failure"));
-
-        System.out.println("Simulating backend failure for run command.");
-        System.out.println("Calling run command with: --pipeline testPipeline");
-
-        CommandLine cmd = new CommandLine(runCommand);
-        int exitCode = cmd.execute("--pipeline", "testPipeline");
-
-        System.out.println("Expected: 1, Actual: " + exitCode);
-        assertEquals(1, exitCode); // Ensure failure is properly handled
-    }
+  }
 }

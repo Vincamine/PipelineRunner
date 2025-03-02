@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
 
 /**
  * DockerManager class to manage Docker containers.
@@ -39,27 +39,34 @@ public class DockerManager {
   /**
    * Run a Docker container for a job.
    *
-   * @param jobExecution JobExecution
+   * @param jobRunState JobExecution
    * @return Container ID
    */
-  public String runContainer(JobExecution jobExecution) {
+  public String runContainer(JobRunState jobRunState) {
     try {
-      CreateContainerResponse container = dockerClient.createContainerCmd(jobExecution.getJobName())
-              .withImage(jobExecution.getJobName())
+      CreateContainerResponse container = dockerClient.createContainerCmd(jobRunState.getJobName())
+              .withImage(jobRunState.getJobName())
               .withHostConfig(HostConfig.newHostConfig().withAutoRemove(true))
-              .withCmd(jobExecution.getJobName())
               .exec();
 
-      StartContainerCmd startCmd = dockerClient.startContainerCmd(container.getId());
-      startCmd.exec();
+      String containerId = container.getId();
+      dockerClient.startContainerCmd(containerId).exec();
 
-      return container.getId();
+      logger.info("Started container {} for job {}", containerId, jobRunState.getJobName());
+      return containerId;
     } catch (Exception e) {
-      logger.error("Failed to start Docker container for job: " + jobExecution.getJobName(), e);
+      logger.error("Failed to start Docker container for job: {}", jobRunState.getJobName(), e);
       return null;
     }
   }
 
+
+  /**
+   * Start a container with the given image.
+   *
+   * @param image Image
+   * @return Container ID
+   */
   /**
    * Start a container with the given image.
    *
@@ -70,9 +77,24 @@ public class DockerManager {
     CreateContainerResponse container = dockerClient.createContainerCmd(image)
             .withHostConfig(HostConfig.newHostConfig())
             .exec();
-    dockerClient.startContainerCmd(container.getId()).exec();
+
+    if (container == null || container.getId() == null) {
+      logger.error("Failed to create container for image: {}", image);
+      return null;
+    }
+
+    StartContainerCmd startCmd = dockerClient.startContainerCmd(container.getId());
+    if (startCmd != null) {
+      startCmd.exec();
+      logger.info("Started container {} for image {}", container.getId(), image);
+    } else {
+      logger.error("Failed to start container for image: {}", image);
+      return null;
+    }
+
     return container.getId();
   }
+
 
   /**
    * Wait for a container to complete.

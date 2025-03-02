@@ -7,7 +7,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import edu.neu.cs6510.sp25.t1.backend.client.WorkerClient;
-import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
 
 /**
  * Scheduler for processing job executions.
@@ -15,7 +15,7 @@ import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
 @Service
 public class JobScheduler {
   private final WorkerClient workerClient;
-  private final Queue<JobExecution> jobQueue = new ConcurrentLinkedQueue<>();
+  private final Queue<JobRunState> jobQueue = new ConcurrentLinkedQueue<>();
 
   /**
    * Constructor for dependency injection.
@@ -31,7 +31,7 @@ public class JobScheduler {
    *
    * @param job The job to add.
    */
-  public void addJob(JobExecution job) {
+  public void addJob(JobRunState job) {
     jobQueue.offer(job);
   }
 
@@ -42,7 +42,7 @@ public class JobScheduler {
   @Scheduled(fixedRate = 5000) // Process jobs every 5 seconds
   public void processJobs() {
     while (!jobQueue.isEmpty()) {
-      JobExecution job = jobQueue.poll();
+      JobRunState job = jobQueue.poll();
       workerClient.sendJob(job);
     }
   }

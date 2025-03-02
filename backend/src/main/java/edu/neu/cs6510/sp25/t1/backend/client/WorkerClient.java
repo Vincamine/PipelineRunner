@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
 
 /**
  * WorkerClient is a REST client that sends jobs to the worker.
@@ -33,7 +33,7 @@ public class WorkerClient {
    *
    * @param job JobExecution
    */
-  public void sendJob(JobExecution job) {
+  public void sendJob(JobRunState job) {
     try {
       ResponseEntity<String> response = restTemplate.postForEntity(workerUrl, job, String.class);
       System.out.println("Worker Response: " + response.getBody());

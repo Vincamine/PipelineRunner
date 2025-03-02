@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import edu.neu.cs6510.sp25.t1.common.api.JobStatusUpdate;
-import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
 
 /**
  * Client to send job status updates to the backend server.
@@ -51,4 +51,21 @@ public class BackendClient {
     }
     logger.error("Failed to update job status for {} after 3 attempts.", jobName);
   }
+
+  /**
+   * Fetch the job status from the backend.
+   *
+   * @param jobName The name of the job.
+   * @return The ExecutionState of the job.
+   */
+  public ExecutionState getJobStatus(String jobName) {
+    try {
+      ResponseEntity<String> response = restTemplate.getForEntity(backendUrl + "/" + jobName, String.class);
+      return ExecutionState.fromString(response.getBody());
+    } catch (Exception e) {
+      logger.warn("Failed to fetch job status for {}: {}", jobName, e.getMessage());
+      return ExecutionState.UNKNOWN;
+    }
+  }
+
 }

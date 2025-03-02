@@ -1,8 +1,8 @@
 //package edu.neu.cs6510.sp25.t1.backend;
-//
-//import edu.neu.cs6510.sp25.t1.common.model.execution.JobExecution;
-//import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
-//import edu.neu.cs6510.sp25.t1.common.model.definition.JobDefinition;
+//TODO: test when complete backend is implemented
+//import edu.neu.cs6510.sp25.t1.common.runtime.JobExecution;
+//import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+//import edu.neu.cs6510.sp25.t1.common.config.JobDefinition;
 //import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
 //import edu.neu.cs6510.sp25.t1.worker.executor.DockerManager;
 //import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutor;

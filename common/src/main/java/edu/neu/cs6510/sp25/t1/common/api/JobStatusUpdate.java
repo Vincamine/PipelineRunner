@@ -1,6 +1,6 @@
 package edu.neu.cs6510.sp25.t1.common.api;
 
-import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
 
 /**
  * Represents a job status update request body.

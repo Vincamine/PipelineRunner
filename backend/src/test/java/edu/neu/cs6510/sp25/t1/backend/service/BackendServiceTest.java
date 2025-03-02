@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.util.Optional;
 
-import edu.neu.cs6510.sp25.t1.common.model.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;

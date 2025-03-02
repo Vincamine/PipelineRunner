@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import edu.neu.cs6510.sp25.t1.backend.model.Job;
+import edu.neu.cs6510.sp25.t1.backend.entity.Job;
 
 /**
  * Repository for Job entity.

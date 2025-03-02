@@ -1,116 +1,99 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
 
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.validation.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-
 class DryRunCommandTest {
-  private CliBackendClient mockBackendClient;
   private DryRunCommand dryRunCommand;
-  private String validPipelinePath;
-  private String invalidPipelinePath;
+  private CommandLine cmd;
+  private CliBackendClient backendClient;
+
+  @TempDir
+  private Path tempDir;
 
   @BeforeEach
-  void setUp() throws URISyntaxException {
-    mockBackendClient = mock(CliBackendClient.class);
-    dryRunCommand = new DryRunCommand(mockBackendClient);
-
-    validPipelinePath = Paths.get(getClass().getClassLoader()
-            .getResource(".pipelines/pipeline.yaml").toURI()).toString();
-
-    invalidPipelinePath = Paths.get(getClass().getClassLoader()
-            .getResource(".pipelines/invalid_pipeline.yaml").toURI()).toString();
-  }
-
-  // Test case: No pipeline file provided (null)
-  @Test
-  void testDryRunCommand_NoPipelineFile() {
-    CommandLine cmd = new CommandLine(dryRunCommand);
-    int exitCode = cmd.execute();  // No file argument
-
-    assertEquals(2, exitCode, "Expected exit code 2 for missing pipeline file.");
-  }
-
-  // Test case: Empty pipeline file path
-  @Test
-  void testDryRunCommand_EmptyPipelineFile() {
-    CommandLine cmd = new CommandLine(dryRunCommand);
-    int exitCode = cmd.execute("");  // Empty string argument
-
-    assertEquals(2, exitCode, "Expected exit code 2 for empty pipeline file path.");
+  void setUp() {
+    backendClient = mock(CliBackendClient.class);
+    dryRunCommand = new DryRunCommand(backendClient);
+    cmd = new CommandLine(dryRunCommand);
   }
 
   @Test
-  void testDryRunValidPipeline() throws Exception {
-    String mockResponse = "execution: success";
-    when(mockBackendClient.dryRunPipeline(validPipelinePath)).thenReturn(mockResponse);
-
-    CommandLine cmd = new CommandLine(dryRunCommand);
-    int exitCode = cmd.execute("-f", validPipelinePath);  // 🔹 FIXED ARGUMENT FORMAT
-
-    assertEquals(0, exitCode, "Expected exit code 0 for valid dry-run.");
+  void shouldReturnErrorWhenNoFileProvided() {
+    dryRunCommand.configFile = null;
+    assertEquals(2, dryRunCommand.call());
   }
 
   @Test
-  void testDryRunInvalidPipeline() throws Exception {
-    String mockResponse = "Error: Invalid pipeline syntax";
-    when(mockBackendClient.dryRunPipeline(invalidPipelinePath)).thenReturn(mockResponse);
-
-    CommandLine cmd = new CommandLine(dryRunCommand);
-    int exitCode = cmd.execute("-f", invalidPipelinePath);  // 🔹 FIXED ARGUMENT FORMAT
-
-    assertEquals(3, exitCode, "Expected exit code 3 for invalid pipeline.");
+  void shouldReturnErrorWhenFileDoesNotExist() {
+    dryRunCommand.configFile = "nonexistent.yaml";
+    assertEquals(2, dryRunCommand.call());
   }
 
   @Test
-  void testDryRunHandlesRuntimeException() throws Exception {
-    when(mockBackendClient.dryRunPipeline(anyString()))
-            .thenThrow(new RuntimeException("Backend error"));
+  void shouldReturnValidationErrorWhenYamlParsingFails() throws Exception {
+    File tempFile = tempDir.resolve("invalid.yaml").toFile();
+    Files.write(tempFile.toPath(), "invalid-content".getBytes());
+    dryRunCommand.configFile = tempFile.getAbsolutePath();
 
-    CommandLine cmd = new CommandLine(dryRunCommand);
-    int exitCode = cmd.execute("-f", validPipelinePath);  // 🔹 FIXED ARGUMENT FORMAT
+    try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class)) {
+      parserMock.when(() -> YamlParser.parseYaml(tempFile)).thenThrow(new ValidationException("Invalid YAML"));
 
-    assertEquals(1, exitCode, "Expected exit code 1 for RuntimeException.");
+      assertEquals(3, dryRunCommand.call());
+    }
   }
 
   @Test
-  void testDryRunHandlesIOException() throws Exception {
-    when(mockBackendClient.dryRunPipeline(anyString()))
-            .thenThrow(new java.io.IOException("Network issue"));
+  void shouldReturnErrorWhenBackendFails() throws Exception {
+    File tempFile = tempDir.resolve("valid.yaml").toFile();
+    Files.write(tempFile.toPath(), "pipeline: test-pipeline".getBytes());
+    dryRunCommand.configFile = tempFile.getAbsolutePath();
 
-    CommandLine cmd = new CommandLine(dryRunCommand);
-    int exitCode = cmd.execute("-f", validPipelinePath);  // 🔹 FIXED ARGUMENT FORMAT
+    PipelineConfig mockPipelineConfig = mock(PipelineConfig.class);
+    when(mockPipelineConfig.getName()).thenReturn("test-pipeline");
 
-    assertEquals(1, exitCode, "Expected exit code 1 for IOException.");
+    try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class);
+         MockedStatic<PipelineValidator> validatorMock = mockStatic(PipelineValidator.class)) {
+
+      parserMock.when(() -> YamlParser.parseYaml(tempFile)).thenReturn(mockPipelineConfig);
+      when(backendClient.dryRunPipeline(tempFile.getAbsolutePath())).thenThrow(new IOException("Backend error"));
+
+      assertEquals(1, dryRunCommand.call());
+    }
   }
 
   @Test
-  void testDryRunYAMLOutput() throws Exception {
-    String jsonResponse = "{\"pipeline\":\"test\"}";
-    YAMLMapper yamlMapper = new YAMLMapper();
-    String expectedYamlResponse = yamlMapper.writeValueAsString(jsonResponse);
+  void shouldReturnSuccessWhenDryRunSucceeds() throws IOException {
+    File tempFile = tempDir.resolve("valid.yaml").toFile();
+    Files.write(tempFile.toPath(), "pipeline: test-pipeline".getBytes());
+    dryRunCommand.configFile = tempFile.getAbsolutePath();
 
-    when(mockBackendClient.dryRunPipeline(validPipelinePath)).thenReturn(jsonResponse);
+    try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class);
+         MockedStatic<PipelineValidator> validatorMock = mockStatic(PipelineValidator.class)) {
 
-    DryRunCommand yamlCommand = new DryRunCommand(mockBackendClient);
-    yamlCommand.outputFormat = "yaml";  // Set output format
+      parserMock.when(() -> YamlParser.parseYaml(tempFile)).thenReturn(mock(PipelineConfig.class));
+      when(backendClient.dryRunPipeline(tempFile.getAbsolutePath())).thenReturn("Pipeline Dry-Run Successful");
 
-    CommandLine cmd = new CommandLine(yamlCommand);
-    int exitCode = cmd.execute("-f", validPipelinePath, "-o", "yaml");  // 🔹 FIXED ARGUMENT FORMAT
-
-    assertEquals(0, exitCode, "Expected exit code 0 for valid YAML output.");
+      assertEquals(0, dryRunCommand.call());
+    }
   }
 }

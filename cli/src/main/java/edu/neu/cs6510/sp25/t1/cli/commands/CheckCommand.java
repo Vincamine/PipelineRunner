@@ -1,45 +1,33 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import java.io.File;
+
+import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.validation.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
 import picocli.CommandLine;
 
+/**
+ * Command to check the validity of a pipeline YAML file.
+ * Only parses and validates YAML locally.
+ * Validate YAML without running it.
+ * does not interact with the CI/CD system backend.
+ */
 @CommandLine.Command(name = "check", description = "Validate the pipeline configuration file")
 public class CheckCommand extends BaseCommand {
-  @CommandLine.Parameters(index = "0", description = "Path to the pipeline configuration file")
-  private String configFile;
-  private final CliBackendClient backendClient;
-
-  /**
-   * Default constructor using default BackendClient - for unit testing.
-   */
-  public CheckCommand() {
-    this.backendClient = new CliBackendClient("http://localhost:8080"); // Default backend client
-  }
 
   /**
    * Constructor for dependency injection (used for unit testing).
-   * @param backendClient The mocked backend client instance.
    */
-  public CheckCommand(CliBackendClient backendClient) {
-    this.backendClient = backendClient;
+  public CheckCommand() {
   }
 
+
   /**
-   * Executes the CLI command to interact with the CI/CD system.
-   * <p>
-   * Picocli requires an integer return code to indicate success or failure:
-   * - `0` -> Success: The command executed successfully.
-   * - `1` -> General failure: An unexpected error occurred.
-   * - `2` -> Invalid arguments: Handled automatically by Picocli.
-   * - `3+` -> Custom error codes (e.g., `3` for validation errors, `4` for
-   * network issues).
-   * <p>
-   * This method communicates with the backend service to perform the requested
-   * operation.
-   * - `CheckCommand`: Validates the pipeline configuration file.
-   * <p>
-   * If successful, it prints a confirmation message. Otherwise, it displays
-   * errors.
+   * Validates the pipeline configuration file.
+   *
+   * @return 0 if successful, 1 if an error occurred, 2 if no file provided, 3 if validation failed; required by picocli.
    */
   @Override
   public Integer call() {
@@ -47,18 +35,28 @@ public class CheckCommand extends BaseCommand {
       System.err.println("Error: No pipeline configuration file provided.");
       return 2;
     }
-    try {
-      var response = backendClient.checkPipelineConfig(configFile);
 
-      if (response.isValid()) {
-        System.out.println("Pipeline configuration is valid.");
-        return 0;
-      } else {
-        System.out.println("Invalid pipeline configuration: " + response.getErrors());
-        return 3;
+    try {
+      File yamlFile = new File(configFile);
+      if (!yamlFile.exists()) {
+        System.err.println("Error: YAML file not found at " + configFile);
+        return 2;
       }
+
+      // Parse YAML file
+      PipelineConfig pipelineConfig = YamlParser.parseYaml(yamlFile);
+
+      // Validate pipeline structure
+      PipelineValidator.validate(pipelineConfig);
+
+      System.out.println("Pipeline configuration is valid!");
+      return 0;
+
+    } catch (ValidationException e) {
+      System.err.println("Validation Error: " + e.getMessage());
+      return 3;
     } catch (Exception e) {
-      logger.error("Failed to validate pipeline configuration", e);
+      System.err.println("Error processing YAML file: " + e.getMessage());
       return 1;
     }
   }

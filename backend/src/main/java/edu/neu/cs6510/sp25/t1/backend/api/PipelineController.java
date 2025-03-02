@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
-import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
+import edu.neu.cs6510.sp25.t1.backend.dto.PipelineExecutionSummary;
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
 import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
 
@@ -33,10 +33,9 @@ public class PipelineController {
    * @return A DTO representation of the pipeline execution.
    */
   @PostMapping("/run")
-  public ResponseEntity<PipelineDTO> runPipeline(@RequestBody RunPipelineRequest request) {
-    Optional<PipelineDTO> dto = pipelineService.startPipeline(request.getPipeline());
-    return dto.map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+  public ResponseEntity<PipelineExecutionSummary> runPipeline(@RequestBody RunPipelineRequest request) {
+    Optional<PipelineExecutionSummary> summary = pipelineService.startPipeline(request.getPipeline());
+    return summary.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
   /**
@@ -46,9 +45,8 @@ public class PipelineController {
    * @return A DTO with the pipeline execution status.
    */
   @GetMapping("/{pipelineName}/status")
-  public ResponseEntity<PipelineDTO> getStatus(@PathVariable String pipelineName) {
-    Optional<PipelineDTO> dto = pipelineService.getPipelineExecution(pipelineName);
-    return dto.map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+  public ResponseEntity<PipelineExecutionSummary> getStatus(@PathVariable String pipelineName) {
+    Optional<PipelineExecutionSummary> summary = pipelineService.getPipelineExecution(pipelineName);
+    return summary.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 }

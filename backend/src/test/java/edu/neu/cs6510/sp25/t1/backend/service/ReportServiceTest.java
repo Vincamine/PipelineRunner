@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
-import edu.neu.cs6510.sp25.t1.backend.model.Pipeline;
+import edu.neu.cs6510.sp25.t1.backend.entity.Pipeline;
 import edu.neu.cs6510.sp25.t1.backend.repository.PipelineRepository;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

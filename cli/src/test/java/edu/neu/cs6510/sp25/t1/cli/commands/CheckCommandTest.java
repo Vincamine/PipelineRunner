@@ -2,98 +2,81 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
 
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
-import edu.neu.cs6510.sp25.t1.common.api.PipelineCheckResponse;
+import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.validation.PipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.ValidationException;
 import picocli.CommandLine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
 
 
 class CheckCommandTest {
-  private CliBackendClient mockBackendClient;
   private CheckCommand checkCommand;
-  private String validPipelinePath;
-  private String invalidPipelinePath;
+  private CommandLine cmd;
+
+  @TempDir
+  private Path tempDir; // Temporary directory for file creation
 
   @BeforeEach
-  void setUp() throws URISyntaxException {
-    mockBackendClient = mock(CliBackendClient.class);
-    checkCommand = new CheckCommand(mockBackendClient);
-
-    validPipelinePath = Paths.get(getClass().getClassLoader().getResource(".pipelines/pipeline.yaml").toURI()).toString();
-    invalidPipelinePath = Paths.get(getClass().getClassLoader().getResource(".pipelines/invalid_pipeline.yaml").toURI()).toString();
+  void setUp() {
+    checkCommand = new CheckCommand();
+    cmd = new CommandLine(checkCommand);
   }
 
-  // Test case: No pipeline file provided (null)
   @Test
-  void testCheckCommand_NoPipelineFile() {
-    CommandLine cmd = new CommandLine(checkCommand);
-    int exitCode = cmd.execute();  // No file argument
-
-    assertEquals(2, exitCode, "Expected exit code 2 for missing pipeline file.");
+  void shouldReturnErrorWhenNoFileProvided() {
+    checkCommand.configFile = null;
+    assertEquals(2, checkCommand.call());
   }
 
-  // Test case: Empty pipeline file path
   @Test
-  void testCheckCommand_EmptyPipelineFile() {
-    CommandLine cmd = new CommandLine(checkCommand);
-    int exitCode = cmd.execute("");  // Empty string argument
-
-    assertEquals(2, exitCode, "Expected exit code 2 for empty pipeline file path.");
+  void shouldReturnErrorWhenFileDoesNotExist() {
+    checkCommand.configFile = "nonexistent.yaml";
+    assertEquals(2, checkCommand.call());
   }
 
-  // Test case: Valid pipeline file (Success case)
   @Test
-  void testCheckValidPipeline() throws Exception {
-    when(mockBackendClient.checkPipelineConfig(validPipelinePath))
-            .thenReturn(new PipelineCheckResponse(true, null));
+  void shouldReturnSuccessWhenFileIsValid() throws IOException {
+    // Create a temporary YAML file
+    File tempFile = tempDir.resolve("valid.yaml").toFile();
+    Files.write(tempFile.toPath(), "pipeline: test-pipeline".getBytes());
+    checkCommand.configFile = tempFile.getAbsolutePath();
 
-    CommandLine cmd = new CommandLine(checkCommand);
-    int exitCode = cmd.execute(validPipelinePath);
+    try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class);
+         MockedStatic<PipelineValidator> validatorMock = mockStatic(PipelineValidator.class)) {
 
-    assertEquals(0, exitCode, "Expected exit code 0 for valid pipeline.");
+      parserMock.when(() -> YamlParser.parseYaml(tempFile)).thenReturn(mock(PipelineConfig.class));
+
+      assertEquals(0, checkCommand.call());
+    }
   }
 
-  // Test case: Invalid pipeline file with multiple errors
   @Test
-  void testCheckInvalidPipeline() throws Exception {
-    when(mockBackendClient.checkPipelineConfig(invalidPipelinePath))
-            .thenReturn(new PipelineCheckResponse(false, List.of("Syntax error", "Missing key")));
+  void shouldReturnValidationErrorWhenInvalidFile() throws IOException {
+    // Create a temporary YAML file
+    File tempFile = tempDir.resolve("invalid.yaml").toFile();
+    Files.write(tempFile.toPath(), "pipeline: invalid".getBytes());
+    checkCommand.configFile = tempFile.getAbsolutePath();
 
-    CommandLine cmd = new CommandLine(checkCommand);
-    int exitCode = cmd.execute(invalidPipelinePath);
+    try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class);
+         MockedStatic<PipelineValidator> validatorMock = mockStatic(PipelineValidator.class)) {
 
-    assertEquals(3, exitCode, "Expected exit code 3 for invalid pipeline.");
-  }
+      parserMock.when(() -> YamlParser.parseYaml(tempFile)).thenReturn(mock(PipelineConfig.class));
+      validatorMock.when(() -> PipelineValidator.validate(any())).thenThrow(new ValidationException("Invalid"));
 
-  // Test case: Backend exception handling (RuntimeException)
-  @Test
-  void testCheckCommandHandlesExceptions() throws Exception {
-    when(mockBackendClient.checkPipelineConfig(validPipelinePath))
-            .thenThrow(new RuntimeException("Backend error"));
-
-    CommandLine cmd = new CommandLine(checkCommand);
-    int exitCode = cmd.execute(validPipelinePath);
-
-    assertEquals(1, exitCode, "Expected exit code 1 for backend failure.");
-  }
-
-  //Test case: Backend exception handling (IOException)
-  @Test
-  void testCheckCommandHandlesIOException() throws Exception {
-    when(mockBackendClient.checkPipelineConfig(validPipelinePath))
-            .thenThrow(new java.io.IOException("Network issue"));
-
-    CommandLine cmd = new CommandLine(checkCommand);
-    int exitCode = cmd.execute(validPipelinePath);
-
-    assertEquals(1, exitCode, "Expected exit code 1 for IOException.");
+      assertEquals(3, checkCommand.call());
+    }
   }
 }

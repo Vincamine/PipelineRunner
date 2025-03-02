@@ -3,7 +3,7 @@ package edu.neu.cs6510.sp25.t1.backend.dto;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import edu.neu.cs6510.sp25.t1.backend.model.Stage;
+import edu.neu.cs6510.sp25.t1.backend.entity.Stage;
 
 /**
  * Data Transfer Object (DTO) for Stage.
