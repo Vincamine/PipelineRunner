@@ -1,4 +1,4 @@
-name: "My CI/CD Pipeline"
+name: my-cicd-pipeline
 
 stages:
   - name: "build"
