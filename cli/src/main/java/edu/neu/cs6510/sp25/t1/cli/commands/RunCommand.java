@@ -21,6 +21,7 @@ import java.util.UUID;
 public class RunCommand extends BaseCommand {
 
   private final CliBackendClient backendClient;
+  private static final String DEFAULT_PIPELINE_PATH = ".pipelines/pipeline.yaml";
 
   @CommandLine.Option(names = "--local", description = "Run pipeline on local machine (logs execution state)")
   private boolean runLocally;
@@ -45,6 +46,11 @@ public class RunCommand extends BaseCommand {
   @Override
   public Integer call() {
     System.out.println("Command Started: RunCommand");
+
+    if (configFile == null || configFile.isEmpty()) {
+      configFile = DEFAULT_PIPELINE_PATH;
+      System.out.println("Using default pipeline configuration: " + DEFAULT_PIPELINE_PATH);
+    }
 
     if (!validateInputs()) {
       return 2;
