@@ -35,8 +35,8 @@
 | Task | Weight | Assignee |
 | ---- | ------ | -------- |
 | [Implement `xx report` CLI command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/102)                 | 5    | Yiwen        |
-| [Implement repository-level pipeline execution summary (L4.1)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/103)  | 3    | Mingtianfang |
-| [Implement individual pipeline run summary (L4.2)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/104)          | 3    | Wenxue       |
+| [Implement repository-level pipelineEntity execution summary (L4.1)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/103)  | 3    | Mingtianfang |
+| [Implement individual pipelineEntity run summary (L4.2)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/104)          | 3    | Wenxue       |
 | [Debug current code base and add all needed documentation](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/101)     | 2    | Yiwen        |
 | [Update README for Week 3 Sprint](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/87)                             | 2    | Wenxue       |
 | [Ensure reports CLI command follows proper error handling](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/105)      | 3    | Shenqian     |

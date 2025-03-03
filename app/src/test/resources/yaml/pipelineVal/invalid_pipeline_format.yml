@@ -1,3 +1,0 @@
-pipeline: "This should be an object, not a string"
-stages:
-  - build

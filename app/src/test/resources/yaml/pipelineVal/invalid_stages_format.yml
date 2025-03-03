@@ -1,3 +1,0 @@
-pipeline:
-  name: "InvalidStagesFormat"
-  stages: "build, test, deploy"

@@ -1,86 +1,25 @@
+# ==============================
+# IDE-specific files
+# ==============================
+# IntelliJ IDEA
+/.idea/
+*.iml
+*.iws
 
-# Compiled class files
-*.class
-
-# Log files
-*.log
-
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.ear
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
-
-# Eclipse specific files
+# Eclipse
 /.classpath
 /.project
 /.settings/
 /.loadpath
 
-# IntelliJ IDEA
-/.idea/
-*.iml
-*.iws
-out/
-
 # NetBeans
 /nbproject/private/
-/build/
-/dist/
 /nbbuild/
 /nbdist/
 /.nb-gradle/
 
 # VS Code
 /.vscode/
-
-# Maven
-/target/
-
-# Gradle
-.gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
-
-# Temporary files
-*.tmp
-*.swp
-*.swo
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Test output
-/test-output/
-
-# Environment specific files
-.env
-
-# Logs
-logs/
-*.log
-
-# Others
-*.class
-*.jar
-*.war
-*.ear
-*.db
-*.sqlite
-
-# Backup files
-*~
-*.bak
 
 # JetBrains Rider
 .idea/
@@ -90,8 +29,63 @@ logs/
 *.userosscache
 *.sln.docstates
 
-app/bin/
+# ==============================
+# Build and Dependency Files
+# ==============================
+# Maven
+/target/
 
-#*.sh
-demo_plan_updated.md
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
 
+# Gradle project-specific cache
+**/.gradle/
+
+# Ignore compiled binaries
+**/bin/
+**/build/
+**/out/
+
+# Package Files (JAR, WAR, EAR)
+*.jar
+*.war
+*.ear
+
+# ==============================
+# Logs and Temporary Files
+# ==============================
+logs/
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+# Test output
+/test-output/
+
+# Backup files
+*~
+*.bak
+
+# ==============================
+# OS-Specific Files
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Environment-specific Files
+# ==============================
+.env
+
+# ==============================
+# Miscellaneous
+# ==============================
+/dist/
+/demo_plan_updated.md

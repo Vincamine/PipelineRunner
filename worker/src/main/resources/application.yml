@@ -1,0 +1,11 @@
+server:
+  port: 8081
+docker:
+  image-pull-policy: "Always"
+  volume-mounts: "/workspace"
+artifacts:
+  storage-path: "/artifacts"
+  retention-days: 7
+worker:
+  max-concurrent-jobs: 5
+  artifact-storage-path: "/var/cicd/artifacts"

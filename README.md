@@ -1,9 +1,9 @@
 # 25Spring CS6510 Team 1 - CI/CD System
 
 - **Title:** Readme file
-- **Date:** Feb 9, 2025
+- **Date:** Feb 27, 2025
 - **Author:** Yiwen Wang
-- **Version:** 1.3
+- **Version:** 1.4
 
 **Revision History**
 
@@ -13,325 +13,162 @@
 | Feb 3, 2025  |   1.1   | Added CLI usage details                         | Yiwen Wang |
 | Feb 9, 2025  |   1.2   | Enhanced Git validation & added status command  | Yiwen Wang |
 | Feb 9, 2025  |   1.3   | Added troubleshooting & structured error format | Yiwen Wang |
+| Feb 27, 2025 |   1.4   | Updated based on refined project requirements   | Yiwen Wang |
 
 ---
 
 # Introduction: Local CI/CD Pipeline Runner
 
-Welcome to the repository for our CI/CD system for small/medium-sized companies.
+Welcome to the repository for our CI/CD system, designed for small to medium-sized companies. This system enables developers to execute, debug, and validate CI/CD pipelines seamlessly across both company data centers and local machines without modifications.
 
-A command-line tool designed to run and manage CI/CD pipelines both on company data centers and locally on developer machines. This tool allows developers to execute, debug, and validate entire or partial pipelines without the need for external modifications, ensuring that all CI/CD configurations reside within the repository and can be tracked via version control.
-
----
-
-# Design Documents
-
-## Tech Stack
-
-Describe the technologies used in the project, including programming languages, frameworks, libraries, and infrastructure components.  
-[Tech Stack Design](dev-docs/reports/weeklies/design/tech-stack.md)
-
-## High-Level Design
-
-Provide an architectural overview of the system. Include diagrams if possible, explaining the interaction between different components and the overall flow of the application.  
-[High-Level Architecture Design](dev-docs/reports/weeklies/design/high-level-arch.md)
-
-## Low-Level Design
-
-Detail the implementation of various components, including algorithms, data structures, database schemas, API endpoints, and business logic.  
-[Low-Level Design](dev-docs/reports/weeklies/design/low-level-design.md)
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Command Line Interface (CLI)](#command-line-interface-cli)
-  - [Sub-Commands and Options](#sub-commands-and-options)
-- [Pipeline Configuration File](#pipeline-configuration-file)
-- [Execution Flow](#execution-flow)
-- [Error Reporting](#error-reporting)
-- [Troubleshooting](#troubleshooting)
-- [Reporting on Past Executions](#reporting-on-past-executions)
-- [Contributing](#contributing)
-- [License](#license)
+A command-line tool ensures that all CI/CD configurations reside within the repository, making it easier to manage, track, and validate development pipelines with a version-controlled structure.
 
 ---
 
-## Overview
+# Features & Capabilities
 
-This project is a CI/CD pipeline runner that:
-
-- **Supports Dual Environments:** Can run on both company data centers and local environments.
-- **Local Pipeline Execution:** Enables developers to run pipelines in full or in part locally for debugging and development.
-- **Repository-Driven Configuration:** All pipeline configurations are stored and tracked within the repository under a designated folder.
-- **Unified CLI:** Provides a command-line client that adheres to best practices, ensuring consistent behavior whether run locally or on server machines.
-- **Enhanced Git Validation:** Ensures the CLI only runs from a valid Git repository.
+- **Local-first Approach:** CI/CD pipelines can run on both company servers and local developer machines with no modifications.
+- **Git-based Configuration:** All pipelineEntity settings reside in a `.pipelines` directory inside the repository.
+- **Independent Pipelines:** Each pipelineEntity configuration is self-contained, with a unique name and a complete execution definition.
+- **Flexible Pipeline Structure:**
+  - Pipelines consist of sequential **stageEntities**.
+  - Stages contain **jobEntities** that may run in parallel.
+  - Jobs define execution environments using Docker images.
+  - Jobs support dependencies but cannot form cycles.
+- **Robust CLI:**
+  - Validate configuration files.
+  - Execute dry-run previews of pipelineEntity execution order.
+  - Run pipelines locally or on remote servers.
+  - Generate detailed reports on past executions.
+  - Override configuration parameters at runtime.
+- **Job Flexibility:**
+  - Jobs can continue execution even after failures (if configured).
+  - Jobs can specify artifacts to be uploaded upon completion.
+  - Artifacts can be selected using pattern-based paths.
+- **Comprehensive Reporting:**
+  - Status tracking for pipelines, stageEntities, and jobEntities.
+  - Logs and execution summaries for debugging and analysis.
 
 ---
 
-## Key Features
-
-- **Local and Remote Execution:** Seamlessly run pipelines in both company data centers and local environments.
-- **In-Repo Configuration:** All pipeline configurations reside in a `.pipelines` folder within the repository, ensuring they are versioned and trackable.
-- **Strict Git Repository Integration:** Only committed files are considered; uncommitted local changes are ignored.
-- **CLI-Driven Workflow:** A rich command-line interface (CLI) for running, checking, and reporting pipeline executions.
-- **Flexible Pipeline Definitions:** Pipelines are defined in YAML v1.2 with clear specifications for stages, jobs, dependencies, and scripts.
-- **Enhanced Logging & Debugging:** Added verbose mode and structured logging for debugging CLI operations.
-
----
-
-## Installation
+# Installation
 
 1. **Clone the Repository:**
-
    ```bash
    git clone https://github.com/CS6510-SEA-SP25/t1-cicd.git
    cd t1-cicd
    ```
-
 2. **Build the Project:**
-
    ```bash
    ./gradlew clean build
    ```
 
 ---
 
-## Usage
+# Usage
 
 ### Command Line Interface (CLI)
 
-The CLI must be executed from the root of a Git repository. It provides sub-commands and options to validate, simulate, run, and report on pipeline executions.
+Run the CLI from the root of a Git repository. It provides commands for validating, running, and reporting on pipelineEntity executions.
 
 #### General Usage
-
 ```bash
 ./gradlew run --args="[sub-command] [options]"
 ```
 
-### Sub-Commands and Options
+#### Key CLI Commands
 
-#### 1. **Display Help Information**
-
-Shows all available commands and options:
-
-```bash
-./gradlew run --args="--help"
-```
-
-#### 2. **Display Version**
-
-Displays the current version of the CLI tool:
-
-```bash
-./gradlew run --args="--version"
-```
-
-#### 3. **Logging Messages**
-
-Use the `log` sub-command to log messages:
-
-```bash
-./gradlew run --args="log --message 'Deployment started'"
-```
-
-If no message is provided, the CLI will display:
-
-```bash
-./gradlew run --args="log"
-```
-
-Output:
-
-```
-No message provided.
-```
-
-#### 4. **Checking Pipeline Status**
-
-```bash
-./gradlew run --args="status --pipeline-id 12345"
-```
-
-If inside a Git repository, the pipeline status is printed. Otherwise, the CLI will return:
-
-```
-❌ Error: This CLI must be run from the root of a Git repository.
-```
+- **Display Help:**
+  ```bash
+  ./gradlew run --args="--help"
+  ```
+- **Display Version:**
+  ```bash
+  ./gradlew run --args="--version"
+  ```
+- **Check Pipeline Status:**
+  ```bash
+  ./gradlew run --args="status --pipelineEntity-id 12345"
+  ```
+  - Returns error if executed outside a Git repository.
+- **Run Pipelines Locally:**
+  ```bash
+  ./gradlew run --args="run --pipelineEntity my_pipeline"
+  ```
+- **Validate Pipeline Configuration:**
+  ```bash
+  ./gradlew run --args="validate .pipelines/config.yaml"
+  ```
 
 ---
 
-## Pipeline Configuration File
+# Pipeline Configuration
 
-All CI/CD configuration files must be located in a `.pipelines` folder in the repository root and follow the YAML v1.2 format.
+All CI/CD configurations should be stored in the `.pipelines` directory in the repository root and must follow the YAML v1.2 format.
 
-### Basic Structure
-
+### Example Configuration:
 ```yaml
-pipeline:
+pipelineEntity:
   name: "My Pipeline"
-  stages:
+  stageEntities:
     - build
     - test
-    - docs
+    - deploy
 
-jobs:
+jobEntities:
   - name: compile
-    stage: build
+    stageEntity: build
     image: gradle:8.12-jdk21
     script:
       - ./gradlew classes
-
   - name: unittests
-    stage: test
+    stageEntity: test
     image: gradle:8.12-jdk21
     script:
       - ./gradlew test
-
-  - name: javadoc
-    stage: docs
+  - name: deploy
+    stageEntity: deploy
     image: gradle:8.12-jdk21
     script:
-      - ./gradlew javadoc
+      - ./gradlew deploy
 ```
 
 ---
 
-## How to Test
+# Troubleshooting
 
-### 1️⃣ Run CLI with Verbose Mode
-
-```bash
-./gradlew run --args="--verbose"
-```
-✅ Expected: Should print `✅ Verbose mode enabled.` before any validation.
-
-### 2️⃣ Test Git Validation with Debug Logging
-
-```bash
-./gradlew run --args="status --pipeline-id 12345"
-```
-✅ Expected:
-- If inside a Git repository, it should print pipeline status.
-- If not inside a Git repository, it should return:
-  
-  ```
-  ❌ Error: This CLI must be run from the root of a Git repository.
-  ```
-
-### 3️⃣ Run Unit Tests
-
-```bash
-./gradlew test
-```
-✅ Expected: All tests should pass.
-
----
-## Error Reporting
-
-All CLI errors follow a structured **(filename:line:col:error)** format:
-
-```bash
-<filename>:<line>:<column>: <error-message>
-```
-
-Example:
-
-```
-StatusCommand.java:45:5: Pipeline ID not found
-```
-
----
-
-## Troubleshooting
-
-### 🛠️ Issue: `org.yaml.snakeyaml` Cannot Be Resolved
-
-#### **Cause**
-
-This issue happens when the **SnakeYAML library is missing**.
-
-#### **Solution**
-
-1️⃣ **Ensure Dependency is Installed**
-Run:
-
-```bash
-./gradlew dependencies --configuration compileClasspath | grep snakeyaml
-```
-
-2️⃣ **If Missing, Add It in `build.gradle.kts`**
-
-```kotlin
-dependencies {
-    implementation("org.yaml:snakeyaml:2.0")
-}
-```
-
-Then rebuild:
-
-```bash
-./gradlew clean build --refresh-dependencies
-```
-
----
-
-### 🛠️ Issue: CLI Throws "Must Be in Git Repository"
-
-#### **Cause**
-
-GitValidator now **requires** that the CLI **only runs in a Git repository**.
-
-#### **Solution**
-
-Run:
-
+### 🛠 Issue: CLI Must Be Run in a Git Repository
+#### Cause
+GitValidator enforces that the CLI only runs inside a Git repository.
+#### Solution
 ```bash
 git rev-parse --is-inside-work-tree
 ```
-
-If it prints `true`, you are inside a Git repo. Otherwise, run:
-
+If the output is `true`, you're in a Git repository. Otherwise, initialize one:
 ```bash
 git init
 ```
 
----
-
-### 🛠️ Issue: CLI Fails with `IllegalArgumentException: Invalid YAML Format`
-
-#### **Cause**
-
-The pipeline configuration file contains **invalid YAML syntax**.
-
-#### **Solution**
-
+### 🛠 Issue: Invalid YAML Format in `.pipelines` Configuration
+#### Solution
 Run:
-
 ```bash
-yamllint .pipelines/pipeline-config.yaml
+yamllint .pipelines/config.yaml
 ```
-
-Fix any reported issues.
+Fix any reported issues before re-running the pipelineEntity.
 
 ---
 
-## Contributing
+# Contributing
 
 1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/my-new-feature`).
-3. Commit your changes (`git commit -am 'Add some feature'`).
-4. Push to the branch (`git push origin feature/my-new-feature`).
-5. Open a pull request detailing your changes.
+2. Create a new branch (`git checkout -b feature/my-new-feature`).
+3. Commit your changes (`git commit -am 'Add feature X'`).
+4. Push to your branch (`git push origin feature/my-new-feature`).
+5. Open a pull request for review.
 
 ---
 
-## License
+# License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-
----
-
