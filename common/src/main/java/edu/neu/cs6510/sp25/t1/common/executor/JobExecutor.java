@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.worker.executor;
+package edu.neu.cs6510.sp25.t1.common.executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.List;
 
 import edu.neu.cs6510.sp25.t1.common.api.JobRequest;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 import edu.neu.cs6510.sp25.t1.common.config.JobConfig;
 import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
 import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
@@ -75,7 +75,7 @@ public class JobExecutor {
 
     JobRunState jobRunState = new JobRunState(
             new JobConfig(jobRequest.getJobName(), "default-stage", "default-image",
-                    List.of(), dependencies, false),
+                    List.of(), dependencies, false, null),
             ExecutionState.RUNNING.name(),
             false,
             dependencies,

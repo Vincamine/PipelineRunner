@@ -1,10 +1,10 @@
 package edu.neu.cs6510.sp25.t1.worker;
 
 import edu.neu.cs6510.sp25.t1.common.api.JobRequest;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
 import edu.neu.cs6510.sp25.t1.worker.executor.DockerManager;
-import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutor;
+import edu.neu.cs6510.sp25.t1.common.executor.JobExecutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;

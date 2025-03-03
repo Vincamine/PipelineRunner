@@ -31,7 +31,7 @@ public abstract class BaseCommand implements Callable<Integer> {
   protected boolean verbose;
 
   @SuppressWarnings("checkstyle:VisibilityModifier")
-  @CommandLine.Option(names = {"-f", "--file"}, description = "Path to the pipeline configuration file")
+  @CommandLine.Option(names = {"-f", "--filename"}, description = "Path to the pipeline configuration file")
   protected String configFile;
 
   @SuppressWarnings("checkstyle:VisibilityModifier")

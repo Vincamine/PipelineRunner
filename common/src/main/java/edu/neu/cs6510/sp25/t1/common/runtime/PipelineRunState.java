@@ -4,8 +4,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
-
 /**
  * Represents an active execution of a CI/CD pipeline. Defines execution state & metadata.
  * This class is responsible for managing the state of the pipeline execution,

@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.List;
 
 import edu.neu.cs6510.sp25.t1.common.config.JobConfig;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
 
 /**
  * Represents a job execution instance within a pipeline stage.
@@ -65,7 +64,7 @@ public class JobRunState {
    * @param allowFailure Whether the job is allowed to fail.
    */
   public JobRunState(String jobName, String status, boolean allowFailure) {
-    this(new JobConfig(jobName, "default-stage", "default-image", List.of(), List.of(), allowFailure),
+    this(new JobConfig(jobName, "default-stage", "default-image", List.of(), List.of(), allowFailure, null),
             status, allowFailure, List.of(), true);
   }
 
@@ -76,7 +75,7 @@ public class JobRunState {
    */
   public JobRunState(String jobName) {
     this(new JobConfig(jobName, "default-stage", "default-image",
-                    List.of(), List.of(), false),
+                    List.of(), List.of(), false, null),
             ExecutionState.PENDING.name(),
             false,
             List.of(),

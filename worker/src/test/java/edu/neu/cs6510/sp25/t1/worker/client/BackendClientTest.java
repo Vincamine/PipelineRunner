@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import edu.neu.cs6510.sp25.t1.common.api.JobStatusUpdate;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.any;

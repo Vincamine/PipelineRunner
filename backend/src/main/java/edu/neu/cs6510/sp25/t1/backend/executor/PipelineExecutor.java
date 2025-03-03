@@ -7,7 +7,7 @@ import java.time.Instant;
 
 import edu.neu.cs6510.sp25.t1.backend.entity.PipelineExecution;
 import edu.neu.cs6510.sp25.t1.backend.repository.PipelineExecutionRepository;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 
 /**

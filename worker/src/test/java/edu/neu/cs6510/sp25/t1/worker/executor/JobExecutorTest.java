@@ -12,7 +12,8 @@ import java.io.IOException;
 import java.util.List;
 
 import edu.neu.cs6510.sp25.t1.common.api.JobRequest;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.executor.JobExecutor;
+import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;

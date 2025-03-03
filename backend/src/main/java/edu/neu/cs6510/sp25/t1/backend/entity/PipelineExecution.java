@@ -2,7 +2,7 @@ package edu.neu.cs6510.sp25.t1.backend.entity;
 
 import java.time.Instant;
 
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

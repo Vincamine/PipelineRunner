@@ -2,7 +2,7 @@ package edu.neu.cs6510.sp25.t1.backend.service;
 
 import edu.neu.cs6510.sp25.t1.backend.entity.PipelineExecution;
 import edu.neu.cs6510.sp25.t1.backend.repository.PipelineExecutionRepository;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,12 +1,15 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import edu.neu.cs6510.sp25.t1.common.api.JobRequest;
 import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
 import edu.neu.cs6510.sp25.t1.common.api.UpdateExecutionStateRequest;
 import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
-import edu.neu.cs6510.sp25.t1.common.execution.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
 import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
 import edu.neu.cs6510.sp25.t1.common.runtime.StageRunState;
@@ -103,7 +106,7 @@ public class RunCommand extends BaseCommand {
                       .map(JobRunState::new)
                       .collect(Collectors.toList()));
 
-      logInfo("▶ Executing Stage: " + stageConfig.getName());
+      logInfo("Executing Stage: " + stageConfig.getName());
 
       // Execute each job in the stage
       for (JobRunState jobState : stageState.getJobExecutions()) {
@@ -138,22 +141,32 @@ public class RunCommand extends BaseCommand {
    * @return true if successful, false otherwise.
    */
   private boolean executeJob(JobRunState jobState) {
+    logInfo("Running Job: " + jobState.getJobName());
+
+    // Ensure the job has a valid pipeline association
+    String pipelineName = jobState.getJobDefinition().getStageName();
+
+    // Create a job execution request
+    JobRequest jobRequest = new JobRequest(
+            jobState.getJobName(),
+            pipelineName, // Use stage as a reference (Pipeline info not in JobConfig)
+            jobState.getJobName(),
+            "latest-commit",
+            Map.of(),
+            List.of(),
+            true
+    );
+
     try {
-      logInfo("Running Job: " + jobState.getJobName());
-      jobState.start();
-
-      // Simulate execution (Replace with actual Docker execution)
-      Thread.sleep(1000);
-
-      jobState.complete("SUCCESS");
-      logInfo("Job Completed: " + jobState.getJobName());
+      backendClient.executeJob(jobRequest);
+      logInfo("Job execution request sent: " + jobState.getJobName());
       return true;
-    } catch (InterruptedException e) {
-      jobState.complete("FAILED");
-      logError("Job execution interrupted: " + jobState.getJobName());
+    } catch (Exception e) {
+      logError("Job execution failed: " + jobState.getJobName() + " - Error: " + e.getMessage());
       return false;
     }
   }
+
 
   /**
    * Executes the pipeline remotely via the backend.

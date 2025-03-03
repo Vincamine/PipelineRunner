@@ -45,6 +45,10 @@ public class CliBackendClient {
     this.objectMapper = new ObjectMapper();
   }
 
+  public CliBackendClient() {
+
+  }
+
   /**
    * Handles API responses and ensures proper error reporting.
    *

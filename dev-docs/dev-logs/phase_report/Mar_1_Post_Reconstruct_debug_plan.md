@@ -114,14 +114,14 @@ Showcase the working CI/CD system in a structured demo.
 ## CI/CD Pipeline CLI Development Checklist
 
 ### **1. Design and Implement CLI Client**
-- [ ] Create CLI tool with required functionalities.
+- [x] Create CLI tool with required functionalities.
 - [ ] Ensure it integrates correctly with backend services.
 
 ### **2. CLI Processing of Pipeline Configuration Files**
-- [ ] CLI must be run from the root of a Git repository.
-- [ ] Support configuration files stored in `.pipelines/`.
-- [ ] Allow specifying config file via `--filename | -f`.
-- [ ] Provide `--check` option to validate config files without execution.
+- [x] CLI must be run from the root of a Git repository.
+- [x] Support configuration files stored in `.pipelines/`.
+- [x] Allow specifying config file via `--filename | -f`.
+- [x] Provide `--check` option to validate config files without execution.
 
 ### **3. Validation of Pipeline YAML Definitions**
 - [x] YAML v1.2 format support.
