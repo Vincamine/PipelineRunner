@@ -1,4 +1,7 @@
 # Useful Commands for the Project
+**Version:** `1.0`  
+**Last Updated:** `March 2025`  
+**Author:** Yiwen
 
 ## Project Commands
 ### Building the project

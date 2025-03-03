@@ -1,4 +1,7 @@
 # Using Gradle Inside IntelliJ IDEA
+**Version:** `1.0`  
+**Last Updated:** `March 2025`  
+**Author:** Yiwen
 
 ## Reloading Gradle in IntelliJ
 1. Click **"Reload All Gradle Projects"** in the Gradle tool window.

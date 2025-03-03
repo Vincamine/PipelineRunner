@@ -1,181 +1,123 @@
-# User Guide: CI/CD Command Line Tool (`cicd`)
+# CI/CD CLI User Guide
 
-**Version:** `1.0`  
-**Last Updated:** `March 2025`  
-**Author:** Yiwen
+## Introduction
+This guide provides instructions on how to use the CI/CD CLI tool to validate, execute, and retrieve reports for CI/CD pipelines. The CLI supports both **local** and **remote** execution, allowing developers to run and debug pipelines efficiently.
 
----
-
-## 📖 Table of Contents
-
-- [🚀 Installation](#-installation)
-- [🛠️ Basic Usage](#-basic-usage)
-- [📋 Command Reference](#-command-reference)
-    - [`check`](#check-validate-pipeline)
-    - [`run`](#run-execute-a-pipeline)
-    - [`dry-run`](#dry-run-simulate-execution)
-    - [`report`](#report-fetch-execution-results)
-- [🧹 Uninstallation](#-uninstallation)
-- [📌 Notes](#-notes)
-- [💡 Alternative Without Installation](#-alternative-without-installation)
-
----
-
-## 🚀 Installation
-
-### **1️⃣ Run the Install Script**
-
-To set up the `cicd` command globally, run:
+## Installation
+To simplify usage, install the CLI tool as a shell command:
 
 ```sh
-bash scripts/install.sh
+scripts/install.sh
 ```
 
-**This will:**
-✅ Create the `cicd` command in `/usr/local/bin`  
-✅ Ensure `cicd` always runs the latest JAR version  
-✅ Allow you to execute commands without `java -jar ...`
-
-### **2️⃣ Verify Installation**
-
-Run:
+After installation, confirm it works by running:
 
 ```sh
 cicd --help
 ```
 
-If the help message appears, installation is successful 🎉
-
----
-
-## 🛠️ Basic Usage
-
-Once installed, use `cicd` like this:
+If you do not install the script, you can use the CLI with:
 
 ```sh
-cicd <command> [options]
+java -jar cli/build/libs/ci-tool.jar <command>
 ```
 
-Example:
+## Pipeline Configuration Files
+**GitHub Repository:** [cicdSample](https://github.com/YiwenW312/cicdSample.git)
 
-```sh
-cicd check -f .pipelines/pipeline.yaml
-```
+### **Remote Repository Pipelines**
+1. **Pipeline File:** `pipelines/pipeline.yaml`  
+   **Pipeline Name:** `demo-ci-pipeline`
 
-Runs the pipeline configuration check.
+2. **Pipeline File:** `.pipelines/test-pipeline.yaml`  
+   **Pipeline Name:** `test-pipeline`
 
----
+### **Local (Own) Repository Pipelines**
+1. **Pipeline File:** `pipelines/pipeline.yaml`  
+   **Pipeline Name:** `my-cicd-pipeline`
 
-## 📋 Command Reference
+## CLI Commands
 
-### 🔹 `check` (Validate Pipeline)
-
-Check if the pipeline configuration is valid:
-
+### **1️⃣ Validate a Pipeline Configuration**
+Check if a pipeline file is valid:
 ```sh
 cicd check -f .pipelines/pipeline.yaml
 ```
 
-### 🔹 `run` (Execute a Pipeline)
-
-#### **Run Locally**
-
-```sh
-cicd run --local --repo /home/user/project --commit abc123 --branch main --pipeline pr
-```
-
-**Variations:**
-
-- If `--branch` is missing → uses `main`
-- If `--commit` is missing → uses latest commit
-- If `--pipeline` is missing → requires `--file`
-
-#### **Run Remotely**
-
-```sh
-cicd run --repo https://github.com/org/repo.git --branch main --pipeline pr
-```
-
-- **Sample Repo**: https://github.com/YiwenW312/cicdSample.git
-### 🔹 `dry-run` (Simulate Execution)
-
-Show execution order **without actually running jobs**:
-
+### **2️⃣ Simulate Execution (Dry-Run)**
+To check the execution order:
 ```sh
 cicd dry-run -f .pipelines/pipeline.yaml
 ```
 
-**Example Output:**
-
-```yaml
-build:
-  compile:
-    image: gradle:8.12-jdk21
-    script:
-      - ./gradlew classes
-test:
-  unittests:
-    image: gradle:8.12-jdk21
-    script:
-      - ./gradlew test
-  reports:
-    image: gradle:8.12-jdk21
-    script:
-      - ./gradlew check
-```
-
-### 🔹 `report` (Fetch Execution Results)
-
-To retrieve execution results:
-
+### **3️⃣ Run Pipelines**
+#### **Remote Execution**
+Run a pipeline remotely on a CI/CD server:
 ```sh
-cicd report --pipeline my_pipeline --format json
+cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
 ```
 
-**Formats:**
-
-- `plaintext` (default)
-- `json`
-- `yaml`
-
----
-
-## 🧹 Uninstallation
-
-To remove the `cicd` command:
-
+#### **Local Execution (Remote Repository)**
+Run a pipeline on your local machine, pulling from a remote repo:
 ```sh
-sudo rm /usr/local/bin/cicd
+cicd run --local --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
 ```
 
----
-
-## 📌 Notes
-
-- All commands require a **valid `.yaml` pipeline file**.
-- If running locally, results are stored in a **local report file**.
-- If running remotely, results are saved in the **database**.
-
----
-
-## 💡 Alternative Without Installation
-
-If you do **not** install the script, you need to run commands manually with `java -jar`:
-
+#### **Local Execution (Local Repository)**
+Run a pipeline locally using a cloned Git repository:
 ```sh
-java -jar cli/build/libs/ci-tool.jar check -f .pipelines/pipeline.yaml
+cicd run --local --repo ./workspace/project --branch feature1 -f .pipelines/pipeline.yaml
 ```
 
-Instead of:
-
+#### **Run All Pipelines in a Repo**
 ```sh
-cicd check -f .pipelines/pipeline.yaml
+cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main
 ```
 
-To run a pipeline:
-
+#### **Run with Pipeline Name Instead of File**
 ```sh
-java -jar cli/build/libs/ci-tool.jar run --local --repo /home/user/project --commit abc123 --branch main --pipeline pr
+cicd run --local --repo ./workspace/project --branch feature1 --pipeline test-pipeline
 ```
 
-This method works, but **installing the script makes it easier** 🚀
+#### **Run with Config Overrides**
+Override a pipeline variable:
+```sh
+cicd run --local --override "global.docker.image=gradle:jdk8" --file .pipelines/pipeline.yaml
+```
+
+### **4️⃣ Retrieve Pipeline Execution Reports**
+#### **List All Past Pipeline Runs**
+```sh
+cicd report --repo https://github.com/company/project
+```
+
+#### **List Runs of a Specific Pipeline**
+```sh
+cicd report --repo https://github.com/company/project --pipeline demo-ci-pipeline
+```
+
+#### **Retrieve Execution Details of a Specific Run**
+```sh
+cicd report --repo https://github.com/company/project --pipeline demo-ci-pipeline --run 2
+```
+
+#### **Get Stage Details of a Specific Run**
+```sh
+cicd report --repo https://github.com/company/project --pipeline demo-ci-pipeline --stage build --run 2
+```
+
+#### **Get Job Details of a Specific Stage**
+```sh
+cicd report --repo https://github.com/company/project --pipeline demo-ci-pipeline --stage build --job compile --run 2
+```
+
+## Error Handling & Debugging
+- If both `--pipeline` and `--file` are provided, the CLI must return an **error**.
+- If `--repo` is missing and the command is executed outside a Git repository, it must return an **error**.
+- If an invalid `--commit` is given, execution should **fail**.
+- If job dependencies form a **cycle**, the CLI must return an **error with dependency details**.
+- If a job fails and `allowFailure` is `false`, execution must **stop immediately**.
+
+## **Conclusion**
+This guide outlines how to validate, run, and report CI/CD pipelines using the `cicd` CLI tool. Test the provided commands to verify functionality and debug issues efficiently.
+
