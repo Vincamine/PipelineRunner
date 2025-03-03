@@ -1,4 +1,7 @@
 # CI/CD CLI Command Testing Summary
+**Version:** `1.0`  
+**Last Updated:** `March 3 2025`  
+**Author:** Yiwen
 
 ## ✅ Worked Command Lines
 These commands were executed successfully and produced expected results:
