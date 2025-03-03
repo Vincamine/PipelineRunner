@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.backend.api.dto;
+package edu.neu.cs6510.sp25.t1.backend.data.dto;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,6 +12,7 @@ import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineEntity;
 public class PipelineDTO {
   private String name;
   private List<StageDTO> stages;
+  private String repositoryUrl;
 
   /**
    * Constructs a PipelineDTO.
@@ -73,5 +74,9 @@ public class PipelineDTO {
    */
   public void setStages(List<StageDTO> stages) {
     this.stages = stages;
+  }
+
+  public String getRepositoryUrl() {
+    return repositoryUrl;
   }
 }

@@ -14,6 +14,8 @@ import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 @Repository
 public interface StageExecutionRepository extends JpaRepository<StageExecutionEntity, Long> {
 
+  List<StageExecutionEntity> findByPipelineExecutionId(Long pipelineExecutionId);
+
   /**
    * Finds all stage executions for a given pipeline execution.
    *

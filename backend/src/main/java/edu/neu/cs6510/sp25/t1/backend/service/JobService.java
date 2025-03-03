@@ -1,6 +1,8 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import edu.neu.cs6510.sp25.t1.backend.data.dto.JobDTO;
 import edu.neu.cs6510.sp25.t1.backend.data.entity.JobEntity;
+import edu.neu.cs6510.sp25.t1.backend.data.entity.StageEntity;
 import edu.neu.cs6510.sp25.t1.backend.data.repository.JobRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import java.util.List;
 public class JobService {
 
   private final JobRepository jobRepository;
+  private static StageEntity stage;
 
   public JobService(JobRepository jobRepository) {
     this.jobRepository = jobRepository;
@@ -43,27 +46,41 @@ public class JobService {
   /**
    * Creates a new job.
    *
-   * @param job The job entity to create.
+   * @param jobDTO The job DTO containing job details.
    * @return The saved job entity.
    */
   @Transactional
-  public JobEntity createJob(JobEntity job) {
+  public JobEntity createJob(JobDTO jobDTO) {
+    if (stage == null) {
+      throw new IllegalArgumentException("Stage cannot be null when creating a job.");
+    }
+    JobEntity job = new JobEntity(
+            jobDTO.getJobName(),
+            jobDTO.getImage(),
+            jobDTO.getScript(),
+            stage,
+            jobDTO.isAllowFailure()
+    );
     return jobRepository.save(job);
   }
+
 
   /**
    * Updates an existing job.
    *
    * @param jobId The job ID.
-   * @param updatedJob The updated job entity.
+   * @param jobDTO The updated job details.
    * @return The updated job entity.
    */
   @Transactional
-  public JobEntity updateJob(Long jobId, JobEntity updatedJob) {
+  public JobEntity updateJob(Long jobId, JobDTO jobDTO) {
     JobEntity existingJob = getJobById(jobId);
-    existingJob.setName(updatedJob.getName());
-    existingJob.setImage(updatedJob.getImage());
-    existingJob.setAllowFailure(updatedJob.isAllowFailure());
+
+    existingJob.setName(jobDTO.getJobName());
+    existingJob.setImage(jobDTO.getImage());
+    existingJob.setScript(jobDTO.getScript());
+    existingJob.setAllowFailure(jobDTO.isAllowFailure());
+
     return jobRepository.save(existingJob);
   }
 

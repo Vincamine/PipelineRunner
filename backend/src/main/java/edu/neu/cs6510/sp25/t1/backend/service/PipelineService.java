@@ -1,11 +1,13 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineDTO;
 import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineEntity;
 import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing pipelines.
@@ -22,45 +24,56 @@ public class PipelineService {
   /**
    * Retrieves all pipelines.
    *
-   * @return List of all pipelines.
+   * @return List of all pipelines as DTOs.
    */
-  public List<PipelineEntity> getAllPipelines() {
-    return pipelineRepository.findAll();
+  public List<PipelineDTO> getAllPipelines() {
+    return pipelineRepository.findAll().stream()
+            .map(PipelineDTO::fromEntity)
+            .collect(Collectors.toList());
   }
 
   /**
    * Retrieves a pipeline by its name.
    *
    * @param pipelineName The pipeline name.
-   * @return The pipeline entity.
+   * @return The pipeline DTO.
    */
-  public PipelineEntity getPipelineByName(String pipelineName) {
-    return pipelineRepository.findByName(pipelineName);
+  public PipelineDTO getPipelineByName(String pipelineName) {
+    PipelineEntity pipelineEntity = pipelineRepository.findByName(pipelineName)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
+
+    return PipelineDTO.fromEntity(pipelineEntity);
   }
 
   /**
    * Creates a new pipeline.
    *
-   * @param pipeline The pipeline entity to create.
-   * @return The saved pipeline entity.
+   * @param pipelineDTO The pipeline DTO containing pipeline details.
+   * @return The saved pipeline DTO.
    */
   @Transactional
-  public PipelineEntity createPipeline(PipelineEntity pipeline) {
-    return pipelineRepository.save(pipeline);
+  public PipelineDTO createPipeline(PipelineDTO pipelineDTO) {
+    PipelineEntity pipeline = new PipelineEntity(pipelineDTO.getName());
+    pipeline.setRepositoryUrl(pipelineDTO.getRepositoryUrl());
+
+    return PipelineDTO.fromEntity(pipelineRepository.save(pipeline));
   }
 
   /**
    * Updates an existing pipeline.
    *
    * @param pipelineName The name of the pipeline.
-   * @param updatedPipeline The updated pipeline entity.
-   * @return The updated pipeline entity.
+   * @param updatedPipelineDTO The updated pipeline DTO.
+   * @return The updated pipeline DTO.
    */
   @Transactional
-  public PipelineEntity updatePipeline(String pipelineName, PipelineEntity updatedPipeline) {
-    PipelineEntity existingPipeline = getPipelineByName(pipelineName);
-    existingPipeline.setName(updatedPipeline.getName());
-    return pipelineRepository.save(existingPipeline);
+  public PipelineDTO updatePipeline(String pipelineName, PipelineDTO updatedPipelineDTO) {
+    PipelineEntity existingPipeline = pipelineRepository.findByName(pipelineName)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
+
+    existingPipeline.setRepositoryUrl(updatedPipelineDTO.getRepositoryUrl());
+
+    return PipelineDTO.fromEntity(pipelineRepository.save(existingPipeline));
   }
 
   /**

@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "stages")
 public class StageEntity {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -20,8 +21,8 @@ public class StageEntity {
   @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<JobEntity> jobs;
 
-  @OneToMany(mappedBy = "stageExecution", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private List<StageExecutionEntity> stageExecutions; // ✅ Link to execution history
+  @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<StageExecutionEntity> stageExecutions;
 
   public StageEntity() {}
 

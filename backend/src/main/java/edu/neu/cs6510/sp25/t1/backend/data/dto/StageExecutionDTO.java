@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.backend.api.dto;
+package edu.neu.cs6510.sp25.t1.backend.data.dto;
 
 import java.time.Instant;
 import java.util.List;

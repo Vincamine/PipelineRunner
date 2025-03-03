@@ -13,5 +13,5 @@ import edu.neu.cs6510.sp25.t1.backend.data.entity.StageEntity;
  */
 @Repository
 public interface StageRepository extends JpaRepository<StageEntity, Long> {
-  List<StageEntity> findByPipelineId(Long pipelineId);
+  List<StageEntity> findByPipelineName(String pipelineName);
 }

@@ -1,7 +1,5 @@
 package edu.neu.cs6510.sp25.t1.common.execution;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.time.Instant;
 import java.util.List;
 

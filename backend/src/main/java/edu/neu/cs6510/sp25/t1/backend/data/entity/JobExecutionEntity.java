@@ -65,4 +65,6 @@ public class JobExecutionEntity {
     return job;
   }
 
+  public void setStartTime(Instant now) {
+  }
 }

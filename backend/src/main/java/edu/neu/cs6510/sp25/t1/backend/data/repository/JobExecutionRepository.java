@@ -1,6 +1,8 @@
 package edu.neu.cs6510.sp25.t1.backend.data.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,7 +23,8 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
    * @param runId The unique run ID.
    * @return List of JobExecution records.
    */
-  List<JobExecutionEntity> findByPipelineExecutionRunId(String runId);
+  List<JobExecutionEntity> findByStageExecution_PipelineExecution_RunId(String runId);
+
 
   /**
    * Finds all job executions by status.
@@ -38,5 +41,14 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
    * @param runId The pipeline execution run ID.
    * @return Optional containing the execution if found.
    */
-  Optional<JobExecutionEntity> findByJobJobNameAndPipelineExecutionRunId(String jobName, String runId);
+  Optional<JobExecutionEntity> findByJob_NameAndStageExecution_PipelineExecution_RunId(String jobName, String runId);
+
+  @Query("SELECT j FROM JobExecutionEntity j " +
+          "WHERE j.stageExecution.pipelineExecution.runId = :runId " +
+          "AND j.stageExecution.stageName = :stageName " +
+          "AND j.job.name = :jobName")
+  Optional<JobExecutionEntity> findByPipelineExecutionRunIdAndStageNameAndJobName(
+          @Param("runId") String runId,
+          @Param("stageName") String stageName,
+          @Param("jobName") String jobName);
 }

@@ -2,7 +2,6 @@ package edu.neu.cs6510.sp25.t1.backend.data.entity;
 
 import java.time.Instant;
 import java.util.List;
-
 import jakarta.persistence.*;
 
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
@@ -13,6 +12,7 @@ import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 @Entity
 @Table(name = "stage_executions")
 public class StageExecutionEntity {
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -37,6 +37,10 @@ public class StageExecutionEntity {
   @Column
   private Instant completionTime;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "stage_id", referencedColumnName = "id") // Foreign key referencing StageEntity
+  private StageEntity stage;
+
   @OneToMany(mappedBy = "stageExecution", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<JobExecutionEntity> jobExecutions;
 
@@ -52,8 +56,9 @@ public class StageExecutionEntity {
     return id;
   }
 
-  public String getRunId() { return runId; }  // Required for CLI queries
-
+  public String getRunId() {
+    return runId; // Required for CLI queries
+  }
 
   public String getStageName() {
     return stageName;
@@ -91,4 +96,7 @@ public class StageExecutionEntity {
     return jobExecutions;
   }
 
+  public StageEntity getStage() {
+    return stage;
+  }
 }

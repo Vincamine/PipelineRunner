@@ -1,7 +1,7 @@
-package edu.neu.cs6510.sp25.t1.backend.api.dto;
+package edu.neu.cs6510.sp25.t1.backend.data.dto;
 
 
-import edu.neu.cs6510.sp25.t1.common.execution.PipelineExecution;
+import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineExecutionEntity;
 
 /**
  * Data Transfer Object (DTO) for Pipeline Execution Summary.
@@ -25,15 +25,16 @@ public class PipelineExecutionDTO {
   /**
    * Converts a `PipelineExecution` entity to a `PipelineExecutionSummary`.
    *
-   * @param execution The pipeline execution.
+   * @param entity The `PipelineExecution` entity.
    * @return A `PipelineExecutionSummary` DTO.
    */
-  public static PipelineExecutionDTO fromEntity(PipelineExecution execution) {
+  public static PipelineExecutionDTO fromEntity(PipelineExecutionEntity entity) {
     return new PipelineExecutionDTO(
-            execution.getPipelineName(),
-            execution.getState().name()  // Convert Enum to String
+            entity.getPipeline().getName(),
+            entity.getStatus().name()
     );
   }
+
 
   /**
    * Retrieves the name of the pipeline.

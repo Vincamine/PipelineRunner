@@ -1,16 +1,21 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import edu.neu.cs6510.sp25.t1.backend.data.entity.*;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.*;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
+import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineEntity;
+import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.data.entity.StageEntity;
+import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineRepository;
+import edu.neu.cs6510.sp25.t1.backend.data.repository.StageExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.data.repository.StageRepository;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 /**
  * Service for managing pipeline execution, including stage execution.
@@ -20,21 +25,21 @@ public class PipelineExecutionService {
 
   private final PipelineExecutionRepository pipelineExecutionRepository;
   private final PipelineRepository pipelineRepository;
-  private final StageExecutionRepository stageExecutionRepository;
   private final StageRepository stageRepository;
-  private final JobExecutionService jobExecutionService;
+  private final StageExecutionService stageExecutionService;
+  private final StageExecutionRepository stageExecutionRepository;
 
   public PipelineExecutionService(
           PipelineExecutionRepository pipelineExecutionRepository,
           PipelineRepository pipelineRepository,
-          StageExecutionRepository stageExecutionRepository,
           StageRepository stageRepository,
-          JobExecutionService jobExecutionService) {
+          StageExecutionService stageExecutionService,
+          StageExecutionRepository stageExecutionRepository) {
     this.pipelineExecutionRepository = pipelineExecutionRepository;
     this.pipelineRepository = pipelineRepository;
-    this.stageExecutionRepository = stageExecutionRepository;
     this.stageRepository = stageRepository;
-    this.jobExecutionService = jobExecutionService;
+    this.stageExecutionService = stageExecutionService;
+    this.stageExecutionRepository = stageExecutionRepository;
   }
 
   /**
@@ -42,14 +47,12 @@ public class PipelineExecutionService {
    *
    * @param pipelineName The name of the pipeline.
    * @param commitHash   The Git commit hash for this run.
-   * @return The execution instance.
+   * @return The execution instance as DTO.
    */
   @Transactional
-  public PipelineExecutionEntity startPipelineExecution(String pipelineName, String commitHash) {
-    PipelineEntity pipeline = pipelineRepository.findByName(pipelineName);
-    if (pipeline == null) {
-      throw new IllegalArgumentException("Pipeline not found: " + pipelineName);
-    }
+  public PipelineExecutionDTO startPipelineExecution(String pipelineName, String commitHash) {
+    PipelineEntity pipeline = pipelineRepository.findByName(pipelineName)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
 
     String runId = UUID.randomUUID().toString();
     PipelineExecutionEntity pipelineExecution = new PipelineExecutionEntity(
@@ -63,59 +66,25 @@ public class PipelineExecutionService {
       throw new IllegalStateException("No stages defined for pipeline: " + pipelineName);
     }
 
-    startNextStageExecution(pipelineExecution, stages.get(0));
+    stageExecutionService.startStageExecution(pipelineExecution, stages.getFirst());
 
-    return pipelineExecution;
+    return PipelineExecutionDTO.fromEntity(pipelineExecution);
   }
 
-  /**
-   * Starts execution of a stage.
-   *
-   * @param pipelineExecution The pipeline execution instance.
-   * @param stage             The stage to execute.
-   */
-  @Transactional
-  public void startNextStageExecution(PipelineExecutionEntity pipelineExecution, StageEntity stage) {
-    StageExecutionEntity stageExecution = new StageExecutionEntity(pipelineExecution, stage.getName());
-    stageExecution.setStatus(ExecutionStatus.RUNNING);
-    stageExecution.setStartTime(Instant.now());
-    stageExecutionRepository.save(stageExecution);
-
-    // Start execution of jobs in this stage
-    jobExecutionService.startJobsForStage(stageExecution);
+  // Fetch specific pipeline execution by pipeline name and run ID
+  public PipelineExecutionEntity getPipelineExecution(String pipelineName, String runId) {
+    return pipelineExecutionRepository.findByPipelineNameAndRunId(pipelineName, runId)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline execution not found"));
   }
 
-  /**
-   * Marks a pipeline execution as completed if all stages are done.
-   *
-   * @param pipelineExecution The execution instance.
-   */
-  @Transactional
-  public void completePipelineExecution(PipelineExecutionEntity pipelineExecution) {
-    List<StageExecutionEntity> stageExecutions = stageExecutionRepository.findByPipelineExecutionId(pipelineExecution.getId());
-
-    ExecutionStatus pipelineStatus = calculateOverallStatus(stageExecutions.stream()
-            .map(StageExecutionEntity::getStatus)
-            .collect(Collectors.toList()));
-
-    pipelineExecution.setStatus(pipelineStatus);
-    pipelineExecution.setCompletionTime(Instant.now());
-    pipelineExecutionRepository.save(pipelineExecution);
+  // Fetch all pipeline executions for a specific pipeline
+  public List<PipelineExecutionEntity> getPipelineExecutions(String pipelineName) {
+    return pipelineExecutionRepository.findByPipelineName(pipelineName);
   }
 
-  /**
-   * Determines the overall status of a pipeline/stage.
-   *
-   * @param statuses List of statuses.
-   * @return The computed status.
-   */
-  private ExecutionStatus calculateOverallStatus(List<ExecutionStatus> statuses) {
-    if (statuses.contains(ExecutionStatus.FAILED)) {
-      return ExecutionStatus.FAILED;
-    }
-    if (statuses.contains(ExecutionStatus.CANCELED)) {
-      return ExecutionStatus.CANCELED;
-    }
-    return ExecutionStatus.SUCCESS;
+  // Fetch the latest pipeline execution by pipeline name
+  public PipelineExecutionEntity getLatestPipelineExecution(String pipelineName) {
+    return pipelineExecutionRepository.findTopByPipelineNameOrderByStartTimeDesc(pipelineName)
+            .orElseThrow(() -> new IllegalArgumentException("No executions found for pipeline"));
   }
 }

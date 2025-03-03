@@ -60,4 +60,9 @@ public class JobEntity {
 
   public void setScript(List<String> script) { this.script = script; }
   public void setDependencies(List<JobEntity> dependencies) { this.dependencies = dependencies; }
+
+  public void setName(String name) { this.name = name; }
+  public void setImage(String image) { this.image = image; }
+  public void setAllowFailure(boolean allowFailure) { this.allowFailure = allowFailure; }
+  public void setStage(StageEntity stage) { this.stage = stage; }
 }

@@ -5,6 +5,9 @@ spring:
   application:
     name: cicd-backend  # Name of the backend application
 
+  main:
+    allow-circular-references: true  # Allow circular references in Spring beans
+
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cicd_db}
     username: ${DATABASE_USER:postgres}
@@ -28,7 +31,6 @@ spring:
     redis:
       host: localhost
       port: 6379
-
 
 logging:
   level:
