@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import edu.neu.cs6510.sp25.t1.backend.api.dto.PipelineDTO;
+import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineReportService;
 
 /**
@@ -18,44 +20,53 @@ import edu.neu.cs6510.sp25.t1.backend.service.PipelineReportService;
 public class ReportController {
   private final PipelineReportService reportService;
 
-  /**
-   * Constructor for the ReportController.
-   *
-   * @param reportService The report service.
-   */
   public ReportController(PipelineReportService reportService) {
     this.reportService = reportService;
   }
 
   /**
-   * Retrieves all pipelines.
+   * Retrieves all pipelines with execution history.
    *
-   * @return A list of pipeline DTOs.
+   * @return List of pipeline names.
    */
   @GetMapping("/pipelines")
-  public List<PipelineDTO> getAllPipelines() {
-    return reportService.getAllPipelines();
+  public ResponseEntity<List<String>> getAllPipelines() {
+    return ResponseEntity.ok(reportService.getAllPipelines());
   }
 
   /**
-   * Retrieves executions of a specific pipeline.
+   * Retrieves all executions for a specific pipeline.
    *
    * @param pipeline The pipeline name.
-   * @return A list of pipeline executions converted to DTOs.
+   * @return List of pipeline execution entities.
    */
   @GetMapping("/{pipeline}")
-  public List<PipelineDTO> getPipelineExecutions(@PathVariable String pipeline) {
-    return reportService.getPipelineExecutions(pipeline);
+  public ResponseEntity<List<PipelineExecutionEntity>> getPipelineExecutions(@PathVariable String pipeline) {
+    return ResponseEntity.ok(reportService.getPipelineExecutions(pipeline));
+  }
+
+  /**
+   * Retrieves a specific pipeline execution.
+   *
+   * @param pipeline The pipeline name.
+   * @param runId The run ID of the execution.
+   * @return The pipeline execution entity.
+   */
+  @GetMapping("/{pipeline}/{runId}")
+  public ResponseEntity<PipelineExecutionEntity> getPipelineExecution(
+          @PathVariable String pipeline,
+          @PathVariable String runId) {
+    return ResponseEntity.ok(reportService.getPipelineExecution(pipeline, runId));
   }
 
   /**
    * Retrieves the latest execution of a pipeline.
    *
    * @param pipeline The pipeline name.
-   * @return The latest pipeline execution converted to a DTO.
+   * @return The latest pipeline execution DTO.
    */
   @GetMapping("/{pipeline}/latest")
-  public PipelineDTO getLatestPipelineRun(@PathVariable String pipeline) {
-    return reportService.getLatestPipelineRun(pipeline);
+  public ResponseEntity<PipelineDTO> getLatestPipelineRun(@PathVariable String pipeline) {
+    return ResponseEntity.ok(reportService.getLatestPipelineRun(pipeline));
   }
 }

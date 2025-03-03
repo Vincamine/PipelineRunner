@@ -35,20 +35,33 @@ public class DryRunCommand extends BaseCommand {
    */
   @Override
   public Integer call() {
-    if (!validateInputs()) {
+    System.out.println("====================================");
+    System.out.println("Command Started: " + this.getClass().getSimpleName());
+    System.out.println("====================================");
+    if (validateInputs()) {
       return 2;
     }
 
+    System.out.println("passed the inputs validation");
+    System.out.println("====================================");
     try {
-      // Load and validate pipeline configuration
+      logInfo("Loading and validating pipeline configuration...");
       Pipeline pipeline = loadAndValidatePipelineConfig();
+
+      if (pipeline == null || pipeline.getStages().isEmpty()) {
+        logError("Pipeline is empty or could not be loaded.");
+        return 3;
+      }
+
+      logInfo("Pipeline successfully loaded. Generating execution plan...");
+      System.out.println("====================================");
       generateExecutionPlan(pipeline);
       return 0;
     } catch (ValidationException e) {
-      logError(String.format("Validation Error: %s", e.getMessage()));
+      logError("Validation Error: " + e.getMessage());
       return 3;
     } catch (Exception e) {
-      logError(String.format("Error processing pipeline: %s", e.getMessage()));
+      logError("Error processing pipeline: " + e.getMessage());
       return 1;
     }
   }
@@ -65,10 +78,14 @@ public class DryRunCommand extends BaseCommand {
 
     // Process stages in order
     for (Stage stage : pipeline.getStages()) {
+      logInfo("Processing Stage: " + stage.getName());
+
       Map<String, Object> stageDetails = new LinkedHashMap<>();
 
       // Process jobs within each stage
       for (Job job : stage.getJobs()) {
+        logInfo("  - Found Job: " + job.getName() + " (Image: " + job.getImage() + ")");
+
         Map<String, Object> jobDetails = new LinkedHashMap<>();
         jobDetails.put("image", job.getImage());
         jobDetails.put("script", job.getScript()); // Keeps script as a list
@@ -77,6 +94,11 @@ public class DryRunCommand extends BaseCommand {
       }
 
       executionPlan.put(stage.getName(), stageDetails);
+    }
+
+    if (executionPlan.isEmpty()) {
+      logError("No stages or jobs found in the pipeline.");
+      return;
     }
 
     try {

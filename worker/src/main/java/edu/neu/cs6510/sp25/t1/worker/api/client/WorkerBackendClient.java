@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import edu.neu.cs6510.sp25.t1.common.api.BackendClientInterface;
 import edu.neu.cs6510.sp25.t1.common.api.JobStatusUpdate;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
@@ -14,7 +15,7 @@ import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
  * Client to send job status updates to the backend server.
  */
 @Service
-public class WorkerBackendClient {
+public class WorkerBackendClient implements BackendClientInterface {
   private static final Logger logger = LoggerFactory.getLogger(WorkerBackendClient.class);
   private RestTemplate restTemplate = new RestTemplate();
   private final String backendUrl = "http://localhost:8080/api/jobs/status";

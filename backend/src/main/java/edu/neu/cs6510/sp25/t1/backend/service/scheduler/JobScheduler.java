@@ -7,7 +7,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import edu.neu.cs6510.sp25.t1.backend.api.client.WorkerClient;
-import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
+
 
 /**
  * Scheduler for processing job executions.

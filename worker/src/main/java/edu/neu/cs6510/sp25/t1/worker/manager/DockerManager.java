@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Random;
 
-import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.manager.DockerManagerInterface;
+
 
 /**
  * Manages Docker containers for job execution.
@@ -20,7 +22,7 @@ import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
  * To enable real execution, uncomment the actual Docker API calls.
  */
 @Service
-public class DockerManager {
+public class DockerManager implements DockerManagerInterface {
   private final DockerClient dockerClient;
   private static final Logger logger = LoggerFactory.getLogger(DockerManager.class);
   private static final Random random = new Random();

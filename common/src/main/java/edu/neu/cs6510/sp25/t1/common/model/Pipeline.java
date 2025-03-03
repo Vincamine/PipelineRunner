@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Represents the structure of a CI/CD pipeline configuration.
- * This class is used for defining the pipeline stages and global variables.
+ * This class is used for defining the pipeline stages.
  * Static configuration data.
  */
 public class Pipeline {

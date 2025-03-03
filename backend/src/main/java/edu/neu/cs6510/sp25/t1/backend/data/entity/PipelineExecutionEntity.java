@@ -3,24 +3,14 @@ package edu.neu.cs6510.sp25.t1.backend.data.entity;
 import java.time.Instant;
 
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
-/**
- * Represents a pipeline execution entity stored in the database.
- */
 @Entity
 @Table(name = "pipeline_executions")
 public class PipelineExecutionEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Long id; // Run ID
 
   @Column(nullable = false)
   private String pipelineName;
@@ -30,7 +20,7 @@ public class PipelineExecutionEntity {
   private ExecutionStatus state;
 
   @Column(nullable = false, updatable = false)
-  private Instant createdAt;
+  private Instant createdAt; // ✅ Ensure this field exists for sorting queries
 
   public PipelineExecutionEntity() {
   }

@@ -1,7 +1,4 @@
 name: "My CI/CD Pipeline"
-globals:
-  project: "t1-cicd"
-  environment: "dev"
 
 stages:
   - name: "build"

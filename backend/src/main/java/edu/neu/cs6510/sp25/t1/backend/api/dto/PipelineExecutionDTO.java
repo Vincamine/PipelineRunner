@@ -1,6 +1,7 @@
 package edu.neu.cs6510.sp25.t1.backend.api.dto;
 
-import edu.neu.cs6510.sp25.t1.worker.execution.PipelineExecution;
+
+import edu.neu.cs6510.sp25.t1.common.execution.PipelineExecution;
 
 /**
  * Data Transfer Object (DTO) for Pipeline Execution Summary.

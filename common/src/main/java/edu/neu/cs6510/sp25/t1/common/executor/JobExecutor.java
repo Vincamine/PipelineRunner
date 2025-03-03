@@ -1,10 +1,11 @@
-package edu.neu.cs6510.sp25.t1.worker.executor;
+package edu.neu.cs6510.sp25.t1.common.executor;
 
+import edu.neu.cs6510.sp25.t1.common.api.BackendClientInterface;
 import edu.neu.cs6510.sp25.t1.common.api.request.JobRequest;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import edu.neu.cs6510.sp25.t1.worker.api.client.WorkerBackendClient;
-import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.worker.manager.DockerManager;
+import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.manager.DockerManagerInterface;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,8 @@ import java.util.List;
 @Service
 public class JobExecutor {
   private static final Logger logger = LoggerFactory.getLogger(JobExecutor.class);
-  private final DockerManager dockerManager;
-  private final WorkerBackendClient backendClient;
+  private final DockerManagerInterface dockerManager;
+  private final BackendClientInterface backendClient;
 
   /**
    * Constructor for JobExecutor.
@@ -29,7 +30,7 @@ public class JobExecutor {
    * @param backendClient The BackendClient for sending job execution updates.
    */
   @Autowired
-  public JobExecutor(DockerManager dockerManager, WorkerBackendClient backendClient) {
+  public JobExecutor(DockerManagerInterface dockerManager, BackendClientInterface backendClient) {
     this.dockerManager = dockerManager;
     this.backendClient = backendClient;
   }

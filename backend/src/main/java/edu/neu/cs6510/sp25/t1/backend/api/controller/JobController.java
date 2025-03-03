@@ -3,45 +3,75 @@ package edu.neu.cs6510.sp25.t1.backend.api.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionTrackingService;
-import edu.neu.cs6510.sp25.t1.common.api.response.UpdateExecutionStateRequest;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+
+import java.util.Optional;
 
 /**
- * Controller for handling job execution logging requests.
+ * Controller for managing job executions within a pipeline.
  */
 @RestController
-@RequestMapping("/api/v1/jobs")
+@RequestMapping("/api/jobs")
 public class JobController {
-  private final JobExecutionTrackingService jobExecutionTrackingService;
+  private final JobService jobService;
 
-  public JobController(JobExecutionTrackingService jobExecutionTrackingService) {
-    this.jobExecutionTrackingService = jobExecutionTrackingService;
+  /**
+   * Constructor for JobController.
+   *
+   * @param jobService The service handling job executions.
+   */
+  public JobController(JobService jobService) {
+    this.jobService = jobService;
   }
 
   /**
-   * Logs when a job execution starts.
+   * Retrieves the execution status of a specific job.
+   *
+   * @param jobId The job execution ID.
+   * @return Response with job execution status.
    */
-  @PostMapping("/log/start")
-  public ResponseEntity<Void> logJobExecutionStart(@RequestBody UpdateExecutionStateRequest request) {
-    jobExecutionTrackingService.logJobExecution(request.getName(), "STARTED");
-    return ResponseEntity.ok().build();
+  @GetMapping("/{jobId}/status")
+  public ResponseEntity<ExecutionStatus> getJobStatus(@PathVariable Long jobId) {
+    Optional<JobExecutionEntity> jobExecution = jobService.getJobExecution(jobId);
+
+    if (jobExecution.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+
+    return ResponseEntity.ok(jobExecution.get().getStatus());
   }
 
   /**
-   * Logs when a job execution succeeds.
+   * Retries a failed job execution.
+   *
+   * @param jobId The job execution ID.
+   * @return Response indicating success or failure.
    */
-  @PostMapping("/log/success")
-  public ResponseEntity<Void> logJobExecutionSuccess(@RequestBody UpdateExecutionStateRequest request) {
-    jobExecutionTrackingService.logJobExecution(request.getName(), "SUCCESS");
-    return ResponseEntity.ok().build();
+  @PostMapping("/{jobId}/retry")
+  public ResponseEntity<String> retryJob(@PathVariable Long jobId) {
+    boolean retried = jobService.retryJob(jobId);
+
+    if (!retried) {
+      return ResponseEntity.badRequest().body("Failed to retry job. Either job not found or not retryable.");
+    }
+
+    return ResponseEntity.ok("Job retried successfully.");
   }
 
   /**
-   * Logs when a job execution fails.
+   * Fetches logs for a specific job execution.
+   *
+   * @param jobId The job execution ID.
+   * @return Response containing job logs.
    */
-  @PostMapping("/log/failure")
-  public ResponseEntity<Void> logJobExecutionFailure(@RequestBody UpdateExecutionStateRequest request) {
-    jobExecutionTrackingService.logJobExecution(request.getName(), "FAILED");
-    return ResponseEntity.ok().build();
+  @GetMapping("/{jobId}/logs")
+  public ResponseEntity<String> getJobLogs(@PathVariable Long jobId) {
+    Optional<String> logs = jobService.getJobLogs(jobId);
+
+    if (logs.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+
+    return ResponseEntity.ok(logs.get());
   }
 }

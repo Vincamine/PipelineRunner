@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.neu.cs6510.sp25.t1.common.api.request.JobRequest;
-import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutor;
+import edu.neu.cs6510.sp25.t1.common.executor.JobExecutor;
+
 
 /**
  * REST controller for handling job execution requests.

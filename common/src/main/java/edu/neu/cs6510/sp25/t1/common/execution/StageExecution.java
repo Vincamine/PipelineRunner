@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.worker.execution;
+package edu.neu.cs6510.sp25.t1.common.execution;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -43,12 +43,13 @@ public abstract class BaseCommand implements Callable<Integer> {
   protected String branch;
 
   @SuppressWarnings("checkstyle:VisibilityModifier")
-  @CommandLine.Option(names = {"-co", "--commit"}, description = "Git commit hash to use")
+  @CommandLine.Option(names = {"-co", "--commit"}, description = "Git commit hash to use", defaultValue = "latest")
   protected String commit;
 
   @SuppressWarnings("checkstyle:VisibilityModifier")
   @CommandLine.Option(names = {"-o",
           "--output"}, description = "Output format: plaintext, json, yaml", defaultValue = "plaintext")
+
   protected String outputFormat;
 
   private final ObjectMapper objectMapper = new ObjectMapper();

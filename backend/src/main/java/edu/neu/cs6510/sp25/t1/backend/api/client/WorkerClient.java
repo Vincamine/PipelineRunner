@@ -6,7 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
+
 
 /**
  * WorkerClient is a REST client that sends jobs to the worker.

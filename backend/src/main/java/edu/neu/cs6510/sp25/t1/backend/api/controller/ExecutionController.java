@@ -1,35 +1,79 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
+import edu.neu.cs6510.sp25.t1.backend.service.ExecutionService;
+import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineExecutionEntity;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+
+import java.util.Optional;
 
 /**
- * Controller for handling execution-related requests.
+ * Controller for managing pipeline executions.
  */
 @RestController
 @RequestMapping("/api/executions")
 public class ExecutionController {
+  private final ExecutionService executionService;
 
   /**
-   * Retrieves the execution logs from a file.
+   * Constructor for ExecutionController.
    *
-   * @return A list of log entries.
+   * @param executionService The service managing execution states.
    */
-  @GetMapping("/logs")
-  public ResponseEntity<List<String>> getExecutionLogs() {
-    try {
-      List<String> logs = Files.readAllLines(Paths.get("job-executions.log"));
-      return ResponseEntity.ok(logs);
-    } catch (IOException e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of("Error reading logs"));
+  public ExecutionController(ExecutionService executionService) {
+    this.executionService = executionService;
+  }
+
+  /**
+   * Starts a new execution for a given pipeline.
+   *
+   * @param pipelineName The name of the pipeline.
+   * @return Response indicating success or failure.
+   */
+  @PostMapping("/{pipelineName}/start")
+  public ResponseEntity<String> startExecution(@PathVariable String pipelineName) {
+    boolean started = executionService.startPipelineExecution(pipelineName);
+
+    if (!started) {
+      return ResponseEntity.badRequest().body("Pipeline execution could not be started.");
     }
+
+    return ResponseEntity.ok("Pipeline execution started successfully.");
+  }
+
+  /**
+   * Retrieves the current execution status of a pipeline.
+   *
+   * @param pipelineName The name of the pipeline.
+   * @return Execution status of the pipeline.
+   */
+  @GetMapping("/{pipelineName}/status")
+  public ResponseEntity<ExecutionStatus> getExecutionStatus(@PathVariable String pipelineName) {
+    Optional<PipelineExecutionEntity> execution = executionService.getPipelineExecution(pipelineName);
+
+    if (execution.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+
+    return ResponseEntity.ok(execution.get().getState());
+  }
+
+  /**
+   * Stops a running execution of a pipeline.
+   *
+   * @param pipelineName The name of the pipeline.
+   * @return Response indicating success or failure.
+   */
+  @PostMapping("/{pipelineName}/stop")
+  public ResponseEntity<String> stopExecution(@PathVariable String pipelineName) {
+    boolean stopped = executionService.stopPipelineExecution(pipelineName);
+
+    if (!stopped) {
+      return ResponseEntity.badRequest().body("Pipeline execution could not be stopped.");
+    }
+
+    return ResponseEntity.ok("Pipeline execution stopped successfully.");
   }
 }

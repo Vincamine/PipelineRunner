@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.worker.executor;
+package edu.neu.cs6510.sp25.t1.common.executor;
 
 import java.io.File;
 import java.util.List;
@@ -6,16 +6,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import edu.neu.cs6510.sp25.t1.common.api.BackendClientInterface;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.execution.PipelineExecution;
+import edu.neu.cs6510.sp25.t1.common.execution.StageExecution;
+import edu.neu.cs6510.sp25.t1.common.manager.DockerManagerInterface;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
-import edu.neu.cs6510.sp25.t1.worker.api.client.WorkerBackendClient;
-import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.worker.execution.PipelineExecution;
-import edu.neu.cs6510.sp25.t1.worker.execution.StageExecution;
-import edu.neu.cs6510.sp25.t1.worker.manager.DockerManager;
+
 
 public class PipelineExecutor {
   private static final Logger LOGGER = Logger.getLogger(PipelineExecutor.class.getName());
@@ -27,7 +28,7 @@ public class PipelineExecutor {
    * @param dockerManager Docker manager instance.
    * @param backendClient Backend client for reporting execution status.
    */
-  public PipelineExecutor(DockerManager dockerManager, WorkerBackendClient backendClient) {
+  public PipelineExecutor(DockerManagerInterface dockerManager, BackendClientInterface backendClient) {
     this.stageExecutor = new StageExecutor(dockerManager, backendClient);
   }
 

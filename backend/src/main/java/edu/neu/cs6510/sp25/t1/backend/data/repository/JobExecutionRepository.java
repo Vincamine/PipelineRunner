@@ -6,7 +6,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
+
 
 /**
  * Repository for managing job execution records.

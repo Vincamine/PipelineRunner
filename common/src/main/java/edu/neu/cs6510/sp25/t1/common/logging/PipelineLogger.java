@@ -1,17 +1,45 @@
 package edu.neu.cs6510.sp25.t1.common.logging;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 
 /**
- * PipelineLogger provides advanced logging with structured log levels.
- * Uses java.util.logging for better log management.
+ * Centralized logger for pipeline-related logging.
+ * Uses SLF4J with Logback and ensures logs print to the console.
  */
 public class PipelineLogger {
-  private static final Logger LOGGER = Logger.getLogger(PipelineLogger.class.getName());
-  private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+  private static final Logger logger = LoggerFactory.getLogger(PipelineLogger.class);
+
+  static {
+    configureConsoleLogging();
+  }
+
+  /**
+   * Configures Logback to ensure logs appear in the console.
+   */
+  private static void configureConsoleLogging() {
+    LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    context.reset();
+
+    PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+    encoder.setContext(context);
+    encoder.setPattern("[%d{HH:mm:ss}] %-5level - %msg%n"); // Custom log format
+    encoder.start();
+
+    ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
+    consoleAppender.setContext(context);
+    consoleAppender.setEncoder(encoder);
+    consoleAppender.start();
+
+    ch.qos.logback.classic.Logger rootLogger = context.getLogger("edu.neu.cs6510.sp25.t1");
+    rootLogger.setLevel(Level.DEBUG); // Ensure all levels print
+    rootLogger.addAppender(consoleAppender);
+  }
 
   /**
    * Logs an informational message.
@@ -19,45 +47,33 @@ public class PipelineLogger {
    * @param message The message to log.
    */
   public static void info(String message) {
-    log(Level.INFO, message);
+    logger.info("[PipelineLogger] {}", message);
   }
 
   /**
    * Logs a warning message.
    *
-   * @param message The warning message.
+   * @param message The message to log.
    */
   public static void warn(String message) {
-    log(Level.WARNING, message);
+    logger.warn("[PipelineLogger] {}", message);
   }
 
   /**
    * Logs an error message.
    *
-   * @param message The error message.
-   */
-  public static void error(String message) {
-    log(Level.SEVERE, message);
-  }
-
-  /**
-   * Logs an error message with an exception stack trace.
-   *
-   * @param message   The error message.
-   * @param exception The exception to log.
-   */
-  public static void error(String message, Throwable exception) {
-    LOGGER.log(Level.SEVERE, message, exception);
-  }
-
-  /**
-   * Internal logging function that prints formatted log messages.
-   *
-   * @param level   The log level (INFO, WARNING, ERROR).
    * @param message The message to log.
    */
-  private static void log(Level level, String message) {
-    String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMATTER);
-    LOGGER.log(level, "[{0}] {1}", new Object[]{timestamp, message});
+  public static void error(String message) {
+    logger.error("[PipelineLogger] {}", message);
+  }
+
+  /**
+   * Logs a debug message.
+   *
+   * @param message The message to log.
+   */
+  public static void debug(String message) {
+    logger.debug("[PipelineLogger] {}", message);
   }
 }
