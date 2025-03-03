@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * CLI command to execute a pipeline, either locally or remotely.
@@ -22,9 +23,14 @@ public class RunCommand extends BaseCommand {
 
   private final CliBackendClient backendClient;
   private static final String DEFAULT_PIPELINE_PATH = ".pipelines/pipeline.yaml";
+  private static final String PIPELINES_DIRECTORY = ".pipelines/";
+  private static final String YAML_EXTENSION = ".yaml";
 
   @CommandLine.Option(names = "--local", description = "Run pipeline on local machine (logs execution state)")
   private boolean runLocally;
+
+  @CommandLine.Option(names = "--pipeline", description = "Pipeline name to run (will look for .pipelines/<name>.yaml)")
+  private String pipelineName;
 
   /**
    * Default constructor for Picocli.
@@ -133,6 +139,33 @@ public class RunCommand extends BaseCommand {
       System.err.println("⚠️ Failed to write local execution log: " + e.getMessage());
     }
   }
+
+  /**
+   * Process pipeline option
+   */
+  private void processPipelineOptions() {
+    // Track if we're using a user-specified option to provide better error messages
+    AtomicBoolean userSpecifiedOption = new AtomicBoolean(false);
+
+    // Check if pipeline name is provided with --pipeline
+    if (pipelineName != null && !pipelineName.isEmpty()) {
+      // Only override configFile if it wasn't explicitly set
+      if (configFile == null || configFile.isEmpty()) {
+        configFile = PIPELINES_DIRECTORY + pipelineName + YAML_EXTENSION;
+        System.out.println("Using pipeline configuration: " + configFile);
+      } else {
+        System.out.println("Both --file and --pipeline provided. Using --file: " + configFile);
+      }
+      userSpecifiedOption.set(true);
+    }
+
+    // If no options were provided, use the default
+    if (configFile == null || configFile.isEmpty()) {
+      configFile = DEFAULT_PIPELINE_PATH;
+      System.out.println("Using default pipeline configuration: " + DEFAULT_PIPELINE_PATH);
+    }
+  }
+
 
   /**
    * Validates required inputs.
