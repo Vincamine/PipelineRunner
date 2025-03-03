@@ -6,19 +6,19 @@ CREATE TABLE pipelines (
                            name VARCHAR(255) PRIMARY KEY NOT NULL
 );
 
--- Create stages table
-CREATE TABLE stages (
+-- Create stageEntities table
+CREATE TABLE stageEntities (
                         id BIGSERIAL PRIMARY KEY,  -- Changed SERIAL to BIGSERIAL
                         name VARCHAR(255) NOT NULL,
                         pipeline_name VARCHAR(255) NOT NULL REFERENCES pipelines(name) ON DELETE CASCADE
 );
 
--- Create jobs table
-CREATE TABLE jobs (
+-- Create jobEntities table
+CREATE TABLE jobEntities (
                       id BIGSERIAL PRIMARY KEY,  -- Changed SERIAL to BIGSERIAL
                       name VARCHAR(255) NOT NULL,
                       image VARCHAR(255) NOT NULL,
-                      stage_id BIGINT NOT NULL REFERENCES stages(id) ON DELETE CASCADE,
+                      stage_id BIGINT NOT NULL REFERENCES stageEntities(id) ON DELETE CASCADE,
                       allow_failure BOOLEAN NOT NULL,
                       start_time TIMESTAMP,
                       completion_time TIMESTAMP
@@ -27,7 +27,7 @@ CREATE TABLE jobs (
 -- Job scripts table
 CREATE TABLE job_scripts (
                              id BIGSERIAL PRIMARY KEY,  -- Changed SERIAL to BIGSERIAL
-                             job_id BIGINT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+                             job_id BIGINT NOT NULL REFERENCES jobEntities(id) ON DELETE CASCADE,
                              script TEXT NOT NULL
 );
 
@@ -47,7 +47,7 @@ CREATE TABLE pipeline_execution (
 CREATE TABLE job_execution (
                                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),  -- Ensure pgcrypto is enabled
                                pipeline_execution_id UUID NOT NULL REFERENCES pipeline_execution(id) ON DELETE CASCADE,
-                               job_id BIGINT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+                               job_id BIGINT NOT NULL REFERENCES jobEntities(id) ON DELETE CASCADE,
                                status VARCHAR(50) NOT NULL CHECK (status IN ('PENDING', 'RUNNING', 'SUCCESS', 'FAILED')),
                                logs TEXT,
                                started_at TIMESTAMP DEFAULT NOW(),

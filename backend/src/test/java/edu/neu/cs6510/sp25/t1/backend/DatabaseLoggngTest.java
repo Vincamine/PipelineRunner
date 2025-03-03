@@ -1,7 +1,7 @@
 //package edu.neu.cs6510.sp25.t1.backend;
 //TODO: test when complete backend is implemented
 //
-//import edu.neu.cs6510.sp25.t1.backend.repository.JobExecutionRepository;
+//import edu.neu.cs6510.sp25.t1.backend.data.repository.JobExecutionRepository;
 //import edu.neu.cs6510.sp25.t1.common.runtime.JobExecution;
 //import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
 //import org.junit.jupiter.api.BeforeEach;

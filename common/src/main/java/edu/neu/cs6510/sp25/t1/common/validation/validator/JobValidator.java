@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.neu.cs6510.sp25.t1.common.config.JobConfig;
-import edu.neu.cs6510.sp25.t1.common.config.StageConfig;
+import edu.neu.cs6510.sp25.t1.common.model.Job;
+import edu.neu.cs6510.sp25.t1.common.model.Stage;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 
@@ -33,33 +33,25 @@ public class JobValidator {
    * @param filename The YAML filename for error reporting.
    * @throws ValidationException If validation fails.
    */
-  public static void validateJobs(List<StageConfig> stages, String filename) throws ValidationException {
+  public static void validateJobs(List<Stage> stages, String filename) throws ValidationException {
     List<String> errors = new ArrayList<>();
     Set<String> jobNames = new HashSet<>();
     Set<String> stageNames = new HashSet<>();
 
-    for (StageConfig stage : stages) {
+    for (Stage stage : stages) {
       stageNames.add(stage.getName());
 
-      for (JobConfig job : stage.getJobs()) {
+      for (Job job : stage.getJobs()) {
 
         // Validate required fields
         if (job.getName() == null || job.getName().isEmpty()) {
           errors.add(formatError(filename, "name", "Job must have a name."));
-        }
-        if (job.getStageName() == null || job.getStageName().isEmpty()) {
-          errors.add(formatError(filename, "stage", "Job '" + job.getName() + "' must specify a stage."));
         }
         if (job.getImage() == null || job.getImage().isEmpty()) {
           errors.add(formatError(filename, "image", "Job '" + job.getName() + "' must specify an image."));
         }
         if (job.getScript() == null || job.getScript().isEmpty()) {
           errors.add(formatError(filename, "script", "Job '" + job.getName() + "' must have at least one script command."));
-        }
-
-        // Validate stage reference
-        if (!stageNames.contains(job.getStageName())) {
-          errors.add(formatError(filename, "stage", "Job '" + job.getName() + "' references a non-existent stage '" + job.getStageName() + "'."));
         }
 
         // Validate unique job names

@@ -11,7 +11,7 @@ import org.yaml.snakeyaml.error.MarkedYAMLException;
 import org.yaml.snakeyaml.error.YAMLException;
 import org.yaml.snakeyaml.nodes.*;
 
-import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 
 import java.io.File;
@@ -40,7 +40,7 @@ public class YamlParser {
    * @return Parsed PipelineConfig object.
    * @throws ValidationException If parsing fails.
    */
-  public static PipelineConfig parseYaml(File yamlFile) throws ValidationException {
+  public static Pipeline parseYaml(File yamlFile) throws ValidationException {
     try (FileInputStream inputStream = new FileInputStream(yamlFile)) {
       fieldLocations.clear();
 
@@ -59,7 +59,7 @@ public class YamlParser {
       processNode(rootNode, "", fieldLocations);
 
       // Convert to PipelineConfig
-      return yamlMapper.convertValue(data, PipelineConfig.class);
+      return yamlMapper.convertValue(data, Pipeline.class);
 
     } catch (JsonMappingException e) {
       int line = e.getLocation().getLineNr();

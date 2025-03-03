@@ -7,8 +7,8 @@
 | ---- | ------ |
 | [Debug current code base and add all needed documentation](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/101)     | 2    |
 | [Implement `xx report` CLI command](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/102)  | 2 |
-| [Implement repository-level pipeline execution summary (L4.1)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/103)  | 3    |
-| [Implement individual pipeline run summary (L4.2)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/104)          | 3    |
+| [Implement repository-level pipelineEntity execution summary (L4.1)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/103)  | 3    |
+| [Implement individual pipelineEntity run summary (L4.2)](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/104)          | 3    |
 | [Ensure reports CLI command follows proper error handling](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/105)      | 3    |
 | [Check all other error reporting works](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/107)       | 3    | 
 | [Validate report format and ensure correct output structure](https://github.com/CS6510-SEA-SP25/t1-cicd/issues/106)    | 3    | 

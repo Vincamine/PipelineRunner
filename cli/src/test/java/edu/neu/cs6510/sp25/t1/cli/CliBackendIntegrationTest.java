@@ -10,7 +10,7 @@
 //
 //import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
 //import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
-//import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
+//import edu.neu.cs6510.sp25.t1.common.api.request.RunPipelineRequest;
 //import picocli.CommandLine;
 //
 //import static org.junit.jupiter.api.Assertions.assertEquals;

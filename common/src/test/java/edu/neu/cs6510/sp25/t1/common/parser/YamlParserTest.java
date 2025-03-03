@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 
@@ -26,7 +26,7 @@ class YamlParserTest {
     String yamlContent = "name: test-pipeline\nstages: []";
     Files.write(yamlFile.toPath(), yamlContent.getBytes());
 
-    PipelineConfig pipeline = YamlParser.parseYaml(yamlFile);
+    Pipeline pipeline = YamlParser.parseYaml(yamlFile);
     assertNotNull(pipeline);
   }
 

@@ -83,15 +83,15 @@ The CLI will be built using Java with Gradle as the build system, providing a cr
 
 ### 2.2 Backend Service (Module: backend)
 
-The Backend Service will manage the overall CI/CD system and orchestrate pipeline executions.
+The Backend Service will manage the overall CI/CD system and orchestrate pipelineEntity executions.
 
 #### Key Features:
 
 - RESTful API for CLI and potential web interfaces
 - Repository management and configuration
 - Pipeline scheduling and orchestration
-- Storage and persistence of pipeline configurations and results
-- Worker management and job distribution
+- Storage and persistence of pipelineEntity configurations and results
+- Worker management and jobEntity distribution
 - Authentication and authorization
 
 #### Design Considerations:
@@ -114,7 +114,7 @@ The Backend Service will manage the overall CI/CD system and orchestrate pipelin
 
 ### 2.3 Worker Service (Module: worker)
 
-The Worker Service will execute pipeline jobs within containers.
+The Worker Service will execute pipelineEntity jobEntities within containers.
 
 #### Key Features:
 
@@ -126,7 +126,7 @@ The Worker Service will execute pipeline jobs within containers.
 
 #### Design Considerations:
 
-- Isolation between job executions
+- Isolation between jobEntity executions
 - Resource allocation and limits
 - Failure recovery strategies
 - Efficient artifact handling
@@ -134,10 +134,10 @@ The Worker Service will execute pipeline jobs within containers.
 
 #### Technology Choices:
 
-- **Java 21**: Chosen for efficient concurrent execution with virtual threads, which allows the worker to handle multiple job executions simultaneously with minimal resource overhead.
+- **Java 21**: Chosen for efficient concurrent execution with virtual threads, which allows the worker to handle multiple jobEntity executions simultaneously with minimal resource overhead.
 - **Docker Java API**: Selected for container management because it provides comprehensive control over Docker operations directly from Java. This eliminates the need for shell commands and improves security and reliability.
 - **Spring Boot Web**: Used to implement RESTful APIs for communication with the Backend service, providing a consistent technology stack across components.
-- **Spring WebClient**: Implemented for non-blocking HTTP communication with the Backend for job status updates and artifact uploads.
+- **Spring WebClient**: Implemented for non-blocking HTTP communication with the Backend for jobEntity status updates and artifact uploads.
 - **Prometheus**: Used for metrics collection because it provides a pull-based model that works well in dynamic environments. It offers robust monitoring capabilities with minimal overhead.
 - **Spring Boot (Core)**: Chosen for the Worker as well, to provide consistent configuration management, dependency injection, and application lifecycle across components.
 
@@ -163,7 +163,7 @@ The Common module will contain shared code and models used by multiple component
 
 - **Jackson Annotations**: Used for JSON model annotations to ensure consistent serialization behavior across components.
 - **SLF4J**: Implemented as a logging facade to allow consistent logging patterns while enabling different logging implementations in each component.
-- **SnakeYAML**: Chosen for YAML parsing of pipeline configurations because of its comprehensive YAML support and good performance characteristics.
+- **SnakeYAML**: Chosen for YAML parsing of pipelineEntity configurations because of its comprehensive YAML support and good performance characteristics.
 - **Spring HTTP Client Commons**: Used for shared HTTP client configurations and utilities between Backend and Worker services.
 
 ## 3. Communication Protocols
@@ -178,8 +178,8 @@ The Common module will contain shared code and models used by multiple component
 ### 3.2 Backend to Worker Communication
 
 - **RESTful HTTP/HTTPS API**: Selected for Backend-to-Worker communication to maintain consistency with the CLI-to-Backend approach and simplify the technology stack.
-- **WebSockets**: Used for real-time bidirectional communication for job status updates and log streaming.
-- **Job polling with long polling**: Implemented to allow Workers to retrieve new jobs efficiently without constant polling.
+- **WebSockets**: Used for real-time bidirectional communication for jobEntity status updates and log streaming.
+- **Job polling with long polling**: Implemented to allow Workers to retrieve new jobEntities efficiently without constant polling.
 - **TLS encryption**: Ensures secure communication between components, protecting sensitive data in transit.
 - **Worker registration and heartbeat endpoints**: Used for system resilience, allowing dynamic worker discovery and health monitoring.
 
@@ -190,10 +190,10 @@ The Common module will contain shared code and models used by multiple component
 1. User invokes CLI with `run` command
 2. CLI validates arguments and sends request to Backend API
 3. Backend validates request and retrieves repository information
-4. Backend schedules jobs and assigns them to available Workers
-5. Workers execute jobs in containers and send status updates to Backend via REST API
+4. Backend schedules jobEntities and assigns them to available Workers
+5. Workers execute jobEntities in containers and send status updates to Backend via REST API
 6. Workers stream logs to Backend using WebSockets
-7. Backend collects results and updates pipeline status
+7. Backend collects results and updates pipelineEntity status
 8. CLI polls or receives webhook notification of completion
 9. CLI displays results to the user
 
@@ -234,8 +234,8 @@ The Common module will contain shared code and models used by multiple component
 ### 6.2 Worker Scalability
 
 - **Dynamic worker pool sizing**: Workers can be added or removed without system reconfiguration, allowing the system to scale based on demand.
-- **Resource-based job allocation**: Jobs are assigned to workers based on available resources, ensuring efficient utilization.
-- **Worker specialization**: Workers can be tagged with capabilities, allowing specialized workers for specific job types (e.g., high-memory jobs, GPU-accelerated jobs).
+- **Resource-based jobEntity allocation**: Jobs are assigned to workers based on available resources, ensuring efficient utilization.
+- **Worker specialization**: Workers can be tagged with capabilities, allowing specialized workers for specific jobEntity types (e.g., high-memory jobEntities, GPU-accelerated jobEntities).
 - **Containerized deployment**: Workers are designed for containerized deployment in Kubernetes or similar orchestration systems, facilitating scaling and management.
 
 ## 7. Security Considerations
@@ -250,7 +250,7 @@ The Common module will contain shared code and models used by multiple component
 ### 7.2 Secure Execution
 
 - **Isolated execution environments**: Jobs run in separate Docker containers to prevent interference and enhance security.
-- **Secrets management**: Sensitive data (API tokens, passwords) are securely managed and injected into jobs as needed.
+- **Secrets management**: Sensitive data (API tokens, passwords) are securely managed and injected into jobEntities as needed.
 - **Network isolation**: Containers can be configured with limited network access to prevent unauthorized connections.
 - **Artifact integrity verification**: Ensures artifacts haven't been tampered with during storage or transmission.
 
@@ -265,7 +265,7 @@ The Common module will contain shared code and models used by multiple component
 
 ### 8.2 Continuous Integration
 
-- CI pipeline builds and tests affected modules only
+- CI pipelineEntity builds and tests affected modules only
 - Parallel building and testing of modules
 - Integration tests verify cross-module compatibility
 - Version management is simplified with single repository
@@ -286,17 +286,17 @@ The Common module will contain shared code and models used by multiple component
    - Support commands to run pipelines locally.
    - Provide basic logs for execution.
 2. Backend Module 
-   - Implement basic API endpoints for triggering pipeline execution.
+   - Implement basic API endpoints for triggering pipelineEntity execution.
    - Provide local execution support without external dependencies.
 3. Worker Module
-   - Implement job execution logic.
-   - Enable job isolation using Docker.
+   - Implement jobEntity execution logic.
+   - Enable jobEntity isolation using Docker.
 4. Reporting
    - Store basic execution logs. 
-   - Generate simple reports for pipeline execution.
+   - Generate simple reports for pipelineEntity execution.
 
 * **Key Validation Step:**
-      - Ensure a **basic CI/CD pipeline runs successfully** end-to-end using **CLI + Backend + Worker.**
+      - Ensure a **basic CI/CD pipelineEntity runs successfully** end-to-end using **CLI + Backend + Worker.**
       - Use unit and integration tests to validate.
 
 ### Phase 2: Enhanced Features - Pipeline Configurations within Git Repositories
@@ -309,7 +309,7 @@ The Common module will contain shared code and models used by multiple component
    - Enable batch execution across multiple repositories.
 3. Cross-Repository Operations
    - Add support for dependency tracking between repositories.
-   - Support triggering a pipeline from another pipeline.
+   - Support triggering a pipelineEntity from another pipelineEntity.
 4. Enhanced Reporting
    - Generate detailed execution reports.
    - Provide real-time monitoring using logs, dashboards, or UI.
@@ -327,25 +327,25 @@ The Common module will contain shared code and models used by multiple component
    - Ensure secure access control for multi-user environments.
    - Support API token-based authentication for automation and integrations.
 2. Advanced Dependency Management
-   - Introduce dynamic job scheduling based on job dependencies.
-   - Enable conditional execution of jobs based on success/failure.
-   - Optimize job execution order to minimize pipeline runtime.
-   - Implement parallel execution for independent jobs within a pipeline.
+   - Introduce dynamic jobEntity scheduling based on jobEntity dependencies.
+   - Enable conditional execution of jobEntities based on success/failure.
+   - Optimize jobEntity execution order to minimize pipelineEntity runtime.
+   - Implement parallel execution for independent jobEntities within a pipelineEntity.
 3. Performance Optimizations
-   - Improve pipeline execution speed by caching dependencies.
+   - Improve pipelineEntity execution speed by caching dependencies.
    - Implement incremental builds to avoid unnecessary re-execution.
    - Optimize Docker container usage to minimize startup times.
    - Introduce resource monitoring and optimization to prevent bottlenecks.
 4. High Availability (HA) Configuration
-   - Ensure fault tolerance by allowing failed jobs to retry.
+   - Ensure fault tolerance by allowing failed jobEntities to retry.
    - Implement distributed execution for large-scale workflows.
-   - Enable load balancing for job execution across worker nodes.
+   - Enable load balancing for jobEntity execution across worker nodes.
    - Support database replication and failover for system stability.
 
 * **Key Validation Step**
       - Validate that RBAC restricts access to pipelines based on user roles.
-      - Ensure dependency resolution and job scheduling work optimally.
-      - Verify that pipeline execution is faster due to caching and optimizations.
+      - Ensure dependency resolution and jobEntity scheduling work optimally.
+      - Verify that pipelineEntity execution is faster due to caching and optimizations.
       - Test high availability configurations under simulated failures.
 * This phase ensures the CI/CD system is scalable, secure, and performant, making it suitable for enterprise environments. 
 
@@ -355,7 +355,7 @@ The Common module will contain shared code and models used by multiple component
       - Pipeline Execution Duplication Check: Implement a mechanism to detect duplicate executions.
       - Artifact Upload Validation: Ensure uploaded artifacts respect patterns (*.java, **/doc/ etc.).
       - WebSocket Authentication: Ensure secure WebSocket connections for log streaming.
-      - CI/CD Configuration Validation in Backend: Validate .pipeline/pipeline.yaml before execution.
+      - CI/CD Configuration Validation in Backend: Validate .pipelineEntity/pipelineEntity.yaml before execution.
 
 ## 10. Estimated Timeline
 

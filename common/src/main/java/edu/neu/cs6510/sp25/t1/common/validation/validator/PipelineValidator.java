@@ -6,10 +6,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.neu.cs6510.sp25.t1.common.config.JobConfig;
-import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
-import edu.neu.cs6510.sp25.t1.common.config.StageConfig;
+import edu.neu.cs6510.sp25.t1.common.model.Job;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
+import edu.neu.cs6510.sp25.t1.common.model.Stage;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
+import edu.neu.cs6510.sp25.t1.common.manager.PipelineNameManager;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 
@@ -44,40 +45,40 @@ public class PipelineValidator {
   /**
    * Validates the structure and dependencies of a pipeline.
    *
-   * @param pipelineConfig The pipeline configuration to validate.
+   * @param pipeline The pipeline configuration to validate.
    * @param filename       The filename of the YAML being validated.
    * @throws ValidationException If the validation fails.
    */
-  public static void validate(PipelineConfig pipelineConfig, String filename) throws ValidationException {
+  public static void validate(Pipeline pipeline, String filename) throws ValidationException {
     List<String> errors = new ArrayList<>();
     final PipelineNameManager pipelineNameManager = new PipelineNameManager();
 
 
     // Ensure pipeline name exists
-    if (pipelineConfig == null || pipelineConfig.getName() == null || pipelineConfig.getName().isEmpty()) {
+    if (pipeline == null || pipeline.getName() == null || pipeline.getName().isEmpty()) {
       errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "name"), "Pipeline name is required."));
     } else {
       // Check pipeline name uniqueness
-      if (!pipelineNameManager.isPipelineNameUnique(pipelineConfig.getName())) {
-        String suggestedName = pipelineNameManager.suggestUniquePipelineName(pipelineConfig.getName());
+      if (!pipelineNameManager.isPipelineNameUnique(pipeline.getName())) {
+        String suggestedName = pipelineNameManager.suggestUniquePipelineName(pipeline.getName());
         errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "name"),
-                "Pipeline name '" + pipelineConfig.getName() + "' is already in use. Suggested alternative: '" + suggestedName + "'."));
-        PipelineLogger.warn("Duplicate pipeline name detected: " + pipelineConfig.getName() + ". Suggested: " + suggestedName);
+                "Pipeline name '" + pipeline.getName() + "' is already in use. Suggested alternative: '" + suggestedName + "'."));
+        PipelineLogger.warn("Duplicate pipeline name detected: " + pipeline.getName() + ". Suggested: " + suggestedName);
       }
     }
 
     // Ensure at least one stage exists
-    if (pipelineConfig.getStages() == null || pipelineConfig.getStages().isEmpty()) {
+    if (pipeline.getStages() == null || pipeline.getStages().isEmpty()) {
       errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "stages"), "At least one stage is required."));
     }
 
     Set<String> jobNames = new HashSet<>();
-    for (StageConfig stage : pipelineConfig.getStages()) {
+    for (Stage stage : pipeline.getStages()) {
       if (stage.getJobs() == null || stage.getJobs().isEmpty()) {
         errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "jobs"), "Each stage must have at least one job."));
       }
 
-      for (JobConfig job : stage.getJobs()) {
+      for (Job job : stage.getJobs()) {
         if (jobNames.contains(job.getName())) {
           errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, job.getName()), "Duplicate job name found: " + job.getName()));
         }
@@ -86,10 +87,10 @@ public class PipelineValidator {
     }
 
     // Validate job dependencies exist
-    validateDependenciesExist(pipelineConfig, filename, jobNames, errors);
+    validateDependenciesExist(pipeline, filename, jobNames, errors);
 
     // Detect cyclic dependencies
-    List<List<String>> cycles = detectCycles(pipelineConfig);
+    List<List<String>> cycles = detectCycles(pipeline);
     for (List<String> cycle : cycles) {
       errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "needs"), "Cyclic dependency detected: " + String.join(" -> ", cycle)));
       PipelineLogger.error("Cyclic dependency detected: " + String.join(" -> ", cycle));
@@ -109,14 +110,14 @@ public class PipelineValidator {
   /**
    * Ensures all job dependencies reference existing jobs.
    *
-   * @param pipelineConfig The pipeline configuration.
+   * @param pipeline The pipeline configuration.
    * @param filename       The YAML filename.
    * @param jobNames       The set of all defined job names.
    * @param errors         The list of validation errors to populate.
    */
-  private static void validateDependenciesExist(PipelineConfig pipelineConfig, String filename, Set<String> jobNames, List<String> errors) {
-    for (StageConfig stage : pipelineConfig.getStages()) {
-      for (JobConfig job : stage.getJobs()) {
+  private static void validateDependenciesExist(Pipeline pipeline, String filename, Set<String> jobNames, List<String> errors) {
+    for (Stage stage : pipeline.getStages()) {
+      for (Job job : stage.getJobs()) {
         for (String dependency : job.getNeeds()) {
           if (!jobNames.contains(dependency)) {
             errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, dependency),
@@ -132,15 +133,15 @@ public class PipelineValidator {
   /**
    * Detects all cycles in job dependencies using depth-first search (DFS).
    *
-   * @param pipelineConfig The pipeline configuration.
+   * @param pipeline The pipeline configuration.
    * @return A list of detected cycles.
    */
-  private static List<List<String>> detectCycles(PipelineConfig pipelineConfig) {
+  private static List<List<String>> detectCycles(Pipeline pipeline) {
     List<List<String>> detectedCycles = new ArrayList<>();
 
-    for (StageConfig stage : pipelineConfig.getStages()) {
-      for (JobConfig job : stage.getJobs()) {
-        detectCycleDFS(job.getName(), pipelineConfig, new HashSet<>(), new HashSet<>(), new ArrayList<>(), detectedCycles);
+    for (Stage stage : pipeline.getStages()) {
+      for (Job job : stage.getJobs()) {
+        detectCycleDFS(job.getName(), pipeline, new HashSet<>(), new HashSet<>(), new ArrayList<>(), detectedCycles);
       }
     }
     return detectedCycles;
@@ -151,13 +152,13 @@ public class PipelineValidator {
    * Performs DFS to detect cycles in job dependencies.
    *
    * @param jobName         The current job name.
-   * @param pipelineConfig  The pipeline configuration.
+   * @param pipeline  The pipeline configuration.
    * @param visited         A set of visited jobs.
    * @param recursionStack  Tracks the current job path for cycle detection.
    * @param currentPath     The current job path being explored.
    * @param detectedCycles  The list of detected cycles.
    */
-  private static void detectCycleDFS(String jobName, PipelineConfig pipelineConfig, Set<String> visited,
+  private static void detectCycleDFS(String jobName, Pipeline pipeline, Set<String> visited,
                                      Set<String> recursionStack, List<String> currentPath, List<List<String>> detectedCycles) {
     if (recursionStack.contains(jobName)) {
       detectedCycles.add(new ArrayList<>(currentPath));
@@ -169,8 +170,8 @@ public class PipelineValidator {
     recursionStack.add(jobName);
     currentPath.add(jobName);
 
-    for (String dependency : findJobDependencies(jobName, pipelineConfig)) {
-      detectCycleDFS(dependency, pipelineConfig, visited, recursionStack, currentPath, detectedCycles);
+    for (String dependency : findJobDependencies(jobName, pipeline)) {
+      detectCycleDFS(dependency, pipeline, visited, recursionStack, currentPath, detectedCycles);
     }
 
     recursionStack.remove(jobName);
@@ -181,12 +182,12 @@ public class PipelineValidator {
    * Finds dependencies for a given job in the pipeline.
    *
    * @param jobName        The name of the job.
-   * @param pipelineConfig The pipeline configuration.
+   * @param pipeline The pipeline configuration.
    * @return A list of job names that this job depends on.
    */
-  private static List<String> findJobDependencies(String jobName, PipelineConfig pipelineConfig) {
-    for (StageConfig stage : pipelineConfig.getStages()) {
-      for (JobConfig job : stage.getJobs()) {
+  private static List<String> findJobDependencies(String jobName, Pipeline pipeline) {
+    for (Stage stage : pipeline.getStages()) {
+      for (Job job : stage.getJobs()) {
         if (job.getName().equals(jobName)) {
           return job.getNeeds();
         }

@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 import edu.neu.cs6510.sp25.t1.common.validation.validator.GitValidator;
@@ -31,7 +31,7 @@ public abstract class BaseCommand implements Callable<Integer> {
   protected boolean verbose;
 
   @SuppressWarnings("checkstyle:VisibilityModifier")
-  @CommandLine.Option(names = {"-f", "--filename"}, description = "Path to the pipeline configuration file")
+  @CommandLine.Option(names = {"-f", "--file"}, description = "Path to the pipeline configuration file")
   protected String configFile;
 
   @SuppressWarnings("checkstyle:VisibilityModifier")
@@ -176,7 +176,7 @@ public abstract class BaseCommand implements Callable<Integer> {
   }
 
 
-  protected PipelineConfig loadAndValidatePipelineConfig() throws ValidationException {
+  protected Pipeline loadAndValidatePipelineConfig() throws ValidationException {
     if (configFile == null || configFile.isEmpty()) {
       throw new ValidationException("Missing required parameter: --file <pipeline.yaml>");
     }
@@ -191,10 +191,10 @@ public abstract class BaseCommand implements Callable<Integer> {
     }
 
     // Parse and validate YAML
-    PipelineConfig pipelineConfig = YamlParser.parseYaml(yamlFile);
-    PipelineValidator.validate(pipelineConfig, configFile);
+    Pipeline pipeline = YamlParser.parseYaml(yamlFile);
+    PipelineValidator.validate(pipeline, configFile);
 
-    return pipelineConfig;
+    return pipeline;
   }
 
 }

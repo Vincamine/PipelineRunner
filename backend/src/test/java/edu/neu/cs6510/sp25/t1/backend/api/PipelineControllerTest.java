@@ -11,7 +11,7 @@
 //
 //import edu.neu.cs6510.sp25.t1.backend.dto.PipelineExecutionSummary;
 //import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
-//import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
+//import edu.neu.cs6510.sp25.t1.common.api.request.RunPipelineRequest;
 //
 //import static org.junit.jupiter.api.Assertions.assertEquals;
 //import static org.junit.jupiter.api.Assertions.assertNotNull;

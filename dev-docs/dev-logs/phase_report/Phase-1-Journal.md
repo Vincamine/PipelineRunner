@@ -9,17 +9,17 @@
    - Support commands to run pipelines locally.
    - Provide basic logs for execution.
 2. Backend Module (completed)
-   - Implement basic API endpoints for triggering pipeline execution.
+   - Implement basic API endpoints for triggering pipelineEntity execution.
    - Provide local execution support without external dependencies.
 3. Worker Module(completed)
-   - Implement job execution logic.
-   - Enable job isolation using Docker.
+   - Implement jobEntity execution logic.
+   - Enable jobEntity isolation using Docker.
 4. Reporting(completed)
    - Store basic execution logs. 
-   - Generate simple reports for pipeline execution.
+   - Generate simple reports for pipelineEntity execution.
 
 * **Key Validation Step:** (End to End integration is not completed, other completed)
-      - Ensure a **basic CI/CD pipeline runs successfully** end-to-end using **CLI + Backend + Worker.**
+      - Ensure a **basic CI/CD pipelineEntity runs successfully** end-to-end using **CLI + Backend + Worker.**
       - Use unit and integration tests to validate.
 
 

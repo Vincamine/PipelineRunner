@@ -5,7 +5,7 @@
 
 ## **1. Overview**
 This document describes the logic and implementation details of the CLI commands for the CI/CD system. The CLI allows users to:
-- **Validate pipeline configurations**
+- **Validate pipelineEntity configurations**
 - **Simulate execution (`dry-run`)**
 - **Execute pipelines (`run`)** locally or via backend
 - **Retrieve execution reports**
@@ -20,7 +20,7 @@ The CLI ensures:
 
 ## **2. CLI Execution Requirements**
 - **The CLI must be executed from the root of a Git repository.**
-- **A valid `.pipelines/pipeline.yaml` configuration file is required.**
+- **A valid `.pipelines/pipelineEntity.yaml` configuration file is required.**
 - **All commands validate inputs before execution.**
 - **Errors are reported in the format:**
   ```
@@ -35,9 +35,9 @@ The CLI ensures:
 ### ✅ **YAML Pipeline Configuration Validation**
 - Enforced using `YamlParser` and `PipelineValidator`
 - Ensures required fields:
-    - `pipeline.name` (must be unique within repo)
-    - `stages` (at least one required)
-    - `jobs` (each stage must have at least one job)
+    - `pipelineEntity.name` (must be unique within repo)
+    - `stageEntities` (at least one required)
+    - `jobEntities` (each stageEntity must have at least one jobEntity)
     - `needs` dependencies must exist and be **acyclic**
 - Supports:
     - **YAML v1.2 format**
@@ -53,7 +53,7 @@ The CLI ensures:
     - Ensure `--file` parameter is provided
     - Ensure CLI is running inside a Git repository
 2. **Load and parse YAML file (`YamlParser.parseYaml()`)**
-3. **Validate pipeline structure (`PipelineValidator.validate()`)**
+3. **Validate pipelineEntity structure (`PipelineValidator.validate()`)**
 4. **Execute command-specific logic**
 5. **Return appropriate exit codes**
     - `0` → Success
@@ -66,26 +66,26 @@ The CLI ensures:
 ## **4. CLI Commands**
 ### **4.1 `check` Command (Validate Pipeline)**
 #### **Description**
-- Parses and validates the pipeline YAML file **locally**.
+- Parses and validates the pipelineEntity YAML file **locally**.
 - Does NOT interact with the backend.
-- Detects syntax errors, missing fields, duplicate job names, and cyclic dependencies.
+- Detects syntax errors, missing fields, duplicate jobEntity names, and cyclic dependencies.
 
 #### **Usage**
 ```bash
-xx check --file .pipelines/pipeline.yaml
+xx check --file .pipelines/pipelineEntity.yaml
 ```
 
 ---
 
 ### **4.2 `dry-run` Command (Simulate Execution)**
 #### **Description**
-- Parses, validates, and simulates the pipeline **without execution**.
+- Parses, validates, and simulates the pipelineEntity **without execution**.
 - Verifies execution order and dependencies.
 - Returns **expected execution plan**.
 
 #### **Usage**
 ```bash
-xx dry-run --file .pipelines/pipeline.yaml
+xx dry-run --file .pipelines/pipelineEntity.yaml
 ```
 
 #### **Example Output**
@@ -103,40 +103,40 @@ Stage: deploy
 
 ### **4.3 `run` Command (Execute Pipeline)**
 #### **Description**
-- Parses and validates the pipeline.
+- Parses and validates the pipelineEntity.
 - **Executes locally (`--local`)** OR **sends execution request to the backend**.
-- Ensures jobs obey `needs` dependencies.
-- Runs jobs in **Docker containers** if an `image` is specified.
+- Ensures jobEntities obey `needs` dependencies.
+- Runs jobEntities in **Docker containers** if an `image` is specified.
 
 #### **Usage**
 ```bash
-# Execute pipeline using backend
-xx run --file .pipelines/pipeline.yaml
+# Execute pipelineEntity using backend
+xx run --file .pipelines/pipelineEntity.yaml
 
-# Execute pipeline locally
-xx run --file .pipelines/pipeline.yaml --local
+# Execute pipelineEntity locally
+xx run --file .pipelines/pipelineEntity.yaml --local
 ```
 
 #### **Example Output**
 ```
-Starting stage: build
+Starting stageEntity: build
 ✅ Job compile completed successfully
 
-Starting stage: test
+Starting stageEntity: test
 ✅ Job unittests completed successfully
 
-Starting stage: deploy
+Starting stageEntity: deploy
 ✅ Job deploy completed successfully
-✅ Local pipeline execution completed successfully.
+✅ Local pipelineEntity execution completed successfully.
 ```
 
 ---
 
 ### **4.4 `report` Command (Retrieve Execution History)**
 #### **Description**
-- Fetches past pipeline executions from the backend.
+- Fetches past pipelineEntity executions from the backend.
 - Supports filtering by:
-    - **Pipeline name (`--pipeline`)**
+    - **Pipeline name (`--pipelineEntity`)**
     - **Specific run (`--run`)**
 - Supports output in **plaintext, JSON, or YAML**.
 
@@ -145,11 +145,11 @@ Starting stage: deploy
 # List all pipelines
 xx report --list-pipelines
 
-# Get execution history for a specific pipeline
-xx report --pipeline build-and-test
+# Get execution history for a specific pipelineEntity
+xx report --pipelineEntity build-and-test
 
 # Get details of a specific execution run
-xx report --pipeline build-and-test --run 1234
+xx report --pipelineEntity build-and-test --run 1234
 ```
 
 ---
@@ -182,7 +182,7 @@ All errors follow this format:
 ---
 
 ## **Next Steps**
-- **Implement parallel job execution within a stage**
+- **Implement parallel jobEntity execution within a stageEntity**
 - **Add real-time logging for `run --local`**
-- **Improve execution reports with job logs and timestamps**
+- **Improve execution reports with jobEntity logs and timestamps**
 

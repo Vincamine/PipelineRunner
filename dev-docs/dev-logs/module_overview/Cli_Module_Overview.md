@@ -7,10 +7,10 @@
 ## 1. **Introduction**
 The `cli` module is a **command-line interface (CLI) tool** that interacts with the backend module to manage CI/CD pipelines. It provides functionalities like:
 
-- Checking pipeline configurations
-- Simulating (dry-run) pipeline execution
+- Checking pipelineEntity configurations
+- Simulating (dry-run) pipelineEntity execution
 - Running pipelines
-- Fetching pipeline execution reports
+- Fetching pipelineEntity execution reports
 
 ## 2. **Module Structure**
 The CLI module consists of the following **main components**:
@@ -47,7 +47,7 @@ cli
     - Handles errors and network issues.
 
 - Example:  
-  When the user runs `cli run --pipeline my-pipeline`, the following happens:
+  When the user runs `cli run --pipelineEntity my-pipelineEntity`, the following happens:
     1. `RunCommand` calls `CliBackendClient.runPipeline(request)`.
     2. `CliBackendClient` sends an HTTP POST request to `/api/v1/pipelines/run`.
     3. The backend starts execution and responds with status updates.
@@ -55,8 +55,8 @@ cli
 
 ### 🔄 **CLI ↔ Common Module**
 - CLI **uses shared models** from the `common` module:
-    - `RunPipelineRequest` (for submitting pipeline runs)
-    - `PipelineCheckResponse` (for validating pipeline configuration)
+    - `RunPipelineRequest` (for submitting pipelineEntity runs)
+    - `PipelineCheckResponse` (for validating pipelineEntity configuration)
 
 - **Why?**
     - The common module ensures **data consistency** across CLI and Backend.
@@ -69,9 +69,9 @@ Each CLI command corresponds to a backend API action:
 
 | Command         | Backend Endpoint               | Description |
 |---------------|------------------------------|------------|
-| `cli check`  | `/api/v1/pipelines/check`     | Validates a pipeline configuration file. |
-| `cli dry-run` | `/api/v1/pipelines/dry-run`  | Simulates pipeline execution. |
-| `cli run`     | `/api/v1/pipelines/run`      | Starts a pipeline execution. |
+| `cli check`  | `/api/v1/pipelines/check`     | Validates a pipelineEntity configuration file. |
+| `cli dry-run` | `/api/v1/pipelines/dry-run`  | Simulates pipelineEntity execution. |
+| `cli run`     | `/api/v1/pipelines/run`      | Starts a pipelineEntity execution. |
 | `cli report`  | `/api/v1/pipelines`          | Retrieves execution history. |
 
 ---
@@ -89,17 +89,17 @@ java -jar cli/build/libs/cli.jar --help
 
 3️⃣ **Example Usage**
 ```sh
-# Check pipeline configuration
+# Check pipelineEntity configuration
 cli check my-config.yml
 
 # Simulate execution (dry-run)
 cli dry-run my-config.yml --output json
 
-# Run a pipeline
-cli run --pipeline my-pipeline
+# Run a pipelineEntity
+cli run --pipelineEntity my-pipelineEntity
 
 # Get execution history
-cli report --pipeline my-pipeline --output yaml
+cli report --pipelineEntity my-pipelineEntity --output yaml
 ```
 
 ---
@@ -112,5 +112,5 @@ cli report --pipeline my-pipeline --output yaml
 ---
 
 ## Conclusion
-The CLI module provides a **user-friendly interface** for interacting with the CI/CD backend. It uses `common` models for **data consistency** and `backend` endpoints for **pipeline execution and reporting**. Future enhancements will improve usability and security.
+The CLI module provides a **user-friendly interface** for interacting with the CI/CD backend. It uses `common` models for **data consistency** and `backend` endpoints for **pipelineEntity execution and reporting**. Future enhancements will improve usability and security.
 

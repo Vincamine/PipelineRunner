@@ -183,7 +183,7 @@ dependencies {
 **Technology Choices:**
 
 - **Jackson**: Used for JSON processing due to its performance, flexibility, and excellent integration with Java objects. Jackson provides robust data binding and offers specialized modules for date/time handling.
-- **SnakeYAML**: Chosen for YAML parsing due to its comprehensive YAML support, permissive license, and good performance. It's used for reading pipeline configuration files.
+- **SnakeYAML**: Chosen for YAML parsing due to its comprehensive YAML support, permissive license, and good performance. It's used for reading pipelineEntity configuration files.
 - **Spring Web**: Used for shared API interface definitions and REST client configurations.
 
 #### 2.3.2 cli/build.gradle
@@ -361,7 +361,7 @@ bootJar {
 |   PipelineModel   |       |     StageModel    |       |     JobModel      |
 +-------------------+       +-------------------+       +-------------------+
 | - name: String    |<>-----| - name: String    |<>-----| - name: String    |
-| - stages: List    |       | - jobs: List      |       | - stage: String   |
+| - stageEntities: List    |       | - jobEntities: List      |       | - stageEntity: String   |
 | - globals: Map    |       +-------------------+       | - image: String   |
 +-------------------+                                   | - script: List    |
                                                         | - needs: List     |
@@ -499,10 +499,10 @@ import org.springframework.web.bind.annotation.*;
 // Worker API Controller Interface
 public interface WorkerApi {
     
-    @PostMapping("/api/jobs")
+    @PostMapping("/api/jobEntities")
     ResponseEntity<JobResponse> executeJob(@RequestBody ExecuteJobRequest request);
     
-    @GetMapping("/api/jobs/{jobId}")
+    @GetMapping("/api/jobEntities/{jobId}")
     ResponseEntity<JobStatusResponse> getJobStatus(@PathVariable String jobId);
     
     @PostMapping("/api/workers/register")
@@ -511,7 +511,7 @@ public interface WorkerApi {
     @PostMapping("/api/workers/heartbeat")
     ResponseEntity<HeartbeatResponse> heartbeat(@RequestBody HeartbeatRequest request);
     
-    @DeleteMapping("/api/jobs/{jobId}")
+    @DeleteMapping("/api/jobEntities/{jobId}")
     ResponseEntity<CancelJobResponse> cancelJob(@PathVariable String jobId);
 }
 
@@ -591,7 +591,7 @@ package edu.neu.cs6510.sp25.t1.common.model;
 
 public class Pipeline {
     private String name;
-    private List<Stage> stages;
+    private List<Stage> stageEntities;
     private Map<String, Object> globals;
     
     // Constructor, getters, and setters omitted for brevity
@@ -599,7 +599,7 @@ public class Pipeline {
 
 public class Stage {
     private String name;
-    private List<Job> jobs;
+    private List<Job> jobEntities;
     
     // Constructor, getters, and setters omitted for brevity
 }
@@ -741,7 +741,8 @@ public class PipelineController {
 package edu.neu.cs6510.sp25.t1.worker.api;
 
 import edu.neu.cs6510.sp25.t1.common.api.*;
-import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutorService;
+import edu.neu.cs6510.sp25.t1.worker.manager.JobExecutorService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -749,61 +750,61 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 public class WorkerController implements WorkerApi {
-    
-    private final JobExecutorService jobExecutorService;
-    
-    @Autowired
-    public WorkerController(JobExecutorService jobExecutorService) {
-        this.jobExecutorService = jobExecutorService;
+
+  private final JobExecutorService jobExecutorService;
+
+  @Autowired
+  public WorkerController(JobExecutorService jobExecutorService) {
+    this.jobExecutorService = jobExecutorService;
+  }
+
+  @Override
+  @PostMapping("/jobEntities")
+  public ResponseEntity<JobResponse> executeJob(@RequestBody ExecuteJobRequest request) {
+    JobResponse response = jobExecutorService.startJob(request);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  @GetMapping("/jobEntities/{jobId}")
+  public ResponseEntity<JobStatusResponse> getJobStatus(@PathVariable String jobId) {
+    JobStatusResponse response = jobExecutorService.getJobStatus(jobId);
+    if (response == null) {
+      return ResponseEntity.notFound().build();
     }
-    
-    @Override
-    @PostMapping("/jobs")
-    public ResponseEntity<JobResponse> executeJob(@RequestBody ExecuteJobRequest request) {
-        JobResponse response = jobExecutorService.startJob(request);
-        return ResponseEntity.ok(response);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  @PostMapping("/workers/register")
+  public ResponseEntity<RegisterResponse> registerWorker(@RequestBody RegisterRequest request) {
+    RegisterResponse response = new RegisterResponse();
+    response.setWorkerId(request.getWorkerId());
+    response.setRegistered(true);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  @PostMapping("/workers/heartbeat")
+  public ResponseEntity<HeartbeatResponse> heartbeat(@RequestBody HeartbeatRequest request) {
+    HeartbeatResponse response = new HeartbeatResponse();
+    response.setAcknowledged(true);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  @DeleteMapping("/jobEntities/{jobId}")
+  public ResponseEntity<CancelJobResponse> cancelJob(@PathVariable String jobId) {
+    boolean canceled = jobExecutorService.cancelJob(jobId);
+    CancelJobResponse response = new CancelJobResponse();
+    response.setCanceled(canceled);
+
+    if (!canceled) {
+      return ResponseEntity.notFound().build();
     }
-    
-    @Override
-    @GetMapping("/jobs/{jobId}")
-    public ResponseEntity<JobStatusResponse> getJobStatus(@PathVariable String jobId) {
-        JobStatusResponse response = jobExecutorService.getJobStatus(jobId);
-        if (response == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(response);
-    }
-    
-    @Override
-    @PostMapping("/workers/register")
-    public ResponseEntity<RegisterResponse> registerWorker(@RequestBody RegisterRequest request) {
-        RegisterResponse response = new RegisterResponse();
-        response.setWorkerId(request.getWorkerId());
-        response.setRegistered(true);
-        return ResponseEntity.ok(response);
-    }
-    
-    @Override
-    @PostMapping("/workers/heartbeat")
-    public ResponseEntity<HeartbeatResponse> heartbeat(@RequestBody HeartbeatRequest request) {
-        HeartbeatResponse response = new HeartbeatResponse();
-        response.setAcknowledged(true);
-        return ResponseEntity.ok(response);
-    }
-    
-    @Override
-    @DeleteMapping("/jobs/{jobId}")
-    public ResponseEntity<CancelJobResponse> cancelJob(@PathVariable String jobId) {
-        boolean canceled = jobExecutorService.cancelJob(jobId);
-        CancelJobResponse response = new CancelJobResponse();
-        response.setCanceled(canceled);
-        
-        if (!canceled) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        return ResponseEntity.ok(response);
-    }
+
+    return ResponseEntity.ok(response);
+  }
 }
 ```
 

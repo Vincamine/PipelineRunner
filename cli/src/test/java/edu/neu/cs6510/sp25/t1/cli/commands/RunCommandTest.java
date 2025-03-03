@@ -11,7 +11,7 @@
 //import java.nio.file.Path;
 //
 //import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
-//import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
+//import edu.neu.cs6510.sp25.t1.common.api.request.RunPipelineRequest;
 //import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
 //import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 //import edu.neu.cs6510.sp25.t1.common.validation.validator.PipelineValidator;

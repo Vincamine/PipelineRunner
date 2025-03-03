@@ -5,31 +5,31 @@
 - **Author:** Yiwen Wang
 
 ## **1. Introduction**
-The `worker` module is responsible for **executing jobs** in the CI/CD pipeline system. It interacts with the `backend` module and executes jobs using **Docker containers**.
+The `worker` module is responsible for **executing jobEntities** in the CI/CD pipelineEntity system. It interacts with the `backend` module and executes jobEntities using **Docker containers**.
 
-This module **receives jobs** from the backend, **executes them** in an isolated environment, and **reports status updates** back to the backend.
+This module **receives jobEntities** from the backend, **executes them** in an isolated environment, and **reports status updates** back to the backend.
 
 ## **2. Worker Module Components**
 ### **🔹 API Layer (`worker.api`)**
 | **Class** | **Purpose** |
 |-----------|------------|
-| `WorkerController` | Handles job execution requests from the backend. |
+| `WorkerController` | Handles jobEntity execution requests from the backend. |
 | **Fixes:** Uses `JobRequest` instead of `JobExecution`, improved logging and validation. |
 
 ### **🔹 Client (`worker.client`)**
 | **Class** | **Purpose** |
 |-----------|------------|
-| `BackendClient` | Sends job execution status updates to the backend. |
+| `BackendClient` | Sends jobEntity execution status updates to the backend. |
 | **Fixes:** Uses `common.api.JobStatusUpdate`, implements **retry logic** for API failures. |
 
 ### **🔹 Execution Layer (`worker.executor`)**
 | **Class** | **Purpose** |
 |-----------|------------|
-| `DockerManager` | Manages Docker containers for executing jobs. |
+| `DockerManager` | Manages Docker containers for executing jobEntities. |
 | **Fixes:** Validates inputs, improves method consistency, and error handling. |
-| `DockerRunner` | Runs jobs inside Docker containers using system processes. |
+| `DockerRunner` | Runs jobEntities inside Docker containers using system processes. |
 | **Fixes:** Added exception handling to prevent silent failures. |
-| `JobExecutor` | Manages job execution lifecycle (start, update status, cleanup). |
+| `JobExecutor` | Manages jobEntity execution lifecycle (start, update status, cleanup). |
 | **Fixes:** Uses `ExecutionState` enum, configurable logging, and better error handling. |
 
 ## **3. Execution Flow & Responsibilities**
@@ -40,9 +40,9 @@ This module **receives jobs** from the backend, **executes them** in an isolated
 - Converts `JobRequest` to `JobExecution` and passes it to `JobExecutor`.
 
 2️⃣ **Executes the Job**
-- `JobExecutor` starts the job execution using `DockerManager`.
+- `JobExecutor` starts the jobEntity execution using `DockerManager`.
 - `DockerManager` pulls the image, starts a container, and executes commands.
-- Worker **monitors** the job execution.
+- Worker **monitors** the jobEntity execution.
 
 3️⃣ **Updates Job Status**
 - **While running**, the worker sends a `JobStatusUpdate` (`RUNNING`).
@@ -67,8 +67,8 @@ The **worker module relies on the common module** for standardization:
 ✅ **Logging & Monitoring** → Execution results are logged for auditing.
 
 ## **6. Summary**
-- The **worker module** executes jobs using **Docker containers**.
-- It receives jobs from the backend, executes them, and sends **status updates**.
+- The **worker module** executes jobEntities using **Docker containers**.
+- It receives jobEntities from the backend, executes them, and sends **status updates**.
 - It integrates with the **common module** for execution tracking and API communication.
 - 🚀 **With these improvements, the worker module is robust, modular, and fault-tolerant.**
 

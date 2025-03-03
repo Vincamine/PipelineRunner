@@ -1,6 +1,6 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import picocli.CommandLine;
 
@@ -34,7 +34,7 @@ public class CheckCommand extends BaseCommand {
     }
     try {
       // Use shared method from BaseCommand
-      PipelineConfig pipelineConfig = loadAndValidatePipelineConfig();
+      Pipeline pipeline = loadAndValidatePipelineConfig();
 
       logInfo("Pipeline configuration is valid: " + configFile);
       return 0;

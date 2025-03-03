@@ -1,6 +1,6 @@
 package edu.neu.cs6510.sp25.t1.common.api;
 
-import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 /**
  * Represents a job status update request body.
@@ -8,7 +8,7 @@ import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
  */
 public class JobStatusUpdate {
   private final String jobName;
-  private final ExecutionState status; // ✅ Use the unified ExecutionState enum
+  private final ExecutionStatus status; // ✅ Use the unified ExecutionState enum
 
   /**
    * Constructor for JobStatusUpdate.
@@ -23,7 +23,7 @@ public class JobStatusUpdate {
     }
 
     this.jobName = jobName;
-    this.status = ExecutionState.fromString(status); // ✅ Convert string to ExecutionState safely
+    this.status = ExecutionStatus.fromString(status); // ✅ Convert string to ExecutionState safely
   }
 
   /**
@@ -40,7 +40,7 @@ public class JobStatusUpdate {
    *
    * @return the job status as an ExecutionState enum
    */
-  public ExecutionState getStatus() {
+  public ExecutionStatus getStatus() {
     return status;
   }
 

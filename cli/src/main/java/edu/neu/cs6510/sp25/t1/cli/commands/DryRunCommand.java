@@ -6,9 +6,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import edu.neu.cs6510.sp25.t1.common.config.JobConfig;
-import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
-import edu.neu.cs6510.sp25.t1.common.config.StageConfig;
+import edu.neu.cs6510.sp25.t1.common.model.Job;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
+import edu.neu.cs6510.sp25.t1.common.model.Stage;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import picocli.CommandLine;
 
@@ -28,7 +28,6 @@ public class DryRunCommand extends BaseCommand {
    * Executes the dry-run command to simulate pipeline execution order.
    *
    * @return Exit code:
-   * <p>
    * - 0 - Success
    * - 1 - General failure
    * - 2 - Missing file or incorrect directory
@@ -41,45 +40,43 @@ public class DryRunCommand extends BaseCommand {
     }
 
     try {
-      // Load pipeline configuration
-      PipelineConfig pipelineConfig = loadAndValidatePipelineConfig();
-      simulateExecution(pipelineConfig);
+      // Load and validate pipeline configuration
+      Pipeline pipeline = loadAndValidatePipelineConfig();
+      generateExecutionPlan(pipeline);
       return 0;
     } catch (ValidationException e) {
-      logError(String.format("%s: Validation Error: %s", configFile, e.getMessage()));
+      logError(String.format("Validation Error: %s", e.getMessage()));
       return 3;
     } catch (Exception e) {
-      logError(String.format("%s: Error processing pipeline: %s", configFile, e.getMessage()));
+      logError(String.format("Error processing pipeline: %s", e.getMessage()));
       return 1;
     }
   }
 
   /**
-   * Simulates pipeline execution by printing the planned execution order in YAML format.
+   * Generates and prints the pipeline execution plan in YAML format.
    *
-   * @param pipelineConfig The pipeline configuration.
+   * @param pipeline The pipeline configuration.
    */
-  private void simulateExecution(PipelineConfig pipelineConfig) {
-    logInfo("🔍 Simulating execution for pipeline: " + pipelineConfig.getName());
+  private void generateExecutionPlan(Pipeline pipeline) {
+    logInfo("🔍 Generating execution plan for pipeline: " + pipeline.getName());
 
     Map<String, Object> executionPlan = new LinkedHashMap<>();
 
-    for (StageConfig stageConfig : pipelineConfig.getStages()) {
+    // Process stages in order
+    for (Stage stage : pipeline.getStages()) {
       Map<String, Object> stageDetails = new LinkedHashMap<>();
 
-      for (JobConfig job : stageConfig.getJobs()) {
+      // Process jobs within each stage
+      for (Job job : stage.getJobs()) {
         Map<String, Object> jobDetails = new LinkedHashMap<>();
         jobDetails.put("image", job.getImage());
-        jobDetails.put("script", job.getScript());
-
-        if (!job.getArtifacts().isEmpty()) {
-          jobDetails.put("artifacts", job.getArtifacts());
-        }
+        jobDetails.put("script", job.getScript()); // Keeps script as a list
 
         stageDetails.put(job.getName(), jobDetails);
       }
 
-      executionPlan.put(stageConfig.getName(), stageDetails);
+      executionPlan.put(stage.getName(), stageDetails);
     }
 
     try {

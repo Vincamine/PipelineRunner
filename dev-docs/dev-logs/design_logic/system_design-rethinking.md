@@ -17,10 +17,10 @@ The custom CI/CD system allows developers to define and run pipelines both local
 
 - Pipeline configuration in YAML files stored in the repository
 - Pipeline execution based on Git repositories, branches, and commits
-- Stage and job dependencies with parallel execution
-- Docker-based job execution
+- Stage and jobEntity dependencies with parallel execution
+- Docker-based jobEntity execution
 - Artifact collection and storage
-- Comprehensive reporting on pipeline execution
+- Comprehensive reporting on pipelineEntity execution
 
 ## High-Level Architecture
 
@@ -99,13 +99,13 @@ flowchart TB
 
 2. **Core Components**
    - **Backend Service**: Central orchestration component
-   - **Job Scheduler**: Handles job scheduling based on dependencies
-   - **State Manager**: Tracks pipeline, stage, and job states
+   - **Job Scheduler**: Handles jobEntity scheduling based on dependencies
+   - **State Manager**: Tracks pipelineEntity, stageEntity, and jobEntity states
    - **Artifact Storage**: Manages storage and retrieval of artifacts
 
 3. **Execution Layer**
-   - **Worker Manager**: Coordinates job distribution
-   - **Workers**: Execute jobs in Docker containers
+   - **Worker Manager**: Coordinates jobEntity distribution
+   - **Workers**: Execute jobEntities in Docker containers
 
 4. **Storage Layer**
    - **Database**: Stores configurations, history, and metadata
@@ -121,20 +121,20 @@ The system is divided into four primary modules:
 
 1. **CLI Module**
    - Handles user interaction via command-line interface
-   - Validates pipeline configurations
+   - Validates pipelineEntity configurations
    - Submits execution requests to the backend
    - Displays results and reports to users
 
 2. **Backend Module**
-   - Creates and manages pipeline runs
+   - Creates and manages pipelineEntity runs
    - Determines execution order based on dependencies
-   - Assigns jobs to workers
-   - Tracks pipeline state and history
+   - Assigns jobEntities to workers
+   - Tracks pipelineEntity state and history
    - Manages artifact storage
 
 3. **Worker Module**
    - Pulls Docker images and creates containers
-   - Executes job commands in isolated environments
+   - Executes jobEntity commands in isolated environments
    - Collects output, status, and artifacts
    - Reports results back to the backend
 
@@ -148,9 +148,9 @@ The system is divided into four primary modules:
 
 The separation between worker and backend components provides several benefits:
 
-1. **Scalability**: Workers can be deployed on multiple machines to handle parallel job execution
+1. **Scalability**: Workers can be deployed on multiple machines to handle parallel jobEntity execution
 2. **Resource isolation**: Jobs with different resource requirements can run on specialized workers
-3. **Fault tolerance**: If a worker fails, only the jobs on that worker are affected
+3. **Fault tolerance**: If a worker fails, only the jobEntities on that worker are affected
 4. **Security**: Workers can run in isolated environments with limited permissions
 
 ## Execution Flow
@@ -165,12 +165,12 @@ flowchart TB
     Worker["Worker Module"]
     Common["Common Module"]
     
-    User -->|"Run pipeline command"| CLI
+    User -->|"Run pipelineEntity command"| CLI
     
-    CLI -->|"1. Submit pipeline request"| Backend
-    Backend -->|"2. Send job to execute"| Worker
-    Worker -->|"3. Return job results"| Backend
-    Backend -->|"4. Return pipeline results"| CLI
+    CLI -->|"1. Submit pipelineEntity request"| Backend
+    Backend -->|"2. Send jobEntity to execute"| Worker
+    Worker -->|"3. Return jobEntity results"| Backend
+    Backend -->|"4. Return pipelineEntity results"| CLI
     CLI -->|"5. Display results"| User
     
     Common -.->|"Shared utilities"| CLI
@@ -179,18 +179,18 @@ flowchart TB
     
     subgraph "CLI Module Tasks"
         CLI1["Parse command arguments"]
-        CLI2["Read & validate pipeline config"]
+        CLI2["Read & validate pipelineEntity config"]
         CLI3["Submit execution request"]
         CLI4["Display results to user"]
     end
     
     subgraph "Backend Module Tasks"
-        B1["Create pipeline run with ID"]
+        B1["Create pipelineEntity run with ID"]
         B2["Determine execution order"]
-        B3["Schedule jobs based on dependencies"]
-        B4["Assign jobs to workers"]
+        B3["Schedule jobEntities based on dependencies"]
+        B4["Assign jobEntities to workers"]
         B5["Handle artifacts"]
-        B6["Update pipeline status"]
+        B6["Update pipelineEntity status"]
     end
     
     subgraph "Worker Module Tasks"
@@ -203,33 +203,33 @@ flowchart TB
 ```
 
 1. **User Interaction**:
-   - User initiates a pipeline run through the CLI
-   - Example: `xx run --pipeline my-pipeline`
+   - User initiates a pipelineEntity run through the CLI
+   - Example: `xx run --pipelineEntity my-pipelineEntity`
 
 2. **CLI Processing**:
    - Parses command arguments
-   - Reads and validates the pipeline configuration
+   - Reads and validates the pipelineEntity configuration
    - Submits the execution request to the Backend
 
 3. **Backend Processing**:
-   - Creates a pipeline run with a unique ID
-   - Determines execution order based on stages and dependencies
-   - Schedules and assigns jobs to Workers
-   - Monitors job status
+   - Creates a pipelineEntity run with a unique ID
+   - Determines execution order based on stageEntities and dependencies
+   - Schedules and assigns jobEntities to Workers
+   - Monitors jobEntity status
    - Handles artifact management
-   - Updates overall pipeline status
+   - Updates overall pipelineEntity status
 
 4. **Worker Execution**:
-   - Receives job execution requests
+   - Receives jobEntity execution requests
    - Pulls required Docker images
    - Sets up the execution environment
-   - Runs the commands specified in the job
+   - Runs the commands specified in the jobEntity
    - Captures output and status
    - Collects artifacts when successful
    - Reports completion back to the Backend
 
 5. **Result Reporting**:
-   - Backend compiles the pipeline execution results
+   - Backend compiles the pipelineEntity execution results
    - CLI displays results to the user
 
 ## Entity-Relationship Model
@@ -332,11 +332,11 @@ erDiagram
    - URL, branch, and commit hash
 
 2. **Pipeline**:
-   - Represents a CI/CD pipeline configuration
+   - Represents a CI/CD pipelineEntity configuration
    - Has a unique name and a path to its config file
 
 3. **Stage**:
-   - Represents a phase in the pipeline (build, test, deploy, etc.)
+   - Represents a phase in the pipelineEntity (build, test, deploy, etc.)
    - Has an order defining sequence of execution
 
 4. **Job**:
@@ -345,24 +345,24 @@ erDiagram
 
 5. **Command**:
    - Individual shell commands to be executed
-   - Each job can have multiple commands executed in sequence
+   - Each jobEntity can have multiple commands executed in sequence
 
 6. **Artifact**:
-   - Files or directories produced by jobs
+   - Files or directories produced by jobEntities
    - Defined by path and pattern specifications
 
 ### Execution Entities
 
 7. **PipelineRun**:
-   - An instance of a pipeline execution
+   - An instance of a pipelineEntity execution
    - Tracks status, start/end times, and specific commit
 
 8. **StageRun**:
-   - An instance of a stage execution
+   - An instance of a stageEntity execution
    - Tracks status and execution times
 
 9. **JobRun**:
-   - An instance of a job execution
+   - An instance of a jobEntity execution
    - Includes status, times, and the worker that executed it
 
 10. **CommandRun**:
@@ -370,7 +370,7 @@ erDiagram
    - Captures exit code, output, and execution times
 
 11. **ArtifactUpload**:
-   - Records of artifacts uploaded by jobs
+   - Records of artifacts uploaded by jobEntities
    - Includes path, size, and verification data
 
 ## Local vs. Remote Execution
@@ -382,14 +382,14 @@ The system supports both local and remote execution modes:
 - All components run on the developer's machine
 - Helpful for testing and debugging pipelines
 - Pipeline runs and results are stored locally
-- Initiated with the `--local` flag: `xx run --local --pipeline my-pipeline`
+- Initiated with the `--local` flag: `xx run --local --pipelineEntity my-pipelineEntity`
 
 ### Remote Execution
 
 - Components are distributed across server infrastructure
 - Provides more computing resources for larger workloads
 - Results are accessible to the entire team
-- Default mode: `xx run --pipeline my-pipeline`
+- Default mode: `xx run --pipelineEntity my-pipelineEntity`
 
 The same CLI and configuration files work in both modes, allowing developers to test locally before pushing changes for remote execution.
 
@@ -433,7 +433,7 @@ cicd-system/
 │   │   │   │           └── cicd/
 │   │   │   │               └── backend/
 │   │   │   │                   ├── BackendService.java     # Main service entry point
-│   │   │   │                   ├── pipeline/               # Pipeline management
+│   │   │   │                   ├── pipelineEntity/               # Pipeline management
 │   │   │   │                   │   ├── PipelineManager.java
 │   │   │   │                   │   └── PipelineRepository.java
 │   │   │   │                   ├── scheduler/              # Job scheduling
@@ -484,7 +484,7 @@ cicd-system/
 │   │   │   │                   │   ├── ConfigValidator.java
 │   │   │   │                   │   └── YamlParser.java
 │   │   │   │                   ├── model/                  # Shared data models
-│   │   │   │                   │   ├── pipeline/
+│   │   │   │                   │   ├── pipelineEntity/
 │   │   │   │                   │   │   ├── Pipeline.java
 │   │   │   │                   │   │   ├── Stage.java
 │   │   │   │                   │   │   └── Job.java

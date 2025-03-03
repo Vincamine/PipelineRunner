@@ -1,6 +1,7 @@
 package edu.neu.cs6510.sp25.t1.backend.client;
 
-import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
+import edu.neu.cs6510.sp25.t1.backend.api.client.WorkerClient;
+import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +37,7 @@ class WorkerClientTest {
 
   @Test
   void testSendJob_Success() {
-    JobRunState job = mock(JobRunState.class);
+    JobExecution job = mock(JobExecution.class);
     ResponseEntity<String> mockResponse = mock(ResponseEntity.class);
     when(mockResponse.getBody()).thenReturn("Success");
     when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
@@ -49,7 +50,7 @@ class WorkerClientTest {
 
   @Test
   void testSendJob_Failure() {
-    JobRunState job = mock(JobRunState.class);
+    JobExecution job = mock(JobExecution.class);
     doThrow(new RuntimeException("Worker not available"))
             .when(restTemplate).postForEntity(anyString(), any(), eq(String.class));
 

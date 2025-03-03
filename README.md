@@ -28,16 +28,16 @@ A command-line tool ensures that all CI/CD configurations reside within the repo
 # Features & Capabilities
 
 - **Local-first Approach:** CI/CD pipelines can run on both company servers and local developer machines with no modifications.
-- **Git-based Configuration:** All pipeline settings reside in a `.pipelines` directory inside the repository.
-- **Independent Pipelines:** Each pipeline configuration is self-contained, with a unique name and a complete execution definition.
+- **Git-based Configuration:** All pipelineEntity settings reside in a `.pipelines` directory inside the repository.
+- **Independent Pipelines:** Each pipelineEntity configuration is self-contained, with a unique name and a complete execution definition.
 - **Flexible Pipeline Structure:**
-  - Pipelines consist of sequential **stages**.
-  - Stages contain **jobs** that may run in parallel.
+  - Pipelines consist of sequential **stageEntities**.
+  - Stages contain **jobEntities** that may run in parallel.
   - Jobs define execution environments using Docker images.
   - Jobs support dependencies but cannot form cycles.
 - **Robust CLI:**
   - Validate configuration files.
-  - Execute dry-run previews of pipeline execution order.
+  - Execute dry-run previews of pipelineEntity execution order.
   - Run pipelines locally or on remote servers.
   - Generate detailed reports on past executions.
   - Override configuration parameters at runtime.
@@ -46,7 +46,7 @@ A command-line tool ensures that all CI/CD configurations reside within the repo
   - Jobs can specify artifacts to be uploaded upon completion.
   - Artifacts can be selected using pattern-based paths.
 - **Comprehensive Reporting:**
-  - Status tracking for pipelines, stages, and jobs.
+  - Status tracking for pipelines, stageEntities, and jobEntities.
   - Logs and execution summaries for debugging and analysis.
 
 ---
@@ -69,7 +69,7 @@ A command-line tool ensures that all CI/CD configurations reside within the repo
 
 ### Command Line Interface (CLI)
 
-Run the CLI from the root of a Git repository. It provides commands for validating, running, and reporting on pipeline executions.
+Run the CLI from the root of a Git repository. It provides commands for validating, running, and reporting on pipelineEntity executions.
 
 #### General Usage
 ```bash
@@ -88,12 +88,12 @@ Run the CLI from the root of a Git repository. It provides commands for validati
   ```
 - **Check Pipeline Status:**
   ```bash
-  ./gradlew run --args="status --pipeline-id 12345"
+  ./gradlew run --args="status --pipelineEntity-id 12345"
   ```
   - Returns error if executed outside a Git repository.
 - **Run Pipelines Locally:**
   ```bash
-  ./gradlew run --args="run --pipeline my_pipeline"
+  ./gradlew run --args="run --pipelineEntity my_pipeline"
   ```
 - **Validate Pipeline Configuration:**
   ```bash
@@ -108,26 +108,26 @@ All CI/CD configurations should be stored in the `.pipelines` directory in the r
 
 ### Example Configuration:
 ```yaml
-pipeline:
+pipelineEntity:
   name: "My Pipeline"
-  stages:
+  stageEntities:
     - build
     - test
     - deploy
 
-jobs:
+jobEntities:
   - name: compile
-    stage: build
+    stageEntity: build
     image: gradle:8.12-jdk21
     script:
       - ./gradlew classes
   - name: unittests
-    stage: test
+    stageEntity: test
     image: gradle:8.12-jdk21
     script:
       - ./gradlew test
   - name: deploy
-    stage: deploy
+    stageEntity: deploy
     image: gradle:8.12-jdk21
     script:
       - ./gradlew deploy
@@ -155,7 +155,7 @@ Run:
 ```bash
 yamllint .pipelines/config.yaml
 ```
-Fix any reported issues before re-running the pipeline.
+Fix any reported issues before re-running the pipelineEntity.
 
 ---
 

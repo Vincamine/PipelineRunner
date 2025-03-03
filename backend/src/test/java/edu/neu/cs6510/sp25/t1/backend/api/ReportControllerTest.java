@@ -1,7 +1,8 @@
 package edu.neu.cs6510.sp25.t1.backend.api;
 
-import edu.neu.cs6510.sp25.t1.backend.dto.PipelineDTO;
-import edu.neu.cs6510.sp25.t1.backend.service.ReportService;
+import edu.neu.cs6510.sp25.t1.backend.api.controller.ReportController;
+import edu.neu.cs6510.sp25.t1.backend.api.dto.PipelineDTO;
+import edu.neu.cs6510.sp25.t1.backend.service.PipelineReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,12 +15,12 @@ import static org.mockito.Mockito.when;
 
 class ReportControllerTest {
 
-  private ReportService reportService;
+  private PipelineReportService reportService;
   private ReportController reportController;
 
   @BeforeEach
   void setUp() {
-    reportService = mock(ReportService.class);
+    reportService = mock(PipelineReportService.class);
     reportController = new ReportController(reportService);
   }
 

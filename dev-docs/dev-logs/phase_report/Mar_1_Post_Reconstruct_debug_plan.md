@@ -7,70 +7,70 @@ Complete all 5 sprints and prepare a working demo for the CI/CD system, ensuring
 
 ## **Phase 1: Fix YAML Parsing & Validation (Sprint 2)**
 ### **Goal:**
-Ensure the CLI correctly reads, validates, and sends YAML pipeline configurations to the backend.
+Ensure the CLI correctly reads, validates, and sends YAML pipelineEntity configurations to the backend.
 
 ### **Tasks:**
 1. **Fix CLI YAML Parsing Issue**
     - Ensure CLI reads the YAML file from `.pipelines/` directory.
     - Parse YAML into a structured format (e.g., Java object or Map).
-    - Send the **correctly parsed** pipeline structure (not just `{ pipeline: <command-name> }`) to the backend.
+    - Send the **correctly parsed** pipelineEntity structure (not just `{ pipelineEntity: <command-name> }`) to the backend.
 
 2. **Implement YAML Validation Rules**
     - Check for:
-        - Required keys: `pipeline`, `stages`, `jobs`.
-        - Unique pipeline names per repository.
-        - At least **one stage and one job** per pipeline.
-        - No cyclic dependencies between jobs.
+        - Required keys: `pipelineEntity`, `stageEntities`, `jobEntities`.
+        - Unique pipelineEntity names per repository.
+        - At least **one stageEntity and one jobEntity** per pipelineEntity.
+        - No cyclic dependencies between jobEntities.
     - Implement structured **error reporting**:
         - Format: `<filename>:<line>:<error-message>`.
 
 3. **Update CLI to Accept YAML Configurations**
-    - Support `--filename | -f` flag to specify pipeline config file.
+    - Support `--filename | -f` flag to specify pipelineEntity config file.
     - Implement `--check` flag to validate configuration without execution.
 
 ---
 
 ## **Phase 2: Pipeline Execution (Sprint 3)**
 ### **Goal:**
-Enable sequential pipeline execution with dependency resolution.
+Enable sequential pipelineEntity execution with dependency resolution.
 
 ### **Tasks:**
 1. **Implement CLI Execution Commands**
-    - `dry-run`: Simulate execution without running jobs.
-    - `run`: Execute the pipeline locally.
+    - `dry-run`: Simulate execution without running jobEntities.
+    - `run`: Execute the pipelineEntity locally.
 
 2. **Ensure Sequential Execution of Jobs**
     - No parallel execution for now.
-    - Respect **job dependencies** (`needs`).
+    - Respect **jobEntity dependencies** (`needs`).
 
 3. **Validate Execution Order**
-    - Ensure pipeline jobs run in the expected sequence.
-    - Handle failures gracefully if a job is set to "allow failure".
+    - Ensure pipelineEntity jobEntities run in the expected sequence.
+    - Handle failures gracefully if a jobEntity is set to "allow failure".
 
 ---
 
 ## **Phase 3: Basic Reporting (Sprint 4)**
 ### **Goal:**
-Provide CLI commands for tracking past pipeline runs.
+Provide CLI commands for tracking past pipelineEntity runs.
 
 ### **Tasks:**
 1. **Implement CLI `report` command**
-    - Generate summary of pipeline runs.
-    - Track execution status per pipeline.
+    - Generate summary of pipelineEntity runs.
+    - Track execution status per pipelineEntity.
 
 2. **Ignore Advanced Features for Now**
-    - No job output storage.
+    - No jobEntity output storage.
     - No artifact uploads.
 
 ---
 
 ## **Phase 4: Advanced Reporting & Docker Execution (Sprint 5)**
 ### **Goal:**
-Extend reporting and enable pipeline execution inside Docker containers.
+Extend reporting and enable pipelineEntity execution inside Docker containers.
 
 ### **Tasks:**
 1. **Extend CLI `report` Command**
-    - Include **stage-level** and **job-level** summaries.
+    - Include **stageEntity-level** and **jobEntity-level** summaries.
     - Store execution history persistently.
 
 2. **Enable Docker-based Execution**
@@ -98,7 +98,7 @@ Showcase the working CI/CD system in a structured demo.
 2. **Write Final Documentation**
     - Update `README.md` with:
         - Installation instructions.
-        - Example pipeline configurations.
+        - Example pipelineEntity configurations.
         - CLI usage guide.
 
 ---
@@ -106,8 +106,8 @@ Showcase the working CI/CD system in a structured demo.
 
 ### **Resources Needed**
 - YAML parsing & validation library for Java.
-- Database for storing pipeline execution history.
-- Docker setup for running jobs in containers.
+- Database for storing pipelineEntity execution history.
+- Docker setup for running jobEntities in containers.
 - Recording tool for demo video.
 
 ---
@@ -126,25 +126,25 @@ Showcase the working CI/CD system in a structured demo.
 ### **3. Validation of Pipeline YAML Definitions**
 - [x] YAML v1.2 format support.
 - [x] Validate keys:
-   - [x] `pipeline` (required, includes `name`, `stages`).
-   - [x] `stages` (required, execution order defined by list order).
-   - [x] `job` (at least one per stage, including `name`, `stage`, `image`, `script`, `needs`).
+   - [x] `pipelineEntity` (required, includes `name`, `stageEntities`).
+   - [x] `stageEntities` (required, execution order defined by list order).
+   - [x] `jobEntity` (at least one per stageEntity, including `name`, `stageEntity`, `image`, `script`, `needs`).
 - [x] Enforce constraints:
-   - [x] Unique pipeline names inside repo.
-   - [x] At least one stage defined.
-   - [x] Unique job names within a stage.
+   - [x] Unique pipelineEntity names inside repo.
+   - [x] At least one stageEntity defined.
+   - [x] Unique jobEntity names within a stageEntity.
    - [x] No cyclic dependencies.
    - [x] Valid `needs` references.
 
 ### **4. Error Reporting**
 - [x] CLI must:
    - [x] Report errors with `<filename>:<line-number>:<column-number>:<error-message>` format.
-   - [x] Detect cycles in job dependencies.
+   - [x] Detect cycles in jobEntity dependencies.
    - [x] Identify type mismatches in configuration values.
 
 ### **5. CLI Commands for Dry-Run and Local Execution**
 - [x] Implement:
-   - [x] `dry-run`: Simulates execution without running jobs.
+   - [x] `dry-run`: Simulates execution without running jobEntities.
    - [x] `run`: cli command for run for a local repo to be executed on the local machine
 
 ### **6. Execution Flow**
@@ -154,19 +154,19 @@ Showcase the working CI/CD system in a structured demo.
 ### **7. CLI Command for Reporting Past Pipeline Runs**
 - [ ] Implement CLI `report` command.
 - [ ] Generate:
-   - [ ] Summary of pipeline run for repository (L4.1, L4.2).
-- [ ] Show past pipeline runs:
-   - [ ] CLI retrieves past runs of any pipeline of a repository.
-   - [ ] Show summary of all past pipeline runs.
-   - [ ] Support querying specific pipeline runs by name or number.
+   - [ ] Summary of pipelineEntity run for repository (L4.1, L4.2).
+- [ ] Show past pipelineEntity runs:
+   - [ ] CLI retrieves past runs of any pipelineEntity of a repository.
+   - [ ] Show summary of all past pipelineEntity runs.
+   - [ ] Support querying specific pipelineEntity runs by name or number.
 
 ### **8. Extended Reporting for Stage/Job-Level Summaries**
 - [ ] Extend CLI `report` command to include:
-   - [ ] Stage-level pipeline run summary (L4.3).
-   - [ ] Job-level pipeline run summary (L4.4).
+   - [ ] Stage-level pipelineEntity run summary (L4.3).
+   - [ ] Job-level pipelineEntity run summary (L4.4).
 - [ ] Implement:
-   - [ ] Retrieval of stage summary from a pipeline.
-   - [ ] Retrieval of job summary within a stage.
+   - [ ] Retrieval of stageEntity summary from a pipelineEntity.
+   - [ ] Retrieval of jobEntity summary within a stageEntity.
 
 ### **9. Pipeline Execution Inside Docker Containers**
 - [ ] Replace mocked/shell escape Docker calls with:

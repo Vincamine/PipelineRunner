@@ -2,8 +2,9 @@ package edu.neu.cs6510.sp25.t1.common.validation.validator;
 
 import java.io.File;
 
-import edu.neu.cs6510.sp25.t1.common.config.PipelineConfig;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
+import edu.neu.cs6510.sp25.t1.common.manager.PipelineNameManager;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 
@@ -37,20 +38,20 @@ public class YamlPipelineValidator {
     }
 
     // Parse YAML into PipelineConfig
-    PipelineConfig pipelineConfig = YamlParser.parseYaml(yamlFile);
+    Pipeline pipeline = YamlParser.parseYaml(yamlFile);
 
     // Validate pipeline name uniqueness
-    if (!pipelineNameManager.isPipelineNameUnique(pipelineConfig.getName())) {
-      String suggestedName = pipelineNameManager.suggestUniquePipelineName(pipelineConfig.getName());
-      PipelineLogger.warn("Duplicate pipeline name detected: " + pipelineConfig.getName() + ". Suggested: " + suggestedName);
-      throw new ValidationException(filePath, 1, "Pipeline name '" + pipelineConfig.getName() + "' is already in use. Suggested: '" + suggestedName + "'.");
+    if (!pipelineNameManager.isPipelineNameUnique(pipeline.getName())) {
+      String suggestedName = pipelineNameManager.suggestUniquePipelineName(pipeline.getName());
+      PipelineLogger.warn("Duplicate pipeline name detected: " + pipeline.getName() + ". Suggested: " + suggestedName);
+      throw new ValidationException(filePath, 1, "Pipeline name '" + pipeline.getName() + "' is already in use. Suggested: '" + suggestedName + "'.");
     }
 
     // Validate pipeline structure
-    PipelineValidator.validate(pipelineConfig, filePath);
+    PipelineValidator.validate(pipeline, filePath);
 
     // Validate job configurations
-    JobValidator.validateJobs(pipelineConfig.getStages(), filePath);
+    JobValidator.validateJobs(pipeline.getStages(), filePath);
 
     PipelineLogger.info("Pipeline validation successful: " + filePath);
   }

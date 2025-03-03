@@ -1,10 +1,10 @@
 package edu.neu.cs6510.sp25.t1.worker;
 
-import edu.neu.cs6510.sp25.t1.common.api.JobRequest;
-import edu.neu.cs6510.sp25.t1.common.runtime.ExecutionState;
-import edu.neu.cs6510.sp25.t1.worker.client.BackendClient;
-import edu.neu.cs6510.sp25.t1.worker.executor.DockerManager;
-import edu.neu.cs6510.sp25.t1.common.executor.JobExecutor;
+import edu.neu.cs6510.sp25.t1.common.api.request.JobRequest;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import edu.neu.cs6510.sp25.t1.worker.api.client.WorkerBackendClient;
+import edu.neu.cs6510.sp25.t1.worker.manager.DockerManager;
+import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -26,7 +26,7 @@ class FailureHandlingTest {
   private DockerManager dockerManager;
 
   @MockBean
-  private BackendClient backendClient;
+  private WorkerBackendClient workerBackendClient;
 
   @BeforeEach
   void setUp() {
@@ -46,9 +46,9 @@ class FailureHandlingTest {
     jobExecutor.executeJob(failingJob);
 
     // Verify failure handling
-    verify(backendClient).sendJobStatus("failing-job", ExecutionState.QUEUED);
-    verify(backendClient).sendJobStatus("failing-job", ExecutionState.RUNNING);
-    verify(backendClient).sendJobStatus("failing-job", ExecutionState.FAILED);
+    verify(workerBackendClient).sendJobStatus("failing-job", ExecutionStatus.QUEUED);
+    verify(workerBackendClient).sendJobStatus("failing-job", ExecutionStatus.RUNNING);
+    verify(workerBackendClient).sendJobStatus("failing-job", ExecutionStatus.FAILED);
 
     // Ensure that cleanup is still called even on failure
     verify(dockerManager).cleanupContainer("container-fail");

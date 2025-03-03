@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import edu.neu.cs6510.sp25.t1.common.api.PipelineCheckResponse;
-import edu.neu.cs6510.sp25.t1.common.api.RunPipelineRequest;
-import edu.neu.cs6510.sp25.t1.common.api.UpdateExecutionStateRequest;
-import edu.neu.cs6510.sp25.t1.common.runtime.JobRunState;
-import edu.neu.cs6510.sp25.t1.common.runtime.PipelineRunState;
+import edu.neu.cs6510.sp25.t1.common.api.response.PipelineCheckResponse;
+import edu.neu.cs6510.sp25.t1.common.api.request.RunPipelineRequest;
+import edu.neu.cs6510.sp25.t1.common.api.response.UpdateExecutionStateRequest;
+import edu.neu.cs6510.sp25.t1.worker.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.worker.execution.PipelineExecution;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -25,9 +25,9 @@ import okhttp3.Response;
  */
 public class CliBackendClient {
   private static final Logger logger = LoggerFactory.getLogger(CliBackendClient.class);
-  private final String baseUrl;
-  private final OkHttpClient client;
-  private final ObjectMapper objectMapper;
+  private String baseUrl = "http://localhost:8080";
+  private OkHttpClient client = new OkHttpClient();
+  private ObjectMapper objectMapper = new ObjectMapper();
   private final YAMLMapper yamlMapper = new YAMLMapper();
 
   /**
@@ -204,55 +204,55 @@ public class CliBackendClient {
   /**
    * Logs the start of a pipeline execution.
    *
-   * @param pipelineRunState The pipeline execution state.
+   * @param pipelineExecution The pipeline execution state.
    */
-  public void logPipelineExecutionStart(PipelineRunState pipelineRunState) {
-    logExecution("/api/v1/pipelines/log/start", pipelineRunState);
+  public void logPipelineExecutionStart(PipelineExecution pipelineExecution) {
+    logExecution("/api/v1/pipelines/log/start", pipelineExecution);
   }
 
   /**
    * Logs the success of a pipeline execution.
    *
-   * @param pipelineRunState The pipeline execution state.
+   * @param pipelineExecution The pipeline execution state.
    */
-  public void logPipelineExecutionSuccess(PipelineRunState pipelineRunState) {
-    logExecution("/api/v1/pipelines/log/success", pipelineRunState);
+  public void logPipelineExecutionSuccess(PipelineExecution pipelineExecution) {
+    logExecution("/api/v1/pipelines/log/success", pipelineExecution);
   }
 
   /**
    * Logs the failure of a pipeline execution.
    *
-   * @param pipelineRunState The pipeline execution state.
+   * @param pipelineExecution The pipeline execution state.
    */
-  public void logPipelineExecutionFailure(PipelineRunState pipelineRunState) {
-    logExecution("/api/v1/pipelines/log/failure", pipelineRunState);
+  public void logPipelineExecutionFailure(PipelineExecution pipelineExecution) {
+    logExecution("/api/v1/pipelines/log/failure", pipelineExecution);
   }
 
   /**
    * Logs the start of a job execution.
    *
-   * @param jobRunState The job execution state.
+   * @param jobExecution The job execution state.
    */
-  public void logJobExecutionStart(JobRunState jobRunState) {
-    logExecution("/api/v1/jobs/log/start", jobRunState);
+  public void logJobExecutionStart(JobExecution jobExecution) {
+    logExecution("/api/v1/jobs/log/start", jobExecution);
   }
 
   /**
    * Logs the success of a job execution.
    *
-   * @param jobRunState The job execution state.
+   * @param jobExecution The job execution state.
    */
-  public void logJobExecutionSuccess(JobRunState jobRunState) {
-    logExecution("/api/v1/jobs/log/success", jobRunState);
+  public void logJobExecutionSuccess(JobExecution jobExecution) {
+    logExecution("/api/v1/jobs/log/success", jobExecution);
   }
 
   /**
    * Logs the failure of a job execution.
    *
-   * @param jobRunState The job execution state.
+   * @param jobExecution The job execution state.
    */
-  public void logJobExecutionFailure(JobRunState jobRunState) {
-    logExecution("/api/v1/jobs/log/failure", jobRunState);
+  public void logJobExecutionFailure(JobExecution jobExecution) {
+    logExecution("/api/v1/jobs/log/failure", jobExecution);
   }
 
   /**

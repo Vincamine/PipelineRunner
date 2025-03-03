@@ -20,7 +20,7 @@ This document outlines the plan for supporting **local execution** of pipelines 
 
 ### **2️⃣ Execution Without Backend**
 
-- Local execution should **run the pipeline entirely on the local machine**.
+- Local execution should **run the pipelineEntity entirely on the local machine**.
 - CLI **must not call backend APIs** for execution.
 - However, execution states should still be **logged locally**.
 
@@ -78,7 +78,7 @@ public class LocalExecutionLogger implements ExecutionStateUpdater {
     public void saveExecutionLocally(String pipelineName, String jobName, ExecutionState state) {
         try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
             String entry = String.format(
-                "{ \"pipeline\": \"%s\", \"job\": \"%s\", \"state\": \"%s\" }\n",
+                "{ \"pipelineEntity\": \"%s\", \"jobEntity\": \"%s\", \"state\": \"%s\" }\n",
                 pipelineName, jobName, state.name()
             );
             writer.write(entry);
@@ -100,7 +100,7 @@ Now, the CLI runs pipelines **without calling the backend** but **tracks executi
 ```java
 PipelineExecutor executor = new PipelineExecutor(new LocalExecutionLogger());
 
-PipelineRunState pipelineState = new PipelineRunState("test-pipeline");
+PipelineRunState pipelineState = new PipelineRunState("test-pipelineEntity");
 executor.executePipeline(pipelineState);
 ```
 
@@ -158,7 +158,7 @@ public class SyncCommand extends BaseCommand {
 ### **Running a Pipeline Locally**
 
 ```sh
-xx run --local --file .pipelines/pipeline.yaml
+xx run --local --file .pipelines/pipelineEntity.yaml
 ```
 
 📌 Logs stored in `local-executions.json`, but **no backend interaction**.

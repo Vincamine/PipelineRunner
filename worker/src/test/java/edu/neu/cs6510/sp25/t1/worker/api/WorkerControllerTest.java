@@ -3,8 +3,9 @@ package edu.neu.cs6510.sp25.t1.worker.api;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
-import edu.neu.cs6510.sp25.t1.common.api.JobRequest;
-import edu.neu.cs6510.sp25.t1.common.executor.JobExecutor;
+import edu.neu.cs6510.sp25.t1.common.api.request.JobRequest;
+import edu.neu.cs6510.sp25.t1.worker.executor.JobExecutor;
+import edu.neu.cs6510.sp25.t1.worker.api.controller.WorkerController;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

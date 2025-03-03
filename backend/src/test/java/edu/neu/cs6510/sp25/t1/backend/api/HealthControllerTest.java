@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Map;
 
+import edu.neu.cs6510.sp25.t1.backend.api.controller.HealthController;
+
 /**
  * Unit test for {@link HealthController}.
  */

@@ -2,11 +2,11 @@
 - Version: 1.0
 - Updated with the Project requirements by Feb 28, 2025
 - Author: Yiwen Wang
-This document describes the structured error handling process in the YAML-based pipeline validation system. The goal is to provide accurate and meaningful error reporting with exact line and column numbers for debugging.
+This document describes the structured error handling process in the YAML-based pipelineEntity validation system. The goal is to provide accurate and meaningful error reporting with exact line and column numbers for debugging.
 
 ## 1. Error Sources
 
-Errors can occur in the following stages:
+Errors can occur in the following stageEntities:
 
 1. **YAML Parsing** (handled in `YamlParser`)
 2. **Pipeline Structure Validation** (handled in `PipelineValidator`)
@@ -69,19 +69,19 @@ YamlParser.parseYaml(yamlFile)
 ### Flow:
 
 ```plaintext
-PipelineValidator.validate(pipelineConfig, fileName)
+PipelineValidator.validate(pipeline, fileName)
 │
-├── Check pipeline name
+├── Check pipelineEntity name
 │   ├── If missing → throw ValidationException(fileName, getFieldLineNumber("name"), "Pipeline name is required")
 │
-├── Check at least one stage exists
-│   ├── If missing → throw ValidationException(fileName, getFieldLineNumber("stages"), "At least one stage is required")
+├── Check at least one stageEntity exists
+│   ├── If missing → throw ValidationException(fileName, getFieldLineNumber("stageEntities"), "At least one stageEntity is required")
 │
-├── Check job uniqueness
-│   ├── If duplicate found → throw ValidationException(fileName, getFieldLineNumber(jobName), "Duplicate job name found")
+├── Check jobEntity uniqueness
+│   ├── If duplicate found → throw ValidationException(fileName, getFieldLineNumber(jobName), "Duplicate jobEntity name found")
 │
 ├── Validate dependencies
-│   ├── If job depends on non-existent job → throw ValidationException(fileName, getFieldLineNumber(jobName), "Job '<job>' depends on non-existent job")
+│   ├── If jobEntity depends on non-existent jobEntity → throw ValidationException(fileName, getFieldLineNumber(jobName), "Job '<jobEntity>' depends on non-existent jobEntity")
 │
 ├── Detect cyclic dependencies
 │   ├── If cycle found → throw ValidationException(fileName, getFieldLineNumber("needs"), "Cyclic dependency detected: <cycle>")
@@ -94,7 +94,7 @@ PipelineValidator.validate(pipelineConfig, fileName)
 
 ### Handled Errors:
 
-1. **Missing Required Fields** (`name`, `stage`, `image`, `script`) → Throws `ValidationException`
+1. **Missing Required Fields** (`name`, `stageEntity`, `image`, `script`) → Throws `ValidationException`
 2. **Job References Non-existent Stage** → Throws `ValidationException`
 3. **Duplicate Job Names in Pipeline** → Throws `ValidationException`
 4. **Empty Script Section** → Throws `ValidationException`
@@ -102,21 +102,21 @@ PipelineValidator.validate(pipelineConfig, fileName)
 ### Flow:
 
 ```plaintext
-JobValidator.validateJobs(stages, fileName)
+JobValidator.validateJobs(stageEntities, fileName)
 │
-├── Iterate over stages
-│   ├── Iterate over jobs
+├── Iterate over stageEntities
+│   ├── Iterate over jobEntities
 │   │   ├── Validate `name`
 │   │   │   ├── If missing → throw ValidationException(fileName, getFieldLineNumber("name"), "Job must have a name")
-│   │   ├── Validate `stage`
-│   │   │   ├── If missing → throw ValidationException(fileName, getFieldLineNumber("stage"), "Job must specify a stage")
-│   │   │   ├── If stage does not exist → throw ValidationException(fileName, getFieldLineNumber("stage"), "Job references non-existent stage")
+│   │   ├── Validate `stageEntity`
+│   │   │   ├── If missing → throw ValidationException(fileName, getFieldLineNumber("stageEntity"), "Job must specify a stageEntity")
+│   │   │   ├── If stageEntity does not exist → throw ValidationException(fileName, getFieldLineNumber("stageEntity"), "Job references non-existent stageEntity")
 │   │   ├── Validate `image`
 │   │   │   ├── If missing → throw ValidationException(fileName, getFieldLineNumber("image"), "Job must specify an image")
 │   │   ├── Validate `script`
 │   │   │   ├── If empty → throw ValidationException(fileName, getFieldLineNumber("script"), "Job must have at least one script command")
-│   │   ├── Validate job uniqueness
-│   │   │   ├── If duplicate → throw ValidationException(fileName, getFieldLineNumber(jobName), "Duplicate job name found")
+│   │   ├── Validate jobEntity uniqueness
+│   │   │   ├── If duplicate → throw ValidationException(fileName, getFieldLineNumber(jobName), "Duplicate jobEntity name found")
 └── If no errors, validation passes
 ```
 
@@ -131,9 +131,9 @@ JobValidator.validateJobs(stages, fileName)
 **Example Output:**
 
 ```
-pipeline.yaml:12: Job 'deploy' references a non-existent stage 'production'
-pipeline.yaml:20: Duplicate job name found: 'test'
-pipeline.yaml:35: Cyclic dependency detected: build -> test -> build
+pipelineEntity.yaml:12: Job 'deploy' references a non-existent stageEntity 'production'
+pipelineEntity.yaml:20: Duplicate jobEntity name found: 'test'
+pipelineEntity.yaml:35: Cyclic dependency detected: build -> test -> build
 ```
 
 ## 7. Summary

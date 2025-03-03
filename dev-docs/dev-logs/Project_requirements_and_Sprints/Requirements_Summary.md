@@ -16,13 +16,13 @@
 Based on both requirement documents, the client wants a custom CI/CD system with the following key features:
 
 - **Local-first approach:** The system must run both on company data centers and developers' local machines without modifications.
-- **Git-based configuration:** All pipeline configurations reside in a `.pipelines` directory within the repository.
-- **Independent pipeline configurations:** Each configuration file is self-contained and defines a complete pipeline with a unique name.
+- **Git-based configuration:** All pipelineEntity configurations reside in a `.pipelines` directory within the repository.
+- **Independent pipelineEntity configurations:** Each configuration file is self-contained and defines a complete pipelineEntity with a unique name.
 
-### Flexible pipeline structure:
+### Flexible pipelineEntity structure:
 
-- Pipelines are organized into sequential stages.
-- Stages contain jobs that can run in parallel.
+- Pipelines are organized into sequential stageEntities.
+- Stages contain jobEntities that can run in parallel.
 - Jobs can have dependencies but cannot form cycles.
 - Jobs specify Docker images for execution environments.
 
@@ -31,17 +31,17 @@ Based on both requirement documents, the client wants a custom CI/CD system with
 - Validate configuration files.
 - Execute dry-runs to preview execution order.
 - Run pipelines locally or remotely.
-- Get detailed reports on past pipeline executions.
+- Get detailed reports on past pipelineEntity executions.
 - Override configuration values.
 - Specify repos, branches, and commits.
 
 ### Job flexibility:
 
-- Jobs can be configured to continue pipeline execution even after failure.
+- Jobs can be configured to continue pipelineEntity execution even after failure.
 - Jobs can specify artifacts to upload upon completion.
 - Artifact paths can use patterns for selection.
 
-### Comprehensive reporting system to track pipeline runs, with status tracking for pipelines, stages, and jobs.
+### Comprehensive reporting system to track pipelineEntity runs, with status tracking for pipelines, stageEntities, and jobEntities.
 
 ## What Are They Trying to Build?
 
