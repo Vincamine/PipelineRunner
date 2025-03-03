@@ -23,16 +23,32 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
    * Finds a specific execution by pipeline name and run ID.
    *
    * @param pipelineName The name of the pipeline.
-   * @param id The run ID (execution ID).
+   * @param runId The unique run ID.
    * @return Optional containing the execution if found.
    */
-  Optional<PipelineExecutionEntity> findByPipelineNameAndId(String pipelineName, Long id); // ✅ FIXED!
+  Optional<PipelineExecutionEntity> findByPipelineNameAndRunId(String pipelineName, String runId);
 
   /**
-   * Finds the latest execution for a pipeline, ordered by createdAt timestamp.
+   * Finds the latest execution for a pipeline, ordered by startTime timestamp.
    *
    * @param pipelineName The name of the pipeline.
    * @return Optional containing the latest execution.
    */
-  Optional<PipelineExecutionEntity> findTopByPipelineNameOrderByCreatedAtDesc(String pipelineName); // ✅ FIXED!
+  Optional<PipelineExecutionEntity> findTopByPipelineNameOrderByStartTimeDesc(String pipelineName);
+
+  /**
+   * Finds a specific execution by run ID.
+   *
+   * @param runId The unique run ID.
+   * @return Optional containing the execution if found.
+   */
+  Optional<PipelineExecutionEntity> findByRunId(String runId);
+
+  /**
+   * Finds all executions for a specific repository URL.
+   *
+   * @param repositoryUrl The repository URL.
+   * @return List of pipeline executions.
+   */
+  List<PipelineExecutionEntity> findByRepositoryUrl(String repositoryUrl);
 }

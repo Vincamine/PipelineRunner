@@ -20,6 +20,9 @@ public class PipelineEntity {
   @Column(nullable = false, unique = true)
   private String name;
 
+  @Column(nullable = false)
+  private String repositoryUrl;
+
   @OneToMany(mappedBy = "pipeline", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<StageEntity> stageEntities;
 
@@ -36,6 +39,7 @@ public class PipelineEntity {
    */
   public PipelineEntity(String name) {
     this.name = name;
+    this.repositoryUrl = repositoryUrl;
   }
 
   /**
@@ -73,4 +77,8 @@ public class PipelineEntity {
   public void setStages(List<StageEntity> stageEntities) {
     this.stageEntities = stageEntities;
   }
+
+  public String getRepositoryUrl() { return repositoryUrl; }
+
+  public void setRepositoryUrl(String repositoryUrl) { this.repositoryUrl = repositoryUrl; }
 }

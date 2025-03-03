@@ -1,67 +1,75 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineEntity;
+import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineExecutionRepository;
 
 /**
- * Service for managing pipeline execution data.
+ * Service for managing pipelines.
  */
 @Service
 public class PipelineService {
-  private final PipelineExecutionRepository pipelineExecutionRepository;
 
-  public PipelineService(PipelineExecutionRepository pipelineExecutionRepository) {
-    this.pipelineExecutionRepository = pipelineExecutionRepository;
+  private final PipelineRepository pipelineRepository;
+
+  public PipelineService(PipelineRepository pipelineRepository) {
+    this.pipelineRepository = pipelineRepository;
   }
 
   /**
-   * Retrieves all unique pipeline names from the database.
+   * Retrieves all pipelines.
    *
-   * @return A list of pipeline names.
+   * @return List of all pipelines.
    */
-  public List<String> getAllPipelines() {
-    return pipelineExecutionRepository.findAll()
-            .stream()
-            .map(PipelineExecutionEntity::getPipelineName)
-            .distinct()
-            .collect(Collectors.toList());
+  public List<PipelineEntity> getAllPipelines() {
+    return pipelineRepository.findAll();
   }
 
   /**
-   * Retrieves all executions for a specific pipeline.
+   * Retrieves a pipeline by its name.
    *
-   * @param pipelineName The name of the pipeline.
-   * @return A list of pipeline execution entities.
+   * @param pipelineName The pipeline name.
+   * @return The pipeline entity.
    */
-  public List<PipelineExecutionEntity> getPipelineExecutions(String pipelineName) {
-    return pipelineExecutionRepository.findByPipelineName(pipelineName);
+  public PipelineEntity getPipelineByName(String pipelineName) {
+    return pipelineRepository.findByName(pipelineName);
   }
 
   /**
-   * Retrieves a specific execution of a pipeline by its run ID.
+   * Creates a new pipeline.
    *
-   * @param pipelineName The name of the pipeline.
-   * @param runId        The execution ID.
-   * @return The execution entity, if found.
+   * @param pipeline The pipeline entity to create.
+   * @return The saved pipeline entity.
    */
-  public PipelineExecutionEntity getPipelineExecution(String pipelineName, Long runId) {
-    return pipelineExecutionRepository.findByPipelineNameAndId(pipelineName, runId)
-            .orElseThrow(() -> new RuntimeException("Pipeline execution not found for " + pipelineName + " run " + runId));
+  @Transactional
+  public PipelineEntity createPipeline(PipelineEntity pipeline) {
+    return pipelineRepository.save(pipeline);
   }
 
   /**
-   * Retrieves the latest execution of a given pipeline.
+   * Updates an existing pipeline.
    *
    * @param pipelineName The name of the pipeline.
-   * @return The latest execution entity, if available.
+   * @param updatedPipeline The updated pipeline entity.
+   * @return The updated pipeline entity.
    */
-  public PipelineExecutionEntity getLatestPipelineExecution(String pipelineName) {
-    return pipelineExecutionRepository.findTopByPipelineNameOrderByCreatedAtDesc(pipelineName)
-            .orElseThrow(() -> new RuntimeException("No executions found for pipeline: " + pipelineName));
+  @Transactional
+  public PipelineEntity updatePipeline(String pipelineName, PipelineEntity updatedPipeline) {
+    PipelineEntity existingPipeline = getPipelineByName(pipelineName);
+    existingPipeline.setName(updatedPipeline.getName());
+    return pipelineRepository.save(existingPipeline);
+  }
+
+  /**
+   * Deletes a pipeline by its name.
+   *
+   * @param pipelineName The pipeline name.
+   */
+  @Transactional
+  public void deletePipeline(String pipelineName) {
+    pipelineRepository.deleteById(pipelineName);
   }
 }

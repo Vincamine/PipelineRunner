@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.backend.service.scheduler;
+package edu.neu.cs6510.sp25.t1.backend.scheduler;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
