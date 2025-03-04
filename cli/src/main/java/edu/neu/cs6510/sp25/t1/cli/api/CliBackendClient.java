@@ -62,25 +62,25 @@ public class CliBackendClient {
     return responseBody;
   }
 
-  /**
-   * Run a pipeline execution via the backend.
-   *
-   * @param request The pipeline execution request details.
-   * @return The backend response as a String.
-   * @throws IOException If there is an error communicating with the backend.
-   */
-  public String runPipeline(RunPipelineRequest request) throws IOException {
-    String jsonRequest = objectMapper.writeValueAsString(request);
-
-    Request req = new Request.Builder()
-            .url(baseUrl + "/api/v1/pipelines/" + request.getPipeline() + "/execute")
-            .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
-            .build();
-
-    try (Response response = client.newCall(req).execute()) {
-      return handleResponse(response);
-    }
-  }
+//  /**
+//   * Run a pipeline execution via the backend.
+//   *
+//   * @param request The pipeline execution request details.
+//   * @return The backend response as a String.
+//   * @throws IOException If there is an error communicating with the backend.
+//   */
+//  public String runPipeline(RunPipelineRequest request) throws IOException {
+//    String jsonRequest = objectMapper.writeValueAsString(request);
+//
+//    Request req = new Request.Builder()
+//            .url(baseUrl + "/api/v1/pipelines/" + request.getPipeline() + "/execute")
+//            .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
+//            .build();
+//
+//    try (Response response = client.newCall(req).execute()) {
+//      return handleResponse(response);
+//    }
+//  }
 
 
   /**

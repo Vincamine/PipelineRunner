@@ -7,11 +7,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineExecutionDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.PipelineExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineRepository;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 @Service

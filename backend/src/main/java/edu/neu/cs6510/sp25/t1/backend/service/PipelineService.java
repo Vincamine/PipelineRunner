@@ -1,8 +1,8 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.PipelineDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

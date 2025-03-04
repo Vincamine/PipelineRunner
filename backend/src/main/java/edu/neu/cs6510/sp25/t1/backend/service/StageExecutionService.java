@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import edu.neu.cs6510.sp25.t1.backend.api.client.WorkerClient;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.JobEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.JobExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.StageExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.JobExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.StageExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.model.StageExecution;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.service.model.StageExecution;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.common.model.Job;
 import edu.neu.cs6510.sp25.t1.common.model.Stage;

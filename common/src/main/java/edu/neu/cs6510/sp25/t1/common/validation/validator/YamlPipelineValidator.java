@@ -2,9 +2,10 @@ package edu.neu.cs6510.sp25.t1.common.validation.validator;
 
 import java.io.File;
 
+import edu.neu.cs6510.sp25.t1.common.validation.manager.PipelineNameManager;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
-import edu.neu.cs6510.sp25.t1.common.manager.PipelineNameManager;
+
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 

@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import edu.neu.cs6510.sp25.t1.backend.data.dto.JobExecutionDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineExecutionDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.dto.StageExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.JobExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.PipelineExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.StageExecutionDTO;
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineReportService;
 
 /**
@@ -35,7 +35,7 @@ public class ReportController {
    */
   @GetMapping("/pipelines")
   public ResponseEntity<List<PipelineExecutionDTO>> getAllPipelines(@RequestParam(defaultValue = "10") int limit) {
-    return ResponseEntity.ok(reportService.getRecentExecutions(limit));
+    return ResponseEntity.ok(reportService.getRecentPipelineExecutions(limit));
   }
 
   /**
@@ -92,7 +92,7 @@ public class ReportController {
           @PathVariable String pipeline,
           @PathVariable String runId,
           @PathVariable String stage) {
-    StageExecutionDTO stageSummary = reportService.getStageSummary(pipeline, runId, stage);
+    StageExecutionDTO stageSummary = reportService.getStageExecutionSummary(pipeline, runId, stage);
     return stageSummary != null ? ResponseEntity.ok(stageSummary) : ResponseEntity.notFound().build();
   }
 
@@ -111,14 +111,14 @@ public class ReportController {
           @PathVariable String runId,
           @PathVariable String stage,
           @PathVariable String job) {
-    JobExecutionDTO jobSummary = reportService.getJobSummary(pipeline, runId, stage, job);
+    JobExecutionDTO jobSummary = reportService.getJobExecutionSummary(pipeline, runId, stage, job);
     return jobSummary != null ? ResponseEntity.ok(jobSummary) : ResponseEntity.notFound().build();
   }
 
   @GetMapping("/{pipeline}/executions/{runId}/logs")
   public ResponseEntity<String> getExecutionLogs(
           @PathVariable String pipeline, @PathVariable String runId) {
-    List<String> logs = reportService.getPipelineLogs(pipeline, runId);
+    List<String> logs = reportService.getPipelineExecutionHistory(pipeline, runId);
     return logs.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(String.join("\n", logs));
   }
 }

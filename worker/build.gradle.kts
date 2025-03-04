@@ -17,6 +17,8 @@ dependencies {
     // WebClient (for sending job status updates)
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
+    implementation ("com.github.docker-java:docker-java:3.2.13")
+
     // Docker Java API (for managing job execution in Docker)
     implementation("com.github.docker-java:docker-java-core:3.3.4")
     implementation("com.github.docker-java:docker-java-transport-httpclient5:3.3.4")

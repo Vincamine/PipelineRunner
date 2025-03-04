@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
-import edu.neu.cs6510.sp25.t1.backend.data.dto.JobExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.api.request.UpdateExecutionStateRequest;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionService;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.worker.api.client.WorkerBackendClient;
@@ -72,12 +73,7 @@ public class JobController {
   @GetMapping("/{jobExecutionId}/logs")
   public ResponseEntity<String> getJobLogs(@PathVariable Long jobExecutionId) {
     Optional<String> logs = jobExecutionService.getJobLogs(jobExecutionId);
-
-    if (logs.isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
-
-    return ResponseEntity.ok(logs.get());
+    return logs.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   /**
@@ -111,78 +107,5 @@ public class JobController {
       return ResponseEntity.badRequest().body("Failed to update job status.");
     }
     return ResponseEntity.ok("Job status updated successfully.");
-  }
-
-  /**
-   * Represents a request to update the execution state of a pipeline, stage, or job.
-   * This request is used to log execution progress to the backend for tracking.
-   */
-  public static class UpdateExecutionStateRequest {
-    private String name; // Pipeline, stage, or job name
-    private ExecutionStatus state; // The execution state
-
-    public UpdateExecutionStateRequest() {
-    }
-
-    public UpdateExecutionStateRequest(String name, ExecutionStatus state) {
-      if (name == null || name.isBlank()) {
-        throw new IllegalArgumentException("Execution target name cannot be null or empty.");
-      }
-      this.name = name;
-      this.state = state;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public ExecutionStatus getState() {
-      return state;
-    }
-
-    @Override
-    public String toString() {
-      return "UpdateExecutionStateRequest{" +
-              "name='" + name + '\'' +
-              ", state=" + state +
-              '}';
-    }
-  }
-
-  /**
-   * Represents a job status update request body.
-   * This class is used for sending job status updates to the backend.
-   */
-  public static class JobStatusUpdate {
-    private String jobName;
-    private ExecutionStatus status;
-
-    public JobStatusUpdate() {
-    }
-
-    public JobStatusUpdate(String jobName, String status) {
-      if (jobName == null || jobName.isBlank()) {
-        throw new IllegalArgumentException("Job name cannot be null or empty.");
-      }
-      this.jobName = jobName;
-      this.status = ExecutionStatus.fromString(status);
-    }
-
-    public String getJobName() {
-      return jobName;
-    }
-
-    public ExecutionStatus getStatus() {
-      return status;
-    }
-
-
-    @Override
-    public String toString() {
-      return "JobStatusUpdate{" +
-              "jobName='" + jobName + '\'' +
-              ", status=" + status +
-              '}';
-    }
   }
 }

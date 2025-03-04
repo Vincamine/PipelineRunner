@@ -8,14 +8,14 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import edu.neu.cs6510.sp25.t1.worker.api.response.JobResponse;
 import edu.neu.cs6510.sp25.t1.backend.api.client.WorkerClient;
-import edu.neu.cs6510.sp25.t1.backend.data.dto.JobExecutionDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.JobEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.JobExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.JobExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.model.JobExecution;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.JobExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.service.model.JobExecution;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import edu.neu.cs6510.sp25.t1.worker.api.client.WorkerBackendClient;
 
 /**
  * Service for tracking job execution results and updating stage completion status.
@@ -123,7 +123,7 @@ public class JobExecutionService {
     return true;
   }
 
-  public boolean updateJobResults(Long jobExecutionId, WorkerBackendClient.JobResponse jobResponse) {
+  public boolean updateJobResults(Long jobExecutionId, JobResponse jobResponse) {
     JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
             .orElseThrow(() -> new IllegalArgumentException("Job Execution not found: " + jobExecutionId));
 

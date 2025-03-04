@@ -8,82 +8,181 @@
 **Revision History**
 
 |     Date     | Version |                  Description                   |     Author      |
-| :----------: | :-----: | :--------------------------------------------: | :-------------: |
+|:------------:|:-------:|:----------------------------------------------:| :-------------: |
 | Feb 27, 2025 |   1.1   |         Structure change to mono repo          |   Yiwen Wang    |
 | Feb 28, 2025 |   1.2   | Replaced gRPC with REST for all communications | Yiwen Wang |
+| Mar 4, 2025  |   1.3   |           updated project structure            | Yiwen Wang |
 
 # Low-Level Design Document: Custom CI/CD System (Monorepo)
 
 ## 1. Repository Structure
 
-The system will be structured as a Gradle multi-module project within a single monorepo:
+The system will be structured as a Gradle multi-module project within a single monorepo, detail file name may change in the future:
 
 ```bash
-cicd-system/
-├── build.gradle                # Root build file with common configurations
-├── settings.gradle             # Module definitions
-├── gradle.properties           # Global properties
-├── gradlew                     # Gradle wrapper script
-├── gradlew.bat                 # Gradle wrapper script for Windows
-├── cli/                        # CLI Application module
-│   ├── build.gradle            # CLI-specific dependencies and build config
-│   └── src/
-│       ├── main/
-│       │   ├── java/
-│       │   │   └── edu/neu/cs6510/sp25/t1/cli/
-│       │   │       ├── commands/          # Command implementations
-│       │   │       ├── api/               # Backend API client
-│       │   │       ├── model/             # CLI-specific models
-│       │   │       ├── util/              # CLI-specific utilities
-│       │   │       └── App.java           # Entry point
-│       │   └── resources/
-│       └── test/
-├── backend/                    # Backend Service module
-│   ├── build.gradle            # Backend-specific dependencies and build config
-│   └── src/
-│       ├── main/
-│       │   ├── java/
-│       │   │   └── edu/neu/cs6510/sp25/t1/backend/
-│       │   │       ├── api/               # API controllers
-│       │   │       ├── service/           # Business logic
-│       │   │       ├── repository/        # Data access
-│       │   │       ├── worker/            # Worker communication
-│       │   │       └── BackendApplication.java # Entry point
-│       │   └── resources/
-│       │       ├── application.yml        # Application config
-│       │       └── db/migration/          # Flyway migrations
-│       └── test/
-├── worker/                     # Worker Service module
-│   ├── build.gradle            # Worker-specific dependencies and build config
-│   └── src/
-│       ├── main/
-│       │   ├── java/
-│       │   │   └── edu/neu/cs6510/sp25/t1/worker/
-│       │   │       ├── executor/          # Job execution
-│       │   │       ├── docker/            # Docker integration
-│       │   │       ├── artifact/          # Artifact handling
-│       │   │       ├── api/               # REST API controllers
-│       │   │       ├── client/            # Backend REST client
-│       │   │       └── WorkerApplication.java # Entry point
-│       │   └── resources/
-│       └── test/
-├── common/                     # Shared code module
-│   ├── build.gradle            # Common dependencies and build config
-│   └── src/
-│       ├── main/
-│       │   ├── java/
-│       │   │   └── edu/neu/cs6510/sp25/t1/common/
-│       │   │       ├── model/             # Shared domain models
-│       │   │       ├── util/              # Shared utilities
-│       │   │       ├── validation/        # Shared validation logic
-│       │   │       ├── config/            # Configuration models
-│       │   │       └── api/               # Shared API interfaces and DTOs
-│       │   └── resources/
-│       └── test/
-└── docs/                       # Project documentation
-    ├── architecture.md         # Architecture documentation
-    ├── user-guide.md           # User documentation
-    └── development.md          # Developer documentation
+project-root/
+  ├── backend/
+  │   ├── api/
+  │   │   ├── controller/
+  │   │   │   ├── JobController.java
+  │   │   │   ├── PipelineController.java
+  │   │   │   ├── StageController.java
+  │   │   ├── service/
+  │   │   │   ├── JobService.java
+  │   │   │   ├── PipelineService.java
+  │   │   │   ├── StageService.java
+  │   │   ├── request/
+  │   │   │   ├── JobExecutionRequest.java
+  │   │   │   ├── PipelineExecutionRequest.java
+  │   │   │   ├── JobStatusUpdate.java
+  │   │   ├── response/
+  │   │   │   ├── JobExecutionResponse.java
+  │   │   │   ├── PipelineExecutionResponse.java
+  │   ├── database/
+  │   │   ├── entity/
+  │   │   │   ├── JobEntity.java
+  │   │   │   ├── PipelineEntity.java
+  │   │   │   ├── StageEntity.java
+  │   │   ├── repository/
+  │   │   │   ├── JobRepository.java
+  │   │   │   ├── PipelineRepository.java
+  │   │   │   ├── StageRepository.java
+  │   │   ├── dto/
+  │   │   │   ├── JobDTO.java
+  │   │   │   ├── PipelineDTO.java
+  │   │   │   ├── StageDTO.java
+  │   ├── service/
+  │   │   ├── execution/
+  │   │   │   ├── JobExecutionService.java
+  │   │   │   ├── PipelineExecutionService.java
+  │   │   │   ├── StageExecutionService.java
+  │   ├── config/
+  │   │   ├── AppConfig.java
+  │   │   ├── DatabaseConfig.java
+
+  ├── worker/
+  │   ├── api/
+  │   │   ├── controller/
+  │   │   │   ├── WorkerController.java
+  │   │   ├── client/
+  │   │   │   ├── WorkerBackendClient.java
+  │   ├── executor/
+  │   │   ├── JobExecutor.java
+  │   │   ├── StageExecutor.java
+  │   ├── manager/
+  │   │   ├── DockerManager.java
+  │   ├── config/
+  │   │   ├── WorkerConfig.java
+
+  ├── cli/
+  │   ├── command/
+  │   │   ├── RunCommand.java
+  │   │   ├── CheckCommand.java
+  │   ├── validation/
+  │   │   ├── error/
+  │   │   │   ├── ErrorHandler.java
+  │   │   │   ├── ValidationException.java
+  │   │   ├── parser/
+  │   │   │   ├── YamlParser.java
+  │   │   ├── validator/
+  │   │   │   ├── PipelineValidator.java
+  │   │   │   ├── YamlPipelineValidator.java
+  │   ├── config/
+  │   │   ├── CliConfig.java
+
+  ├── common/
+  │   ├── api/
+  │   │   ├── request/
+  │   │   │   ├── JobExecutionRequest.java
+  │   │   │   ├── PipelineExecutionRequest.java
+  │   │   │   ├── JobStatusUpdate.java
+  │   │   ├── response/
+  │   │   │   ├── JobExecutionResponse.java
+  │   │   │   ├── PipelineExecutionResponse.java
+  │   ├── model/
+  │   │   ├── JobExecution.java
+  │   │   ├── StageExecution.java
+  │   │   ├── PipelineExecution.java
+  │   │   ├── PipelineConfig.java
+  │   │   ├── JobConfig.java
+  │   ├── logging/
+  │   │   ├── CicdLogger.java
+  │   ├── validation/
+  │   │   ├── YamlSchemaValidator.java
+  │   ├── enums/
+  │   │   ├── ExecutionStatus.java
+  │   ├── config/
+  │   │   ├── GlobalConfig.java
+
+```
+
+- update: report feature proposed structure, detail file name may change in the future:
+```bash
+📂 project-root
+│
+├── 📂 backend
+│   ├── 📂 api
+│   │   ├── 📂 controller
+│   │   │   ├── ReportController.java  # Handles API requests for fetching reports
+│   │   ├── 📂 request
+│   │   │   ├── ReportRequest.java  # Represents request body for fetching reports
+│   │   ├── 📂 response
+│   │   │   ├── PipelineReportResponse.java  # Response DTO for pipeline-level report
+│   │   │   ├── StageReportResponse.java  # Response DTO for stage-level report
+│   │   │   ├── JobReportResponse.java  # Response DTO for job-level report
+│   │   ├── 📂 client
+│   │   │   ├── ReportClient.java  # Optional: If fetching reports from an external service
+│   │
+│   ├── 📂 service
+│   │   ├── ReportService.java  # Service layer handling report retrieval and processing
+│   │   ├── PipelineReportService.java  # Fetches past pipeline runs summary
+│   │   ├── StageReportService.java  # Fetches stage-specific reports
+│   │   ├── JobReportService.java  # Fetches job-specific reports
+│   │
+│   ├── 📂 repository
+│   │   ├── PipelineReportRepository.java  # Fetch pipeline reports from DB
+│   │   ├── StageReportRepository.java  # Fetch stage reports from DB
+│   │   ├── JobReportRepository.java  # Fetch job reports from DB
+│   │
+│   ├── 📂 model
+│   │   ├── PipelineReport.java  # Entity representing a pipeline report
+│   │   ├── StageReport.java  # Entity representing a stage report
+│   │   ├── JobReport.java  # Entity representing a job report
+│   │
+│   ├── 📂 aggregator
+│   │   ├── PipelineReportAggregator.java  # Aggregates job & stage reports to pipeline level
+│   │   ├── StageReportAggregator.java  # Aggregates job reports to stage level
+│   │   ├── JobReportAggregator.java  # Aggregates job execution logs
+│
+│
+├── 📂 cli
+│   ├── 📂 command
+│   │   ├── ReportCommand.java  # Main CLI command for fetching reports
+│   │   ├── PipelineReportCommand.java  # CLI command for fetching pipeline reports
+│   │   ├── StageReportCommand.java  # CLI command for fetching stage reports
+│   │   ├── JobReportCommand.java  # CLI command for fetching job reports
+│   │
+│   ├── 📂 service
+│   │   ├── ReportService.java  # Calls backend API to retrieve reports
+│   │
+│   ├── 📂 api
+│   │   ├── ReportClient.java  # Sends requests to backend API to fetch reports
+│
+│
+├── 📂 worker
+│   ├── 📂 api
+│   │   ├── WorkerReportClient.java  # Sends job execution status updates
+│
+│
+├── 📂 common
+│   ├── 📂 model
+│   │   ├── ReportStatus.java  # Enum for Success, Failed, Canceled statuses
+│   │
+│   ├── 📂 dto
+│   │   ├── PipelineReportDTO.java  # DTO for pipeline report data transfer
+│   │   ├── StageReportDTO.java  # DTO for stage report data transfer
+│   │   ├── JobReportDTO.java  # DTO for job report data transfer
+
 ```
 
 ## 2. Gradle Configuration

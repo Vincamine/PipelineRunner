@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import edu.neu.cs6510.sp25.t1.backend.data.dto.JobExecutionDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineExecutionDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineReportDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.dto.StageExecutionDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.JobExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.StageExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.JobExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.PipelineExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.PipelineReportDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.StageExecutionDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 /**

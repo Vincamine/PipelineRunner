@@ -1,135 +1,96 @@
 package edu.neu.cs6510.sp25.t1.worker.manager;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.model.HostConfig;
+
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import edu.neu.cs6510.sp25.t1.worker.api.request.JobRequest;
 
-import java.util.Random;
+import com.github.dockerjava.core.DefaultDockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
 
-import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
 
 
 /**
  * Manages Docker containers for job execution.
- * <p>
- * Currently, this implementation uses a **simulated execution** to allow development
- * of reporting functionality before real execution is enabled. Jobs have a **90% chance**
- * of success and a **10% chance** of failure.
- * <p>
- * To enable real execution, uncomment the actual Docker API calls.
+ * Handles the creation, execution, and cleanup of containers.
  */
 @Service
-public class DockerManager implements DockerManagerInterface {
-  private final DockerClient dockerClient;
+public class DockerManager {
   private static final Logger logger = LoggerFactory.getLogger(DockerManager.class);
-  private static final Random random = new Random();
-
-  /**
-   * Default constructor.
-   */
-  public DockerManager() {
-    this.dockerClient = null;
-  }
+  private final DockerClient dockerClient;
 
   /**
    * Constructor with DockerClient.
    *
-   * @param dockerClient DockerClient instance
+   *
    */
-  public DockerManager(DockerClient dockerClient) {
-    this.dockerClient = dockerClient;
+  public DockerManager() {
+    DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+    this.dockerClient = DockerClientImpl.getInstance(config)
+            .withDockerCmdExecFactory(new HttpClient5DockerCmdExecFactory());
   }
 
   /**
-   * Simulates running a Docker container for job execution.
-   * <p>
-   * Instead of actually starting a container, this method returns a fake container ID.
-   * <p>
-   * **Future Implementation:** Uncomment Docker API calls to enable real execution.
+   * Runs a job inside a Docker container.
    *
-   * @param jobExecution The job execution details.
-   * @return Simulated container ID.
+   * @param jobRequest The job request containing execution details.
+   * @return The container ID if started successfully, otherwise null.
    */
-  public String runContainer(JobExecution jobExecution) {
-    String containerId = "simulated-container-" + jobExecution.getName();
-    logger.info("Simulated start of Docker container for job {}: {}", jobExecution.getName(), containerId);
+  public String runContainer(JobRequest jobRequest) {
+    try {
+      // Create the Docker container
+      CreateContainerResponse container = dockerClient.createContainerCmd(jobRequest.getImage())
+              .withHostConfig(HostConfig.newHostConfig().withAutoRemove(true))
+              .withCmd(jobRequest.getScript().toArray(new String[0])) // Pass script as command args
+              .exec();
 
-        /*
-        // Real Docker Execution (Uncomment to enable)
-        try {
-            CreateContainerResponse container = dockerClient.createContainerCmd(jobExecution.getJobName())
-                    .withImage(jobExecution.getJobName())
-                    .withHostConfig(HostConfig.newHostConfig().withAutoRemove(true))
-                    .exec();
+      String containerId = container.getId();
 
-            String containerId = container.getId();
-            dockerClient.startContainerCmd(containerId).exec();
+      // Start the container
+      dockerClient.startContainerCmd(containerId).exec();
+      logger.info("Started Docker container {} for job {}", containerId, jobRequest.getJobName());
 
-            logger.info("Started real container {} for job {}", containerId, jobExecution.getJobName());
-            return containerId;
-        } catch (Exception e) {
-            logger.error("Failed to start Docker container for job: {}", jobExecution.getJobName(), e);
-            return null;
-        }
-        */
-
-    return containerId;
+      return containerId;
+    } catch (Exception e) {
+      logger.error("Failed to start Docker container for job: {}", jobRequest.getJobName(), e);
+      return null;
+    }
   }
 
   /**
-   * Simulates waiting for a Docker container to complete execution.
-   * <p>
-   * **90% of jobs succeed, 10% fail** for testing report functionality.
-   * <p>
-   * **Future Implementation:** Uncomment Docker API calls to enable real execution monitoring.
+   * Waits for a Docker container to complete execution.
    *
-   * @param containerId The simulated container ID.
-   * @return True if execution is simulated as successful, false otherwise.
+   * @param containerId The container ID.
+   * @return True if execution was successful, false otherwise.
    */
   public boolean waitForContainer(String containerId) {
-    boolean success = random.nextDouble() < 0.90; // 90% success rate
-
-    if (success) {
-      logger.info("Simulated Docker container {} completed successfully.", containerId);
+    try {
+      dockerClient.waitContainerCmd(containerId).start().awaitCompletion();
+      logger.info("Docker container {} completed execution successfully.", containerId);
       return true;
-    } else {
-      logger.error("Simulated Docker container {} failed.", containerId);
+    } catch (Exception e) {
+      logger.error("Error while waiting for container {}: {}", containerId, e.getMessage());
       return false;
     }
-
-        /*
-        // Real Docker Execution (Uncomment to enable)
-        try {
-            dockerClient.waitContainerCmd(containerId)
-                    .exec(new WaitContainerResultCallback())
-                    .awaitCompletion();
-            return true;
-        } catch (Exception e) {
-            logger.error("Error while waiting for container: " + containerId, e);
-            return false;
-        }
-        */
   }
 
   /**
-   * Simulates cleaning up a Docker container after execution.
-   * <p>
-   * **Future Implementation:** Uncomment Docker API calls to enable real cleanup.
+   * Cleans up a Docker container after execution.
    *
-   * @param containerId The simulated container ID.
+   * @param containerId The container ID.
    */
   public void cleanupContainer(String containerId) {
-    logger.info("Simulated cleanup of Docker container {}", containerId);
-
-        /*
-        // Real Docker Cleanup (Uncomment to enable)
-        try {
-            dockerClient.removeContainerCmd(containerId).exec();
-        } catch (Exception e) {
-            logger.error("Failed to remove container: " + containerId, e);
-        }
-        */
+    try {
+      dockerClient.removeContainerCmd(containerId).exec();
+      logger.info("Cleaned up Docker container {}", containerId);
+    } catch (Exception e) {
+      logger.error("Failed to remove container {}: {}", containerId, e.getMessage());
+    }
   }
 }

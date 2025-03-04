@@ -1,9 +1,9 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import edu.neu.cs6510.sp25.t1.backend.data.dto.JobDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.JobEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.StageEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.repository.JobRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.dto.JobDTO;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.StageEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
