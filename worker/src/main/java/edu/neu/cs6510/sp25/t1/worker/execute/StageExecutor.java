@@ -1,11 +1,4 @@
-package edu.neu.cs6510.sp25.t1.common.executor;
-
-import edu.neu.cs6510.sp25.t1.common.api.BackendClientInterface;
-import edu.neu.cs6510.sp25.t1.common.api.request.JobRequest;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.common.execution.StageExecution;
-import edu.neu.cs6510.sp25.t1.common.manager.DockerManagerInterface;
+package edu.neu.cs6510.sp25.t1.worker.execute;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,18 +6,24 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
+import edu.neu.cs6510.sp25.t1.common.api.BackendClientInterface;
+import edu.neu.cs6510.sp25.t1.common.api.request.JobRequest;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
+import edu.neu.cs6510.sp25.t1.common.execution.StageExecution;
+
 /**
  * StageExecutor is responsible for executing a stage within a pipeline.
  */
 @Service
 public class StageExecutor {
-  private final JobExecutor jobExecutor;
+  final JobExecutor jobExecutor;
 
   /**
    * Constructor for StageExecutor.
    *
-   * @param dockerManager    The DockerManager for managing job execution.
-   * @param backendClient    The backend client to send execution updates.
+   * @param dockerManager The DockerManager for managing job execution.
+   * @param backendClient The backend client to send execution updates.
    */
   @Autowired
   public StageExecutor(DockerManagerInterface dockerManager, BackendClientInterface backendClient) {

@@ -45,7 +45,7 @@ public class PipelineExecutionEntity {
 
   public PipelineExecutionEntity(PipelineEntity pipeline, String runId, String commitHash, ExecutionStatus status, Instant startTime) {
     this.pipeline = pipeline;
-    this.runId = runId;  // ✅ Store CLI-generated runId
+    this.runId = runId;  // Store CLI-generated runId
     this.repositoryUrl = pipeline.getRepositoryUrl();
     this.commitHash = commitHash;
     this.status = status;

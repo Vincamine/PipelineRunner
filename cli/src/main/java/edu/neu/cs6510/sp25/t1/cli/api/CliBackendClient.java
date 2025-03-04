@@ -2,33 +2,29 @@ package edu.neu.cs6510.sp25.t1.cli.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import edu.neu.cs6510.sp25.t1.common.api.response.PipelineCheckResponse;
-import edu.neu.cs6510.sp25.t1.common.api.request.RunPipelineRequest;
-import edu.neu.cs6510.sp25.t1.common.api.request.UpdateExecutionStateRequest;
-import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.common.execution.PipelineExecution;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+
+
 /**
- * Client for interacting with the backend API.
+ * Client for interacting with the backend API from the CLI.
  */
 public class CliBackendClient {
   private static final Logger logger = LoggerFactory.getLogger(CliBackendClient.class);
   private String baseUrl = "http://localhost:8080";
-  private OkHttpClient client = new OkHttpClient();
-  private ObjectMapper objectMapper = new ObjectMapper();
-  private final YAMLMapper yamlMapper = new YAMLMapper();
+  private final OkHttpClient client;
+  private final ObjectMapper objectMapper;
+  private final YAMLMapper yamlMapper;
 
   /**
    * Constructor with parameters.
@@ -43,10 +39,11 @@ public class CliBackendClient {
             .connectTimeout(10, TimeUnit.SECONDS)
             .build();
     this.objectMapper = new ObjectMapper();
+    this.yamlMapper = new YAMLMapper();
   }
 
   public CliBackendClient() {
-
+    this("http://localhost:8080");
   }
 
   /**
@@ -66,44 +63,7 @@ public class CliBackendClient {
   }
 
   /**
-   * Check the pipeline configuration.
-   *
-   * @param configFile Path to the configuration file.
-   * @return PipelineCheckResponse
-   * @throws IOException If there is an error communicating with the backend.
-   */
-  public PipelineCheckResponse checkPipelineConfig(String configFile) throws IOException {
-    Request req = new Request.Builder()
-            .url(baseUrl + "/api/v1/pipelines/check?file=" + configFile)
-            .get()
-            .build();
-
-    try (Response response = client.newCall(req).execute()) {
-      String responseBody = handleResponse(response);
-      return objectMapper.readValue(responseBody, PipelineCheckResponse.class);
-    }
-  }
-
-  /**
-   * Performs a dry run of the pipeline to simulate execution.
-   *
-   * @param configFile Path to the pipeline configuration file.
-   * @return The simulated execution order.
-   * @throws IOException If there is an error communicating with the backend.
-   */
-  public String dryRunPipeline(String configFile) throws IOException {
-    Request req = new Request.Builder()
-            .url(baseUrl + "/api/v1/pipelines/dry-run?file=" + configFile)
-            .get()
-            .build();
-
-    try (Response response = client.newCall(req).execute()) {
-      return handleResponse(response);
-    }
-  }
-
-  /**
-   * Runs a pipeline execution via the backend.
+   * Run a pipeline execution via the backend.
    *
    * @param request The pipeline execution request details.
    * @return The backend response as a String.
@@ -113,7 +73,7 @@ public class CliBackendClient {
     String jsonRequest = objectMapper.writeValueAsString(request);
 
     Request req = new Request.Builder()
-            .url(baseUrl + "/api/v1/pipelines/run")
+            .url(baseUrl + "/api/v1/pipelines/" + request.getPipeline() + "/execute")
             .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
             .build();
 
@@ -121,6 +81,7 @@ public class CliBackendClient {
       return handleResponse(response);
     }
   }
+
 
   /**
    * Fetch past executions of a pipeline.
@@ -131,11 +92,60 @@ public class CliBackendClient {
    * @throws IOException If there is an error communicating with the backend.
    */
   public String getPipelineExecutions(String pipeline, String format) throws IOException {
-    String url = baseUrl + "/api/v1/pipelines";
+    String url = baseUrl + "/api/v1/pipelines/" + pipeline + "/executions";
 
-    if (!"all".equals(pipeline)) {
-      url += "/" + pipeline + "/executions";
+    Request req = new Request.Builder().url(url).get().build();
+
+    try (Response response = client.newCall(req).execute()) {
+      String responseBody = handleResponse(response);
+      return formatResponse(responseBody, format);
     }
+  }
+
+  /**
+   * Fetches a list of all pipelines.
+   *
+   * @return A JSON string containing all pipelines.
+   * @throws IOException If there is an error communicating with the backend.
+   */
+  public String getAllPipelines() throws IOException {
+    Request req = new Request.Builder().url(baseUrl + "/api/v1/pipelines").get().build();
+
+    try (Response response = client.newCall(req).execute()) {
+      return handleResponse(response);
+    }
+  }
+
+  /**
+   * Fetch a specific pipeline execution.
+   *
+   * @param pipeline The pipeline name.
+   * @param runId    The run ID.
+   * @param format   The output format.
+   * @return Formatted pipeline execution details.
+   * @throws IOException If there is an error communicating with the backend.
+   */
+  public String getPipelineExecution(String pipeline, String runId, String format) throws IOException {
+    String url = baseUrl + "/api/v1/pipelines/" + pipeline + "/executions/" + runId;
+
+    Request req = new Request.Builder().url(url).get().build();
+
+    try (Response response = client.newCall(req).execute()) {
+      String responseBody = handleResponse(response);
+      return formatResponse(responseBody, format);
+    }
+  }
+
+  /**
+   * Fetch the latest pipeline execution.
+   *
+   * @param pipeline The pipeline name.
+   * @param format   The output format.
+   * @return Formatted latest execution details.
+   * @throws IOException If there is an error communicating with the backend.
+   */
+  public String getLatestPipelineExecution(String pipeline, String format) throws IOException {
+    String url = baseUrl + "/api/v1/pipelines/" + pipeline + "/executions/latest";
 
     Request req = new Request.Builder().url(url).get().build();
 
@@ -162,121 +172,4 @@ public class CliBackendClient {
     }
     return responseBody;
   }
-
-  /**
-   * Fetches a list of all pipelines.
-   *
-   * @return A JSON string containing all pipelines.
-   * @throws IOException If there is an error communicating with the backend.
-   */
-  public String getAllPipelines() throws IOException {
-    Request req = new Request.Builder().url(baseUrl + "/api/v1/pipelines").get().build();
-
-    try (Response response = client.newCall(req).execute()) {
-      return handleResponse(response);
-    }
-  }
-
-  /**
-   * Updates the execution state of a pipeline, stage, or job.
-   *
-   * @param request The execution state update request.
-   */
-  public void updateExecutionState(UpdateExecutionStateRequest request) {
-    try {
-      String jsonRequest = objectMapper.writeValueAsString(request);
-
-      Request req = new Request.Builder()
-              .url(baseUrl + "/api/v1/execution/state")
-              .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
-              .build();
-
-      try (Response response = client.newCall(req).execute()) {
-        handleResponse(response);
-        logger.info("Updated execution state: {}", request);
-      }
-    } catch (IOException e) {
-      logger.error("Failed to update execution state: {}", e.getMessage());
-    }
-  }
-
-
-  /**
-   * Logs the start of a pipeline execution.
-   *
-   * @param pipelineExecution The pipeline execution state.
-   */
-  public void logPipelineExecutionStart(PipelineExecution pipelineExecution) {
-    logExecution("/api/v1/pipelines/log/start", pipelineExecution);
-  }
-
-  /**
-   * Logs the success of a pipeline execution.
-   *
-   * @param pipelineExecution The pipeline execution state.
-   */
-  public void logPipelineExecutionSuccess(PipelineExecution pipelineExecution) {
-    logExecution("/api/v1/pipelines/log/success", pipelineExecution);
-  }
-
-  /**
-   * Logs the failure of a pipeline execution.
-   *
-   * @param pipelineExecution The pipeline execution state.
-   */
-  public void logPipelineExecutionFailure(PipelineExecution pipelineExecution) {
-    logExecution("/api/v1/pipelines/log/failure", pipelineExecution);
-  }
-
-  /**
-   * Logs the start of a job execution.
-   *
-   * @param jobExecution The job execution state.
-   */
-  public void logJobExecutionStart(JobExecution jobExecution) {
-    logExecution("/api/v1/jobs/log/start", jobExecution);
-  }
-
-  /**
-   * Logs the success of a job execution.
-   *
-   * @param jobExecution The job execution state.
-   */
-  public void logJobExecutionSuccess(JobExecution jobExecution) {
-    logExecution("/api/v1/jobs/log/success", jobExecution);
-  }
-
-  /**
-   * Logs the failure of a job execution.
-   *
-   * @param jobExecution The job execution state.
-   */
-  public void logJobExecutionFailure(JobExecution jobExecution) {
-    logExecution("/api/v1/jobs/log/failure", jobExecution);
-  }
-
-  /**
-   * Generic method to log execution states to the backend.
-   *
-   * @param endpoint The API endpoint for logging execution.
-   * @param state    The execution state object (pipeline or job).
-   */
-  private void logExecution(String endpoint, Object state) {
-    try {
-      String jsonRequest = objectMapper.writeValueAsString(state);
-
-      Request req = new Request.Builder()
-              .url(baseUrl + endpoint)
-              .post(RequestBody.create(jsonRequest, MediaType.parse("application/json")))
-              .build();
-
-      try (Response response = client.newCall(req).execute()) {
-        handleResponse(response);
-        logger.info("Logged execution: {} -> {}", endpoint, state);
-      }
-    } catch (IOException e) {
-      logger.error("Failed to log execution to {}: {}", endpoint, e.getMessage());
-    }
-  }
 }
-

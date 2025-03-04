@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,48 +27,98 @@ public class ReportController {
     this.reportService = reportService;
   }
 
-  // Get all pipelines
+  /**
+   * Retrieve recent pipeline executions with an optional limit.
+   *
+   * @param limit Optional limit (default: 10).
+   * @return List of recent pipeline executions.
+   */
   @GetMapping("/pipelines")
-  public ResponseEntity<List<PipelineExecutionDTO>> getAllPipelines() {
-    return ResponseEntity.ok(reportService.getRecentExecutions(10));  // Adjust the number for the limit
+  public ResponseEntity<List<PipelineExecutionDTO>> getAllPipelines(@RequestParam(defaultValue = "10") int limit) {
+    return ResponseEntity.ok(reportService.getRecentExecutions(limit));
   }
 
-  // Get all executions for a specific pipeline
+  /**
+   * Retrieve all executions for a specific pipeline.
+   *
+   * @param pipeline The pipeline name.
+   * @param limit    Optional limit (default: 10).
+   * @return List of pipeline executions.
+   */
   @GetMapping("/{pipeline}/executions")
-  public ResponseEntity<List<PipelineExecutionDTO>> getPipelineExecutions(@PathVariable String pipeline) {
-    return ResponseEntity.ok(reportService.getPipelineExecutionHistory(pipeline, 10)); // Adjust limit if needed
+  public ResponseEntity<List<PipelineExecutionDTO>> getPipelineExecutions(
+          @PathVariable String pipeline,
+          @RequestParam(defaultValue = "10") int limit) {
+    return ResponseEntity.ok(reportService.getPipelineExecutionHistory(pipeline, limit));
   }
 
-  // Get a specific pipeline execution by run ID
+  /**
+   * Get details of a specific pipeline execution.
+   *
+   * @param pipeline The pipeline name.
+   * @param runId    The run ID.
+   * @return Pipeline execution details.
+   */
   @GetMapping("/{pipeline}/executions/{runId}")
   public ResponseEntity<PipelineExecutionDTO> getPipelineExecution(
           @PathVariable String pipeline,
           @PathVariable String runId) {
-    return ResponseEntity.ok(reportService.getPipelineExecution(pipeline, runId));
+    PipelineExecutionDTO execution = reportService.getPipelineExecution(pipeline, runId);
+    return execution != null ? ResponseEntity.ok(execution) : ResponseEntity.notFound().build();
   }
 
-  // Get the latest execution of a pipeline
+  /**
+   * Get the latest execution of a pipeline.
+   *
+   * @param pipeline The pipeline name.
+   * @return Latest pipeline execution details.
+   */
   @GetMapping("/{pipeline}/executions/latest")
   public ResponseEntity<PipelineExecutionDTO> getLatestPipelineRun(@PathVariable String pipeline) {
-    return ResponseEntity.ok(reportService.getLatestPipelineRun(pipeline));
+    PipelineExecutionDTO latestExecution = reportService.getLatestPipelineRun(pipeline);
+    return latestExecution != null ? ResponseEntity.ok(latestExecution) : ResponseEntity.notFound().build();
   }
 
-  // Get the summary of a stage from a pipeline run
+  /**
+   * Retrieve a summary of a specific stage in a pipeline execution.
+   *
+   * @param pipeline The pipeline name.
+   * @param runId    The run ID.
+   * @param stage    The stage name.
+   * @return Stage execution details.
+   */
   @GetMapping("/{pipeline}/executions/{runId}/stage/{stage}")
   public ResponseEntity<StageExecutionDTO> getStageSummary(
           @PathVariable String pipeline,
           @PathVariable String runId,
           @PathVariable String stage) {
-    return ResponseEntity.ok(reportService.getStageSummary(pipeline, runId, stage));
+    StageExecutionDTO stageSummary = reportService.getStageSummary(pipeline, runId, stage);
+    return stageSummary != null ? ResponseEntity.ok(stageSummary) : ResponseEntity.notFound().build();
   }
 
-  // Get the summary of a job from a pipeline run
+  /**
+   * Retrieve a summary of a specific job execution.
+   *
+   * @param pipeline The pipeline name.
+   * @param runId    The run ID.
+   * @param stage    The stage name.
+   * @param job      The job name.
+   * @return Job execution details.
+   */
   @GetMapping("/{pipeline}/executions/{runId}/stage/{stage}/job/{job}")
   public ResponseEntity<JobExecutionDTO> getJobSummary(
           @PathVariable String pipeline,
           @PathVariable String runId,
           @PathVariable String stage,
           @PathVariable String job) {
-    return ResponseEntity.ok(reportService.getJobSummary(pipeline, runId, stage, job));
+    JobExecutionDTO jobSummary = reportService.getJobSummary(pipeline, runId, stage, job);
+    return jobSummary != null ? ResponseEntity.ok(jobSummary) : ResponseEntity.notFound().build();
+  }
+
+  @GetMapping("/{pipeline}/executions/{runId}/logs")
+  public ResponseEntity<String> getExecutionLogs(
+          @PathVariable String pipeline, @PathVariable String runId) {
+    List<String> logs = reportService.getPipelineLogs(pipeline, runId);
+    return logs.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(String.join("\n", logs));
   }
 }

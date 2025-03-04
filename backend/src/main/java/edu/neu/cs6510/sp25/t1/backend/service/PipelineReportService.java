@@ -1,25 +1,26 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import edu.neu.cs6510.sp25.t1.backend.data.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineExecutionDTO;
 import edu.neu.cs6510.sp25.t1.backend.data.dto.PipelineReportDTO;
 import edu.neu.cs6510.sp25.t1.backend.data.dto.StageExecutionDTO;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.data.entity.PipelineExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.data.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.data.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.data.repository.PipelineExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.data.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
- * Service for generating pipeline execution reports.
+ * Service for generating execution reports for pipelines, stages, and jobs.
  */
 @Service
 public class PipelineReportService {
@@ -38,37 +39,20 @@ public class PipelineReportService {
   }
 
   /**
-   * Generates a full report for a pipeline execution.
+   * Generates a full execution report for a pipeline.
    *
    * @param runId The unique run ID of the pipeline execution.
-   * @return A PipelineReportDTO containing complete execution details.
+   * @return A PipelineReportDTO containing execution details.
    */
-  public PipelineReportDTO generateExecutionReport(String runId) {
-    // Get pipeline execution
-    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findByRunId(runId)
-            .orElseThrow(() -> new IllegalArgumentException("Pipeline execution not found for runId: " + runId));
+  public PipelineReportDTO generatePipelineExecutionReport(String runId) {
+    PipelineExecutionEntity pipelineExecution = fetchPipelineExecution(runId);
 
-    // Convert to DTO
-    PipelineExecutionDTO pipelineExecutionDTO = PipelineExecutionDTO.fromEntity(pipelineExecution);
+    List<StageExecutionDTO> stageExecutions = fetchStageExecutions(runId);
+    List<JobExecutionDTO> jobExecutions = fetchJobExecutions(runId);
+    Map<String, Object> metrics = calculateExecutionMetrics(pipelineExecution, stageExecutions, jobExecutions);
 
-    // Get stage executions
-    List<StageExecutionDTO> stageExecutions = stageExecutionRepository.findByPipelineExecutionRunId(runId)
-            .stream()
-            .map(StageExecutionDTO::fromEntity)
-            .collect(Collectors.toList());
-
-    // Get job executions
-    List<JobExecutionDTO> jobExecutions = jobExecutionRepository.findByStageExecution_PipelineExecution_RunId(runId)
-            .stream()
-            .map(JobExecutionDTO::fromEntity)
-            .collect(Collectors.toList());
-
-    // Calculate metrics
-    Map<String, Object> metrics = calculateExecutionMetrics(runId);
-
-    // Create and return report
     return new PipelineReportDTO(
-            pipelineExecutionDTO,
+            PipelineExecutionDTO.fromEntity(pipelineExecution),
             stageExecutions,
             jobExecutions,
             metrics
@@ -76,71 +60,96 @@ public class PipelineReportService {
   }
 
   /**
-   * Calculates execution metrics for a pipeline run.
-   *
-   * @param runId The unique run ID of the pipeline execution.
-   * @return A map of metric names to values.
+   * Fetches a pipeline execution entity by run ID.
    */
-  private Map<String, Object> calculateExecutionMetrics(String runId) {
+  private PipelineExecutionEntity fetchPipelineExecution(String runId) {
+    return pipelineExecutionRepository.findByRunId(runId)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline execution not found for runId: " + runId));
+  }
+
+  /**
+   * Fetches stage execution DTOs for a pipeline execution.
+   */
+  private List<StageExecutionDTO> fetchStageExecutions(String runId) {
+    return stageExecutionRepository.findByPipelineExecutionRunId(runId)
+            .stream()
+            .map(StageExecutionDTO::fromEntity)
+            .collect(Collectors.toList());
+  }
+
+  /**
+   * Fetches job execution DTOs for a pipeline execution.
+   */
+  private List<JobExecutionDTO> fetchJobExecutions(String runId) {
+    return jobExecutionRepository.findByStageExecution_PipelineExecution_RunId(runId)
+            .stream()
+            .map(JobExecutionDTO::fromEntity)
+            .collect(Collectors.toList());
+  }
+
+  /**
+   * Calculates execution metrics for a pipeline run.
+   */
+  private Map<String, Object> calculateExecutionMetrics(
+          PipelineExecutionEntity pipelineExecution,
+          List<StageExecutionDTO> stageExecutions,
+          List<JobExecutionDTO> jobExecutions) {
+
     Map<String, Object> metrics = new HashMap<>();
 
-    // Get entities from repositories
-    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findByRunId(runId)
-            .orElseThrow(() -> new IllegalArgumentException("Pipeline execution not found for runId: " + runId));
-
-    List<StageExecutionEntity> stageExecutions = stageExecutionRepository.findByPipelineExecutionRunId(runId);
-    List<JobExecutionEntity> jobExecutions = jobExecutionRepository.findByStageExecution_PipelineExecution_RunId(runId);
-
-    // Total execution time (if completed)
+    // Compute total execution time
     if (pipelineExecution.getCompletionTime() != null) {
       Duration duration = Duration.between(pipelineExecution.getStartTime(), pipelineExecution.getCompletionTime());
       metrics.put("totalExecutionTimeSeconds", duration.getSeconds());
     }
 
-    // Count jobs by status
+    // Count job statuses
     Map<ExecutionStatus, Long> jobStatusCounts = jobExecutions.stream()
-            .collect(Collectors.groupingBy(JobExecutionEntity::getStatus, Collectors.counting()));
+            .collect(Collectors.groupingBy(JobExecutionDTO::getStatus, Collectors.counting()));
     metrics.put("jobStatusCounts", jobStatusCounts);
 
-    // Count stages by status
+    // Count stage statuses
     Map<ExecutionStatus, Long> stageStatusCounts = stageExecutions.stream()
-            .collect(Collectors.groupingBy(StageExecutionEntity::getStatus, Collectors.counting()));
+            .collect(Collectors.groupingBy(StageExecutionDTO::getStatus, Collectors.counting()));
     metrics.put("stageStatusCounts", stageStatusCounts);
 
-    // Success rate
+    // Compute success rate
     long totalJobs = jobExecutions.size();
     long successfulJobs = jobStatusCounts.getOrDefault(ExecutionStatus.SUCCESS, 0L);
-    double successRate = totalJobs > 0 ? (double) successfulJobs / totalJobs * 100 : 0;
+    double successRate = totalJobs > 0 ? ((double) successfulJobs / totalJobs) * 100 : 0;
     metrics.put("jobSuccessRate", successRate);
 
-    // Identify bottlenecks (jobs that took longest to execute)
-    List<Map<String, Object>> slowestJobs = jobExecutions.stream()
-            .filter(job -> job.getCompletionTime() != null) // Only completed jobs
-            .sorted(Comparator.comparing(job ->
-                            Duration.between(job.getStartTime(), job.getCompletionTime()).toMillis(),
-                    Comparator.reverseOrder()))
-            .limit(3) // Top 3 slowest
-            .map(job -> {
-              Map<String, Object> jobInfo = new HashMap<>();
-              jobInfo.put("jobName", job.getJob().getName());
-              jobInfo.put("stageName", job.getStageExecution().getStageName());
-              Duration jobDuration = Duration.between(job.getStartTime(), job.getCompletionTime());
-              jobInfo.put("durationSeconds", jobDuration.getSeconds());
-              return jobInfo;
-            })
-            .collect(Collectors.toList());
-    metrics.put("slowestJobs", slowestJobs);
+    // Identify slowest jobs
+    metrics.put("slowestJobs", identifySlowestJobs(jobExecutions));
 
     return metrics;
   }
 
   /**
-   * Gets recent pipeline executions.
-   *
-   * @param limit The maximum number of executions to return.
-   * @return List of recent pipeline execution DTOs.
+   * Identifies the slowest jobs in execution.
    */
-  public List<PipelineExecutionDTO> getRecentExecutions(int limit) {
+  private List<Map<String, Object>> identifySlowestJobs(List<JobExecutionDTO> jobExecutions) {
+    return jobExecutions.stream()
+            .filter(job -> job.getCompletionTime() != null)
+            .sorted(Comparator.comparing(job ->
+                            Duration.between(job.getStartTime(), job.getCompletionTime()).toMillis(),
+                    Comparator.reverseOrder()))
+            .limit(3)
+            .map(job -> {
+              Map<String, Object> jobInfo = new HashMap<>();
+              jobInfo.put("jobName", job.getJobName());
+              jobInfo.put("stageName", job.getStageName());
+              Duration jobDuration = Duration.between(job.getStartTime(), job.getCompletionTime());
+              jobInfo.put("durationSeconds", jobDuration.getSeconds());
+              return jobInfo;
+            })
+            .collect(Collectors.toList());
+  }
+
+  /**
+   * Fetches the latest execution history of a pipeline.
+   */
+  public List<PipelineExecutionDTO> getRecentPipelineExecutions(int limit) {
     return pipelineExecutionRepository.findAll().stream()
             .sorted(Comparator.comparing(PipelineExecutionEntity::getStartTime).reversed())
             .limit(limit)
@@ -149,11 +158,7 @@ public class PipelineReportService {
   }
 
   /**
-   * Gets execution history for a specific pipeline.
-   *
-   * @param pipelineName The name of the pipeline.
-   * @param limit The maximum number of executions to return.
-   * @return List of pipeline execution DTOs.
+   * Fetches execution history for a specific pipeline.
    */
   public List<PipelineExecutionDTO> getPipelineExecutionHistory(String pipelineName, int limit) {
     return pipelineExecutionRepository.findByPipelineName(pipelineName).stream()
@@ -163,45 +168,30 @@ public class PipelineReportService {
             .collect(Collectors.toList());
   }
 
-  // Get all pipelines in the repository
-  public List<PipelineExecutionDTO> getAllPipelines() {
-    return pipelineExecutionRepository.findAll().stream()
-            .map(PipelineExecutionDTO::fromEntity)
-            .collect(Collectors.toList());
-  }
-
-  // Get executions for a specific pipeline
-  public List<PipelineExecutionDTO> getPipelineExecutions(String pipelineName) {
-    return pipelineExecutionRepository.findByPipelineName(pipelineName).stream()
-            .map(PipelineExecutionDTO::fromEntity)
-            .collect(Collectors.toList());
-  }
-
-  // Get a specific pipeline execution by run ID
+  /**
+   * Retrieves a specific pipeline execution by run ID.
+   */
   public PipelineExecutionDTO getPipelineExecution(String pipelineName, String runId) {
-    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findByPipelineNameAndRunId(pipelineName, runId)
-            .orElseThrow(() -> new IllegalArgumentException("Pipeline execution not found"));
-    return PipelineExecutionDTO.fromEntity(pipelineExecution);
-  }
-
-  // Get the latest pipeline run
-  public PipelineExecutionDTO getLatestPipelineRun(String pipelineName) {
-    return pipelineExecutionRepository.findTopByPipelineNameOrderByStartTimeDesc(pipelineName)
+    return pipelineExecutionRepository.findByPipelineNameAndRunId(pipelineName, runId)
             .map(PipelineExecutionDTO::fromEntity)
-            .orElseThrow(() -> new IllegalArgumentException("No runs found for pipeline"));
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline execution not found"));
   }
 
-  // Get stage summary for a given pipeline execution
-  public StageExecutionDTO getStageSummary(String pipelineName, String runId, String stageName) {
-    StageExecutionEntity stageExecution = stageExecutionRepository.findByPipelineExecutionRunIdAndStageName(runId, stageName)
-            .orElseThrow(() -> new IllegalArgumentException("Stage not found"));
-    return StageExecutionDTO.fromEntity(stageExecution);
+  /**
+   * Retrieves summary of a stage execution.
+   */
+  public StageExecutionDTO getStageExecutionSummary(String runId, String stageName) {
+    return stageExecutionRepository.findByPipelineExecutionRunIdAndStageName(runId, stageName)
+            .map(StageExecutionDTO::fromEntity)
+            .orElseThrow(() -> new IllegalArgumentException("Stage execution not found"));
   }
 
-  // Get job summary for a given pipeline execution and stage
-  public JobExecutionDTO getJobSummary(String pipelineName, String runId, String stageName, String jobName) {
-    JobExecutionEntity jobExecution = jobExecutionRepository.findByPipelineExecutionRunIdAndStageNameAndJobName(runId, stageName, jobName)
-            .orElseThrow(() -> new IllegalArgumentException("Job not found"));
-    return JobExecutionDTO.fromEntity(jobExecution);
+  /**
+   * Retrieves summary of a job execution.
+   */
+  public JobExecutionDTO getJobExecutionSummary(String runId, String stageName, String jobName) {
+    return jobExecutionRepository.findByPipelineExecutionRunIdAndStageNameAndJobName(runId, stageName, jobName)
+            .map(JobExecutionDTO::fromEntity)
+            .orElseThrow(() -> new IllegalArgumentException("Job execution not found"));
   }
 }

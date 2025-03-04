@@ -1,4 +1,6 @@
-package edu.neu.cs6510.sp25.t1.common.executor;
+package edu.neu.cs6510.sp25.t1.worker.execute;
+
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.List;
@@ -6,18 +8,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import edu.neu.cs6510.sp25.t1.backend.model.JobExecution;
+import edu.neu.cs6510.sp25.t1.backend.model.PipelineExecution;
+import edu.neu.cs6510.sp25.t1.backend.model.StageExecution;
 import edu.neu.cs6510.sp25.t1.common.api.BackendClientInterface;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.common.execution.PipelineExecution;
-import edu.neu.cs6510.sp25.t1.common.execution.StageExecution;
-import edu.neu.cs6510.sp25.t1.common.manager.DockerManagerInterface;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 
-
+@Service
 public class PipelineExecutor {
   private static final Logger LOGGER = Logger.getLogger(PipelineExecutor.class.getName());
   private final StageExecutor stageExecutor;

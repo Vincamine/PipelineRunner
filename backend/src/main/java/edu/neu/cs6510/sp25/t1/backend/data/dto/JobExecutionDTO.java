@@ -81,4 +81,5 @@ public class JobExecutionDTO {
   public void setAllowFailure(boolean allowFailure) { this.allowFailure = allowFailure; }
   public void setStartTime(Instant startTime) { this.startTime = startTime; }
   public void setCompletionTime(Instant completionTime) { this.completionTime = completionTime; }
+
 }

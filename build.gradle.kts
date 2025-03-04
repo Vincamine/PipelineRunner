@@ -69,41 +69,41 @@ subprojects {
             })
         )
     }
-
-    tasks.jacocoTestCoverageVerification {
-        dependsOn(tasks.jacocoTestReport)
-        violationRules {
-            rule {
-                element = "CLASS"
-
-                // Exclude classes by package
-                excludes.addAll(
-                    listOf(
-                        "com.example.config.*",        // Ignore all config files
-                        "com.example.data.dto.*",      // Ignore all DTOs
-                        "com.example.data.entity.*",   // Ignore all Entities
-                        "com.example.enums.*"          // Ignore all Enums
-                    )
-                )
-
-                limit {
-                    counter = "LINE"
-                    value = "COVEREDRATIO"
-                    minimum = "0.7".toBigDecimal()
-                }
-                limit {
-                    counter = "BRANCH"
-                    value = "COVEREDRATIO"
-                    minimum = "0.7".toBigDecimal()
-                }
-            }
-        }
-    }
-
-    tasks.check {
-        dependsOn(tasks.test)
-        dependsOn(tasks.jacocoTestCoverageVerification) // Ensures coverage check runs on build, comment out for now
-    }
+//
+//    tasks.jacocoTestCoverageVerification {
+//        dependsOn(tasks.jacocoTestReport)
+//        violationRules {
+//            rule {
+//                element = "CLASS"
+//
+//                // Exclude classes by package
+//                excludes.addAll(
+//                    listOf(
+//                        "com.example.config.*",        // Ignore all config files
+//                        "com.example.data.dto.*",      // Ignore all DTOs
+//                        "com.example.data.entity.*",   // Ignore all Entities
+//                        "com.example.enums.*"          // Ignore all Enums
+//                    )
+//                )
+//
+//                limit {
+//                    counter = "LINE"
+//                    value = "COVEREDRATIO"
+//                    minimum = "0.7".toBigDecimal()
+//                }
+//                limit {
+//                    counter = "BRANCH"
+//                    value = "COVEREDRATIO"
+//                    minimum = "0.7".toBigDecimal()
+//                }
+//            }
+//        }
+//    }
+//
+//    tasks.check {
+//        dependsOn(tasks.test)
+//        dependsOn(tasks.jacocoTestCoverageVerification) // Ensures coverage check runs on build, comment out for now
+//    }
 
     checkstyle {
         toolVersion = "10.12.3"

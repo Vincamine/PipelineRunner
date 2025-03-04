@@ -1,18 +1,18 @@
-package edu.neu.cs6510.sp25.t1.common.executor;
-
-import edu.neu.cs6510.sp25.t1.common.api.BackendClientInterface;
-import edu.neu.cs6510.sp25.t1.common.api.request.JobRequest;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
-import edu.neu.cs6510.sp25.t1.common.manager.DockerManagerInterface;
+package edu.neu.cs6510.sp25.t1.worker.execute;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+
+import edu.neu.cs6510.sp25.t1.common.api.BackendClientInterface;
+import edu.neu.cs6510.sp25.t1.common.api.request.JobRequest;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
 
 /**
  * JobExecutor is responsible for executing a job request inside a Docker container.
@@ -115,7 +115,7 @@ public class JobExecutor {
    * @param dependencies List of job dependencies.
    * @return true if all dependencies are complete, false otherwise.
    */
-  private boolean waitForDependencies(List<String> dependencies) {
+  boolean waitForDependencies(List<String> dependencies) {
     int attempts = 0;
     while (!areDependenciesComplete(dependencies)) {
       if (attempts++ >= 5) {
@@ -138,7 +138,7 @@ public class JobExecutor {
    * @param dependencies List of dependencies.
    * @return true if all dependencies are complete, false otherwise.
    */
-  private boolean areDependenciesComplete(List<String> dependencies) {
+  boolean areDependenciesComplete(List<String> dependencies) {
     for (String dependency : dependencies) {
       ExecutionStatus state = backendClient.getJobStatus(dependency);
       if (state != ExecutionStatus.SUCCESS) {
@@ -154,7 +154,7 @@ public class JobExecutor {
    * @param jobRequest      The job request details.
    * @param executionStatus The final execution status of the job.
    */
-  private void logExecution(JobRequest jobRequest, ExecutionStatus executionStatus) {
+  void logExecution(JobRequest jobRequest, ExecutionStatus executionStatus) {
     try (FileWriter file = createFileWriter()) {
       String logEntry = String.format(
               "{ \"jobName\": \"%s\", \"status\": \"%s\" }\n",

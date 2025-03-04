@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents the execution state of a pipeline or job.
+ * Represents the execution state of a job or stage.
  */
 public enum ExecutionStatus {
   SUCCESS("Execution completed successfully"),
@@ -24,10 +24,8 @@ public enum ExecutionStatus {
     }
   }
 
-
-
   /**
-   * Constructor for ExecutionState enum.
+   * Constructor for ExecutionStatus enum.
    *
    * @param description A string describing the execution state.
    */
@@ -44,13 +42,10 @@ public enum ExecutionStatus {
     return description;
   }
 
-
   /**
    * Converts a string to an `ExecutionStatus` enum value.
-   * Uses a lookup map for better performance.
    *
    * @param value The string to convert.
-   *              Must be one of the enum values in lowercase.
    * @return The corresponding `ExecutionStatus` enum value.
    */
   public static ExecutionStatus fromString(String value) {

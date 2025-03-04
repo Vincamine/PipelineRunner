@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.common.manager;
+package edu.neu.cs6510.sp25.t1.cli.manager;
 
 import java.io.File;
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.common.execution;
+package edu.neu.cs6510.sp25.t1.backend.model;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public class PipelineExecution {
     if (hasFailed) {
       this.state = PipelineExecutionState.FAILED;
     } else if (allSucceeded) {
-      this.state = PipelineExecutionState.SUCCESSFUL;
+      this.state = PipelineExecutionState.SUCCESS;
     } else {
       this.state = PipelineExecutionState.RUNNING;
     }
