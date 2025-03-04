@@ -117,4 +117,13 @@ public class StageExecution {
   public String getName() {
     return stage.getName();
   }
+
+  /**
+   * Setter for stage status for testing purposes.
+   *
+   * @param status the new status of the stage
+   */
+  public void setStatus(ExecutionStatus status) {
+    this.status = status;
+  }
 }

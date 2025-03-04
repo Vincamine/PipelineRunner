@@ -70,10 +70,20 @@ public class JobExecution {
     return status;
   }
 
+  /**
+   * Gets the image used for execution.
+   *
+   * @return The Docker image.
+   */
   public String getImage() {
     return image;
   }
 
+  /**
+   * Gets if allow failure is enabled.
+   *
+   * @return True if allow failure is enabled, false otherwise.
+   */
   public boolean isAllowFailure() {
     return allowFailure;
   }
