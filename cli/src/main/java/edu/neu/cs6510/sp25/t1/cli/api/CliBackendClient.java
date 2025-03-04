@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineCheckResponse;
 import edu.neu.cs6510.sp25.t1.common.api.request.RunPipelineRequest;
-import edu.neu.cs6510.sp25.t1.common.api.response.UpdateExecutionStateRequest;
+import edu.neu.cs6510.sp25.t1.common.api.request.UpdateExecutionStateRequest;
 import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
 import edu.neu.cs6510.sp25.t1.common.execution.PipelineExecution;
 import okhttp3.MediaType;

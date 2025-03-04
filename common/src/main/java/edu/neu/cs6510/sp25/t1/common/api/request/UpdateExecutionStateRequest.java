@@ -1,7 +1,8 @@
-package edu.neu.cs6510.sp25.t1.common.api.response;
+package edu.neu.cs6510.sp25.t1.common.api.request;
+
+import java.io.Serializable;
 
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import java.io.Serializable;
 
 /**
  * Represents a request to update the execution state of a pipeline, stage, or job.

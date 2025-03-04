@@ -2,7 +2,7 @@ package edu.neu.cs6510.sp25.t1.common.api.request;
 
 import java.util.List;
 import java.util.Map;
-
+import java.util.ArrayList;
 /**
  * Represents a job execution request sent to the worker.
  * This request provides execution-specific details while referencing
@@ -37,7 +37,7 @@ public class JobRequest {
     this.commitHash = commitHash;
     this.environmentVariables = environmentVariables != null ? environmentVariables : Map.of();
     this.artifactPaths = artifactPaths != null ? artifactPaths : List.of();
-    this.needs = List.of();
+    this.needs = new ArrayList<>();
   }
 
   /**
