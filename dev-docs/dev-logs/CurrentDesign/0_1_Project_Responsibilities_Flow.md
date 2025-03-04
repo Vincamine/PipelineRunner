@@ -1,8 +1,10 @@
 # **CICD Module Responsibilities Execution Flow**
 
-- **Version:** 1.0
-- **Updated:** Mar 3, 2025
-- **Author:** Yiwen Wang
+* **Author**: Yiwen Wang
+* **Version**: 1.0
+* **Last Updated**: Mar 4, 2025
+
+H
 
 ## 🔹 Correct Execution Flow
 ### 1️⃣ CLI Receives YAML File
