@@ -20,7 +20,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web:3.4.3")
     implementation("org.springframework.boot:spring-boot-starter-validation:3.4.3")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:3.4.3")
-    implementation("org.springframework.boot:spring-boot-starter-actuator:3.4.3") // Optional for monitoring
+    implementation("org.springframework.boot:spring-boot-starter-actuator:3.4.3")
+
+    // Spring Boot Starter for Web + MVC
+    implementation("org.springframework.boot:spring-boot-starter-web")
 
     // Database
     implementation("org.hibernate.orm:hibernate-core:6.4.2.Final")
@@ -35,13 +38,18 @@ dependencies {
     // OpenAPI Docs (Swagger)
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 
-    // Remove XML Binding (Only add if needed)
-    // implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.2")
-    // implementation("org.glassfish.jaxb:jaxb-runtime:4.0.5")
-
     // Testing
+    // JUnit 5
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
     testImplementation("org.mockito:mockito-core:5.16.0")
+    // Spring Boot Starter for Testing
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // MockMvc and WebMvcTest (used in your HealthControllerTest)
+    testImplementation("org.springframework.boot:spring-boot-starter-webflux")
+    // Mockito for mocking
+    testImplementation("org.mockito:mockito-core:5.16.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
 }
 
 tasks.jar {

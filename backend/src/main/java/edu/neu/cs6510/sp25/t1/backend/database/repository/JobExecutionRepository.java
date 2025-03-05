@@ -1,4 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.database.repository;
 
-public class JobExecutionRepository {
+import com.sun.jdi.InterfaceType;
+
+public interface JobExecutionRepository {
 }

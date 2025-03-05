@@ -21,12 +21,12 @@ subprojects {
     }
 
     dependencies {
-        testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-        testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.0")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.12.0")
 
-        testImplementation("org.mockito:mockito-core:5.4.0")
-        testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
+        testImplementation("org.mockito:mockito-core:5.16.0")
+        testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
     }
 
     java {
@@ -56,54 +56,60 @@ subprojects {
                 fileTree(it) {
                     // Exclude test execution by folder (package-based)
                     exclude("**/config/**")          // Ignore all config classes
-                    exclude("**/data/dto/**")        // Ignore all DTOs
-                    exclude("**/data/entity/**")     // Ignore entities
+                    exclude("**/dto/**")        // Ignore all DTOs
+                    exclude("**/database/entity/**")     // Ignore entities
                     exclude("**/enums/**")           // Ignore enums
 
                     // Exclude test execution by name pattern
                     exclude("**/*Config.*")          // Files ending in 'Config'
                     exclude("**/*DTO.*")             // Files ending in 'DTO'
                     exclude("**/*Entity.*")          // Files ending in 'Entity'
-                    exclude("**/*Enum.*")            // Files ending in 'Enum'
+                    exclude("**/*Status.*")            // Files ending in 'Enum'
+
+                    // Exclude test execution by class name
+                    exclude("**/BackendApp.class", "**/CliApp.class", "**/WorkerApp.class") // Exclude main classes
                 }
             })
         )
     }
-//
-//    tasks.jacocoTestCoverageVerification {
-//        dependsOn(tasks.jacocoTestReport)
-//        violationRules {
-//            rule {
-//                element = "CLASS"
-//
-//                // Exclude classes by package
-//                excludes.addAll(
-//                    listOf(
-//                        "com.example.config.*",        // Ignore all config files
-//                        "com.example.data.dto.*",      // Ignore all DTOs
-//                        "com.example.data.entity.*",   // Ignore all Entities
-//                        "com.example.enums.*"          // Ignore all Enums
-//                    )
-//                )
-//
-//                limit {
-//                    counter = "LINE"
-//                    value = "COVEREDRATIO"
-//                    minimum = "0.7".toBigDecimal()
-//                }
-//                limit {
-//                    counter = "BRANCH"
-//                    value = "COVEREDRATIO"
-//                    minimum = "0.7".toBigDecimal()
-//                }
-//            }
-//        }
-//    }
-//
-//    tasks.check {
-//        dependsOn(tasks.test)
-//        dependsOn(tasks.jacocoTestCoverageVerification) // Ensures coverage check runs on build, comment out for now
-//    }
+
+    tasks.jacocoTestCoverageVerification {
+        dependsOn(tasks.jacocoTestReport)
+        violationRules {
+            rule {
+                element = "CLASS"
+
+                // Exclude classes by package
+                excludes.addAll(
+                    listOf(
+                        "com.example.config.*",        // Ignore all config files
+                        "com.example.dto.*",      // Ignore all DTOs
+                        "com.example.database.entity.*",   // Ignore all Entities
+                        "com.example.enums.*",        // Ignore all Enums
+                        "edu.neu.cs6510.sp25.t1.backend.BackendApp", // Ignore BackendApp
+                        "edu.neu.cs6510.sp25.t1.cli.CliApp", // Ignore CliApp
+                        "edu.neu.cs6510.sp25.t1.worker.WorkerApp" // Ignore WorkerApp
+                    )
+                )
+
+                limit {
+                    counter = "LINE"
+                    value = "COVEREDRATIO"
+                    minimum = "0.7".toBigDecimal()
+                }
+                limit {
+                    counter = "BRANCH"
+                    value = "COVEREDRATIO"
+                    minimum = "0.7".toBigDecimal()
+                }
+            }
+        }
+    }
+
+    tasks.check {
+        dependsOn(tasks.test)
+        dependsOn(tasks.jacocoTestCoverageVerification) // Ensures coverage check runs on build, comment out for now
+    }
 
     checkstyle {
         toolVersion = "10.12.3"
