@@ -51,6 +51,8 @@ dependencies {
 
     // **Jakarta Persistence API (JPA Annotations)**
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
+
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
 }
 
 tasks.jar {

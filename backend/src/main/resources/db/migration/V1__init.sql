@@ -1,5 +1,9 @@
+--  This file contains the SQL script to create the initial schema for the database.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Drop tables in the correct dependency order
 DROP TABLE IF EXISTS execution_logs CASCADE;
+DROP TABLE IF EXISTS artifacts CASCADE;
 DROP TABLE IF EXISTS job_executions CASCADE;
 DROP TABLE IF EXISTS stage_executions CASCADE;
 DROP TABLE IF EXISTS pipeline_executions CASCADE;
@@ -15,9 +19,11 @@ CREATE TABLE IF NOT EXISTS pipelines (
     name VARCHAR(255) NOT NULL UNIQUE,
     repository_url TEXT NOT NULL,
     branch VARCHAR(255) DEFAULT 'main',
+    commit_hash VARCHAR(40) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+);
+
 
 -- Table for storing stage definitions
 CREATE TABLE IF NOT EXISTS stages (
@@ -57,6 +63,15 @@ CREATE TABLE IF NOT EXISTS job_dependencies (
     PRIMARY KEY (job_id, depends_on_job_id),
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
     FOREIGN KEY (depends_on_job_id) REFERENCES jobs(id) ON DELETE CASCADE
+    );
+
+-- Table for storing job artifacts
+CREATE TABLE IF NOT EXISTS job_artifacts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    job_id UUID NOT NULL,
+    artifact_path TEXT NOT NULL, -- Stores file or directory path
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
     );
 
 -- Table for storing pipeline executions
@@ -122,3 +137,7 @@ CREATE INDEX idx_pipeline_executions ON pipeline_executions(pipeline_id, run_num
 CREATE INDEX idx_stage_executions ON stage_executions(pipeline_execution_id, stage_id, commit_hash, is_local);
 CREATE INDEX idx_job_executions ON job_executions(stage_execution_id, job_id, commit_hash, is_local);
 CREATE INDEX idx_execution_logs ON execution_logs(pipeline_execution_id, stage_execution_id, job_execution_id);
+CREATE INDEX idx_job_scripts_job_id ON job_scripts(job_id);
+CREATE INDEX idx_job_dependencies_job ON job_dependencies(job_id);
+CREATE INDEX idx_job_dependencies_depends_on ON job_dependencies(depends_on_job_id);
+CREATE INDEX idx_job_artifacts_job_id ON job_artifacts(job_id);
