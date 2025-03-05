@@ -19,6 +19,13 @@ subprojects {
         mavenCentral()
     }
 
+    dependencies {
+        testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
+        testImplementation("org.mockito:mockito-core:5.16.0")
+        testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
+    }
+
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(21))
@@ -27,7 +34,7 @@ subprojects {
 
     tasks.named<Test>("test") {
         useJUnitPlatform()
-        finalizedBy(tasks.jacocoTestReport) // Ensure reports run after tests
+        finalizedBy(tasks.jacocoTestReport)
     }
 
     jacoco {

@@ -16,6 +16,7 @@ dependencies {
     // JUnit and Mockito for testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
     testImplementation("org.mockito:mockito-core:5.8.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
 
     // ShadowJar dependencies
     implementation(project(":common"))
@@ -23,6 +24,14 @@ dependencies {
 
 application {
     mainClass.set("edu.neu.cs6510.sp25.t1.cli.CliApp")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
@@ -35,6 +44,10 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     }
 }
 
-tasks.named<Test>("test") {
-    useJUnitPlatform()
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
+

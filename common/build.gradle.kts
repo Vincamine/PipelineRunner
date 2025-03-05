@@ -32,6 +32,10 @@ java {
     }
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 tasks.named<Test>("test") {
     useJUnitPlatform()
 }

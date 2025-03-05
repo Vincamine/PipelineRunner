@@ -51,10 +51,20 @@ java {
     }
 }
 
-application {
-    mainClass.set("edu.neu.cs6510.sp25.t1.backend.BackendApp")
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+}
+
+application {
+    mainClass.set("edu.neu.cs6510.sp25.t1.backend.BackendApp")
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "edu.neu.cs6510.sp25.t1.BackendApp"
+    }
 }

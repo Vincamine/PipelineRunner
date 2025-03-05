@@ -1,7 +1,7 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.4.3"
-    id("io.spring.dependency-management") version "1.1.7"
+    id("org.springframework.boot") version "3.2.2"
+    id("io.spring.dependency-management") version "1.1.4"
 }
 
 repositories {
@@ -9,23 +9,28 @@ repositories {
 }
 
 dependencies {
-    // ✅ Spring Boot (Minimal)
-    implementation("org.springframework.boot:spring-boot-starter")
+    implementation(project(":common")) // Shared models and utilities
 
-    // ✅ Required for @SpringBootApplication, @ComponentScan
-    implementation("org.springframework.boot:spring-boot-autoconfigure")
+    // Spring Boot for Worker Service API
+    implementation("org.springframework.boot:spring-boot-starter-web")
 
-    // ✅ Docker Java API (Managing Job Execution in Docker)
-    implementation("com.github.docker-java:docker-java-core:3.3.4")
-    implementation("com.github.docker-java:docker-java-transport-httpclient5:3.3.4")
+    // WebClient (for sending job status updates)
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    // ✅ Unit Testing (JUnit & Mockito)
+
+    // ✅ JUnit 5 (Testing)
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
+
+    // ✅ Mockito (For Unit Testing & Mocks)
     testImplementation("org.mockito:mockito-core:5.16.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
 
-    // ✅ Spring Boot Test (For Integration Tests)
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    // Spring Boot Testing (Ensure JUnit 5 is used)
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+    }
 }
 
 java {
@@ -34,10 +39,15 @@ java {
     }
 }
 
+
+tasks.test {
+    useJUnitPlatform()
+}
+
 tasks.named<Test>("test") {
     useJUnitPlatform()
 }
 
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
-    mainClass.set("edu.neu.cs6510.sp25.t1.worker.WorkerApp") // Ensure your main class is correct
+    mainClass.set("edu.neu.cs6510.sp25.t1.worker.WorkerApp")
 }
