@@ -13,10 +13,18 @@ dependencies {
     implementation("info.picocli:picocli:4.7.4")
     annotationProcessor("info.picocli:picocli-codegen:4.7.4")
 
-    // JUnit and Mockito for testing
-    testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
-    testImplementation("org.mockito:mockito-core:5.8.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
+    // Use JUnit BOM (Bill of Materials) to ensure version compatibility
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
+
+    // Then specify JUnit dependencies without versions - they'll use versions from the BOM
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.platform:junit-platform-launcher")
+
+    // Mockito dependencies
+    testImplementation("org.mockito:mockito-core:5.16.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
 
     // ShadowJar dependencies
     implementation(project(":common"))

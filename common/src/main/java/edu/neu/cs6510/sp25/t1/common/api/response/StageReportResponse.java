@@ -1,5 +1,8 @@
 package edu.neu.cs6510.sp25.t1.common.api.response;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 /**
@@ -15,7 +18,10 @@ public class StageReportResponse {
    * @param stageName  The stage name
    * @param executions The list of job executions
    */
-  public StageReportResponse(String stageName, List<ExecutionRecord> executions) {
+  @JsonCreator
+  public StageReportResponse(
+          @JsonProperty String stageName,
+          @JsonProperty List<ExecutionRecord> executions) {
     this.stageName = stageName;
     this.executions = executions;
   }

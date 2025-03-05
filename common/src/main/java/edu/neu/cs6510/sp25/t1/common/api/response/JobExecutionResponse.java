@@ -1,5 +1,8 @@
 package edu.neu.cs6510.sp25.t1.common.api.response;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Represents a response to a job execution request.
  */
@@ -13,10 +16,14 @@ public class JobExecutionResponse {
    * @param jobExecutionId The unique identifier for this job execution
    * @param status         The status of the job execution
    */
-  public JobExecutionResponse(String jobExecutionId, String status) {
+  @JsonCreator
+  public JobExecutionResponse(
+          @JsonProperty("jobExecutionId") String jobExecutionId,
+          @JsonProperty("status") String status) {
     this.jobExecutionId = jobExecutionId;
     this.status = status;
   }
+
 
   /**
    * Getter for jobExecutionId.

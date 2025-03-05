@@ -1,5 +1,8 @@
 package edu.neu.cs6510.sp25.t1.common.api.response;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 /**
@@ -18,7 +21,11 @@ public class PipelineReportResponse {
    * @param status      Execution status (PENDING, RUNNING, SUCCESS, FAILED, CANCELED).
    * @param commitHash  Commit hash associated with this execution.
    */
-  public PipelineReportResponse(String executionId, String status, String commitHash) {
+  @JsonCreator
+  public PipelineReportResponse(
+          @JsonProperty String executionId,
+          @JsonProperty String status,
+          @JsonProperty String commitHash) {
     this.executionId = executionId;
     this.status = status;
     this.commitHash = commitHash;

@@ -1,5 +1,8 @@
 package edu.neu.cs6510.sp25.t1.common.api.response;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 /**
@@ -15,7 +18,10 @@ public class JobReportResponse {
    * @param jobName    The job name.
    * @param executions The list of past job execution records.
    */
-  public JobReportResponse(String jobName, List<ExecutionRecord> executions) {
+  @JsonCreator
+  public JobReportResponse(
+          @JsonProperty("jobName") String jobName,
+          @JsonProperty("executions") List<ExecutionRecord> executions) {
     this.jobName = jobName;
     this.executions = executions;
   }
@@ -53,7 +59,11 @@ public class JobReportResponse {
      * @param status      The status of the job execution (e.g., SUCCESS, FAILED).
      * @param logs        The logs from the job execution.
      */
-    public ExecutionRecord(String executionId, String status, String logs) {
+    @JsonCreator
+    public ExecutionRecord(
+            @JsonProperty("executionId") String executionId,
+            @JsonProperty("status") String status,
+            @JsonProperty("logs") String logs) {
       this.executionId = executionId;
       this.status = status;
       this.logs = logs;

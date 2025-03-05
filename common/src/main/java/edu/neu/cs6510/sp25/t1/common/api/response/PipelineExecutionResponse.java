@@ -1,5 +1,8 @@
 package edu.neu.cs6510.sp25.t1.common.api.response;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Represents a response to a pipeline execution request.
  */
@@ -12,7 +15,10 @@ public class PipelineExecutionResponse {
    * @param executionId The unique identifier for this pipeline execution
    * @param status The status of the pipeline execution
    */
-  public PipelineExecutionResponse(String executionId, String status) {
+  @JsonCreator
+  public PipelineExecutionResponse(
+          @JsonProperty String executionId,
+          @JsonProperty String status) {
     this.executionId = executionId;
     this.status = status;
   }
