@@ -74,18 +74,25 @@ CREATE TABLE IF NOT EXISTS job_artifacts (
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
     );
 
+-- Create a sequence for per-pipeline run numbers before table creation
+CREATE SEQUENCE IF NOT EXISTS pipeline_run_seq START 1;
+
 -- Table for storing pipeline executions
 CREATE TABLE IF NOT EXISTS pipeline_executions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     pipeline_id UUID NOT NULL,
-    run_number SERIAL UNIQUE NOT NULL,
+    run_number INT NOT NULL DEFAULT nextval('pipeline_run_seq'),
     commit_hash VARCHAR(40) NOT NULL,
     is_local BOOLEAN DEFAULT FALSE,
     status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'RUNNING', 'SUCCESS', 'FAILED', 'CANCELED')),
-    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                   start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completion_time TIMESTAMP DEFAULT NULL,
     FOREIGN KEY (pipeline_id) REFERENCES pipelines(id) ON DELETE CASCADE
-    );
+);
+
+-- Assign ownership of the sequence to ensure correct auto-incrementing
+ALTER SEQUENCE pipeline_run_seq OWNED BY pipeline_executions.run_number;
+
 
 -- Table for storing stage executions
 CREATE TABLE IF NOT EXISTS stage_executions (
@@ -101,6 +108,8 @@ CREATE TABLE IF NOT EXISTS stage_executions (
     FOREIGN KEY (pipeline_execution_id) REFERENCES pipeline_executions(id) ON DELETE CASCADE,
     FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
     );
+
+
 
 -- Table for storing job executions
 CREATE TABLE IF NOT EXISTS job_executions (
@@ -141,3 +150,4 @@ CREATE INDEX idx_job_scripts_job_id ON job_scripts(job_id);
 CREATE INDEX idx_job_dependencies_job ON job_dependencies(job_id);
 CREATE INDEX idx_job_dependencies_depends_on ON job_dependencies(depends_on_job_id);
 CREATE INDEX idx_job_artifacts_job_id ON job_artifacts(job_id);
+CREATE UNIQUE INDEX unique_pipeline_run ON pipeline_executions (pipeline_id, run_number);

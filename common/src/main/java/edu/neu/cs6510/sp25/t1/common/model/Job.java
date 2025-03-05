@@ -61,6 +61,11 @@ public class Job {
     this.updatedAt = updatedAt;
   }
 
+  // ========================
+  // Getters for the fields
+  // ========================
+
+
   /**
    * Getter for Job ID.
    *

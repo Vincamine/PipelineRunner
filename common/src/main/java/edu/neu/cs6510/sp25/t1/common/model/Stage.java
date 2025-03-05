@@ -48,30 +48,65 @@ public class Stage {
     this.updatedAt = updatedAt;
   }
 
+  /**
+   * Getter for id.
+   *
+   * @return the id
+   */
   public UUID getId() {
     return id;
   }
 
+  /**
+   * Getter for name.
+   *
+   * @return name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Getter for pipelineId.
+   *
+   * @return pipelineId
+   */
   public UUID getPipelineId() {
     return pipelineId;
   }
 
+  /**
+   * Getter for executionOrder.
+   *
+   * @return executionOrder
+   */
   public int getExecutionOrder() {
     return executionOrder;
   }
 
+  /**
+   * Getter for jobs.
+   *
+   * @return jobs
+   */
   public List<Job> getJobs() {
     return jobs;
   }
 
+  /**
+   * Getter for createdAt.
+   *
+   * @return createdAt
+   */
   public LocalDateTime getCreatedAt() {
     return createdAt;
   }
 
+  /**
+   * Getter for updatedAt.
+   *
+   * @return updatedAt
+   */
   public LocalDateTime getUpdatedAt() {
     return updatedAt;
   }
