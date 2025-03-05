@@ -175,5 +175,3 @@ xx run --pipeline build
 ## **6. Conclusion**
 This document outlines how the CLI determines whether the current directory is a valid Git repository, fetches default values for missing parameters, and ensures that CI/CD configuration files exist in the `.pipelines/` directory. Additionally, it defines the full execution flow for running a pipeline, ensuring correctness and efficiency.
 
-Would you like any refinements or additional functionality? 🚀
-

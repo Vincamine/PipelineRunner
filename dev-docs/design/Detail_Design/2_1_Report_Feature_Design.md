@@ -90,5 +90,3 @@ User Request → Validate Input → Retrieve Execution Data → Format Report �
 ## **5. Conclusion**
 The report feature enables structured retrieval of past executions, providing insights at the **pipeline, stage, and job levels**. The design ensures **efficient querying, storage, and scalability** to handle frequent report requests. The CLI should return a **human-readable format by default**, while structured JSON can be an option for integrations.
 
-Would you like any further refinements? 🚀
-
