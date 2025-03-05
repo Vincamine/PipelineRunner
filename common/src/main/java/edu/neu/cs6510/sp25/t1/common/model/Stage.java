@@ -30,7 +30,6 @@ public class Stage {
    * @param createdAt      Timestamp of stage creation
    * @param updatedAt      Timestamp of last update
    */
-  @JsonCreator
   public Stage(
           @JsonProperty("id") UUID id,
           @JsonProperty("name") String name,
@@ -43,7 +42,7 @@ public class Stage {
     this.name = name;
     this.pipelineId = pipelineId;
     this.executionOrder = executionOrder;
-    this.jobs = jobs;
+    this.jobs = (jobs != null) ? jobs : List.of(); // Ensure jobs is never null
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }

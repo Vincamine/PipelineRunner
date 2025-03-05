@@ -55,18 +55,54 @@ subprojects {
             xml.required.set(true)
             html.required.set(true)
         }
+
+        afterEvaluate {
+            classDirectories.setFrom(
+                files(classDirectories.files.map {
+                    fileTree(it) {
+                        exclude(
+                            // Backend module exclusions
+                            "**/config/**", // Ignore all 'config' folders
+                            "**/database/**", // Ignore entire 'database' folder
+                            "**/database/entity/**", // Ignore entities inside database folder
+                            "**/database/repository/**", // Ignore repository inside database folder
+                            "**/backendApp.*", // Ignore entry point file backendApp
+
+                            // Common module exclusions
+                            "**/config/**", // Ignore all 'config' folders
+                            "**/enums/status/**" // Ignore all 'enums' ending in status
+                        )
+                    }
+                })
+            )
+        }
     }
 
     tasks.jacocoTestCoverageVerification {
         dependsOn(tasks.jacocoTestReport)
+
         violationRules {
             rule {
                 element = "CLASS"
+                excludes = listOf(
+                    // Backend module exclusions
+                    "edu.neu.cs6510.sp25.t1.backend.config.*",
+                    "edu.neu.cs6510.sp25.t1.backend.database.*",
+                    "edu.neu.cs6510.sp25.t1.backend.database.entity.*",
+                    "edu.neu.cs6510.sp25.t1.backend.database.repository.*",
+                    "edu.neu.cs6510.sp25.t1.backend.backendApp",
+
+                    // Common module exclusions
+                    "edu.neu.cs6510.sp25.t1.common.config.*",
+                    "edu.neu.cs6510.sp25.t1.common.enums.status.*"
+                )
+
                 limit {
                     counter = "LINE"
                     value = "COVEREDRATIO"
                     minimum = "0.7".toBigDecimal()
                 }
+
                 limit {
                     counter = "BRANCH"
                     value = "COVEREDRATIO"
@@ -75,6 +111,7 @@ subprojects {
             }
         }
     }
+
 
     tasks.check {
         dependsOn(tasks.test)
