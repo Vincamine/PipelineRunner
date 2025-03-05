@@ -5,10 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
+import lombok.Getter;
+
 /**
  * Represents a request to execute a job.
  */
+@Getter
 public class JobExecutionRequest {
+  // Getters with lombok
   private final String executionId;
   private final String stage;
   private final String job;
@@ -17,11 +21,12 @@ public class JobExecutionRequest {
 
   /**
    * Constructs a new JobExecutionRequest based on its definition.
+   *
    * @param executionId The unique identifier for this job execution
-   * @param stage The stage name
-   * @param job The job name
+   * @param stage       The stage name
+   * @param job         The job name
    * @param dockerImage The Docker image to use for the job
-   * @param commands The list of commands to execute
+   * @param commands    The list of commands to execute
    */
   @JsonCreator
   public JobExecutionRequest(
@@ -35,50 +40,5 @@ public class JobExecutionRequest {
     this.job = job;
     this.dockerImage = dockerImage;
     this.commands = commands;
-  }
-
-  /**
-   * Getter for executionId.
-   *
-   * @return the executionId
-   */
-  public String getExecutionId() {
-    return executionId;
-  }
-
-  /**
-   * Getter for stage.
-   *
-   * @return the stage
-   */
-  public String getStage() {
-    return stage;
-  }
-
-  /**
-   * Getter for job.
-   *
-   * @return the job
-   */
-  public String getJob() {
-    return job;
-  }
-
-  /**
-   * Getter for dockerImage.
-   *
-   * @return the dockerImage
-   */
-  public String getDockerImage() {
-    return dockerImage;
-  }
-
-  /**
-   * Getter for commands.
-   *
-   * @return the commands
-   */
-  public List<String> getCommands() {
-    return commands;
   }
 }

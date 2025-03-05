@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import lombok.Getter;
 
 /**
  * Represents an active execution of a CI/CD pipeline. Defines execution state & metadata.
  */
+@Getter
 public class PipelineExecution {
   private final UUID id;
   private final UUID pipelineId;
@@ -44,44 +46,8 @@ public class PipelineExecution {
   }
 
   // ========================
-  // Getters for the fields
+  // Getters not using lombok
   // ========================
-
-  /**
-   * Gets the unique execution ID.
-   *
-   * @return The execution ID.
-   */
-  public UUID getId() {
-    return id;
-  }
-
-  /**
-   * Gets the pipeline ID.
-   *
-   * @return The pipeline ID.
-   */
-  public UUID getPipelineId() {
-    return pipelineId;
-  }
-
-  /**
-   * Gets the run number.
-   *
-   * @return The run number.
-   */
-  public int getRunNumber() {
-    return runNumber;
-  }
-
-  /**
-   * Gets the commit hash associated with this execution.
-   *
-   * @return The commit hash.
-   */
-  public String getCommitHash() {
-    return commitHash;
-  }
 
   /**
    * Indicates whether this execution is local.
@@ -90,42 +56,6 @@ public class PipelineExecution {
    */
   public boolean isLocal() {
     return isLocal;
-  }
-
-  /**
-   * Gets the status of the pipeline execution.
-   *
-   * @return The execution status.
-   */
-  public ExecutionStatus getStatus() {
-    return status;
-  }
-
-  /**
-   * Gets the start
-   *
-   * @return The start time.
-   */
-  public Instant getStartTime() {
-    return startTime;
-  }
-
-  /**
-   * Gets the completion time of the pipeline execution
-   *
-   * @return The completion time.
-   */
-  public Instant getCompletionTime() {
-    return completionTime;
-  }
-
-  /**
-   * Gets the list of stages in the pipeline execution
-   *
-   * @return The list of stages.
-   */
-  public List<StageExecution> getStages() {
-    return stages;
   }
 
   // ========================

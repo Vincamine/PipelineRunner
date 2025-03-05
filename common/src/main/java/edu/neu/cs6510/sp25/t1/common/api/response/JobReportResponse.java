@@ -5,10 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
+import lombok.Getter;
+
 /**
  * Represents a response to a job report request.
  */
+@Getter
 public class JobReportResponse {
+  // Getters with lombok
   private final String jobName;
   private final List<ExecutionRecord> executions;
 
@@ -27,27 +31,11 @@ public class JobReportResponse {
   }
 
   /**
-   * Getter for jobName.
-   *
-   * @return the job name.
-   */
-  public String getJobName() {
-    return jobName;
-  }
-
-  /**
-   * Getter for executions.
-   *
-   * @return the list of job execution records.
-   */
-  public List<ExecutionRecord> getExecutions() {
-    return executions;
-  }
-
-  /**
    * Represents a record of a past execution of the job.
    */
+  @Getter
   public static class ExecutionRecord {
+    // Getters with lombok
     private final String executionId;
     private final String status;
     private final String logs;
@@ -67,33 +55,6 @@ public class JobReportResponse {
       this.executionId = executionId;
       this.status = status;
       this.logs = logs;
-    }
-
-    /**
-     * Gets the execution ID.
-     *
-     * @return execution ID.
-     */
-    public String getExecutionId() {
-      return executionId;
-    }
-
-    /**
-     * Gets the execution status.
-     *
-     * @return execution status.
-     */
-    public String getStatus() {
-      return status;
-    }
-
-    /**
-     * Gets the execution logs.
-     *
-     * @return execution logs.
-     */
-    public String getLogs() {
-      return logs;
     }
   }
 }

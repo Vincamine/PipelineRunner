@@ -1,7 +1,7 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.2.2"
-    id("io.spring.dependency-management") version "1.1.4"
+    id("org.springframework.boot") version "3.4.3"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 repositories {
@@ -18,9 +18,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
 
-    // ✅ JUnit 5 (Testing)
-    testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
+    // Use JUnit BOM (Bill of Materials) to ensure version compatibility
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
+
+    // Then specify JUnit dependencies without versions - they'll use versions from the BOM
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.platform:junit-platform-launcher")
 
     // ✅ Mockito (For Unit Testing & Mocks)
     testImplementation("org.mockito:mockito-core:5.16.0")

@@ -7,20 +7,34 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.Getter;
+
 /**
  * Represents a job in a CI/CD pipeline configuration.
  * Static configuration data.
  */
+@Getter
 public class Job {
+
+  // Getters with lombok
   private final UUID id;
+
   private final UUID stageId;
+
   private final String name;
+
   private final String dockerImage;
+
   private final List<String> script;
+
   private final List<UUID> dependencies;
+
   private final boolean allowFailure;
+
   private final List<String> artifacts;
+
   private final LocalDateTime createdAt;
+
   private final LocalDateTime updatedAt;
 
   /**
@@ -59,100 +73,5 @@ public class Job {
     this.artifacts = artifacts != null ? artifacts : List.of();
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
-  }
-
-  // ========================
-  // Getters for the fields
-  // ========================
-
-
-  /**
-   * Getter for Job ID.
-   *
-   * @return ID
-   */
-  public UUID getId() {
-    return id;
-  }
-
-  /**
-   * Getter for Stage ID.
-   *
-   * @return Stage ID
-   */
-  public UUID getStageId() {
-    return stageId;
-  }
-
-  /**
-   * Getter for Job name.
-   *
-   * @return Job name
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Getter for Docker image.
-   *
-   * @return Docker image
-   */
-  public String getDockerImage() {
-    return dockerImage;
-  }
-
-  /**
-   * Getter for script.
-   *
-   * @return script
-   */
-  public List<String> getScript() {
-    return script;
-  }
-
-  /**
-   * Getter for dependencies.
-   *
-   * @return dependencies
-   */
-  public List<UUID> getDependencies() {
-    return dependencies;
-  }
-
-  /**
-   * Getter for allowFailure.
-   *
-   * @return allowFailure
-   */
-  public boolean isAllowFailure() {
-    return allowFailure;
-  }
-
-  /**
-   * Getter for artifacts.
-   *
-   * @return artifacts
-   */
-  public List<String> getArtifacts() {
-    return artifacts;
-  }
-
-  /**
-   * Getter for creation timestamp.
-   *
-   * @return creation timestamp
-   */
-  public LocalDateTime getCreatedAt() {
-    return createdAt;
-  }
-
-  /**
-   * Getter for last updated timestamp.
-   *
-   * @return last updated timestamp
-   */
-  public LocalDateTime getUpdatedAt() {
-    return updatedAt;
   }
 }

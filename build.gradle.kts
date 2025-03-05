@@ -3,6 +3,7 @@ plugins {
     jacoco
     checkstyle
     pmd
+    id("com.github.ben-manes.versions") version "0.52.0" // finding outdated dependencies
 }
 
 repositories {
@@ -46,7 +47,7 @@ subprojects {
     }
 
     jacoco {
-        toolVersion = "0.8.10"
+        toolVersion = "0.8.12"
     }
 
     tasks.jacocoTestReport {
@@ -125,7 +126,7 @@ subprojects {
     }
 
     checkstyle {
-        toolVersion = "10.12.3"
+        toolVersion = "9.3"
         configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
         configProperties["checkstyle.suppressions.file"] = file("$rootDir/config/checkstyle/checkstyle-suppressions.xml").absolutePath
     }

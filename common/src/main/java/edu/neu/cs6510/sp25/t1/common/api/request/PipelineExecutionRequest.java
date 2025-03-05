@@ -17,7 +17,7 @@ public class PipelineExecutionRequest {
    *
    * @param repo     The repository URL.
    * @param branch   The branch to execute.
-   * @param commit   The commit hash to execute.
+   * @param commit   The commit hash to execute.s
    * @param pipeline The pipeline to execute.
    */
   @JsonCreator

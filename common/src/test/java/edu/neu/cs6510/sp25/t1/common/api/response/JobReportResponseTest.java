@@ -56,7 +56,7 @@ class JobReportResponseTest {
             Arguments.of("", Collections.emptyList()),
             Arguments.of("test-job", null),
             Arguments.of(null, new ArrayList<>()),
-            Arguments.of("deploy-job", Arrays.asList(
+            Arguments.of("deploy-job", List.of(
                     new JobReportResponse.ExecutionRecord("exec-3", "SUCCESS", "")
             ))
     );
@@ -115,8 +115,8 @@ class JobReportResponseTest {
     assertEquals("build-job", response.getJobName());
     assertNotNull(response.getExecutions());
     assertEquals(1, response.getExecutions().size());
-    assertEquals("exec-1", response.getExecutions().get(0).getExecutionId());
-    assertEquals("SUCCESS", response.getExecutions().get(0).getStatus());
+    assertEquals("exec-1", response.getExecutions().getFirst().getExecutionId());
+    assertEquals("SUCCESS", response.getExecutions().getFirst().getStatus());
   }
 
   @Test

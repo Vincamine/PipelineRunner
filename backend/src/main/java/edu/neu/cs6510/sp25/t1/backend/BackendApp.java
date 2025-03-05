@@ -15,7 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan(basePackages = "edu.neu.cs6510.sp25.t1.backend.database.entity") //  scans "entity"
 @EnableJpaRepositories("edu.neu.cs6510.sp25.t1.backend.database.repository") // scans "repository"
 public class BackendApp {
-    public static void main(String[] args) {
-        SpringApplication.run(BackendApp.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(BackendApp.class, args);
+  }
 }

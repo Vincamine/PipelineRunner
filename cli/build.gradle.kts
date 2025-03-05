@@ -10,8 +10,8 @@ repositories {
 
 dependencies {
     // Picocli for CLI
-    implementation("info.picocli:picocli:4.7.4")
-    annotationProcessor("info.picocli:picocli-codegen:4.7.4")
+    implementation("info.picocli:picocli:4.7.6")
+    annotationProcessor("info.picocli:picocli-codegen:4.7.6")
 
     // Use JUnit BOM (Bill of Materials) to ensure version compatibility
     testImplementation(platform("org.junit:junit-bom:5.12.0"))

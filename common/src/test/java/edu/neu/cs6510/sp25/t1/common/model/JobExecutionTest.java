@@ -25,7 +25,6 @@ class JobExecutionTest {
   private boolean isLocal;
   private List<String> script;
   private List<String> dependencies;
-  private boolean allowFailure;
 
   @BeforeEach
   void setUp() {
@@ -35,7 +34,7 @@ class JobExecutionTest {
     isLocal = true;
     script = Arrays.asList("echo 'Hello'", "exit 0");
     dependencies = Arrays.asList("dep1", "dep2");
-    allowFailure = false;
+    boolean allowFailure = false;
 
     jobExecution = new JobExecution(stageExecutionId, jobId, commitHash, isLocal, "docker-image", script, dependencies, allowFailure);
   }

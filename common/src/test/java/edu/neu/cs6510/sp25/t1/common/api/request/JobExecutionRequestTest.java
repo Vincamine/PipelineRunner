@@ -75,9 +75,9 @@ class JobExecutionRequestTest {
     return Stream.of(
             // executionId, stage, job, dockerImage, commands
             Arguments.of("", "", "", "", Collections.emptyList()),
-            Arguments.of("exec-1", null, "job1", "alpine:latest", Arrays.asList("echo hello")),
+            Arguments.of("exec-1", null, "job1", "alpine:latest", List.of("echo hello")),
             Arguments.of(null, "test", null, "node:14", null),
-            Arguments.of("exec-2", "deploy", "publish", "", Arrays.asList("npm publish"))
+            Arguments.of("exec-2", "deploy", "publish", "", List.of("npm publish"))
     );
   }
 

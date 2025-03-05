@@ -96,9 +96,9 @@ class JobTest {
     return Stream.of(
             // id, stageId, name, dockerImage, script, dependencies, allowFailure, artifacts, createdAt, updatedAt
             Arguments.of(UUID.randomUUID(), UUID.randomUUID(), "", "", Collections.emptyList(), Collections.emptyList(), true, Collections.emptyList(), LocalDateTime.now(), LocalDateTime.now()),
-            Arguments.of(UUID.randomUUID(), UUID.randomUUID(), "test-job", null, Arrays.asList("echo test"), null, false, Arrays.asList("*.log"), null, LocalDateTime.now()),
-            Arguments.of(UUID.randomUUID(), null, "deploy-job", "node:14", null, Arrays.asList(UUID.randomUUID()), true, null, LocalDateTime.now(), null),
-            Arguments.of(null, UUID.randomUUID(), "lint-job", "python:3.9", Arrays.asList("pylint"), Collections.emptyList(), false, Collections.emptyList(), null, null)
+            Arguments.of(UUID.randomUUID(), UUID.randomUUID(), "test-job", null, List.of("echo test"), null, false, List.of("*.log"), null, LocalDateTime.now()),
+            Arguments.of(UUID.randomUUID(), null, "deploy-job", "node:14", null, List.of(UUID.randomUUID()), true, null, LocalDateTime.now(), null),
+            Arguments.of(null, UUID.randomUUID(), "lint-job", "python:3.9", List.of("pylint"), Collections.emptyList(), false, Collections.emptyList(), null, null)
     );
   }
 

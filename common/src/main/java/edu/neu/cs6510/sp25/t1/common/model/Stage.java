@@ -1,16 +1,19 @@
 package edu.neu.cs6510.sp25.t1.common.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.Getter;
+
 /**
  * Represents a stage in a CI/CD pipeline configuration.
  */
+@Getter
 public class Stage {
+  // Getter with lombok
   private final UUID id;
   private final String name;
   private final UUID pipelineId;
@@ -47,66 +50,4 @@ public class Stage {
     this.updatedAt = updatedAt;
   }
 
-  /**
-   * Getter for id.
-   *
-   * @return the id
-   */
-  public UUID getId() {
-    return id;
-  }
-
-  /**
-   * Getter for name.
-   *
-   * @return name
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Getter for pipelineId.
-   *
-   * @return pipelineId
-   */
-  public UUID getPipelineId() {
-    return pipelineId;
-  }
-
-  /**
-   * Getter for executionOrder.
-   *
-   * @return executionOrder
-   */
-  public int getExecutionOrder() {
-    return executionOrder;
-  }
-
-  /**
-   * Getter for jobs.
-   *
-   * @return jobs
-   */
-  public List<Job> getJobs() {
-    return jobs;
-  }
-
-  /**
-   * Getter for createdAt.
-   *
-   * @return createdAt
-   */
-  public LocalDateTime getCreatedAt() {
-    return createdAt;
-  }
-
-  /**
-   * Getter for updatedAt.
-   *
-   * @return updatedAt
-   */
-  public LocalDateTime getUpdatedAt() {
-    return updatedAt;
-  }
 }

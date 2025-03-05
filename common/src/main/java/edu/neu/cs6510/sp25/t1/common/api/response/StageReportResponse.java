@@ -5,10 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
+import lombok.Getter;
+
 /**
  * Represents a response to a stage report request.
  */
+@Getter
 public class StageReportResponse {
+  // Getters with lombok
   private final String stageName;
   private final List<ExecutionRecord> executions;
 
@@ -27,27 +31,11 @@ public class StageReportResponse {
   }
 
   /**
-   * Getter for stageName.
-   *
-   * @return the stageName
-   */
-  public String getStageName() {
-    return stageName;
-  }
-
-  /**
-   * Getter for executions.
-   *
-   * @return the executions.
-   */
-  public List<ExecutionRecord> getExecutions() {
-    return executions;
-  }
-
-  /**
    * Represents a record of a past execution of the stage.
    */
+  @Getter
   public static class ExecutionRecord {
+    // Getters with lombok
     private final String executionId;
     private final String status;
 
@@ -60,24 +48,6 @@ public class StageReportResponse {
     public ExecutionRecord(String executionId, String status) {
       this.executionId = executionId;
       this.status = status;
-    }
-
-    /**
-     * Gets the execution ID.
-     *
-     * @return execution ID.
-     */
-    public String getExecutionId() {
-      return executionId;
-    }
-
-    /**
-     * Gets the execution status.
-     *
-     * @return execution status.
-     */
-    public String getStatus() {
-      return status;
     }
   }
 }

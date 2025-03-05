@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.common.model;
 
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,7 +8,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StageExecutionTest {
 
@@ -18,13 +22,12 @@ class StageExecutionTest {
   private Stage stage;
   private List<JobExecution> jobs;
   private String commitHash;
-  private boolean isLocal;
 
   @BeforeEach
   void setUp() {
     id = UUID.fromString("c3d1d7e0-4a3b-11ec-81d3-0242ac130003"); // Fixed UUID
     commitHash = "abcd1234";
-    isLocal = true;
+    boolean isLocal = true;
 
     // Create a mock Stage object
     UUID stageId = UUID.fromString("3b6b73ec-2d46-11ec-8d3d-0242ac130003");
@@ -68,7 +71,7 @@ class StageExecutionTest {
 
   @Test
   void testUpdateStatusToFailed() {
-    jobs.get(0).updateState(ExecutionStatus.FAILED);
+    jobs.getFirst().updateState(ExecutionStatus.FAILED);
     stageExecution.updateStatus();
 
     assertEquals(ExecutionStatus.FAILED, stageExecution.getStatus());
@@ -77,7 +80,7 @@ class StageExecutionTest {
 
   @Test
   void testUpdateStatusToCanceled() {
-    jobs.get(0).updateState(ExecutionStatus.CANCELED);
+    jobs.getFirst().updateState(ExecutionStatus.CANCELED);
     stageExecution.updateStatus();
 
     assertEquals(ExecutionStatus.CANCELED, stageExecution.getStatus());

@@ -5,13 +5,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
+import lombok.Getter;
+
 /**
  * Represents the response structure for pipeline execution reports.
  */
+@Getter
 public class PipelineReportResponse {
-  private String executionId;
-  private String status;
-  private String commitHash;
+  // Getters wiht lombok
+  private final String executionId;
+  private final String status;
+  private final String commitHash;
   private List<StageReportSummary> stages;
 
   /**
@@ -47,59 +51,16 @@ public class PipelineReportResponse {
   }
 
   /**
-   * Gets the execution ID.
-   *
-   * @return Execution ID.
-   */
-  public String getExecutionId() {
-    return executionId;
-  }
-
-  /**
-   * Gets the execution status.
-   *
-   * @return Execution status.
-   */
-  public String getStatus() {
-    return status;
-  }
-
-  /**
-   * Gets the commit hash.
-   *
-   * @return Commit hash.
-   */
-  public String getCommitHash() {
-    return commitHash;
-  }
-
-  /**
-   * Gets the list of stage summaries.
-   *
-   * @return List of stage execution summaries.
-   */
-  public List<StageReportSummary> getStages() {
-    return stages;
-  }
-
-  /**
    * Represents a summary of a stage execution within a pipeline.
    */
+  @Getter
   public static class StageReportSummary {
-    private String stageName;
-    private String status;
+    private final String stageName;
+    private final String status;
 
     public StageReportSummary(String stageName, String status) {
       this.stageName = stageName;
       this.status = status;
-    }
-
-    public String getStageName() {
-      return stageName;
-    }
-
-    public String getStatus() {
-      return status;
     }
   }
 }

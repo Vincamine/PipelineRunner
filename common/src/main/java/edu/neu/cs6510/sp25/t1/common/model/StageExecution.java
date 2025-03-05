@@ -8,13 +8,17 @@ import java.util.List;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents a stage execution instance in a CI/CD pipeline.
  */
+@Getter
 public class StageExecution {
   private final UUID id;
   private final Stage stage;
+  @Setter
   private ExecutionStatus status;
   private final Instant startTime;
   private Instant completionTime;
@@ -78,63 +82,8 @@ public class StageExecution {
   }
 
   // ========================
-  // Getters for the fields
+  // Getters without lombok
   // ========================
-
-  /**
-   * Gets the unique ID of this stage execution.
-   *
-   * @return The execution ID.
-   */
-  public UUID getId() {
-    return id;
-  }
-
-  /**
-   * Gets the stage definition.
-   *
-   * @return The stage.
-   */
-  public Stage getStage() {
-    return stage;
-  }
-
-  /**
-   * Gets the status of the stage execution.
-   *
-   * @return The execution status.
-   */
-  public ExecutionStatus getStatus() {
-    return status;
-  }
-
-  /**
-   * Gets the start time of the execution.
-   *
-   * @return The start time.
-   */
-  public Instant getStartTime() {
-    return startTime;
-  }
-
-  /**
-   * Gets the completion time of the execution.
-   *
-   * @return The completion time.
-   */
-  public Instant getCompletionTime() {
-    return completionTime;
-  }
-
-  /**
-   * Gets the list of job executions in this stage.
-   *
-   * @return The job executions.
-   */
-  public List<JobExecution> getJobs() {
-    return jobs;
-  }
-
   /**
    * Gets the name of the stage.
    *
@@ -145,33 +94,10 @@ public class StageExecution {
   }
 
   /**
-   * Gets the commit hash of this execution.
-   *
-   * @return The commit hash.
-   */
-  public String getCommitHash() {
-    return commitHash;
-  }
-
-  /**
-   * Checks if this execution is local.
-   *
-   * @return True if local, false otherwise.
+   * Gets the stage status.
+   * @return The stage status
    */
   public boolean isLocal() {
     return isLocal;
-  }
-
-  // ========================
-  // Setters for the fields
-  // ========================
-
-  /**
-   * Sets the stage status manually (for testing purposes).
-   *
-   * @param status The new execution status.
-   */
-  public void setStatus(ExecutionStatus status) {
-    this.status = status;
   }
 }

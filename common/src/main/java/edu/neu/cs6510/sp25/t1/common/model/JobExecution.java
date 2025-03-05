@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import lombok.Getter;
 
 /**
  * Represents a job execution instance within a pipeline stage.
@@ -12,17 +13,47 @@ import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
  * completion time, dependencies, and whether it should be executed in Docker
  * or locally in a non-containerized environment.
  */
+@Getter
 public class JobExecution {
+
   private final UUID id;
+
   private final UUID stageExecutionId;
+
   private final UUID jobId;
+
   private final String commitHash;
   private final boolean isLocal;
+  /**
+   * -- GETTER --
+   *  Gets the status of the job.
+   *
+   */
+  @Getter
   private ExecutionStatus status;
+  /**
+   * -- GETTER --
+   *  Gets the time when the job execution was last updated.
+   *
+   */
+  @Getter
   private final Instant startTime;
+
   private Instant completionTime;
   private Instant lastUpdated;
+  /**
+   * -- GETTER --
+   *  Gets the time when the job execution was last updated.
+   *
+   */
+  @Getter
   private final boolean allowFailure;
+  /**
+   * -- GETTER --
+   *  Gets the Docker image used for execution.
+   *
+   */
+  @Getter
   private final List<String> script;
   private final List<String> dependencies;
   private String logs;
@@ -78,46 +109,6 @@ public class JobExecution {
     this.logs += logText + "\n";
   }
 
-  // ========================
-  // Getters for the fields
-  // ========================
-
-  /**
-   * Gets the unique identifier of the job execution.
-   *
-   * @return The job execution ID.
-   */
-  public UUID getId() {
-    return id;
-  }
-
-  /**
-   * Gets the ID of the stage execution.
-   *
-   * @return The stage execution ID.
-   */
-  public UUID getStageExecutionId() {
-    return stageExecutionId;
-  }
-
-  /**
-   * Gets the ID of the job being executed.
-   *
-   * @return The job ID.
-   */
-  public UUID getJobId() {
-    return jobId;
-  }
-
-  /**
-   * Gets the commit hash of the repository state for execution.
-   *
-   * @return The commit hash.
-   */
-  public String getCommitHash() {
-    return commitHash;
-  }
-
   /**
    * Gets whether this job execution is local or remote.
    *
@@ -127,66 +118,4 @@ public class JobExecution {
     return isLocal;
   }
 
-  /**
-   * Gets the status of the job.
-   *
-   * @return The job status.
-   */
-  public ExecutionStatus getStatus() {
-    return status;
-  }
-
-  /**
-   * Gets the time when the job execution was last updated.
-   *
-   * @return The last updated time.
-   */
-  public Instant getStartTime() {
-    return startTime;
-  }
-
-  /**
-   * Gets the time when the job execution was last updated.
-   *
-   * @return The last updated time.
-   */
-  public Instant getCompletionTime() {
-    return completionTime;
-  }
-
-  /**
-   * Gets the time when the job execution was last updated.
-   *
-   * @return The last updated time.
-   */
-  public boolean isAllowFailure() {
-    return allowFailure;
-  }
-
-  /**
-   * Gets the Docker image used for execution.
-   *
-   * @return The Docker image.
-   */
-  public List<String> getScript() {
-    return script;
-  }
-
-  /**
-   * Gets the dependencies required before execution.
-   *
-   * @return The dependencies.
-   */
-  public List<String> getDependencies() {
-    return dependencies;
-  }
-
-  /**
-   * Gets the logs of the job execution.
-   *
-   * @return The logs.
-   */
-  public String getLogs() {
-    return logs;
-  }
 }

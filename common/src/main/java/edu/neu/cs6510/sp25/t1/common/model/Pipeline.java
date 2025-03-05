@@ -7,11 +7,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.Getter;
+
 /**
  * Represents the structure of a CI/CD pipeline configuration.
  * Defines a pipeline and its associated metadata.
  */
+@Getter
 public class Pipeline {
+  // Getter with lombok
   private final UUID id;
   private final String name;
   private final String repoUrl;
@@ -51,81 +55,5 @@ public class Pipeline {
     this.stages = stages != null ? stages : List.of();
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
-  }
-
-  // ========================
-  // Getters for the fields
-  // ========================
-
-  /**
-   * Getter for id.
-   *
-   * @return the id
-   */
-  public UUID getId() {
-    return id;
-  }
-
-  /**
-   * Getter for name.
-   *
-   * @return the name
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Getter for repoUrl.
-   *
-   * @return the repoUrl
-   */
-  public String getRepoUrl() {
-    return repoUrl;
-  }
-
-  /**
-   * Getter for branch.
-   *
-   * @return the branch
-   */
-  public String getBranch() {
-    return branch;
-  }
-
-  /**
-   * Getter for commitHash.
-   *
-   * @return the commitHash
-   */
-  public String getCommitHash() {
-    return commitHash;
-  }
-
-  /**
-   * Getter for stages.
-   *
-   * @return the stages
-   */
-  public List<Stage> getStages() {
-    return stages;
-  }
-
-  /**
-   * Getter for createdAt.
-   *
-   * @return the createdAt
-   */
-  public LocalDateTime getCreatedAt() {
-    return createdAt;
-  }
-
-  /**
-   * Getter for updatedAt.
-   *
-   * @return the updatedAt
-   */
-  public LocalDateTime getUpdatedAt() {
-    return updatedAt;
   }
 }

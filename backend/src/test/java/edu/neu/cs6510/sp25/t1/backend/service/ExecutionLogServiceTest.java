@@ -1,7 +1,5 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import edu.neu.cs6510.sp25.t1.backend.database.entity.ExecutionLogEntity;
-import edu.neu.cs6510.sp25.t1.backend.database.repository.ExecutionLogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,8 +13,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.ExecutionLogEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.ExecutionLogRepository;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link ExecutionLogService}.
@@ -142,10 +148,9 @@ class ExecutionLogServiceTest {
     // Mock behavior when ExecutionLogEntity is created with null text
     when(executionLogRepository.save(any(ExecutionLogEntity.class)))
             .thenAnswer(invocation -> {
-              ExecutionLogEntity entity = invocation.getArgument(0);
               // This assertion verifies how the ExecutionLogEntity constructor handles null text
               // (It might convert to empty string or keep as null depending on implementation)
-              return entity;
+              return invocation.<ExecutionLogEntity>getArgument(0);
             });
 
     // Act

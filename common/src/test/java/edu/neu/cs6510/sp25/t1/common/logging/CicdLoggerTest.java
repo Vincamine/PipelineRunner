@@ -35,7 +35,6 @@ class CicdLoggerTest {
   private final ByteArrayOutputStream consoleOutput = new ByteArrayOutputStream();
   private final PrintStream originalSystemOut = System.out;
   private ListAppender<ILoggingEvent> listAppender;
-  private Logger cicdLogger;
 
   @TempDir
   File tempDir;
@@ -47,7 +46,7 @@ class CicdLoggerTest {
 
     // Get the existing logger (it's already configured in the static block)
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-    cicdLogger = context.getLogger(CicdLogger.class);
+    Logger cicdLogger = context.getLogger(CicdLogger.class);
 
     // Reset to prevent duplicate initialization errors (since static block already ran)
     context.reset();
@@ -85,7 +84,7 @@ class CicdLoggerTest {
     // Assert
     List<ILoggingEvent> logEvents = listAppender.list;
     assertFalse(logEvents.isEmpty(), "Should have at least one log event");
-    ILoggingEvent lastEvent = logEvents.get(logEvents.size() - 1);
+    ILoggingEvent lastEvent = logEvents.getLast();
     assertEquals(Level.INFO, lastEvent.getLevel(), "Should log at INFO level");
     assertTrue(lastEvent.getFormattedMessage().contains(message),
             "Log should contain the message: " + message);
@@ -102,7 +101,7 @@ class CicdLoggerTest {
     // Assert
     List<ILoggingEvent> logEvents = listAppender.list;
     assertFalse(logEvents.isEmpty(), "Should have at least one log event");
-    ILoggingEvent lastEvent = logEvents.get(logEvents.size() - 1);
+    ILoggingEvent lastEvent = logEvents.getLast();
     assertEquals(Level.WARN, lastEvent.getLevel(), "Should log at WARN level");
     assertTrue(lastEvent.getFormattedMessage().contains(message),
             "Log should contain the message: " + message);
@@ -128,14 +127,14 @@ class CicdLoggerTest {
     // Assert
     List<ILoggingEvent> logEvents = listAppender.list;
     assertFalse(logEvents.isEmpty(), "Should have at least one log event");
-    ILoggingEvent lastEvent = logEvents.get(logEvents.size() - 1);
+    ILoggingEvent lastEvent = logEvents.getLast();
     assertEquals(Level.DEBUG, lastEvent.getLevel(), "Should log at DEBUG level");
     assertTrue(lastEvent.getFormattedMessage().contains(message),
             "Log should contain the message: " + message);
   }
 
   @Test
-  void configureLogging_ShouldSetupConsoleAndFileAppenders() throws Exception {
+  void configureLogging_ShouldSetupConsoleAndFileAppenders() {
     // Instead of trying to verify actual logging, just verify we can create a similar setup
     // without exceptions
 
@@ -189,7 +188,7 @@ class CicdLoggerTest {
 
     // Assert
     List<ILoggingEvent> logEvents = listAppender.list;
-    ILoggingEvent lastEvent = logEvents.get(logEvents.size() - 1);
+    ILoggingEvent lastEvent = logEvents.getLast();
     assertTrue(lastEvent.getFormattedMessage().contains("[CicdLogger]"),
             "Log should include the [CicdLogger] prefix");
   }
