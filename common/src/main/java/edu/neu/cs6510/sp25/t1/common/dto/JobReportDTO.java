@@ -27,6 +27,6 @@ public class JobReportDTO {
     private ExecutionStatus status;
     private Instant startTime;
     private Instant completionTime;
-    private String logs;
+    private boolean allowsFailure;
   }
 }

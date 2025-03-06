@@ -29,7 +29,7 @@ import picocli.CommandLine;
 @CommandLine.Command(name = "run", description = "Runs a CI/CD pipeline.")
 public class RunCommand implements Callable<Integer> {
 
-  @CommandLine.Option(names = {"-r", "--repo"}, description = "Repository URL or path", required = true)
+  @CommandLine.Option(names = {"-r", "--repo"}, description = "Repository URL or path")
   private String repo;
 
   @CommandLine.Option(names = "--pipeline", description = "Pipeline name")

@@ -4,33 +4,33 @@ stages:
   - name: "build"
     jobs:
       - name: "compile"
-        image: "openjdk:21-jdk-slim"
+        dockerImage: "openjdk:21-jdk-slim"
         script:
           - "javac -d out src/main/java/**/*.java"
         allowFailure: false
 
       - name: "unit-tests"
-        image: "openjdk:21-jdk-slim"
+        dockerImage: "openjdk:21-jdk-slim"
         script:
           - "./gradlew test"
-        needs: ["compile"]
+        dependencies: ["compile"]  # ✅ Changed 'needs' → 'dependencies'
         allowFailure: false
 
   - name: "package"
     jobs:
       - name: "build-jar"
-        image: "gradle:8.12-jdk21"
+        dockerImage: "gradle:8.12-jdk21"
         script:
           - "./gradlew bootJar"
-        needs: ["unit-tests"]
+        dependencies: ["unit-tests"]  # ✅ Changed 'needs' → 'dependencies'
         allowFailure: false
 
   - name: "deploy"
     jobs:
       - name: "dockerize"
-        image: "docker:latest"
+        dockerImage: "docker:latest"
         script:
           - "docker build -t my-cicd-app ."
           - "docker run -d -p 8080:8080 my-cicd-app"
-        needs: ["build-jar"]
+        dependencies: ["build-jar"]  # ✅ Changed 'needs' → 'dependencies'
         allowFailure: false

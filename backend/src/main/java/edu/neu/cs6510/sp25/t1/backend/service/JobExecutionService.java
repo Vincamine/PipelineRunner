@@ -33,6 +33,7 @@ public class JobExecutionService {
             .map(jobExecutionMapper::toDTO)
             .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
   }
+
   /**
    * Starts a new job execution.
    */
