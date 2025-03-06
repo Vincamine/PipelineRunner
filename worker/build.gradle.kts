@@ -36,6 +36,17 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
+
+    // Lombok for reducing boilerplate code (e.g., @Getter, @Setter, @RequiredArgsConstructor)
+    implementation("org.projectlombok:lombok:1.18.30")
+
+    // Lombok annotation processor
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
+
+    // Required for Kotlin projects
+    compileOnly("org.projectlombok:lombok:1.18.36")
+    testCompileOnly("org.projectlombok:lombok:1.18.36")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
 }
 
 java {

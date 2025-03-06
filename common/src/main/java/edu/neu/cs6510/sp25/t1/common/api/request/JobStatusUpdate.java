@@ -1,57 +1,41 @@
 package edu.neu.cs6510.sp25.t1.common.api.request;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.UUID;
 
 /**
  * Represents a request to update the status of a job execution.
  */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class JobStatusUpdate {
-  private final String jobExecutionId;
-  private final String status;
-  private final String logs;
+  private UUID jobExecutionId;
+  private ExecutionStatus status;
+  private String logs;
 
   /**
-   * Constructor for JobStatusUpdate.
-   *
-   * @param jobExecutionId The unique identifier of the job execution.
-   * @param status         The new status of the job execution.
-   * @param logs           The logs to update.
+   * JSON mapping for deserialization.
    */
-  @JsonCreator
-  public JobStatusUpdate(
-          @JsonProperty("jobExecutionId") String jobExecutionId,
-          @JsonProperty("status") String status,
-          @JsonProperty("logs") String logs) {
+  @JsonProperty("jobExecutionId")
+  public void setJobExecutionId(UUID jobExecutionId) {
     this.jobExecutionId = jobExecutionId;
+  }
+
+  @JsonProperty("status")
+  public void setStatus(ExecutionStatus status) {
     this.status = status;
+  }
+
+  @JsonProperty("logs")
+  public void setLogs(String logs) {
     this.logs = logs;
-  }
-
-  /**
-   * Getter for jobExecutionId.
-   *
-   * @return the jobExecutionId
-   */
-  public String getJobExecutionId() {
-    return jobExecutionId;
-  }
-
-  /**
-   * Getter for status.
-   *
-   * @return the status
-   */
-  public String getStatus() {
-    return status;
-  }
-
-  /**
-   * Getter for logs.
-   *
-   * @return the logs
-   */
-  public String getLogs() {
-    return logs;
   }
 }
