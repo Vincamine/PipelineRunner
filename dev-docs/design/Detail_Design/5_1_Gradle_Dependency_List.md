@@ -79,3 +79,11 @@ id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.springframework.boot") version "3.2.2"
     id("io.spring.dependency-management") version "1.1.7"
 ```
+
+## HTTP Client
+
+```kotlin
+   // OkHttp for HTTP client operations
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+```
+

@@ -11,28 +11,28 @@ import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.FileAppender;
 
 /**
- * Centralized logging utility for the CI/CD system.
- * Supports console and file-based logging with configurable log levels.
+ * Centralized logger for pipeline-related logging.
+ * Uses SLF4J with Logback and ensures logs print to the console and a log file.
  */
-public class CicdLogger {
-  private static final Logger logger = LoggerFactory.getLogger(CicdLogger.class);
-  private static final String LOG_FILE_PATH = "logs/cicd_system.log"; // Log file path
+public class PipelineLogger {
+  private static final Logger logger = LoggerFactory.getLogger(PipelineLogger.class);
+  private static final String LOG_FILE_PATH = "logs/pipeline_system.log"; // Log file path
 
   static {
     configureLogging();
   }
 
   /**
-   * Configures logging for both console and file outputs.
+   * Configures Logback to ensure logs appear in the console and a log file.
    */
   private static void configureLogging() {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-    context.reset(); // Reset configuration to avoid duplicate log entries.
+    context.reset();
 
     // Define log pattern (includes time, level, thread, and message)
     PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     encoder.setContext(context);
-    encoder.setPattern("[%d{HH:mm:ss}] [%thread] %-5level %logger{36} - %msg%n");
+    encoder.setPattern("[%d{HH:mm:ss}] [%thread] %-5level %logger{36} - %msg%n"); // Enhanced log format
     encoder.start();
 
     // Console Appender
@@ -61,7 +61,7 @@ public class CicdLogger {
    * @param message The message to log.
    */
   public static void info(String message) {
-    logger.info("[CicdLogger] {}", message);
+    logger.info("[PipelineLogger] {}", message);
   }
 
   /**
@@ -70,7 +70,7 @@ public class CicdLogger {
    * @param message The message to log.
    */
   public static void warn(String message) {
-    logger.warn("[CicdLogger] {}", message);
+    logger.warn("[PipelineLogger] {}", message);
   }
 
   /**
@@ -79,7 +79,7 @@ public class CicdLogger {
    * @param message The message to log.
    */
   public static void error(String message) {
-    logger.error("[CicdLogger] {}", message);
+    logger.error("[PipelineLogger] {}", message);
   }
 
   /**
@@ -88,6 +88,6 @@ public class CicdLogger {
    * @param message The message to log.
    */
   public static void debug(String message) {
-    logger.debug("[CicdLogger] {}", message);
+    logger.debug("[PipelineLogger] {}", message);
   }
 }

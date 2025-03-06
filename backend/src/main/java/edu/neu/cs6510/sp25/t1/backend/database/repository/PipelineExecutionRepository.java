@@ -40,4 +40,12 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
    * @return an optional pipeline execution matching the criteria
    */
   Optional<PipelineExecutionEntity> findByPipelineIdAndRunNumber(UUID pipelineId, int runNumber);
+
+  /**
+   * Finds pipeline executions by pipeline name.
+   *
+   * @param pipelineName the pipeline name
+   * @return a list of pipeline executions associated with the given pipeline name
+   */
+  List<PipelineExecutionEntity> findByPipelineNameOrderByStartTimeDesc(String pipelineName);
 }

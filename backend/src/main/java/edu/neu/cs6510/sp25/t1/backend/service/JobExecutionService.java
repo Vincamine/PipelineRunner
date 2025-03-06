@@ -10,6 +10,8 @@ import java.util.UUID;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.mapper.JobExecutionMapper;
+import edu.neu.cs6510.sp25.t1.common.api.request.JobExecutionRequest;
+import edu.neu.cs6510.sp25.t1.common.api.response.JobExecutionResponse;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,21 @@ public class JobExecutionService {
             .map(jobExecutionMapper::toDTO)
             .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
   }
+  /**
+   * Starts a new job execution.
+   */
+  @Transactional
+  public JobExecutionResponse startJobExecution(JobExecutionRequest request) {
+    JobExecutionEntity newJobExecution = JobExecutionEntity.builder()
+            .jobId(request.getJobId())
+            .stageExecutionId(request.getStageExecutionId())
+            .commitHash(request.getCommitHash())
+            .isLocal(request.isLocal())
+            .status(ExecutionStatus.PENDING)
+            .build();
+    newJobExecution = jobExecutionRepository.save(newJobExecution);
+    return new JobExecutionResponse(newJobExecution.getId().toString(), "QUEUED");
+  }
 
   /**
    * Updates job execution status (called when worker reports back).
@@ -42,6 +59,20 @@ public class JobExecutionService {
 
     jobExecution.updateState(newStatus);
     jobExecutionRepository.save(jobExecution);
+  }
+
+  /**
+   * Cancels a job execution.
+   */
+  @Transactional
+  public void cancelJobExecution(UUID jobExecutionId) {
+    JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
+            .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
+
+    if (jobExecution.getStatus() == ExecutionStatus.PENDING || jobExecution.getStatus() == ExecutionStatus.RUNNING) {
+      jobExecution.updateState(ExecutionStatus.CANCELED);
+      jobExecutionRepository.save(jobExecution);
+    }
   }
 
   /**

@@ -232,5 +232,5 @@ This document outlines the API design for the CI/CD system based on the provided
 ---
 
 ## **4. Conclusion**
-This API design includes endpoints, models, and responsibilities across the **backend, worker, CLI, and common modules**, ensuring **modularity and scalability**. Let me know if refinements are needed! 🚀
+This API design includes endpoints, models, and responsibilities across the **backend, worker, CLI, and common modules**, ensuring **modularity and scalability**. 
 

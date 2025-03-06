@@ -1,6 +1,8 @@
 package edu.neu.cs6510.sp25.t1.backend.database.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,7 +24,9 @@ public interface StageExecutionRepository extends JpaRepository<StageExecutionEn
    * @param pipelineExecutionId the pipeline execution ID
    * @return a list of stage executions associated with the given pipeline execution
    */
-  List<StageExecutionEntity> findByPipelineExecutionId(UUID pipelineExecutionId);
+//  List<StageExecutionEntity> findByPipelineExecutionId(UUID pipelineExecutionId);
+  @Query("SELECT s FROM StageExecutionEntity s WHERE s.pipelineExecutionId = :pipelineExecutionId")
+  List<StageExecutionEntity> findByPipelineExecutionId(@Param("pipelineExecutionId") UUID pipelineExecutionId);
 
   /**
    * Finds stage executions by status.
@@ -40,4 +44,10 @@ public interface StageExecutionRepository extends JpaRepository<StageExecutionEn
    * @return an optional stage execution matching the criteria
    */
   Optional<StageExecutionEntity> findByStageIdAndPipelineExecutionId(UUID stageId, UUID pipelineExecutionId);
+
+  List<StageExecutionEntity> findByPipelineExecutionIdAndStageNameOrderByStartTimeDesc(UUID pipelineExecutionId, String stageName);
+
+  Optional<StageExecutionEntity> findByPipelineExecutionIdAndStageId(UUID pipelineExecutionId, UUID stageId);
+
+
 }

@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +32,18 @@ public class StageExecutionService {
             .map(stageExecutionMapper::toDTO)
             .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
   }
+
+  /**
+   * Retrieves the status of a stage execution by pipeline execution ID and stage name.
+   */
+  public String getStageStatus(UUID pipelineExecutionId, UUID stageId) {
+    return stageExecutionRepository.findByPipelineExecutionIdAndStageId(pipelineExecutionId, stageId)
+            .map(stageExecution -> stageExecution.getStatus().toString()) // Convert status to string
+            .orElse("Stage not found");
+  }
+
+
+
 
   /**
    * Finalizes stage execution if all jobs have succeeded.

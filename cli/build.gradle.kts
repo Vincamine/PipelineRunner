@@ -26,6 +26,17 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.16.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
 
+    // OkHttp for HTTP client operations
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Jackson for JSON and YAML processing
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.3")
+
+    // SLF4J and Logback for logging
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("ch.qos.logback:logback-classic:1.5.17")
+
     // ShadowJar dependencies
     implementation(project(":common"))
 }

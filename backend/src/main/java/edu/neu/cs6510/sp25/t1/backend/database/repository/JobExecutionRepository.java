@@ -46,4 +46,6 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
    * @return an optional job execution associated with the given commit
    */
   Optional<JobExecutionEntity> findByCommitHash(String commitHash);
+
+  List<JobExecutionEntity> findByStageExecutionIdAndJobNameOrderByStartTimeDesc(UUID stageExecutionId, String jobName);
 }
