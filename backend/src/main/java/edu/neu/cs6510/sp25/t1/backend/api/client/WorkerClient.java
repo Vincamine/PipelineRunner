@@ -1,45 +1,32 @@
 package edu.neu.cs6510.sp25.t1.backend.api.client;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import edu.neu.cs6510.sp25.t1.common.execution.JobExecution;
-
+import java.util.UUID;
 
 /**
- * WorkerClient is a REST client that sends jobs to the worker.
+ * Client to communicate with the worker service.
  */
 @Component
 public class WorkerClient {
+
   private final RestTemplate restTemplate;
 
-  @Value("${worker.api.url}") // Load worker URL from application.yml
-  private String workerUrl;
-
   /**
-   * Constructor
-   *
-   * @param restTemplate RestTemplate
+   * Constructor to initialize the worker client.
+   * @param restTemplate The REST template to use for communication.
    */
-  @Autowired
   public WorkerClient(RestTemplate restTemplate) {
     this.restTemplate = restTemplate;
   }
 
   /**
-   * Send a job to the worker.
-   *
-   * @param job JobExecution
+   * Notifies the worker service that a job has been assigned.
+   * @param jobExecutionId The ID of the job execution.
    */
-  public void sendJob(JobExecution job) {
-    try {
-      ResponseEntity<String> response = restTemplate.postForEntity(workerUrl, job, String.class);
-      System.out.println("Worker Response: " + response.getBody());
-    } catch (Exception e) {
-      System.err.println("Failed to send job to worker: " + e.getMessage());
-    }
+  public void notifyWorkerJobAssigned(UUID jobExecutionId) {
+    String workerUrl = "http://worker-service/api/worker/job/" + jobExecutionId;
+    restTemplate.postForEntity(workerUrl, null, String.class);
   }
 }

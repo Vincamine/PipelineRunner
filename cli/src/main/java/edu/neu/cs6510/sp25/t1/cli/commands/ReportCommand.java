@@ -1,107 +1,74 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.concurrent.Callable;
+
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import picocli.CommandLine;
 
 /**
- * CLI command for fetching pipeline execution history.
- * <p>
- * This command allows users to retrieve past pipeline executions from the CI/CD system.
- * It supports:
- * - Listing all available pipelines
- * - Fetching execution history of a specific pipeline
- * - Fetching details of a specific pipeline run
- * <p>
- * The output format can be specified as plaintext, JSON, or YAML.
- * <p>
- * Future Enhancements:
- * - Support querying execution history for a specific stage
- * - Support querying execution history for a specific job
- * - Include execution logs in the report
+ * Fetches and prints reports of pipeline executions.
  */
-@CommandLine.Command(name = "report", description = "Retrieve past pipeline executions")
-public class ReportCommand extends BaseCommand {
+@CommandLine.Command(name = "report", description = "Fetches pipeline execution reports.")
+public class ReportCommand implements Callable<Integer> {
 
-  private final CliBackendClient backendClient;
+  @CommandLine.Option(names = {"--repo", "-r"}, description = "Repository URL or path", required = true)
+  private String repo;
 
-  /**
-   * Lists all pipelines available in the system.
-   */
-  @CommandLine.Option(names = "--list-pipelines", description = "List all pipelines")
-  private boolean listPipelines;
-
-  /**
-   * Specifies the pipeline name whose execution history is being queried.
-   */
-  @CommandLine.Option(names = "--pipeline", description = "Specify pipeline name")
+  @CommandLine.Option(names = "--pipeline", description = "Pipeline name")
   private String pipeline;
 
-  /**
-   * Specifies a particular run ID of the pipeline.
-   */
-  @CommandLine.Option(names = "--run", description = "Specify run ID")
+  @CommandLine.Option(names = "--run", description = "Specific pipeline execution run ID")
   private String runId;
 
-  /**
-   * Default constructor using the default BackendClient.
-   */
-  public ReportCommand() {
-    this.backendClient = new CliBackendClient("http://localhost:8080");
-  }
+  @CommandLine.Option(names = "--stage", description = "Stage name to filter report")
+  private String stage;
 
-  /**
-   * Constructor for dependency injection (used for unit testing).
-   *
-   * @param backendClient The backend client used to fetch pipeline execution data.
-   */
-  public ReportCommand(CliBackendClient backendClient) {
-    this.backendClient = backendClient;
-  }
+  @CommandLine.Option(names = "--job", description = "Job name to filter report")
+  private String job;
 
-  /**
-   * Executes the report command by retrieving pipeline execution data based on the given parameters.
-   * <p>
-   * Behavior:
-   * - If `--list-pipelines` is provided, it returns a list of all pipelines.
-   * - If `--pipeline` is provided without `--run`, it returns execution history for that pipeline.
-   * - If both `--pipeline` and `--run` are provided, it returns details of that specific run.
-   * - If neither `--list-pipelines` nor `--pipeline` is provided, an error message is displayed.
-   * <p>
-   * The response is formatted based on the `--output` option (plaintext, JSON, YAML).
-   *
-   * @return Exit code:
-   *         - 0: Success
-   *         - 1: General error
-   *         - 2: Missing required argument
-   */
   @Override
   public Integer call() {
-    if (validateInputs()) {// the git repo check is done here
-      return 2; // Exit code for missing file or wrong directory
-    }
-    if (!listPipelines && (pipeline == null || pipeline.isEmpty())) {
-      logError("Error: Missing required option '--pipeline=<pipeline>' or '--list-pipelines'");
-      return 2; // Picocli's standard exit code for missing arguments
-    }
+    PipelineLogger.info("Fetching report for repository: " + repo);
+
+    String apiUrl = buildReportApiUrl();
+    HttpClient client = HttpClient.newHttpClient();
+    HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(apiUrl))
+            .header("Accept", "application/json")
+            .GET()
+            .build();
 
     try {
-      String response;
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-      if (listPipelines) {
-        response = backendClient.getAllPipelines();
+      if (response.statusCode() == 200) {
+        System.out.println(response.body());
+        return 0;
       } else {
-        response = (runId == null)
-                ? backendClient.getPipelineExecutions(pipeline, outputFormat)
-                : backendClient.getPipelineExecutions(pipeline + "/" + runId, outputFormat);
+        System.err.println("Error: Failed to fetch report. Status: " + response.statusCode());
+        return 1;
       }
-
-      logInfo("Report successfully retrieved.");
-      System.out.println(formatOutput(response));
-      return 0;
-
     } catch (Exception e) {
-      logError("Failed to retrieve report: " + e.getMessage());
-      return 1; // General failure exit code
+      System.err.println("Error fetching report: " + e.getMessage());
+      return 1;
     }
+  }
+
+  /**
+   * Builds the API URL based on provided CLI arguments.
+   */
+  private String buildReportApiUrl() {
+    StringBuilder url = new StringBuilder("http://localhost:8080/api/report?repo=" + repo);
+
+    if (pipeline != null) url.append("&pipeline=").append(pipeline);
+    if (runId != null) url.append("&run=").append(runId);
+    if (stage != null) url.append("&stage=").append(stage);
+    if (job != null) url.append("&job=").append(job);
+
+    return url.toString();
   }
 }

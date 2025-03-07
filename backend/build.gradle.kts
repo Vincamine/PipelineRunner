@@ -1,9 +1,8 @@
 plugins {
     java
     application
-    id("org.springframework.boot") version "3.2.2"
-    id("io.spring.dependency-management") version "1.1.4"
-    id("org.flywaydb.flyway") version "9.22.3"
+    id("org.springframework.boot") version "3.4.3"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 repositories {
@@ -11,54 +10,72 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":common"))
-    implementation(project(":worker"))
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.2"))
-    
-    // Spring Boot Starters
-    implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
-    implementation("org.springframework.boot:spring-boot-starter:3.2.2")
-    implementation("org.springframework.boot:spring-boot-starter-validation:3.2.2")
+    implementation(project(":common")) // Shared code
 
-    // Jackson for JSON processing
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
+    // Spring Boot Core Dependencies
+    implementation("org.springframework.boot:spring-boot-starter-web:3.4.3")
+    implementation("org.springframework.boot:spring-boot-starter-validation:3.4.3")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:3.4.3")
+    implementation("org.springframework.boot:spring-boot-starter-actuator:3.4.3")
 
-    // Logging with SLF4J and Logback
-    implementation("org.slf4j:slf4j-api:2.0.11")
-    implementation("ch.qos.logback:logback-classic:1.4.14")
+    // OpenAPI (Swagger) for API Documentation
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 
-    // **Spring Boot Testing Dependencies**
-    testImplementation("org.springframework.boot:spring-boot-starter-test:3.2.2")
-    testImplementation("org.springframework.boot:spring-boot-starter-webflux:3.2.2") // For MockMvc testing
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-    testImplementation("org.mockito:mockito-core:5.11.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
+    // Database and JPA (PostgreSQL + Hibernate)
+    implementation("org.hibernate.orm:hibernate-core:6.6.9.Final")
+    runtimeOnly("org.postgresql:postgresql:42.7.5")
 
-    // **Spring Web Test Support**
-    testImplementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
+    // Jakarta Persistence (JPA Annotations)
+    implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
 
-    // **JPA (Jakarta Persistence API)**
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa:3.2.2")
-    implementation("org.hibernate.orm:hibernate-core:6.4.0.Final")
-    runtimeOnly("org.postgresql:postgresql:42.6.0")
+    // Logging
+    implementation("ch.qos.logback:logback-classic:1.5.17")
 
-    implementation("org.flywaydb:flyway-core")
-    implementation("org.postgresql:postgresql")
+    // Use JUnit BOM (Bill of Materials) to ensure version compatibility
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
 
-    // **Spring Data Redis**
-    implementation("org.springframework.boot:spring-boot-starter-data-redis:3.2.2")
-    implementation("io.lettuce:lettuce-core:6.5.4.RELEASE")
+    // Then specify JUnit dependencies without versions - they'll use versions from the BOM
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.platform:junit-platform-launcher")
 
-    // **Jakarta Persistence API (JPA Annotations)**
-    implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
+    // Mockito dependencies
+    testImplementation("org.mockito:mockito-core:5.16.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
+
+    // ✅ Spring Boot Test (For MockMvc & Integration Tests)
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+    }
+
+    implementation("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
+
+    testImplementation("org.projectlombok:lombok:1.18.36")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+}
+
+application {
+    mainClass.set("edu.neu.cs6510.sp25.t1.backend.BackendApp")
 }
 
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "edu.neu.cs6510.sp25.t1.BackendApp"
     }
-}
-
-application {
-    mainClass.set("edu.neu.cs6510.sp25.t1.backend.BackendApp")
 }

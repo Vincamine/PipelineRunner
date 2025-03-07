@@ -1,7 +1,7 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.2.2"
-    id("io.spring.dependency-management") version "1.1.4"
+    id("org.springframework.boot") version "3.4.3"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 repositories {
@@ -17,35 +17,36 @@ dependencies {
     // WebClient (for sending job status updates)
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    // Docker Java API (for managing job execution in Docker)
-    implementation("com.github.docker-java:docker-java-core:3.3.4")
-    implementation("com.github.docker-java:docker-java-transport-httpclient5:3.3.4")
 
-    // Logging (SLF4J + Logback)
-    implementation("org.slf4j:slf4j-api:2.0.9")
-    implementation("ch.qos.logback:logback-classic:1.4.14")
+    // Use JUnit BOM (Bill of Materials) to ensure version compatibility
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
 
-    // JSON Parsing (Jackson)
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
+    // Then specify JUnit dependencies without versions - they'll use versions from the BOM
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.platform:junit-platform-launcher")
 
-    // Metrics (Prometheus support)
-    implementation("io.micrometer:micrometer-registry-prometheus")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-
-    // Unit Testing Dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    testImplementation("org.mockito:mockito-core:5.4.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
-
-    // Integration Testing (Testcontainers for Docker)
-    testImplementation("org.testcontainers:junit-jupiter:1.19.3")
-    testImplementation("org.testcontainers:testcontainers:1.19.3")
+    // ✅ Mockito (For Unit Testing & Mocks)
+    testImplementation("org.mockito:mockito-core:5.16.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
 
 
     // Spring Boot Testing (Ensure JUnit 5 is used)
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
-        exclude(group = "org.junit.vintage", module = "junit-vintage-engine") 
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
+
+    // Lombok for reducing boilerplate code (e.g., @Getter, @Setter, @RequiredArgsConstructor)
+    implementation("org.projectlombok:lombok:1.18.30")
+
+    // Lombok annotation processor
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
+
+    // Required for Kotlin projects
+    compileOnly("org.projectlombok:lombok:1.18.36")
+    testCompileOnly("org.projectlombok:lombok:1.18.36")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
 }
 
 java {
@@ -64,5 +65,5 @@ tasks.named<Test>("test") {
 }
 
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
-    mainClass.set("edu.neu.cs6510.sp25.t1.WorkerApp") // Set your actual main class
+    mainClass.set("edu.neu.cs6510.sp25.t1.worker.WorkerApp")
 }

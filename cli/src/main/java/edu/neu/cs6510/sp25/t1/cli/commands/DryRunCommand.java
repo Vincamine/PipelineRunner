@@ -1,113 +1,111 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-
+import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
 import edu.neu.cs6510.sp25.t1.common.model.Job;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.model.Stage;
-import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import picocli.CommandLine;
 
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.Callable;
+
 /**
- * CLI command to simulate pipeline execution.
- * <p>
- * Purpose: Prints the execution plan of a pipeline without actually executing any jobs.
- * <p>
- * Output: The execution plan is printed in a structured YAML format.
+ * Handles the --dry-run command, which validates a pipeline file
+ * and prints out the execution order in a structured YAML format.
  */
-@CommandLine.Command(name = "dry-run", description = "Simulate pipeline execution without running jobs.")
-public class DryRunCommand extends BaseCommand {
+@CommandLine.Command(name = "dry-run", description = "Validates and prints execution order of a pipeline.")
+public class DryRunCommand implements Callable<Integer> {
 
-  private final ObjectMapper yamlMapper = new YAMLMapper();
+  @CommandLine.Option(names = {"-f", "--file"}, description = "Path to the pipeline configuration file", required = true)
+  private String filePath;
 
-  /**
-   * Executes the dry-run command to simulate pipeline execution order.
-   *
-   * @return Exit code:
-   * - 0 - Success
-   * - 1 - General failure
-   * - 2 - Missing file or incorrect directory
-   * - 3 - Validation failure
-   */
   @Override
   public Integer call() {
-    System.out.println("====================================");
-    System.out.println("Command Started: " + this.getClass().getSimpleName());
-    System.out.println("====================================");
-    if (validateInputs()) {
-      return 2;
+    File pipelineFile = new File(filePath);
+    if (!pipelineFile.exists()) {
+      System.err.println("Error: Specified pipeline file does not exist: " + filePath);
+      return 1;
     }
 
-    System.out.println("passed the inputs validation");
-    System.out.println("====================================");
     try {
-      logInfo("Loading and validating pipeline configuration...");
-      Pipeline pipeline = loadAndValidatePipelineConfig();
+      // Validate the pipeline
+      YamlPipelineValidator.validatePipeline(filePath);
 
-      if (pipeline == null || pipeline.getStages().isEmpty()) {
-        logError("Pipeline is empty or could not be loaded.");
-        return 3;
-      }
+      // Parse the YAML
+      Pipeline pipeline = YamlParser.parseYaml(pipelineFile);
 
-      logInfo("Pipeline successfully loaded. Generating execution plan...");
-      System.out.println("====================================");
-      generateExecutionPlan(pipeline);
+      // Generate execution order based on dependencies
+      List<Stage> orderedStages = orderStagesByExecution(pipeline);
+
+      // Print the execution order in YAML format
+      printExecutionPlan(orderedStages);
+
       return 0;
-    } catch (ValidationException e) {
-      logError("Validation Error: " + e.getMessage());
-      return 3;
     } catch (Exception e) {
-      logError("Error processing pipeline: " + e.getMessage());
+      System.err.println("Validation failed: " + e.getMessage());
       return 1;
     }
   }
 
-  /**
-   * Generates and prints the pipeline execution plan in YAML format.
-   *
-   * @param pipeline The pipeline configuration.
-   */
-  private void generateExecutionPlan(Pipeline pipeline) {
-    logInfo("🔍 Generating execution plan for pipeline: " + pipeline.getName());
-
-    Map<String, Object> executionPlan = new LinkedHashMap<>();
-
-    // Process stages in order
+  private List<Stage> orderStagesByExecution(Pipeline pipeline) {
+    List<Stage> orderedStages = new ArrayList<>();
+    Map<String, Stage> stageMap = new HashMap<>();
     for (Stage stage : pipeline.getStages()) {
-      logInfo("Processing Stage: " + stage.getName());
+      stageMap.put(stage.getName(), stage);
+    }
 
-      Map<String, Object> stageDetails = new LinkedHashMap<>();
-
-      // Process jobs within each stage
-      for (Job job : stage.getJobs()) {
-        logInfo("  - Found Job: " + job.getName() + " (Image: " + job.getImage() + ")");
-
-        Map<String, Object> jobDetails = new LinkedHashMap<>();
-        jobDetails.put("image", job.getImage());
-        jobDetails.put("script", job.getScript()); // Keeps script as a list
-
-        stageDetails.put(job.getName(), jobDetails);
+    Set<String> visited = new HashSet<>();
+    for (Stage stage : pipeline.getStages()) {
+      if (!visited.contains(stage.getName())) {
+        visitStage(stage, stageMap, visited, orderedStages);
       }
+    }
+    return orderedStages;
+  }
 
-      executionPlan.put(stage.getName(), stageDetails);
+  private void visitStage(Stage stage, Map<String, Stage> stageMap, Set<String> visited, List<Stage> orderedStages) {
+    if (visited.contains(stage.getName())) return;
+    visited.add(stage.getName());
+
+    for (Job job : stage.getJobs()) {
+      for (UUID dependency : job.getDependencies()) {
+        Stage dependentStage = findStageContainingJob(dependency, stageMap);
+        if (dependentStage != null) {
+          visitStage(dependentStage, stageMap, visited, orderedStages);
+        }
+      }
+    }
+    orderedStages.add(stage);
+  }
+
+  private Stage findStageContainingJob(UUID jobUUID, Map<String, Stage> stageMap) {
+    for (Stage stage : stageMap.values()) {
+      for (Job job : stage.getJobs()) {
+        if (job.getId().equals(jobUUID)) {
+          return stage;
+        }
+      }
+    }
+    return null;
+  }
+
+  private void printExecutionPlan(List<Stage> orderedStages) {
+    StringBuilder yamlOutput = new StringBuilder();
+
+    for (Stage stage : orderedStages) {
+      yamlOutput.append(stage.getName()).append(":\n");
+      for (Job job : stage.getJobs()) {
+        yamlOutput.append("  ").append(job.getName()).append(":\n");
+        yamlOutput.append("    image: ").append(job.getDockerImage()).append("\n");
+        yamlOutput.append("    script:\n");
+        for (String scriptLine : job.getScript()) {
+          yamlOutput.append("    - ").append(scriptLine).append("\n");
+        }
+      }
     }
 
-    if (executionPlan.isEmpty()) {
-      logError("No stages or jobs found in the pipeline.");
-      return;
-    }
-
-    try {
-      String yamlOutput = yamlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(executionPlan);
-      System.out.println("\nPipeline Execution Plan:\n" + yamlOutput);
-    } catch (Exception e) {
-      logError("Failed to generate YAML output: " + e.getMessage());
-    }
-
-    logInfo("Simulation Complete.");
+    System.out.println(yamlOutput.toString());
   }
 }

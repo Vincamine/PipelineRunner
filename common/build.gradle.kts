@@ -8,20 +8,45 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot Dependencies (Required for RestTemplate)
-    implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
+    // ✅ JSON Processing (Jackson)
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.3")
 
-    // Jackson for JSON processing
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
+    // ✅ SLF4J + Logback (Logging)
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("ch.qos.logback:logback-classic:1.5.17")
 
-    // Snakeyaml
-    implementation("org.yaml:snakeyaml:2.0")
+    // Use JUnit BOM (Bill of Materials) to ensure version compatibility
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
 
-    // Annotations (Java EE)
-    implementation("javax.annotation:javax.annotation-api:1.3.2")
+    // Then specify JUnit dependencies without versions - they'll use versions from the BOM
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.platform:junit-platform-launcher")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.16.0")
+    // Mockito dependencies
+    testImplementation("org.mockito:mockito-core:5.16.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
+
+    implementation("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
+
+    testImplementation("org.projectlombok:lombok:1.18.36")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }

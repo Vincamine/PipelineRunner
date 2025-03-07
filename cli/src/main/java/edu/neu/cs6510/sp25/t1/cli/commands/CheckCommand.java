@@ -1,50 +1,36 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
-import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import picocli.CommandLine;
 
+import java.io.File;
+import java.util.concurrent.Callable;
+
 /**
- * Command to check the validity of a pipeline YAML file.
- * - Parses and validates the pipeline YAML locally.
- * - Does NOT interact with the CI/CD system backend.
+ * Command to validate a pipeline YAML file without executing it.
  */
-@CommandLine.Command(name = "check", description = "Validate the pipeline configuration file.")
-public class CheckCommand extends BaseCommand {
+@CommandLine.Command(name = "check", description = "Validates a pipeline YAML file.")
+public class CheckCommand implements Callable<Integer> {
 
-  /**
-   * Default constructor.
-   */
-  public CheckCommand() {
-  }
+  @CommandLine.Option(names = {"-f", "--file"}, description = "Path to the pipeline configuration file", required = true)
+  private String filePath;
 
-  /**
-   * Validates the pipeline configuration file.
-   *
-   * @return Exit code:
-   * - 0: Validation successful
-   * - 1: General error
-   * - 2: File not found or unreadable
-   * - 3: Validation failed
-   */
   @Override
   public Integer call() {
-    if (validateInputs()) {// the git repo check is done here
-      return 2; // Exit code for missing file or wrong directory
+    File file = new File(filePath);
+
+    if (!file.exists()) {
+      System.err.println("Error: Pipeline file " + filePath + " does not exist.");
+      return 1;
     }
+
     try {
-      // Use shared method from BaseCommand
-      Pipeline pipeline = loadAndValidatePipelineConfig();
-
-      logInfo("Pipeline configuration is valid: " + configFile);
+      YamlPipelineValidator.validatePipeline(filePath);
+      PipelineLogger.info("Pipeline file is valid: " + filePath);
       return 0;
-
-    } catch (ValidationException e) {
-      logError(String.format("%s: Validation Error: %s", configFile, e.getMessage()));
-      return 3;
-
     } catch (Exception e) {
-      logError(String.format("%s: Error processing YAML file: %s", configFile, e.getMessage()));
+      System.err.println("Error: " + e.getMessage());
       return 1;
     }
   }
