@@ -97,7 +97,7 @@ class PipelineExecutionRequestTest {
 
         // Act
         String json = objectMapper.writeValueAsString(originalRequest);
-        json = json.replace("\"local\":", "\"isLocal\":");
+//        json = json.replace("\"local\":", "\"isLocal\":");
         PipelineExecutionRequest deserializedRequest = objectMapper.readValue(json, PipelineExecutionRequest.class);
 
         // Assert

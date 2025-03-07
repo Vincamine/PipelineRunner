@@ -98,7 +98,7 @@ class JobExecutionRequestTest {
 
         // Act
         String json = objectMapper.writeValueAsString(originalRequest);
-        json = json.replace("\"local\":", "\"isLocal\":");
+//        json = json.replace("\"local\":", "\"isLocal\":");
         JobExecutionRequest deserializedRequest = objectMapper.readValue(json, JobExecutionRequest.class);
 
         // Assert
