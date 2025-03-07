@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,6 +23,7 @@ import edu.neu.cs6510.sp25.t1.common.model.Job;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.model.Stage;
 import picocli.CommandLine;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Executes a CI/CD pipeline with support for local and remote execution.
@@ -31,6 +33,7 @@ public class RunCommand implements Callable<Integer> {
 
   @CommandLine.Option(names = {"-r", "--repo"}, description = "Repository URL or path")
   private String repo;
+
 
   @CommandLine.Option(names = "--pipeline", description = "Pipeline name")
   private String pipeline;
@@ -69,6 +72,7 @@ public class RunCommand implements Callable<Integer> {
         return 1;
       }
       runningPipelines.add(executionKey);
+
     }
 
     try {
@@ -199,6 +203,7 @@ public class RunCommand implements Callable<Integer> {
   /**
    * Recursively processes job dependencies to determine execution order.
    */
+  
   private void visitStage(Stage stage, Map<String, Stage> stageMap, Set<String> visited, List<Stage> orderedStages) {
     if (visited.contains(stage.getName())) return;
     visited.add(stage.getName());
