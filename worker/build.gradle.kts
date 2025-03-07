@@ -62,6 +62,7 @@ tasks.test {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+    jvmArgs = listOf("-XX:+EnableDynamicAgentLoading")
 }
 
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
