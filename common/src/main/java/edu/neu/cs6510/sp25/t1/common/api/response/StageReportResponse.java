@@ -24,8 +24,8 @@ public class StageReportResponse {
    */
   @JsonCreator
   public StageReportResponse(
-          @JsonProperty String stageName,
-          @JsonProperty List<ExecutionRecord> executions) {
+          @JsonProperty("stageName") String stageName,
+          @JsonProperty("executions") List<ExecutionRecord> executions) {
     this.stageName = stageName;
     this.executions = executions;
   }
@@ -45,7 +45,10 @@ public class StageReportResponse {
      * @param executionId The unique identifier of the stage execution.
      * @param status      The status of the stage execution (e.g., SUCCESS, FAILED, CANCELED).
      */
-    public ExecutionRecord(String executionId, String status) {
+    @JsonCreator
+    public ExecutionRecord(
+            @JsonProperty("executionId") String executionId,
+            @JsonProperty("status") String status) {
       this.executionId = executionId;
       this.status = status;
     }
