@@ -12,7 +12,7 @@ import lombok.Getter;
  */
 @Getter
 public class PipelineReportResponse {
-  // Getters wiht lombok
+  // Getters with lombok
   private final String executionId;
   private final String status;
   private final String commitHash;
@@ -27,9 +27,9 @@ public class PipelineReportResponse {
    */
   @JsonCreator
   public PipelineReportResponse(
-          @JsonProperty String executionId,
-          @JsonProperty String status,
-          @JsonProperty String commitHash) {
+          @JsonProperty("executionId") String executionId,
+          @JsonProperty("status") String status,
+          @JsonProperty("commitHash") String commitHash){
     this.executionId = executionId;
     this.status = status;
     this.commitHash = commitHash;
@@ -58,7 +58,16 @@ public class PipelineReportResponse {
     private final String stageName;
     private final String status;
 
-    public StageReportSummary(String stageName, String status) {
+    /**
+     * Constructor for StageReportSummary.
+     *
+     * @param stageName Name of the stage.
+     * @param status    Status of the stage execution.
+     */
+    @JsonCreator
+    public StageReportSummary(
+            @JsonProperty("stageName") String stageName,
+            @JsonProperty("status") String status) {
       this.stageName = stageName;
       this.status = status;
     }
