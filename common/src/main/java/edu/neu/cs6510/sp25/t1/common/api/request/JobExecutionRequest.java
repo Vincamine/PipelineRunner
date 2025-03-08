@@ -44,4 +44,9 @@ public class JobExecutionRequest {
     this.dockerImage = dockerImage;
     this.commands = commands;
   }
+
+  @JsonProperty("isLocal")
+  public boolean isLocal() {
+    return isLocal;
+  }
 }

@@ -1,9 +1,12 @@
 package edu.neu.cs6510.sp25.t1.worker.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
@@ -23,7 +26,8 @@ public class PipelineExecutionWorkerService {
   private final WorkerCommunicationService workerCommunicationService;
   private final RestTemplate restTemplate;
 
-  private static final String BACKEND_API_URL = "http://backend-service/api";
+  @Value("${backend.api.url:http://backend-service/api}")
+  private String backendApiUrl;
 
   /**
    * Executes all jobs for a given pipeline execution.
@@ -41,23 +45,32 @@ public class PipelineExecutionWorkerService {
       return;
     }
 
+    // Pre-fetch and cache all dependencies to reduce redundant service calls
+    Map<UUID, List<UUID>> dependenciesMap = new HashMap<>();
+    jobExecutions.forEach(job -> {
+      List<UUID> dependencies = workerCommunicationService.getJobDependencies(job.getId());
+      dependenciesMap.put(job.getId(), dependencies);
+    });
+
+    // Use cached dependencies for filtering
     List<JobExecutionDTO> independentJobs = jobExecutions.stream()
-            .filter(job -> workerCommunicationService.getJobDependencies(job.getId()).isEmpty())
+            .filter(job -> dependenciesMap.get(job.getId()).isEmpty())
             .toList();
 
     List<JobExecutionDTO> dependentJobs = jobExecutions.stream()
-            .filter(job -> !workerCommunicationService.getJobDependencies(job.getId()).isEmpty())
+            .filter(job -> !dependenciesMap.get(job.getId()).isEmpty())
             .toList();
 
     log.info("Starting independent jobs...");
     independentJobs.forEach(jobRunner::runJob);
 
     log.info("Processing dependent jobs...");
-    dependentJobs.forEach(this::waitAndRunDependentJob);
+    // Pass cached dependencies to avoid redundant service calls
+    dependentJobs.forEach(job -> waitAndRunDependentJob(job, dependenciesMap.get(job.getId())));
   }
 
   /**
-   * ✅ **NEW METHOD: Executes a single job execution request from the backend.**
+   * Executes a single job execution request from the backend.
    *
    * @param job The job execution details.
    */
@@ -66,15 +79,25 @@ public class PipelineExecutionWorkerService {
     jobRunner.runJob(job);
   }
 
+  /**
+   * Fetches all jobs for a pipeline execution.
+   *
+   * @param pipelineExecutionId The ID of the pipeline execution.
+   * @return List of job executions.
+   */
   private List<JobExecutionDTO> fetchJobsForPipelineExecution(UUID pipelineExecutionId) {
-    String url = BACKEND_API_URL + "/pipeline-executions/" + pipelineExecutionId + "/jobs";
+    String url = backendApiUrl + "/pipeline-executions/" + pipelineExecutionId + "/jobs";
     return restTemplate.getForObject(url, List.class);
   }
 
-  private void waitAndRunDependentJob(JobExecutionDTO job) {
+  /**
+   * Waits for job dependencies to be completed before running the job.
+   *
+   * @param job The job to run.
+   * @param dependencies The pre-fetched dependencies for the job.
+   */
+  private void waitAndRunDependentJob(JobExecutionDTO job, List<UUID> dependencies) {
     log.info("Waiting for dependencies of job {}", job.getId());
-
-    List<UUID> dependencies = workerCommunicationService.getJobDependencies(job.getId());
 
     int attempts = 0;
     while (attempts < 10) {

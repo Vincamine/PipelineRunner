@@ -43,4 +43,9 @@ public class PipelineExecutionRequest {
     this.isLocal = isLocal;
     this.runNumber = runNumber;
   }
+
+  @JsonProperty("isLocal")
+  public boolean isLocal() {
+    return isLocal;
+  }
 }
