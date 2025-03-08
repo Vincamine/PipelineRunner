@@ -17,6 +17,9 @@ dependencies {
     // WebClient (for sending job status updates)
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
+    // Swagger dependencies
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0")
+
 
     // Use JUnit BOM (Bill of Materials) to ensure version compatibility
     testImplementation(platform("org.junit:junit-bom:5.12.0"))
@@ -47,6 +50,8 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.36")
     testCompileOnly("org.projectlombok:lombok:1.18.36")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
+
+
 }
 
 java {
