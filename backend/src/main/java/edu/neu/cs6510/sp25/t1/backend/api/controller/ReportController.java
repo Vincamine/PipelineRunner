@@ -1,15 +1,18 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
-import edu.neu.cs6510.sp25.t1.backend.service.ReportService;
-import edu.neu.cs6510.sp25.t1.common.dto.PipelineReportDTO;
-import edu.neu.cs6510.sp25.t1.common.dto.StageReportDTO;
-import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
+
+import edu.neu.cs6510.sp25.t1.backend.service.ReportService;
+import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
+import edu.neu.cs6510.sp25.t1.common.dto.PipelineReportDTO;
+import edu.neu.cs6510.sp25.t1.common.dto.StageReportDTO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/report")
@@ -22,21 +25,52 @@ public class ReportController {
     this.reportService = reportService;
   }
 
-  @GetMapping("/pipeline/{pipelineName}")
+  /**
+   * ✅ Fetch all pipeline names for which reports are available.
+   */
+  @GetMapping("/pipelines")
+  @Operation(summary = "Retrieve available pipelines", description = "Returns a list of pipeline names for which execution reports are available.")
+  public List<String> getAvailablePipelines() {
+    return reportService.getAvailablePipelines();
+  }
+
+  /**
+   * ✅ Fetch past executions for a given pipeline name.
+   * Input: `pipelineName`
+   */
+  @GetMapping("/pipeline/history/{pipelineName}")
   @Operation(summary = "Retrieve pipeline execution history", description = "Fetches past executions of a specified pipeline.")
-  public List<PipelineReportDTO> getPipelineReport(@PathVariable String pipelineName) {
+  public List<PipelineReportDTO> getPipelineExecutionHistory(@PathVariable String pipelineName) {
     return reportService.getPipelineReports(pipelineName);
   }
 
-  @GetMapping("/pipeline/{pipelineExecutionId}/stage/{stageName}")
-  @Operation(summary = "Retrieve stage execution history", description = "Fetches past executions of a specified stage in a pipeline.")
-  public StageReportDTO getStageReport(@PathVariable UUID pipelineExecutionId, @PathVariable String stageName) {
-    return reportService.getStageReport(pipelineExecutionId, stageName);
+  /**
+   * ✅ Fetch a detailed summary for a specific pipeline execution.
+   * Input: `pipelineName` and `runNumber`
+   */
+  @GetMapping("/pipeline/{pipelineName}/run/{runNumber}")
+  @Operation(summary = "Retrieve detailed pipeline execution report", description = "Fetches detailed execution report of a pipeline run including all stages and jobs.")
+  public PipelineReportDTO getPipelineExecutionSummary(@PathVariable String pipelineName, @PathVariable int runNumber) {
+    return reportService.getPipelineRunSummary(pipelineName, runNumber);
   }
 
-  @GetMapping("/stage/{stageExecutionId}/job/{jobName}")
-  @Operation(summary = "Retrieve job execution history", description = "Fetches past executions of a specified job in a stage.")
-  public JobReportDTO getJobReport(@PathVariable UUID stageExecutionId, @PathVariable String jobName) {
-    return reportService.getJobReport(stageExecutionId, jobName);
+  /**
+   * ✅ Fetch a **stage execution report** for a given pipeline execution.
+   * Input: `pipelineName`, `runNumber`, and `stageName`
+   */
+  @GetMapping("/pipeline/{pipelineName}/run/{runNumber}/stage/{stageName}")
+  @Operation(summary = "Retrieve stage execution history", description = "Fetches execution summary of a specified stage in a pipeline execution.")
+  public StageReportDTO getStageReport(@PathVariable String pipelineName, @PathVariable int runNumber, @PathVariable String stageName) {
+    return reportService.getStageReport(pipelineName, runNumber, stageName);
+  }
+
+  /**
+   * ✅ Fetch a **job execution report** for a given stage execution.
+   * Input: `pipelineName`, `runNumber`, `stageName`, and `jobName`
+   */
+  @GetMapping("/pipeline/{pipelineName}/run/{runNumber}/stage/{stageName}/job/{jobName}")
+  @Operation(summary = "Retrieve job execution history", description = "Fetches execution summary of a specified job in a stage execution.")
+  public JobReportDTO getJobReport(@PathVariable String pipelineName, @PathVariable int runNumber, @PathVariable String stageName, @PathVariable String jobName) {
+    return reportService.getJobReport(pipelineName, runNumber, stageName, jobName);
   }
 }

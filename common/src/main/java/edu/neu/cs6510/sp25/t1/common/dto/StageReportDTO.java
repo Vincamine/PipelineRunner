@@ -13,18 +13,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class StageReportDTO {
-  private String stageName;
-  private List<ExecutionRecord> executionRecords;
-
-  @Getter
-  @Setter
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Builder
-  public static class ExecutionRecord {
-    private UUID id;
-    private ExecutionStatus status;
-    private Instant startTime;
-    private Instant completionTime;
-  }
+  private UUID stageId;  // Stage identifier
+  private String stageName; // Name of the stage
+  private ExecutionStatus status; // Overall stage execution status
+  private Instant startTime; // Start timestamp
+  private Instant completionTime; // Completion timestamp
+  private List<JobReportDTO> jobReports; // Jobs inside this stage
 }
