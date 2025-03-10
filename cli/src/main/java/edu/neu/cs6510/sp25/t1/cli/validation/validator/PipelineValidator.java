@@ -54,7 +54,6 @@ public class PipelineValidator {
     List<String> errors = new ArrayList<>();
     final PipelineNameManager pipelineNameManager = new PipelineNameManager();
 
-
     // Ensure pipeline name exists
     if (pipeline == null || pipeline.getName() == null || pipeline.getName().isEmpty()) {
       errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "name"), "Pipeline name is required."));
@@ -71,29 +70,23 @@ public class PipelineValidator {
     // Ensure at least one stage exists
     if (pipeline.getStages() == null || pipeline.getStages().isEmpty()) {
       errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "stages"), "At least one stage is required."));
-    }
-
-    Set<String> jobNames = new HashSet<>();
-    for (Stage stage : pipeline.getStages()) {
-      if (stage.getJobs() == null || stage.getJobs().isEmpty()) {
-        errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "jobs"), "Each stage must have at least one job."));
-      }
-
-      for (Job job : stage.getJobs()) {
-        if (jobNames.contains(job.getName())) {
-          errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, job.getName()), "Duplicate job name found: " + job.getName()));
+    } else {
+      // Populate job names first
+      Set<String> jobNames = new HashSet<>();
+      for (Stage stage : pipeline.getStages()) {
+        for (Job job : stage.getJobs()) {
+          jobNames.add(job.getName());
         }
-        jobNames.add(job.getName());
       }
-    }
 
-    // Validate job dependencies exist
-    validateDependenciesExist(pipeline, filename, jobNames, errors);
+      // Validate job dependencies exist
+      validateDependenciesExist(pipeline, filename, jobNames, errors);
+    }
 
     // Detect cyclic dependencies
     List<List<String>> cycles = detectCycles(pipeline);
     for (List<String> cycle : cycles) {
-      errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "needs"), "Cyclic dependency detected: " + String.join(" -> ", cycle)));
+      errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "dependencies"), "Cyclic dependency detected: " + String.join(" -> ", cycle)));
       PipelineLogger.error("Cyclic dependency detected: " + String.join(" -> ", cycle));
     }
 
@@ -118,12 +111,14 @@ public class PipelineValidator {
   private static void validateDependenciesExist(Pipeline pipeline, String filename, Set<String> jobNames, List<String> errors) {
     for (Stage stage : pipeline.getStages()) {
       for (Job job : stage.getJobs()) {
-        for (UUID dependency : job.getDependencies()) { // Changed from String to UUID
-          String dependencyStr = dependency.toString(); // Convert UUID to String
-          if (!jobNames.contains(dependencyStr)) { // Compare using String values
-            errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, dependencyStr),
-                    "Job '" + job.getName() + "' depends on a non-existent job '" + dependencyStr + "'."));
-            PipelineLogger.warn("Job '" + job.getName() + "' has an invalid dependency: '" + dependencyStr + "'");
+        if (job.getDependencies() != null && !job.getDependencies().isEmpty()) { // Only check when dependencies exist
+          for (UUID dependency : job.getDependencies()) {
+            String dependencyStr = dependency.toString();
+            if (!jobNames.contains(dependencyStr)) { // Ensure dependency exists in the pipeline
+              errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, dependencyStr),
+                      "Job '" + job.getName() + "' depends on a non-existent job '" + dependencyStr + "'."));
+              PipelineLogger.warn("Job '" + job.getName() + "' has an invalid dependency: '" + dependencyStr + "'");
+            }
           }
         }
       }
@@ -190,7 +185,7 @@ public class PipelineValidator {
    * @return Formatted cycle string.
    */
   private static String formatCycle(List<String> cycle) {
-    return String.join(" → ", cycle) + " → " + cycle.get(0); // Close the loop visually
+    return String.join(" → ", cycle) + " → " + cycle.getFirst(); // Close the loop visually
   }
 
   /**
