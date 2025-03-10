@@ -36,11 +36,11 @@ public class ValidationException extends Exception {
   }
 
   /**
-   * Constructs a ValidationException with a filename, line number, and error message.
-   *
-   * @param filename The name of the YAML file where the error occurred.
-   * @param line     The line number where the validation error occurred.
-   * @param message  The error message.
+   * Constructs a ValidationException with an error message and location.
+   * @param filename The filename where the validation error occurred.
+   * @param line The line number where the validation error occurred.
+   * @param column The column number where the validation error occurred.
+   * @param message The error message.
    */
   public ValidationException(String filename, int line, int column, String message) {
     super(String.format("%s:%d:%d: %s", filename, line, column, message));

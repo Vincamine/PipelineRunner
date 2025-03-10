@@ -69,18 +69,14 @@ public class RunCommandTest {
   private boolean shouldRemoteExecutionFail = false;
   private boolean shouldThrowIOException = false;
 
-  /**
-   * Sets a private field using reflection
-   */
+
   private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
     Field field = target.getClass().getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);
   }
 
-  /**
-   * Invokes a private method using reflection
-   */
+
   private Object invokePrivateMethod(Object target, String methodName, Class<?>[] paramTypes, Object[] params) throws Exception {
     Method method = target.getClass().getDeclaredMethod(methodName, paramTypes);
     method.setAccessible(true);

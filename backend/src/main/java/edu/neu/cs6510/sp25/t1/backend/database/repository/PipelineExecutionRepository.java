@@ -46,6 +46,7 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
   /**
    * dynamically fetches the pipeline name associated with a pipeline execution
    * and return the entity
+   *
    * @param pipelineName the name of the pipeline
    * @return a list of pipeline
    */
@@ -54,6 +55,7 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
 
   /**
    * Join pipelineExecution and pipeline tables to fetch the pipeline name by pipelineId
+   *
    * @param pipelineId the pipeline ID
    * @return an optional pipeline name
    */
@@ -61,7 +63,10 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
   Optional<String> findPipelineNameByPipelineId(@Param("pipelineId") UUID pipelineId);
 
   /**
-   * Fetch the pipeline ID by pipeline name.
+   * Find pipeline
+   *
+   * @param pipelineName the name of the pipeline
+   * @return an optional pipeline id
    */
   @Query("SELECT p.id FROM PipelineEntity p WHERE p.name = :pipelineName")
   Optional<UUID> findPipelineIdByName(@Param("pipelineName") String pipelineName);

@@ -69,7 +69,11 @@ public class JobValidator {
   }
 
   /**
-   * Formats error messages.
+   * Formats a validation error message.
+   * @param filename The filename of the YAML being validated.
+   * @param fieldName The field name where the error occurred.
+   * @param message The error message.
+   * @return The formatted error message.
    */
   private static String formatError(String filename, String fieldName, String message) {
     int line = YamlParser.getFieldLineNumber(filename, fieldName);

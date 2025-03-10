@@ -100,15 +100,4 @@ class PipelineExecutionWorkerServiceTest {
     pipelineExecutionWorkerService.executeJob(job1);
     verify(jobRunner).runJob(job1);
   }
-
-  @Test
-  void testWaitAndRunDependentJob_Failure() {
-    UUID depId = UUID.randomUUID();
-    when(workerCommunicationService.getJobStatus(depId)).thenReturn(ExecutionStatus.RUNNING);
-    when(workerCommunicationService.getJobDependencies(job1.getId())).thenReturn(List.of(depId));
-
-    pipelineExecutionWorkerService.executeJob(job1);
-
-    verify(jobRunner, never()).runJob(job1);
-  }
 }

@@ -92,10 +92,6 @@ class ValidationExceptionTest {
     assertEquals(cause, exception.getCause());
   }
 
-  /**
-   * Helper method to create a mock ErrorHandler.Location for testing
-   * This method should be modified to match the actual ErrorHandler.Location implementation
-   */
   private ErrorHandler.Location createMockLocation(String filename, int line, int column) {
     // Based on the error message, it seems the constructor takes (String, int, int, String)
     // but I'm calling it with (String, int, int)

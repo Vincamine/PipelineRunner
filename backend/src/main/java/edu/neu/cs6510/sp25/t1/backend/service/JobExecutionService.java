@@ -26,6 +26,9 @@ public class JobExecutionService {
 
   /**
    * Retrieves a job execution by ID.
+   *
+   * @param jobExecutionId the job execution ID
+   * @return the job execution DTO
    */
   public JobExecutionDTO getJobExecution(UUID jobExecutionId) {
     return jobExecutionRepository.findById(jobExecutionId)
@@ -35,6 +38,9 @@ public class JobExecutionService {
 
   /**
    * Starts a new job execution.
+   *
+   * @param request the job execution request
+   * @return the job execution response
    */
   @Transactional
   public JobExecutionResponse startJobExecution(JobExecutionRequest request) {
@@ -50,7 +56,10 @@ public class JobExecutionService {
   }
 
   /**
-   * Updates job execution status (called when worker reports back).
+   * Updates the status of a job execution.
+   *
+   * @param jobExecutionId the job execution ID
+   * @param newStatus      the new status
    */
   @Transactional
   public void updateJobExecutionStatus(UUID jobExecutionId, ExecutionStatus newStatus) {
@@ -63,6 +72,8 @@ public class JobExecutionService {
 
   /**
    * Cancels a job execution.
+   *
+   * @param jobExecutionId the job execution ID
    */
   @Transactional
   public void cancelJobExecution(UUID jobExecutionId) {

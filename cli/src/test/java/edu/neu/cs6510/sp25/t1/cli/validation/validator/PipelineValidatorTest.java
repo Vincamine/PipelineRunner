@@ -1,26 +1,26 @@
 package edu.neu.cs6510.sp25.t1.cli.validation.validator;
 
-import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
-import edu.neu.cs6510.sp25.t1.cli.validation.manager.PipelineNameManager;
-import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
-import edu.neu.cs6510.sp25.t1.common.model.Job;
-import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
-import edu.neu.cs6510.sp25.t1.common.model.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.model.Job;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
+import edu.neu.cs6510.sp25.t1.common.model.Stage;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PipelineValidatorTest {

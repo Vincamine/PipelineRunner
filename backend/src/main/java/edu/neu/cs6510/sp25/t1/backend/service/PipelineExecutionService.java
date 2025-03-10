@@ -71,7 +71,8 @@ public class PipelineExecutionService {
   }
 
   /**
-   * Finalizes pipeline execution when all stages complete.
+   * Finalizes a pipeline execution.
+   * @param pipelineExecutionId ID of the pipeline execution
    */
   @Transactional
   public void finalizePipelineExecution(UUID pipelineExecutionId) {

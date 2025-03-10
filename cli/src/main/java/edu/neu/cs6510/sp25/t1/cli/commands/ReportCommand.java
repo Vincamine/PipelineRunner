@@ -74,9 +74,10 @@ public class ReportCommand implements Callable<Integer> {
 
   /**
    * Fetch summary of a specific pipeline run.
-   *
    * @param pipelineName Name of the pipeline
+   * @param run Run number
    * @return 0 if successful, 1 if API request failed
+   * @throws IOException if API request fails
    */
   private Integer fetchPipelineRunSummary(String pipelineName, int run) throws IOException {
     System.out.println("Fetching run summary for pipeline: " + pipelineName + ", Run: " + run);
@@ -87,9 +88,11 @@ public class ReportCommand implements Callable<Integer> {
 
   /**
    * Fetch summary of a specific stage in a pipeline run.
-   *
    * @param pipelineName Name of the pipeline
+   * @param run Run number
+   * @param stage Stage name
    * @return 0 if successful, 1 if API request failed
+   * @throws IOException if API request fails
    */
   private Integer fetchStageSummary(String pipelineName, int run, String stage) throws IOException {
     System.out.println("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + run + ", Stage: " + stage);
@@ -99,11 +102,13 @@ public class ReportCommand implements Callable<Integer> {
   }
 
   /**
-   * Fetch summary of a specific job in a stage.
-   * This is the most detailed report.
-   *
+   * Fetch summary of a specific job in a pipeline stage.
    * @param pipelineName Name of the pipeline
+   * @param run Run number
+   * @param stage Stage name
+   * @param job Job name
    * @return 0 if successful, 1 if API request failed
+   * @throws IOException if API request fails
    */
   private Integer fetchJobSummary(String pipelineName, int run, String stage, String job) throws IOException {
     System.out.println("Fetching job summary for pipeline: " + pipelineName + ", Run: " + run + ", Stage: " + stage + ", Job: " + job);

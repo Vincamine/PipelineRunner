@@ -58,10 +58,10 @@ public class WorkerBackendClient {
   }
 
   /**
-   * Updates job execution status in the backend.
-   *
+   * Updates the job execution status.
    * @param jobExecutionId The job execution ID.
-   * @param status         The execution status.
+   * @param status The new status.
+   * @param logs The logs to attach to the status update.
    */
   public void updateJobStatus(UUID jobExecutionId, ExecutionStatus status, String logs) {
     String url = backendApiUrl + "/job/status";

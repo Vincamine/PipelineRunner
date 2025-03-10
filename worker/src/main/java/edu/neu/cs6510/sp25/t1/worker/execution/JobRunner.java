@@ -58,7 +58,9 @@ public class JobRunner {
    */
   private boolean checkAndWaitForDependencies(JobExecutionDTO job) {
     List<UUID> dependencies = workerCommunicationService.getJobDependencies(job.getId());
-    if (dependencies.isEmpty()) return true;
+    if (dependencies.isEmpty()) {
+      return true;
+    }
 
     log.info("Waiting for dependencies: {}", dependencies);
     long startTime = System.currentTimeMillis();
@@ -68,7 +70,9 @@ public class JobRunner {
       boolean allResolved = dependencies.stream()
               .allMatch(dep -> workerCommunicationService.getJobStatus(dep) == ExecutionStatus.SUCCESS);
 
-      if (allResolved) return true;
+      if (allResolved) {
+        return true;
+      }
 
       try {
         Thread.sleep(2000);
