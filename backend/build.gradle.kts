@@ -22,11 +22,11 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 
     // Database and JPA (PostgreSQL + Hibernate)
-    implementation("org.hibernate.orm:hibernate-core:6.6.9.Final")
+    //implementation("org.hibernate.orm:hibernate-core:6.6.9.Final")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
 
     // Jakarta Persistence (JPA Annotations)
-    implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
+    //implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
 
     // Logging
     implementation("ch.qos.logback:logback-classic:1.5.17")

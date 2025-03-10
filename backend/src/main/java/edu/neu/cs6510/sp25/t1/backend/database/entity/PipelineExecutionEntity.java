@@ -44,6 +44,9 @@ public class PipelineExecutionEntity {
   @Column(name = "pipeline_id", nullable = false)
   private UUID pipelineId;
 
+  @Column(name = "pipeline_name", nullable = false)
+  private String pipelineName;
+
   /**
    * Unique run number for tracking executions of the pipeline.
    */

@@ -39,12 +39,18 @@ public class JobExecutionService {
    */
   @Transactional
   public JobExecutionResponse startJobExecution(JobExecutionRequest request) {
+
+    if (request.getJobName() == null || request.getJobName().isEmpty()) {
+      throw new IllegalArgumentException("Job name cannot be null or empty");
+    }
+
     JobExecutionEntity newJobExecution = JobExecutionEntity.builder()
             .jobId(request.getJobId())
             .stageExecutionId(request.getStageExecutionId())
             .commitHash(request.getCommitHash())
             .isLocal(request.isLocal())
             .status(ExecutionStatus.PENDING)
+            .jobName(request.getJobName())
             .build();
     newJobExecution = jobExecutionRepository.save(newJobExecution);
     return new JobExecutionResponse(newJobExecution.getId().toString(), "QUEUED");

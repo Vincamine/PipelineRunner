@@ -56,6 +56,9 @@ public class StageExecutionEntity {
   @Column(name = "execution_order", nullable = false)
   private int executionOrder;
 
+  @Column(name = "stage_name")
+  private String stageName;
+
   /**
    * Git commit hash associated with this stage execution.
    */

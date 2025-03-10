@@ -18,6 +18,7 @@ public class JobExecutionRequest {
   private final boolean isLocal;
   private final String dockerImage;
   private final List<String> commands;
+  private final String jobName;
 
   /**
    * Constructs a new JobExecutionRequest based on its definition.
@@ -28,21 +29,24 @@ public class JobExecutionRequest {
    * @param isLocal          Indicates if the execution is local
    * @param dockerImage      The Docker image to use for the job
    * @param commands         The list of commands to execute
+   * @param jobName          The name of the job
    */
   @JsonCreator
   public JobExecutionRequest(
-          @JsonProperty("jobId") UUID jobId,
-          @JsonProperty("stageExecutionId") UUID stageExecutionId,
-          @JsonProperty("commitHash") String commitHash,
-          @JsonProperty("isLocal") boolean isLocal,
-          @JsonProperty("dockerImage") String dockerImage,
-          @JsonProperty("commands") List<String> commands) {
+      @JsonProperty("jobId") UUID jobId,
+      @JsonProperty("stageExecutionId") UUID stageExecutionId,
+      @JsonProperty("commitHash") String commitHash,
+      @JsonProperty("isLocal") boolean isLocal,
+      @JsonProperty("dockerImage") String dockerImage,
+      @JsonProperty("commands") List<String> commands,
+      @JsonProperty("jobName") String jobName) {
     this.jobId = jobId;
     this.stageExecutionId = stageExecutionId;
     this.commitHash = commitHash;
     this.isLocal = isLocal;
     this.dockerImage = dockerImage;
     this.commands = commands;
+    this.jobName = jobName;
   }
 
   @JsonProperty("isLocal")
