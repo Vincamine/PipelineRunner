@@ -14,6 +14,9 @@ import edu.neu.cs6510.sp25.t1.common.dto.StageReportDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/**
+ * Controller class for handling report related endpoints.
+ */
 @RestController
 @RequestMapping("/api/report")
 @Tag(name = "Report API", description = "Endpoints for retrieving execution reports")
@@ -21,12 +24,19 @@ public class ReportController {
 
   private final ReportService reportService;
 
+  /**
+   * Constructor for ReportController.
+   *
+   * @param reportService ReportService instance
+   */
   public ReportController(ReportService reportService) {
     this.reportService = reportService;
   }
 
   /**
-   * ✅ Fetch all pipeline names for which reports are available.
+   * Fetch available pipelines.
+   *
+   * @return List of pipeline names
    */
   @GetMapping("/pipelines")
   @Operation(summary = "Retrieve available pipelines", description = "Returns a list of pipeline names for which execution reports are available.")
@@ -35,8 +45,10 @@ public class ReportController {
   }
 
   /**
-   * ✅ Fetch past executions for a given pipeline name.
-   * Input: `pipelineName`
+   * Fetch pipeline execution history.
+   *
+   * @param pipelineName Name of the pipeline
+   * @return List of pipeline execution reports
    */
   @GetMapping("/pipeline/history/{pipelineName}")
   @Operation(summary = "Retrieve pipeline execution history", description = "Fetches past executions of a specified pipeline.")
@@ -45,8 +57,11 @@ public class ReportController {
   }
 
   /**
-   * ✅ Fetch a detailed summary for a specific pipeline execution.
-   * Input: `pipelineName` and `runNumber`
+   * Fetch detailed execution summary for a pipeline run.
+   *
+   * @param pipelineName Name of the pipeline
+   * @param runNumber    Run number of the pipeline
+   * @return summary of pipeline execution
    */
   @GetMapping("/pipeline/{pipelineName}/run/{runNumber}")
   @Operation(summary = "Retrieve detailed pipeline execution report", description = "Fetches detailed execution report of a pipeline run including all stages and jobs.")
@@ -54,9 +69,14 @@ public class ReportController {
     return reportService.getPipelineRunSummary(pipelineName, runNumber);
   }
 
+
   /**
-   * ✅ Fetch a **stage execution report** for a given pipeline execution.
-   * Input: `pipelineName`, `runNumber`, and `stageName`
+   * Fetch stage execution history.
+   *
+   * @param pipelineName Name of the pipeline
+   * @param runNumber    Run number of the pipeline
+   * @param stageName    Name of the stage
+   * @return summary of stage execution
    */
   @GetMapping("/pipeline/{pipelineName}/run/{runNumber}/stage/{stageName}")
   @Operation(summary = "Retrieve stage execution history", description = "Fetches execution summary of a specified stage in a pipeline execution.")
@@ -64,9 +84,15 @@ public class ReportController {
     return reportService.getStageReport(pipelineName, runNumber, stageName);
   }
 
+
   /**
-   * ✅ Fetch a **job execution report** for a given stage execution.
-   * Input: `pipelineName`, `runNumber`, `stageName`, and `jobName`
+   * Fetch the report for a job execution.
+   *
+   * @param pipelineName Name of the pipeline
+   * @param runNumber    Run number of the pipeline
+   * @param stageName    Name of the stage
+   * @param jobName      Name of the job
+   * @return summary of job execution
    */
   @GetMapping("/pipeline/{pipelineName}/run/{runNumber}/stage/{stageName}/job/{jobName}")
   @Operation(summary = "Retrieve job execution history", description = "Fetches execution summary of a specified job in a stage execution.")

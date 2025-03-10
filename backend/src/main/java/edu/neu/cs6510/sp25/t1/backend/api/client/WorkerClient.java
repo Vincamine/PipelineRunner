@@ -15,6 +15,7 @@ public class WorkerClient {
 
   /**
    * Constructor to initialize the worker client.
+   *
    * @param restTemplate The REST template to use for communication.
    */
   public WorkerClient(RestTemplate restTemplate) {
@@ -23,6 +24,7 @@ public class WorkerClient {
 
   /**
    * Notifies the worker service that a job has been assigned.
+   *
    * @param jobExecutionId The ID of the job execution.
    */
   public void notifyWorkerJobAssigned(UUID jobExecutionId) {

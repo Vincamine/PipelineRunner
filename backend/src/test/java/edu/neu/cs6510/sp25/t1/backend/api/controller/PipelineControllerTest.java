@@ -1,121 +1,95 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
-
-import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
-import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 @ExtendWith(MockitoExtension.class)
-public class PipelineControllerTest {
+class PipelineControllerTest {
 
   @Mock
   private PipelineExecutionService pipelineExecutionService;
 
-  @InjectMocks
   private PipelineController pipelineController;
 
-  private PipelineExecutionRequest request;
-  private UUID executionId;
+  private UUID testExecutionId;
 
   @BeforeEach
-  public void setup() {
-    executionId = UUID.randomUUID();
-    request = mock(PipelineExecutionRequest.class);
+  void setUp() {
+    testExecutionId = UUID.randomUUID();
+    pipelineController = new PipelineController(pipelineExecutionService);
   }
 
   @Test
-  public void testExecutePipeline() {
+  void testGetPipelineStatus_Success() {
     // Arrange
-    PipelineExecutionResponse mockResponse = mock(PipelineExecutionResponse.class);
-    when(pipelineExecutionService.startPipelineExecution(request)).thenReturn(mockResponse);
+    PipelineExecutionResponse expectedResponse = mock(PipelineExecutionResponse.class);
+    doReturn(expectedResponse).when(pipelineExecutionService).getPipelineExecution(any(UUID.class));
 
     // Act
-    PipelineExecutionResponse result = pipelineController.executePipeline(request);
+    ResponseEntity<?> response = pipelineController.getPipelineStatus(testExecutionId);
 
     // Assert
-    assertEquals(mockResponse, result);
-    verify(pipelineExecutionService, times(1)).startPipelineExecution(request);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(expectedResponse, response.getBody());
+    verify(pipelineExecutionService, times(1)).getPipelineExecution(testExecutionId);
   }
 
   @Test
-  public void testGetPipelineStatus() {
+  void testGetPipelineStatus_NotFound() {
     // Arrange
-    PipelineExecutionResponse mockResponse = mock(PipelineExecutionResponse.class);
-    when(pipelineExecutionService.getPipelineExecution(executionId)).thenReturn(mockResponse);
+    doThrow(new IllegalArgumentException("Pipeline execution not found"))
+            .when(pipelineExecutionService).getPipelineExecution(any(UUID.class));
 
     // Act
-    PipelineExecutionResponse result = pipelineController.getPipelineStatus(executionId);
+    ResponseEntity<?> response = pipelineController.getPipelineStatus(testExecutionId);
 
     // Assert
-    assertEquals(mockResponse, result);
-    verify(pipelineExecutionService, times(1)).getPipelineExecution(executionId);
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Pipeline execution not found"));
+    verify(pipelineExecutionService, times(1)).getPipelineExecution(testExecutionId);
   }
 
   @Test
-  public void testCheckDuplicateExecution_WhenDuplicateExists() {
-    // Arrange
-    when(pipelineExecutionService.isDuplicateExecution(request)).thenReturn(true);
-
-    // Act
-    boolean isDuplicate = pipelineController.checkDuplicateExecution(request);
+  void testConstructor() {
+    // Arrange & Act
+    PipelineController controller = new PipelineController(pipelineExecutionService);
 
     // Assert
-    assertTrue(isDuplicate);
-    verify(pipelineExecutionService, times(1)).isDuplicateExecution(request);
+    assertNotNull(controller);
   }
 
   @Test
-  public void testCheckDuplicateExecution_WhenNoDuplicateExists() {
+  void testGetPipelineStatus_WithNullId() {
     // Arrange
-    when(pipelineExecutionService.isDuplicateExecution(request)).thenReturn(false);
+    UUID nullId = null;
+    doThrow(new IllegalArgumentException("Pipeline execution ID cannot be null"))
+            .when(pipelineExecutionService).getPipelineExecution(nullId);
 
     // Act
-    boolean isDuplicate = pipelineController.checkDuplicateExecution(request);
+    ResponseEntity<?> response = pipelineController.getPipelineStatus(nullId);
 
     // Assert
-    assertFalse(isDuplicate);
-    verify(pipelineExecutionService, times(1)).isDuplicateExecution(request);
-  }
-
-  @Test
-  public void testExecutePipeline_WithNullResult() {
-    // Arrange
-    when(pipelineExecutionService.startPipelineExecution(request)).thenReturn(null);
-
-    // Act
-    PipelineExecutionResponse result = pipelineController.executePipeline(request);
-
-    // Assert
-    assertNull(result);
-    verify(pipelineExecutionService, times(1)).startPipelineExecution(request);
-  }
-
-  @Test
-  public void testGetPipelineStatus_WithDifferentId() {
-    // Arrange
-    UUID differentId = UUID.randomUUID();
-    PipelineExecutionResponse mockResponse = mock(PipelineExecutionResponse.class);
-    when(pipelineExecutionService.getPipelineExecution(differentId)).thenReturn(mockResponse);
-
-    // Act
-    PipelineExecutionResponse result = pipelineController.getPipelineStatus(differentId);
-
-    // Assert
-    assertEquals(mockResponse, result);
-    verify(pipelineExecutionService, times(1)).getPipelineExecution(differentId);
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Pipeline execution not found"));
   }
 }

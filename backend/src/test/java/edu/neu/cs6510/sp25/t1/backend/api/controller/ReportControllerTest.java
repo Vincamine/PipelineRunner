@@ -1,171 +1,170 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import edu.neu.cs6510.sp25.t1.backend.service.ReportService;
 import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.PipelineReportDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.StageReportDTO;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
-public class ReportControllerTest {
+class ReportControllerTest {
 
   @Mock
   private ReportService reportService;
 
-  @InjectMocks
   private ReportController reportController;
 
-  private static final String PIPELINE_NAME = "test-pipeline";
-  private static final String STAGE_NAME = "test-stage";
-  private static final String JOB_NAME = "test-job";
-  private UUID pipelineExecutionId;
-  private UUID stageExecutionId;
-
   @BeforeEach
-  public void setup() {
-    pipelineExecutionId = UUID.randomUUID();
-    stageExecutionId = UUID.randomUUID();
+  void setUp() {
+    reportController = new ReportController(reportService);
   }
 
   @Test
-  public void testGetPipelineReport_WithResults() {
+  void testGetAvailablePipelines() {
     // Arrange
-    List<PipelineReportDTO> expectedReports = new ArrayList<>();
-    expectedReports.add(mock(PipelineReportDTO.class));
-    expectedReports.add(mock(PipelineReportDTO.class));
-
-    when(reportService.getPipelineReports(PIPELINE_NAME)).thenReturn(expectedReports);
+    List<String> expectedPipelines = Arrays.asList("pipeline1", "pipeline2", "pipeline3");
+    when(reportService.getAvailablePipelines()).thenReturn(expectedPipelines);
 
     // Act
-    List<PipelineReportDTO> actualReports = reportController.getPipelineReport(PIPELINE_NAME);
+    List<String> actualPipelines = reportController.getAvailablePipelines();
 
     // Assert
-    assertEquals(expectedReports.size(), actualReports.size());
+    assertEquals(expectedPipelines, actualPipelines);
+    assertEquals(3, actualPipelines.size());
+    verify(reportService, times(1)).getAvailablePipelines();
+  }
+
+  @Test
+  void testGetAvailablePipelines_EmptyList() {
+    // Arrange
+    when(reportService.getAvailablePipelines()).thenReturn(Collections.emptyList());
+
+    // Act
+    List<String> actualPipelines = reportController.getAvailablePipelines();
+
+    // Assert
+    assertTrue(actualPipelines.isEmpty());
+    verify(reportService, times(1)).getAvailablePipelines();
+  }
+
+  @Test
+  void testGetPipelineExecutionHistory() {
+    // Arrange
+    String pipelineName = "testPipeline";
+    List<PipelineReportDTO> expectedReports = Arrays.asList(
+            mock(PipelineReportDTO.class),
+            mock(PipelineReportDTO.class)
+    );
+    when(reportService.getPipelineReports(pipelineName)).thenReturn(expectedReports);
+
+    // Act
+    List<PipelineReportDTO> actualReports = reportController.getPipelineExecutionHistory(pipelineName);
+
+    // Assert
     assertEquals(expectedReports, actualReports);
-    verify(reportService, times(1)).getPipelineReports(PIPELINE_NAME);
+    assertEquals(2, actualReports.size());
+    verify(reportService, times(1)).getPipelineReports(pipelineName);
   }
 
   @Test
-  public void testGetPipelineReport_EmptyList() {
+  void testGetPipelineExecutionHistory_EmptyList() {
     // Arrange
-    List<PipelineReportDTO> emptyList = Collections.emptyList();
-    when(reportService.getPipelineReports(PIPELINE_NAME)).thenReturn(emptyList);
+    String pipelineName = "nonExistentPipeline";
+    when(reportService.getPipelineReports(pipelineName)).thenReturn(Collections.emptyList());
 
     // Act
-    List<PipelineReportDTO> actualReports = reportController.getPipelineReport(PIPELINE_NAME);
+    List<PipelineReportDTO> actualReports = reportController.getPipelineExecutionHistory(pipelineName);
 
     // Assert
-    assertNotNull(actualReports);
-    assertEquals(0, actualReports.size());
-    verify(reportService, times(1)).getPipelineReports(PIPELINE_NAME);
+    assertTrue(actualReports.isEmpty());
+    verify(reportService, times(1)).getPipelineReports(pipelineName);
   }
 
   @Test
-  public void testGetPipelineReport_NullPipelineName() {
+  void testGetPipelineExecutionSummary() {
     // Arrange
-    when(reportService.getPipelineReports(null)).thenThrow(new IllegalArgumentException("Pipeline name cannot be null"));
+    String pipelineName = "testPipeline";
+    int runNumber = 5;
+    PipelineReportDTO expectedReport = mock(PipelineReportDTO.class);
+    when(reportService.getPipelineRunSummary(pipelineName, runNumber)).thenReturn(expectedReport);
 
-    // Act & Assert
-    assertThrows(IllegalArgumentException.class, () -> {
-      reportController.getPipelineReport(null);
-    });
-    verify(reportService, times(1)).getPipelineReports(null);
+    // Act
+    PipelineReportDTO actualReport = reportController.getPipelineExecutionSummary(pipelineName, runNumber);
+
+    // Assert
+    assertEquals(expectedReport, actualReport);
+    verify(reportService, times(1)).getPipelineRunSummary(pipelineName, runNumber);
   }
 
   @Test
-  public void testGetStageReport_Success() {
+  void testGetStageReport() {
     // Arrange
+    String pipelineName = "testPipeline";
+    int runNumber = 5;
+    String stageName = "testStage";
     StageReportDTO expectedReport = mock(StageReportDTO.class);
-    when(reportService.getStageReport(pipelineExecutionId, STAGE_NAME)).thenReturn(expectedReport);
+    when(reportService.getStageReport(pipelineName, runNumber, stageName)).thenReturn(expectedReport);
 
     // Act
-    StageReportDTO actualReport = reportController.getStageReport(pipelineExecutionId, STAGE_NAME);
+    StageReportDTO actualReport = reportController.getStageReport(pipelineName, runNumber, stageName);
 
     // Assert
     assertEquals(expectedReport, actualReport);
-    verify(reportService, times(1)).getStageReport(pipelineExecutionId, STAGE_NAME);
+    verify(reportService, times(1)).getStageReport(pipelineName, runNumber, stageName);
   }
 
   @Test
-  public void testGetStageReport_NullResult() {
+  void testGetJobReport() {
     // Arrange
-    when(reportService.getStageReport(pipelineExecutionId, STAGE_NAME)).thenReturn(null);
-
-    // Act
-    StageReportDTO actualReport = reportController.getStageReport(pipelineExecutionId, STAGE_NAME);
-
-    // Assert
-    assertEquals(null, actualReport);
-    verify(reportService, times(1)).getStageReport(pipelineExecutionId, STAGE_NAME);
-  }
-
-  @Test
-  public void testGetStageReport_InvalidId() {
-    // Arrange
-    UUID invalidId = UUID.fromString("00000000-0000-0000-0000-000000000000");
-    when(reportService.getStageReport(invalidId, STAGE_NAME))
-            .thenThrow(new IllegalArgumentException("Invalid pipeline execution ID"));
-
-    // Act & Assert
-    assertThrows(IllegalArgumentException.class, () -> {
-      reportController.getStageReport(invalidId, STAGE_NAME);
-    });
-    verify(reportService, times(1)).getStageReport(invalidId, STAGE_NAME);
-  }
-
-  @Test
-  public void testGetJobReport_Success() {
-    // Arrange
+    String pipelineName = "testPipeline";
+    int runNumber = 5;
+    String stageName = "testStage";
+    String jobName = "testJob";
     JobReportDTO expectedReport = mock(JobReportDTO.class);
-    when(reportService.getJobReport(stageExecutionId, JOB_NAME)).thenReturn(expectedReport);
+    when(reportService.getJobReport(pipelineName, runNumber, stageName, jobName)).thenReturn(expectedReport);
 
     // Act
-    JobReportDTO actualReport = reportController.getJobReport(stageExecutionId, JOB_NAME);
+    JobReportDTO actualReport = reportController.getJobReport(pipelineName, runNumber, stageName, jobName);
 
     // Assert
     assertEquals(expectedReport, actualReport);
-    verify(reportService, times(1)).getJobReport(stageExecutionId, JOB_NAME);
+    verify(reportService, times(1)).getJobReport(pipelineName, runNumber, stageName, jobName);
   }
 
   @Test
-  public void testGetJobReport_NullResult() {
-    // Arrange
-    when(reportService.getJobReport(stageExecutionId, JOB_NAME)).thenReturn(null);
-
+  void testConstructor() {
     // Act
-    JobReportDTO actualReport = reportController.getJobReport(stageExecutionId, JOB_NAME);
+    ReportController controller = new ReportController(reportService);
 
     // Assert
-    assertEquals(null, actualReport);
-    verify(reportService, times(1)).getJobReport(stageExecutionId, JOB_NAME);
+    assertNotNull(controller);
   }
 
   @Test
-  public void testGetJobReport_InvalidInput() {
+  void testWithNegativeRunNumber() {
     // Arrange
-    when(reportService.getJobReport(stageExecutionId, null))
-            .thenThrow(new IllegalArgumentException("Job name cannot be null"));
+    String pipelineName = "testPipeline";
+    int negativeRunNumber = -1;
+    PipelineReportDTO expectedReport = mock(PipelineReportDTO.class);
+    when(reportService.getPipelineRunSummary(pipelineName, negativeRunNumber)).thenReturn(expectedReport);
 
-    // Act & Assert
-    assertThrows(IllegalArgumentException.class, () -> {
-      reportController.getJobReport(stageExecutionId, null);
-    });
-    verify(reportService, times(1)).getJobReport(stageExecutionId, null);
+    // Act
+    PipelineReportDTO actualReport = reportController.getPipelineExecutionSummary(pipelineName, negativeRunNumber);
+
+    // Assert
+    assertEquals(expectedReport, actualReport);
+    verify(reportService, times(1)).getPipelineRunSummary(pipelineName, negativeRunNumber);
   }
 }

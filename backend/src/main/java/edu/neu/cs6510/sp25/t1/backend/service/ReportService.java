@@ -7,17 +7,20 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
+import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.PipelineReportDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.StageReportDTO;
-import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
+/**
+ * Service class for generating reports based on pipeline, stage, and job executions.
+ */
 @Service
 public class ReportService {
 
@@ -25,6 +28,13 @@ public class ReportService {
   private final StageExecutionRepository stageExecutionRepository;
   private final JobExecutionRepository jobExecutionRepository;
 
+  /**
+   * Constructor for **ReportService**.
+   *
+   * @param pipelineExecutionRepository pipeline execution repository
+   * @param stageExecutionRepository    stage execution repository
+   * @param jobExecutionRepository      job execution repository
+   */
   public ReportService(PipelineExecutionRepository pipelineExecutionRepository,
                        StageExecutionRepository stageExecutionRepository,
                        JobExecutionRepository jobExecutionRepository) {
@@ -34,7 +44,9 @@ public class ReportService {
   }
 
   /**
-   * Given no inputs, return a **list of pipeline names** for which reports are available.
+   * Get a list of all available pipelines by giving no pipeline name.
+   *
+   * @return list of pipeline names
    */
   @Transactional(readOnly = true)
   public List<String> getAvailablePipelines() {
@@ -47,7 +59,10 @@ public class ReportService {
 
 
   /**
-   * Given a **pipeline name**, return a summary of all executions.
+   * Get a list of all pipeline reports for a given pipeline name.
+   *
+   * @param pipelineName pipeline name
+   * @return list of pipeline reports
    */
   @Transactional(readOnly = true)
   public List<PipelineReportDTO> getPipelineReports(String pipelineName) {
@@ -73,7 +88,11 @@ public class ReportService {
   }
 
   /**
-   * Given a **pipeline name and a run number**, return a summary of that specific run.
+   * Get a summary of a pipeline run by giving the pipeline name and run number.
+   *
+   * @param pipelineName pipeline name
+   * @param runNumber    run number
+   * @return pipeline report
    */
   @Transactional(readOnly = true)
   public PipelineReportDTO getPipelineRunSummary(String pipelineName, int runNumber) {
@@ -103,7 +122,12 @@ public class ReportService {
   }
 
   /**
-   * Given a **pipeline name, run number, and stage name**, return the report of that stage.
+   * Get a detailed report of a stage by giving the pipeline name, run number, and stage name.
+   *
+   * @param pipelineName pipeline name
+   * @param runNumber    run number
+   * @param stageName    stage name
+   * @return stage report
    */
   @Transactional(readOnly = true)
   public StageReportDTO getStageReport(String pipelineName, int runNumber, String stageName) {
@@ -123,7 +147,13 @@ public class ReportService {
   }
 
   /**
-   * Given a **pipeline name, run number, stage name, and job name**, return the report for that job.
+   * Get a detailed report of a job by giving the pipeline name, run number, stage name, and job name.
+   *
+   * @param pipelineName pipeline name
+   * @param runNumber    run number
+   * @param stageName    stage name
+   * @param jobName      job name
+   * @return job report
    */
   @Transactional(readOnly = true)
   public JobReportDTO getJobReport(String pipelineName, int runNumber, String stageName, String jobName) {
@@ -159,7 +189,10 @@ public class ReportService {
   }
 
   /**
-   * Helper method to create a **StageReportDTO** from a `StageExecutionEntity`.
+   * Helper method to create a stage report from a stage execution entity.
+   *
+   * @param stage stage execution entity
+   * @return stage report
    */
   private StageReportDTO createStageReport(StageExecutionEntity stage) {
     List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecutionId(stage.getId());
@@ -187,7 +220,10 @@ public class ReportService {
   }
 
   /**
-   * Determines the overall **pipeline status** based on all stage executions.
+   * Calculate the pipeline status based on the statuses of its stages.
+   *
+   * @param stages list of stage execution entities
+   * @return pipeline status
    */
   private ExecutionStatus calculatePipelineStatus(List<StageExecutionEntity> stages) {
     boolean hasFailed = false;

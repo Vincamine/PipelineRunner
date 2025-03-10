@@ -1,188 +1,174 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
+import edu.neu.cs6510.sp25.t1.backend.api.client.WorkerClient;
 import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionService;
 import edu.neu.cs6510.sp25.t1.common.api.request.JobExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
 import edu.neu.cs6510.sp25.t1.common.api.response.JobExecutionResponse;
+import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class JobControllerTest {
+class JobControllerTest {
 
   @Mock
   private JobExecutionService jobExecutionService;
 
-  @InjectMocks
+  @Mock
+  private WorkerClient workerClient;
+
   private JobController jobController;
 
-  // Test utility method to create a minimal controller for file upload testing
-  private JobController createTestControllerWithoutFileSystem() {
-    return new JobController(jobExecutionService) {
-      @Override
-      public ResponseEntity<String> uploadJobArtifacts(UUID jobId, MultipartFile file) {
-        try {
-          if (file == null) {
-            throw new NullPointerException("File cannot be null");
-          }
+  private UUID testUuid;
+  private String testUuidString;
+  private ExecutionStatus completedStatus;
 
-          // Skip actual file operations
-          return ResponseEntity.ok("{\"message\": \"Artifacts uploaded successfully.\"}");
-        } catch (Exception e) {
-          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                  .body("{\"error\": \"Failed to upload artifact: " + e.getMessage() + "\"}");
-        }
-      }
-    };
+  @BeforeEach
+  void setUp() {
+    testUuid = UUID.randomUUID();
+    testUuidString = testUuid.toString();
+    completedStatus = ExecutionStatus.SUCCESS;
+
+    // Create controller with mocked dependencies
+    jobController = new JobController(jobExecutionService, workerClient);
+    ReflectionTestUtils.setField(jobController, "artifactStoragePath", "/test/artifacts");
   }
 
   @Test
-  public void testExecuteJob() {
+  void testExecuteJob() {
     // Arrange
     JobExecutionRequest request = mock(JobExecutionRequest.class);
     JobExecutionResponse expectedResponse = mock(JobExecutionResponse.class);
-    when(jobExecutionService.startJobExecution(request)).thenReturn(expectedResponse);
+
+    // Set up mock behavior with CORRECT STRING RETURN TYPE
+    doReturn(expectedResponse).when(jobExecutionService).startJobExecution(any());
+    doReturn(testUuidString).when(expectedResponse).getJobExecutionId();
 
     // Act
-    JobExecutionResponse response = jobController.executeJob(request);
+    JobExecutionResponse actualResponse = jobController.executeJob(request);
 
     // Assert
-    assertEquals(expectedResponse, response);
-    verify(jobExecutionService, times(1)).startJobExecution(request);
+    assertNotNull(actualResponse);
+    assertEquals(testUuidString, actualResponse.getJobExecutionId());
+    verify(jobExecutionService, times(1)).startJobExecution(any());
   }
 
   @Test
-  public void testUpdateJobStatus() {
+  void testUpdateJobStatus() {
     // Arrange
-    UUID jobId = UUID.randomUUID();
-    ExecutionStatus status = ExecutionStatus.SUCCESS;
-    JobStatusUpdate updateRequest = mock(JobStatusUpdate.class);
-    when(updateRequest.getJobExecutionId()).thenReturn(jobId);
-    when(updateRequest.getStatus()).thenReturn(status);
+    JobStatusUpdate request = mock(JobStatusUpdate.class);
+    doReturn(testUuid).when(request).getJobExecutionId();
+    doReturn(completedStatus).when(request).getStatus();
 
     // Act
-    String response = jobController.updateJobStatus(updateRequest);
-
-    // Assert
-    assertEquals("{\"message\": \"Job status updated.\"}", response);
-    verify(jobExecutionService, times(1)).updateJobExecutionStatus(jobId, status);
-  }
-
-  @Test
-  public void testCancelJobExecution() {
-    // Arrange
-    UUID jobId = UUID.randomUUID();
-
-    // Act
-    String response = jobController.cancelJobExecution(jobId);
-
-    // Assert
-    assertEquals("{\"message\": \"Job execution canceled successfully.\"}", response);
-    verify(jobExecutionService, times(1)).cancelJobExecution(jobId);
-  }
-
-  @Test
-  public void testUploadJobArtifacts_Success() {
-    // Arrange
-    JobController testController = createTestControllerWithoutFileSystem();
-    UUID jobId = UUID.randomUUID();
-    MockMultipartFile file = new MockMultipartFile(
-            "file",
-            "test-artifact.zip",
-            "application/zip",
-            "test data".getBytes()
-    );
-
-    // Act
-    ResponseEntity<String> response = testController.uploadJobArtifacts(jobId, file);
+    ResponseEntity<String> response = jobController.updateJobStatus(request);
 
     // Assert
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals("{\"message\": \"Artifacts uploaded successfully.\"}", response.getBody());
+    assertTrue(response.getBody().contains("Job status updated successfully"));
+    verify(jobExecutionService, times(1))
+            .updateJobExecutionStatus(eq(testUuid), eq(completedStatus));
   }
 
-  // Custom implementation for testing directory creation branch
   @Test
-  public void testUploadJobArtifacts_DirectoryCreation() {
-    // Using a spy to verify directory creation without actually creating directories
-    JobController testController = spy(new JobController(jobExecutionService));
-
-    UUID jobId = UUID.randomUUID();
-    MockMultipartFile file = new MockMultipartFile(
-            "file",
-            "test-artifact.zip",
-            "application/zip",
-            "test data".getBytes()
-    );
-
-    // Mock to avoid actual file operations but still test the method flow
-    doReturn(ResponseEntity.ok("{\"message\": \"Artifacts uploaded successfully.\"}"))
-            .when(testController).uploadJobArtifacts(any(UUID.class), any(MultipartFile.class));
+  void testGetJobExecution_Success() {
+    // Arrange - Use JobExecutionDTO instead of JobExecutionResponse
+    JobExecutionDTO expectedDTO = mock(JobExecutionDTO.class);
+    doReturn(expectedDTO).when(jobExecutionService).getJobExecution(any(UUID.class));
 
     // Act
-    ResponseEntity<String> response = testController.uploadJobArtifacts(jobId, file);
+    ResponseEntity<?> response = jobController.getJobExecution(testUuid);
 
     // Assert
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals("{\"message\": \"Artifacts uploaded successfully.\"}", response.getBody());
-
-    // Verify the method was called with the correct parameters
-    verify(testController).uploadJobArtifacts(jobId, file);
+    assertEquals(expectedDTO, response.getBody());
   }
 
   @Test
-  public void testUploadJobArtifacts_IOExceptionHandling() throws IOException {
-    // Arrange - Create a controller that simulates an IO exception
-    JobController testController = new JobController(jobExecutionService) {
-      @Override
-      public ResponseEntity<String> uploadJobArtifacts(UUID jobId, MultipartFile file) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("{\"error\": \"Failed to upload artifact: Test IO exception\"}");
-      }
-    };
-
-    UUID jobId = UUID.randomUUID();
-    MultipartFile mockFile = mock(MultipartFile.class);
+  void testGetJobExecution_NotFound() {
+    // Arrange
+    doThrow(new IllegalArgumentException("Job execution not found"))
+            .when(jobExecutionService).getJobExecution(any(UUID.class));
 
     // Act
-    ResponseEntity<String> response = testController.uploadJobArtifacts(jobId, mockFile);
+    ResponseEntity<?> response = jobController.getJobExecution(testUuid);
+
+    // Assert
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Job execution not found"));
+  }
+
+  @Test
+  void testGetJobDependencies() {
+    // Arrange
+    List<UUID> dependencies = Arrays.asList(UUID.randomUUID(), UUID.randomUUID());
+    doReturn(dependencies).when(jobExecutionService).getJobDependencies(any(UUID.class));
+
+    // Act
+    ResponseEntity<List<UUID>> response = jobController.getJobDependencies(testUuid);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(dependencies, response.getBody());
+    assertEquals(2, response.getBody().size());
+  }
+
+  @Test
+  void testNotifyWorker_Success() {
+    // Act
+    ResponseEntity<String> response = jobController.notifyWorker(testUuid);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertTrue(response.getBody().contains("Worker notified successfully"));
+    verify(workerClient, times(1)).notifyWorkerJobAssigned(any(UUID.class));
+  }
+
+  @Test
+  void testNotifyWorker_Failure() {
+    // Arrange
+    doThrow(new RuntimeException("Connection failed"))
+            .when(workerClient).notifyWorkerJobAssigned(any(UUID.class));
+
+    // Act
+    ResponseEntity<String> response = jobController.notifyWorker(testUuid);
 
     // Assert
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    assertEquals("{\"error\": \"Failed to upload artifact: Test IO exception\"}", response.getBody());
+    assertTrue(response.getBody().contains("Failed to notify worker"));
+    verify(workerClient, times(1)).notifyWorkerJobAssigned(any(UUID.class));
   }
 
   @Test
-  public void testUploadJobArtifacts_NullCheck() {
-    // Arrange
-    UUID jobId = UUID.randomUUID();
+  void testConstructor() {
+    // Arrange & Act
+    JobController controller = new JobController(jobExecutionService, workerClient);
 
-    // Use the real controller for this test, as we want to see if it throws NPE
-    // Act & Assert
-    assertThrows(NullPointerException.class, () -> {
-      jobController.uploadJobArtifacts(jobId, null);
-    });
+    // Assert
+    assertNotNull(controller);
   }
 }
