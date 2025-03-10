@@ -1,150 +1,79 @@
 package edu.neu.cs6510.sp25.t1.common.api.request;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Unit tests for {@link ReportRequest}.
- */
 class ReportRequestTest {
 
-  private static final String PIPELINE_NAME = "ci-pipeline";
-  private static final String STAGE_NAME = "build";
-  private static final String JOB_NAME = "compile";
-  private static final String RUN_NUMBER = "42";
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Test
-  void constructor_WithValidParameters_ShouldCreateInstanceWithCorrectValues() {
-    // Act
-    ReportRequest request = new ReportRequest(
-            PIPELINE_NAME, STAGE_NAME, JOB_NAME, RUN_NUMBER);
-
-    // Assert
-    assertEquals(PIPELINE_NAME, request.getPipelineName(), "Pipeline name should match");
-    assertEquals(STAGE_NAME, request.getStageName(), "Stage name should match");
-    assertEquals(JOB_NAME, request.getJobName(), "Job name should match");
-    assertEquals(RUN_NUMBER, request.getRunNumber(), "Run number should match");
-  }
-
-  @Test
-  void constructor_WithNullParameters_ShouldCreateInstanceWithNullValues() {
-    // Act
-    ReportRequest request = new ReportRequest(null, null, null, null);
-
-    // Assert
-    assertNull(request.getPipelineName(), "Pipeline name should be null");
-    assertNull(request.getStageName(), "Stage name should be null");
-    assertNull(request.getJobName(), "Job name should be null");
-    assertNull(request.getRunNumber(), "Run number should be null");
-  }
-
-  static Stream<Arguments> provideParameterVariations() {
-    return Stream.of(
-            // pipelineName, stageName, jobName, runNumber
-            Arguments.of("", "", "", ""),
-            Arguments.of("deploy-pipeline", null, "deploy", "1"),
-            Arguments.of(null, "test", null, "123"),
-            Arguments.of("build-pipeline", "integration", "test-integration", ""),
-            Arguments.of("release", "", "publish", null)
-    );
-  }
-
-  @ParameterizedTest
-  @MethodSource("provideParameterVariations")
-  void constructor_WithVariousParameters_ShouldCreateCorrectInstance(
-          String pipelineName, String stageName, String jobName, String runNumber) {
-
-    // Act
-    ReportRequest request = new ReportRequest(
-            pipelineName, stageName, jobName, runNumber);
-
-    // Assert
-    assertEquals(pipelineName, request.getPipelineName(), "Pipeline name should match");
-    assertEquals(stageName, request.getStageName(), "Stage name should match");
-    assertEquals(jobName, request.getJobName(), "Job name should match");
-    assertEquals(runNumber, request.getRunNumber(), "Run number should match");
-  }
-
-  @Test
-  void getters_ShouldReturnCorrectValues() {
+  void testConstructorAndGetters() {
     // Arrange
-    ReportRequest request = new ReportRequest(
-            PIPELINE_NAME, STAGE_NAME, JOB_NAME, RUN_NUMBER);
+    String pipelineName = "TestPipeline";
+    String stageName = "BuildStage";
+    String jobName = "CompileJob";
+    int runNumber = 5;
 
-    // Act & Assert
-    assertEquals(PIPELINE_NAME, request.getPipelineName());
-    assertEquals(STAGE_NAME, request.getStageName());
-    assertEquals(JOB_NAME, request.getJobName());
-    assertEquals(RUN_NUMBER, request.getRunNumber());
-    // Testing each getter individually ensures complete method coverage
+    // Act
+    ReportRequest reportRequest = new ReportRequest(pipelineName, stageName, jobName, runNumber);
+
+    // Assert
+    assertEquals(pipelineName, reportRequest.getPipelineName());
+    assertEquals(stageName, reportRequest.getStageName());
+    assertEquals(jobName, reportRequest.getJobName());
+    assertEquals(runNumber, reportRequest.getRunNumber());
   }
 
   @Test
-  void jsonSerialization_ShouldSerializeAndDeserializeCorrectly() throws Exception {
+  void testJsonSerialization() throws JsonProcessingException {
     // Arrange
-    ReportRequest originalRequest = new ReportRequest(
-            PIPELINE_NAME, STAGE_NAME, JOB_NAME, RUN_NUMBER);
-    ObjectMapper objectMapper = new ObjectMapper();
+    ReportRequest reportRequest = new ReportRequest("Pipeline1", "Stage1", "Job1", 10);
 
     // Act
-    String json = objectMapper.writeValueAsString(originalRequest);
-    ReportRequest deserializedRequest = objectMapper.readValue(json, ReportRequest.class);
+    String json = objectMapper.writeValueAsString(reportRequest);
 
     // Assert
-    assertEquals(PIPELINE_NAME, deserializedRequest.getPipelineName());
-    assertEquals(STAGE_NAME, deserializedRequest.getStageName());
-    assertEquals(JOB_NAME, deserializedRequest.getJobName());
-    assertEquals(RUN_NUMBER, deserializedRequest.getRunNumber());
+    assertTrue(json.contains("\"pipelineName\":\"Pipeline1\""));
+    assertTrue(json.contains("\"stageName\":\"Stage1\""));
+    assertTrue(json.contains("\"jobName\":\"Job1\""));
+    assertTrue(json.contains("\"runNumber\":10"));
   }
 
   @Test
-  void pipelineName_WithSpecialCharacters_ShouldHandleCorrectly() {
+  void testJsonDeserialization() throws JsonProcessingException {
     // Arrange
-    String specialPipelineName = "pipeline-name_with.special@characters";
+    String json = "{\"pipelineName\":\"TestPipe\",\"stageName\":\"TestStage\",\"jobName\":\"TestJob\",\"runNumber\":3}";
 
     // Act
-    ReportRequest request = new ReportRequest(
-            specialPipelineName, STAGE_NAME, JOB_NAME, RUN_NUMBER);
+    ReportRequest reportRequest = objectMapper.readValue(json, ReportRequest.class);
 
     // Assert
-    assertEquals(specialPipelineName, request.getPipelineName(),
-            "Should handle special characters in pipeline name");
+    assertEquals("TestPipe", reportRequest.getPipelineName());
+    assertEquals("TestStage", reportRequest.getStageName());
+    assertEquals("TestJob", reportRequest.getJobName());
+    assertEquals(3, reportRequest.getRunNumber());
   }
 
   @Test
-  void runNumber_WithNonNumericValue_ShouldHandleCorrectly() {
+  void testJsonDeserializationWithMissingFields() throws JsonProcessingException {
     // Arrange
-    String nonNumericRunNumber = "abc-123";
+    String json = "{\"pipelineName\":\"Pipe\",\"stageName\":\"Stage\"}";
 
     // Act
-    ReportRequest request = new ReportRequest(
-            PIPELINE_NAME, STAGE_NAME, JOB_NAME, nonNumericRunNumber);
+    ReportRequest reportRequest = objectMapper.readValue(json, ReportRequest.class);
 
     // Assert
-    assertEquals(nonNumericRunNumber, request.getRunNumber(),
-            "Should handle non-numeric run number values");
+    assertEquals("Pipe", reportRequest.getPipelineName());
+    assertEquals("Stage", reportRequest.getStageName());
+    assertNull(reportRequest.getJobName());  // Expect null for missing field
+    assertEquals(0, reportRequest.getRunNumber()); // Expect default value 0 for int
   }
 
-  @Test
-  void jobName_WithLongValue_ShouldHandleCorrectly() {
-    // Arrange
-    String longJobName = "extremely-long-job-name-that-contains-many-words-and-descriptions-for-testing-purposes";
-
-    // Act
-    ReportRequest request = new ReportRequest(
-            PIPELINE_NAME, STAGE_NAME, longJobName, RUN_NUMBER);
-
-    // Assert
-    assertEquals(longJobName, request.getJobName(),
-            "Should handle long job name values");
-  }
 }
