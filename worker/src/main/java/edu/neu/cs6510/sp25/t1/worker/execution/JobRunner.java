@@ -21,8 +21,8 @@ public class JobRunner {
   private final DockerExecutor dockerExecutor;
   private final WorkerCommunicationService workerCommunicationService;
 
-  private static final int MAX_RETRY_ATTEMPTS = 10;  // ✅ Number of retries before failing
-  private static final int RETRY_DELAY_MS = 2000;    // ✅ Wait time between retries (2 seconds)
+  private static final int MAX_RETRY_ATTEMPTS = 10;  // Number of retries before failing
+  private static final int RETRY_DELAY_MS = 2000;    // Wait time between retries (2 seconds)
 
   /**
    * Runs a job execution, ensuring dependencies are met before execution.
@@ -58,37 +58,27 @@ public class JobRunner {
    */
   private boolean checkAndWaitForDependencies(JobExecutionDTO job) {
     List<UUID> dependencies = workerCommunicationService.getJobDependencies(job.getId());
+    if (dependencies.isEmpty()) return true;
 
-    if (dependencies.isEmpty()) {
-      log.info("Job {} has no dependencies. Proceeding with execution.", job.getId());
-      return true;
-    }
+    log.info("Waiting for dependencies: {}", dependencies);
+    long startTime = System.currentTimeMillis();
+    long timeout = 120000;
 
-    log.info("Job {} waiting for dependencies to complete: {}", job.getId(), dependencies);
+    while ((System.currentTimeMillis() - startTime) < timeout) {
+      boolean allResolved = dependencies.stream()
+              .allMatch(dep -> workerCommunicationService.getJobStatus(dep) == ExecutionStatus.SUCCESS);
 
-    int attempts = 0;
-    while (attempts < MAX_RETRY_ATTEMPTS) {
-      boolean allDependenciesCompleted = dependencies.stream()
-              .allMatch(depId -> workerCommunicationService.getJobStatus(depId) == ExecutionStatus.SUCCESS);
-
-      if (allDependenciesCompleted) {
-        log.info("All dependencies resolved for job {}. Proceeding with execution.", job.getId());
-        return true;
-      }
-
-      log.warn("Dependencies not met for job {}. Retrying in {} ms...", job.getId(), RETRY_DELAY_MS);
-      attempts++;
+      if (allResolved) return true;
 
       try {
-        Thread.sleep(RETRY_DELAY_MS);  // ✅ Wait before retrying
+        Thread.sleep(2000);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        log.error("Dependency check interrupted for job {}", job.getId(), e);
         return false;
       }
     }
 
-    log.error("Timeout: Dependencies for job {} were not resolved in time", job.getId());
+    log.error("Timeout reached! Dependencies for job {} were not resolved.", job.getId());
     return false;
   }
 }

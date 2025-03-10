@@ -84,4 +84,21 @@ public class JobExecutionService {
   public List<JobExecutionEntity> getJobsByStageExecution(UUID stageExecutionId) {
     return jobExecutionRepository.findByStageExecutionId(stageExecutionId);
   }
+
+
+  @Transactional(readOnly = true)
+  public List<UUID> getJobDependencies(UUID jobId) {
+    return jobExecutionRepository.findDependenciesByJobId(jobId);
+  }
+
+  // Not used in the current implementation
+//  @Transactional
+//  public void saveArtifactPaths(UUID jobExecutionId, List<String> artifactPaths) {
+//    JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
+//            .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
+//
+//    jobExecution.setArtifacts(artifactPaths);
+//    jobExecutionRepository.save(jobExecution);
+//  }
+
 }

@@ -86,14 +86,14 @@ public class PipelineExecutionWorkerService {
    * @return List of job executions.
    */
   private List<JobExecutionDTO> fetchJobsForPipelineExecution(UUID pipelineExecutionId) {
-    String url = backendApiUrl + "/pipeline-executions/" + pipelineExecutionId + "/jobs";
+    String url = backendApiUrl + "/pipeline/" + pipelineExecutionId + "/jobs"; // ✅ Fix API path
     return restTemplate.getForObject(url, List.class);
   }
 
   /**
    * Waits for job dependencies to be completed before running the job.
    *
-   * @param job The job to run.
+   * @param job          The job to run.
    * @param dependencies The pre-fetched dependencies for the job.
    */
   private void waitAndRunDependentJob(JobExecutionDTO job, List<UUID> dependencies) {

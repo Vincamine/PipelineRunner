@@ -83,5 +83,12 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
   @Query("SELECT je FROM JobExecutionEntity je JOIN JobEntity j ON je.jobId = j.id WHERE je.stageExecutionId = :stageExecutionId AND j.name = :jobName ORDER BY je.startTime DESC")
   List<JobExecutionEntity> findByStageExecutionIdAndJobNameOrderByStartTimeDesc(@Param("stageExecutionId") UUID stageExecutionId, @Param("jobName") String jobName);
 
+  /**
+   * Find job dependencies by job ID.
+   * @param jobId the job ID
+   * @return a list of job dependencies
+   */
+  @Query("SELECT jd.dependency.id FROM JobDependencyEntity jd WHERE jd.job.id = :jobId")
+  List<UUID> findDependenciesByJobId(@Param("jobId") UUID jobId);
 
 }

@@ -17,5 +17,5 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ArtifactUploadRequest {
   private UUID jobExecutionId;
-  private List<String> artifacts; // List of artifact file paths
+  private List<String> artifactPaths;
 }

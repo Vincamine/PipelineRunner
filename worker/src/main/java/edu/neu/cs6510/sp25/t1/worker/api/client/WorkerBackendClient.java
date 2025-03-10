@@ -1,16 +1,16 @@
 package edu.neu.cs6510.sp25.t1.worker.api.client;
 
-import edu.neu.cs6510.sp25.t1.common.api.request.ArtifactUploadRequest;
-import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
-import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.UUID;
+
+import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
+import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Client for communicating with the backend API.
@@ -27,9 +27,10 @@ public class WorkerBackendClient {
    * Retrieves job execution details from the backend.
    */
   public JobExecutionDTO getJobExecution(UUID jobExecutionId) {
-    String url = backendApiUrl + "/jobs/" + jobExecutionId;
+    String url = backendApiUrl + "/job/" + jobExecutionId;
     return restTemplate.getForObject(url, JobExecutionDTO.class);
   }
+
 
   /**
    * Retrieves dependencies of a job.
@@ -61,12 +62,12 @@ public class WorkerBackendClient {
     restTemplate.put(url, request);
   }
 
-
-  /**
-   * Uploads artifacts after execution.
-   */
-  public void uploadArtifacts(UUID jobExecutionId, List<String> artifacts) {
-    String url = backendApiUrl + "/job/artifact/upload";
-    restTemplate.postForObject(url, new ArtifactUploadRequest(jobExecutionId, artifacts), Void.class);
-  }
+// not used for now
+//  /**
+//   * Uploads artifacts after execution.
+//   */
+//  public void uploadArtifacts(UUID jobExecutionId, List<String> artifacts) {
+//    String url = backendApiUrl + "/job/artifact/upload";
+//    restTemplate.postForObject(url, new ArtifactUploadRequest(jobExecutionId, artifacts), Void.class);
+//  }
 }
