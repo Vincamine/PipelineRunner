@@ -3,16 +3,18 @@ package edu.neu.cs6510.sp25.t1.cli.validation.parser;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.error.Mark;
 import org.yaml.snakeyaml.error.MarkedYAMLException;
 import org.yaml.snakeyaml.error.YAMLException;
-import org.yaml.snakeyaml.nodes.*;
-
-import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
-import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
+import org.yaml.snakeyaml.nodes.MappingNode;
+import org.yaml.snakeyaml.nodes.Node;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.ScalarNode;
+import org.yaml.snakeyaml.nodes.SequenceNode;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,6 +22,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
+
+import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 
 /**
  * Parses YAML files into Java objects while tracking exact line/column numbers.

@@ -11,6 +11,9 @@ import java.util.logging.Logger;
 
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 
+/**
+ * Utility class for Git-related operations and validations.
+ */
 public class GitUtils {
   private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
   private static final String PIPELINES_DIR = ".pipelines/";
