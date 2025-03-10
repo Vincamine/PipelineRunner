@@ -1,6 +1,8 @@
 package edu.neu.cs6510.sp25.t1.backend.database.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -42,10 +44,20 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
   Optional<PipelineExecutionEntity> findByPipelineIdAndRunNumber(UUID pipelineId, int runNumber);
 
   /**
-   * Finds pipeline executions by pipeline name.
-   *
-   * @param pipelineName the pipeline name
-   * @return a list of pipeline executions associated with the given pipeline name
+   * dynamically fetches the pipeline name associated with a pipeline execution
+   * and return the entity
+   * @param pipelineName the name of the pipeline
+   * @return a list of pipeline
    */
-  List<PipelineExecutionEntity> findByPipelineNameOrderByStartTimeDesc(String pipelineName);
+  @Query("SELECT pe FROM PipelineExecutionEntity pe JOIN PipelineEntity p ON pe.pipelineId = p.id WHERE p.name = :pipelineName ORDER BY pe.startTime DESC")
+  List<PipelineExecutionEntity> findByPipelineNameOrderByStartTimeDesc(@Param("pipelineName") String pipelineName);
+
+  /**
+   * Join pipelineExecution and pipeline tables to fetch the pipeline name by pipelineId
+   * @param pipelineId the pipeline ID
+   * @return an optional pipeline name
+   */
+  @Query("SELECT p.name FROM PipelineExecutionEntity pe JOIN PipelineEntity p ON pe.pipelineId = p.id WHERE pe.pipelineId = :pipelineId")
+  Optional<String> findPipelineNameByPipelineId(@Param("pipelineId") UUID pipelineId);
+
 }

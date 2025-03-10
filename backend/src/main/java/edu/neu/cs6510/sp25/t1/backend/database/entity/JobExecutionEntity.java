@@ -49,11 +49,6 @@ public class JobExecutionEntity {
   @Column(name = "job_id", nullable = false)
   private UUID jobId;
 
-  /**
-   * The name of the job being executed.
-   */
-  @Column(name = "job_name", nullable = false)
-  private String jobName;
 
   /**
    * The commit hash of the repository state for execution.

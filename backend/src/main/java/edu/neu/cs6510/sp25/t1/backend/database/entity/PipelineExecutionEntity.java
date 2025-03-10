@@ -30,74 +30,38 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class PipelineExecutionEntity {
-
-  /**
-   * Unique identifier for the pipeline execution.
-   */
   @Id
   @GeneratedValue
   private UUID id;
 
-  /**
-   * Foreign key reference to the pipeline being executed.
-   */
   @Column(name = "pipeline_id", nullable = false)
   private UUID pipelineId;
 
-  @Column(name = "pipeline_name", nullable = false)
-  private String pipelineName;
-
-  /**
-   * Unique run number for tracking executions of the pipeline.
-   */
   @Column(name = "run_number", nullable = false)
   private int runNumber;
 
-  /**
-   * Git commit hash associated with this pipeline execution.
-   */
   @Column(name = "commit_hash", nullable = false, length = 40)
   private String commitHash;
 
-  /**
-   * Indicates whether this execution is local.
-   */
   @Column(name = "is_local", nullable = false)
   private boolean isLocal;
 
-  /**
-   * The execution status of the pipeline.
-   */
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
   private ExecutionStatus status;
 
-  /**
-   * Timestamp indicating when the pipeline execution started.
-   */
   @Column(name = "start_time")
   private Instant startTime;
 
-  /**
-   * Timestamp indicating when the pipeline execution was completed.
-   */
   @Column(name = "completion_time")
   private Instant completionTime;
 
-  /**
-   * Lifecycle hook to set default timestamps before persisting.
-   */
   @PrePersist
   protected void onCreate() {
     this.startTime = Instant.now();
     this.status = ExecutionStatus.PENDING;
   }
 
-  /**
-   * Updates the execution status and completion timestamp.
-   *
-   * @param newState the new execution status to set
-   */
   public void updateState(ExecutionStatus newState) {
     this.status = newState;
     if (newState == ExecutionStatus.SUCCESS || newState == ExecutionStatus.FAILED || newState == ExecutionStatus.CANCELED) {
