@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Unit tests for the WorkerConfigController class.
- *
+ * <p>
  * Tests the REST API endpoints for retrieving worker configurations.
  */
 @WebMvcTest(WorkerConfigController.class)
@@ -22,18 +22,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 class WorkerConfigControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-    /**
-     * Tests that the worker configuration is returned correctly.
-     *
-     * @throws Exception if any error occurs during the test
-     */
-    @Test
-    void shouldReturnWorkerConfig() throws Exception {
-        mockMvc.perform(get("/api/worker/config"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Worker Config - MaxRetries: 5, RetryDelay: 1000ms"));
-    }
+  /**
+   * Tests that the worker configuration is returned correctly.
+   *
+   * @throws Exception if any error occurs during the test
+   */
+  @Test
+  void shouldReturnWorkerConfig() throws Exception {
+    mockMvc.perform(get("/api/worker/config"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Worker Config - MaxRetries: 5, RetryDelay: 1000ms"));
+  }
 }

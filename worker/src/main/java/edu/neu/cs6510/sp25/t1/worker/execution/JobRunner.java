@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j  // ✅ Use SLF4J Logger for structured logging
+@Slf4j
 public class JobRunner {
   private final DockerExecutor dockerExecutor;
   private final WorkerCommunicationService workerCommunicationService;

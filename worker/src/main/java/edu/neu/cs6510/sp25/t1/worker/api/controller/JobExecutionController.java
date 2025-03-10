@@ -22,7 +22,10 @@ public class JobExecutionController {
   private final PipelineExecutionWorkerService pipelineExecutionWorkerService;
 
   /**
-   * Receives job execution requests from the backend.
+   * Executes a job.
+   *
+   * @param job The job to execute.
+   * @return The response entity.
    */
   @PostMapping("/execute")
   public ResponseEntity<?> executeJob(@RequestBody JobExecutionDTO job) {
