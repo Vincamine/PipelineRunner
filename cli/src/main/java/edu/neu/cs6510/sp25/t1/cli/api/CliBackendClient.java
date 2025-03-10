@@ -16,6 +16,7 @@ import okhttp3.Response;
  * Supports:
  * - Triggering pipeline executions
  * - Fetching execution reports
+ * - Validating pipeline configurations
  * - Handling API requests with structured error handling
  */
 public class CliBackendClient {
@@ -56,24 +57,28 @@ public class CliBackendClient {
   }
 
   /**
-   * Fetches execution reports for a pipeline.
+   * Fetches execution reports for a **pipeline, stage, or job**.
    *
-   * @param repo     The repository URL.
-   * @param pipeline The pipeline name.
-   * @param runId    Optional: The specific run ID.
-   * @param stage    Optional: The stage name.
-   * @param job      Optional: The job name.
+   * @param pipelineName The pipeline name.
+   * @param runNumber    The specific run number.
+   * @param stageName    Optional: The stage name.
+   * @param jobName      Optional: The job name.
    * @return JSON response containing execution details.
    * @throws IOException If an API error occurs.
    */
-  public String fetchPipelineReport(String repo, String pipeline, String runId, String stage, String job) throws IOException {
-    StringBuilder urlBuilder = new StringBuilder(String.format("%s/api/pipeline/report?repo=%s&pipeline=%s", backendUrl, repo, pipeline));
+  public String fetchPipelineReport(String pipelineName, int runNumber, String stageName, String jobName) throws IOException {
+    String url;
 
-    if (runId != null) urlBuilder.append("&run=").append(runId);
-    if (stage != null) urlBuilder.append("&stage=").append(stage);
-    if (job != null) urlBuilder.append("&job=").append(job);
+    // 🌟 Check if user wants a **pipeline, stage, or job** report
+    if (jobName != null && stageName != null) {
+      url = String.format("%s/api/report/pipeline/%s/run/%d/stage/%s/job/%s", backendUrl, pipelineName, runNumber, stageName, jobName);
+    } else if (stageName != null) {
+      url = String.format("%s/api/report/pipeline/%s/run/%d/stage/%s", backendUrl, pipelineName, runNumber, stageName);
+    } else {
+      url = String.format("%s/api/report/pipeline/%s/run/%d", backendUrl, pipelineName, runNumber);
+    }
 
-    Request request = createGetRequest(urlBuilder.toString());
+    Request request = createGetRequest(url);
     Response response = executeRequest(request);
 
     return response.body() != null ? response.body().string() : "Error: Empty response";
