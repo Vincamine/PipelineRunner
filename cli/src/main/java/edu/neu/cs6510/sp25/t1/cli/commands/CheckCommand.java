@@ -20,11 +20,22 @@ public class CheckCommand implements Callable<Integer> {
   @CommandLine.ParentCommand
   private CliApp parent; // Inherit global options from CliApp
 
+  /**
+   * Validates a pipeline configuration file.
+   *
+   * @return 0 if the pipeline is valid, 1 if validation fails.
+   */
   @Override
   public Integer call() {
-    String filePath = parent.filePath; // Use the file path from CliApp
+    String filePath = parent.filePath;
+
+    if (filePath == null) {
+      System.err.println("[Error] File path cannot be null");
+      return 1;
+    }
 
     File yamlFile = new File(filePath);
+
     if (!yamlFile.exists() || !yamlFile.isFile()) {
       System.err.println("[Error] File not found: " + filePath);
       return 1;

@@ -21,16 +21,28 @@ import okhttp3.Response;
  */
 public class CliBackendClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(CliBackendClient.class);
-  private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+  private final OkHttpClient httpClient;
   private final String backendUrl;
 
   /**
-   * Constructs a CliBackendClient with the backend API URL.
+   * Constructs a CliBackendClient with the backend API URL and default HTTP client.
    *
    * @param backendUrl The base URL of the CI/CD backend.
    */
   public CliBackendClient(String backendUrl) {
+    this(backendUrl, new OkHttpClient());
+  }
+
+  /**
+   * Constructs a CliBackendClient with the backend API URL and a specific HTTP client.
+   * This constructor is primarily used for testing.
+   *
+   * @param backendUrl The base URL of the CI/CD backend.
+   * @param httpClient The HTTP client to use for requests.
+   */
+  public CliBackendClient(String backendUrl, OkHttpClient httpClient) {
     this.backendUrl = backendUrl;
+    this.httpClient = httpClient;
   }
 
   /**
@@ -141,7 +153,7 @@ public class CliBackendClient {
    * @throws IOException If an API error occurs.
    */
   private Response executeRequest(Request request) throws IOException {
-    Response response = HTTP_CLIENT.newCall(request).execute();
+    Response response = httpClient.newCall(request).execute();
 
     if (!response.isSuccessful()) {
       String errorMessage = response.body() != null ? response.body().string() : "Unknown error";

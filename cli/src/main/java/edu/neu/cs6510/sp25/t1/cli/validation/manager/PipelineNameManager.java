@@ -17,7 +17,7 @@ public class PipelineNameManager {
   private final Set<String> existingFileNames;
 
   /**
-   * Constructs a PipelineNameManager and loads existing YAML file names.
+   * Initializes the PipelineNameManager and loads existing YAML file names.
    */
   public PipelineNameManager() {
     this.existingFileNames = new HashSet<>();
