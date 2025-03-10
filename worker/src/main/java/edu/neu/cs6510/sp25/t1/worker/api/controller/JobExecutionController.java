@@ -27,7 +27,13 @@ public class JobExecutionController {
   @PostMapping("/execute")
   public ResponseEntity<?> executeJob(@RequestBody JobExecutionDTO job) {
     log.info("Received job execution request: {}", job.getId());
-    pipelineExecutionWorkerService.executeJob(job);
-    return ResponseEntity.ok().body("{\"status\": \"QUEUED\"}");
+
+    try {
+      pipelineExecutionWorkerService.executeJob(job);
+      return ResponseEntity.accepted().body("{\"status\": \"QUEUED\"}");
+    } catch (Exception e) {
+      log.error("Failed to queue job: {}", job.getId(), e);
+      return ResponseEntity.badRequest().body("{\"error\": \"Job execution failed.\"}");
+    }
   }
 }

@@ -17,45 +17,19 @@ import lombok.Getter;
 public class JobExecution {
 
   private final UUID id;
-
   private final UUID stageExecutionId;
-
   private final UUID jobId;
-
   private final String commitHash;
   private final boolean isLocal;
-  /**
-   * -- GETTER --
-   *  Gets the status of the job.
-   *
-   */
-  @Getter
   private ExecutionStatus status;
-  /**
-   * -- GETTER --
-   *  Gets the time when the job execution was last updated.
-   *
-   */
-  @Getter
   private final Instant startTime;
-
   private Instant completionTime;
   private Instant lastUpdated;
-  /**
-   * -- GETTER --
-   *  Gets the time when the job execution was last updated.
-   *
-   */
-  @Getter
   private final boolean allowFailure;
-  /**
-   * -- GETTER --
-   *  Gets the Docker image used for execution.
-   *
-   */
-  @Getter
   private final List<String> script;
   private final List<String> dependencies;
+//  private List<String> artifacts;
+
   private String logs;
 
   /**
@@ -117,5 +91,16 @@ public class JobExecution {
   public boolean isLocal() {
     return isLocal;
   }
+
+//  /**
+//   * Updates the list of artifacts for this job execution.
+//   *
+//   * @param artifactPaths The paths of uploaded artifacts.
+//   */
+//  public void setArtifacts(List<String> artifactPaths) {
+//    this.artifacts = artifactPaths;
+//    this.lastUpdated = Instant.now();
+//  }
+
 
 }

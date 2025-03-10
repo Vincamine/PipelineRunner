@@ -1,13 +1,16 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
-import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
-import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
-import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+
+import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/pipeline")
@@ -20,21 +23,13 @@ public class PipelineController {
     this.pipelineExecutionService = pipelineExecutionService;
   }
 
-  @PostMapping("/execute")
-  @Operation(summary = "Trigger a pipeline execution", description = "Starts a new pipeline execution.")
-  public PipelineExecutionResponse executePipeline(@RequestBody PipelineExecutionRequest request) {
-    return pipelineExecutionService.startPipelineExecution(request);
-  }
-
   @GetMapping("/status/{executionId}")
   @Operation(summary = "Get pipeline execution status", description = "Retrieves the status of a running or completed pipeline execution.")
-  public PipelineExecutionResponse getPipelineStatus(@PathVariable UUID executionId) {
-    return pipelineExecutionService.getPipelineExecution(executionId);
-  }
-
-  @PostMapping("/check-duplicate")
-  @Operation(summary = "Check for duplicate pipeline execution", description = "Verifies if a pipeline execution with the same parameters already exists.")
-  public boolean checkDuplicateExecution(@RequestBody PipelineExecutionRequest request) {
-    return pipelineExecutionService.isDuplicateExecution(request);
+  public ResponseEntity<?> getPipelineStatus(@PathVariable UUID executionId) {
+    try {
+      return ResponseEntity.ok(pipelineExecutionService.getPipelineExecution(executionId));
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(404).body("{\"error\": \"Pipeline execution not found.\"}");
+    }
   }
 }

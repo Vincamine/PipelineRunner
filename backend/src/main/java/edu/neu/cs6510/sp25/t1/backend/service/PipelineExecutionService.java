@@ -4,8 +4,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
@@ -24,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class PipelineExecutionService {
   private final PipelineExecutionRepository pipelineExecutionRepository;
   private final PipelineExecutionMapper pipelineExecutionMapper;
-  private final StageExecutionService stageExecutionService;
 
   /**
    * Retrieves a pipeline execution by ID.
@@ -73,4 +74,5 @@ public class PipelineExecutionService {
     pipelineExecution.updateState(ExecutionStatus.SUCCESS);
     pipelineExecutionRepository.save(pipelineExecution);
   }
+
 }

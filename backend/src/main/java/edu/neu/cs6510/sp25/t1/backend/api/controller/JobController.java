@@ -1,23 +1,23 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionService;
 import edu.neu.cs6510.sp25.t1.common.api.request.JobExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
 import edu.neu.cs6510.sp25.t1.common.api.response.JobExecutionResponse;
+import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -27,6 +27,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class JobController {
 
   private final JobExecutionService jobExecutionService;
+
+  @Value("${job.artifact.storage.path:/artifacts}")
+  private String artifactStoragePath;
 
   public JobController(JobExecutionService jobExecutionService) {
     this.jobExecutionService = jobExecutionService;
@@ -38,41 +41,41 @@ public class JobController {
     return jobExecutionService.startJobExecution(request);
   }
 
-  @PostMapping("/status")
-  @Operation(summary = "Update job execution status", description = "Allows workers to update the execution status of a job.")
-  public String updateJobStatus(@RequestBody JobStatusUpdate updateRequest) {
+  @PutMapping("/status")
+  @Operation(summary = "Update job execution status", description = "Allows workers to update job execution status.")
+  public ResponseEntity<String> updateJobStatus(@RequestBody JobStatusUpdate updateRequest) {
     jobExecutionService.updateJobExecutionStatus(updateRequest.getJobExecutionId(), updateRequest.getStatus());
-    return "{\"message\": \"Job status updated.\"}";
+    return ResponseEntity.ok("{\"message\": \"Job status updated successfully.\"}");
   }
 
-  @PostMapping("/artifact/upload")
-  @Operation(summary = "Upload job artifacts", description = "Allows workers to upload artifacts after job execution.")
-  public ResponseEntity<String> uploadJobArtifacts(@RequestParam("jobId") UUID jobId,
-                                                   @RequestParam("file") MultipartFile file) {
+  @GetMapping("/{jobExecutionId}")
+  @Operation(summary = "Retrieve job execution details", description = "Fetches execution details of a job.")
+  public ResponseEntity<?> getJobExecution(@PathVariable UUID jobExecutionId) {
     try {
-      // Define artifact storage location
-      String storagePath = "/artifacts/" + jobId + "/";
-      File directory = new File(storagePath);
-      if (!directory.exists()) {
-        directory.mkdirs();
-      }
-
-      // Save file
-      File destinationFile = new File(directory, file.getOriginalFilename());
-      file.transferTo(destinationFile);
-
-      return ResponseEntity.ok("{\"message\": \"Artifacts uploaded successfully.\"}");
-    } catch (IOException e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-              .body("{\"error\": \"Failed to upload artifact: " + e.getMessage() + "\"}");
+      return ResponseEntity.ok(jobExecutionService.getJobExecution(jobExecutionId));
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(404).body("{\"error\": \"Job execution not found.\"}");
     }
   }
 
-
-  @PostMapping("/cancel/{jobExecutionId}")
-  @Operation(summary = "Cancel a job execution", description = "Cancels a running job execution.")
-  public String cancelJobExecution(@PathVariable UUID jobExecutionId) {
-    jobExecutionService.cancelJobExecution(jobExecutionId);
-    return "{\"message\": \"Job execution canceled successfully.\"}";
+  @GetMapping("/{jobId}/dependencies")
+  @Operation(summary = "Retrieve job dependencies", description = "Fetches dependencies of a job.")
+  public ResponseEntity<List<UUID>> getJobDependencies(@PathVariable UUID jobId) {
+    return ResponseEntity.ok(jobExecutionService.getJobDependencies(jobId));
   }
+
+  @PostMapping("/worker/assign/{jobExecutionId}")
+  @Operation(summary = "Notify worker of job assignment", description = "Notifies worker that a job has been assigned.")
+  public ResponseEntity<String> notifyWorker(@PathVariable UUID jobExecutionId) {
+    // Implement logic if needed
+    return ResponseEntity.ok("{\"message\": \"Worker notified successfully.\"}");
+  }
+
+  // not implemented yet
+//  @PostMapping("/artifact/upload")
+//  @Operation(summary = "Upload job artifacts", description = "Receives artifact file paths after upload by workers.")
+//  public ResponseEntity<String> uploadJobArtifacts(@RequestBody ArtifactUploadRequest request) {
+//    jobExecutionService.saveArtifactPaths(request.getJobExecutionId(), request.getArtifactPaths());
+//    return ResponseEntity.ok("{\"message\": \"Artifact paths saved successfully.\"}");
+//  }
 }
