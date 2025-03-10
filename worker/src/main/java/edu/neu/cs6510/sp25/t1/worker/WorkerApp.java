@@ -4,6 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
+/**
+ * Worker application entry point.
+ */
 @ComponentScan(basePackages = {"edu.neu.cs6510.sp25.t1"})
 @SpringBootApplication
 public class WorkerApp {

@@ -67,7 +67,10 @@ public class DockerExecutor {
   }
 
   /**
-   * Builds the Docker command for job execution.
+   * Builds the Docker command to execute the job script.
+   * @param dockerImage The Docker image to use.
+   * @param script The job script to execute.
+   * @return The Docker command.
    */
   private String[] buildDockerCommand(String dockerImage, List<String> script) {
     StringBuilder scriptCommands = new StringBuilder();

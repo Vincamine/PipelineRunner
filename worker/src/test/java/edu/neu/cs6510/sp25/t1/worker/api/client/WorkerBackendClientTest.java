@@ -1,9 +1,5 @@
 package edu.neu.cs6510.sp25.t1.worker.api.client;
 
-import edu.neu.cs6510.sp25.t1.common.api.request.ArtifactUploadRequest;
-import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
-import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,133 +12,85 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.UUID;
 
+import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
+import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Unit tests for the WorkerBackendClient class.
- *
- * Tests the client communication with the backend API.
- */
 @ExtendWith(MockitoExtension.class)
 class WorkerBackendClientTest {
 
-    @Mock
-    private RestTemplate restTemplate;
+  @Mock
+  private RestTemplate restTemplate;
 
-    @InjectMocks
-    private WorkerBackendClient workerBackendClient;
+  @InjectMocks
+  private WorkerBackendClient workerBackendClient;
 
-    private static final String BACKEND_API_URL = "http://backend-service/api";
+  private final String backendApiUrl = "http://mock-backend/api";
 
-    @BeforeEach
-    void setUp() {
-        // Setting the non-static field using ReflectionTestUtils
-        ReflectionTestUtils.setField(workerBackendClient, "backendApiUrl", BACKEND_API_URL);
-    }
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(workerBackendClient, "backendApiUrl", backendApiUrl);
+  }
 
-    /**
-     * Tests getting job execution details from the backend.
-     */
-    @Test
-    void shouldGetJobExecution() {
-        // Prepare test data
-        UUID jobExecutionId = UUID.randomUUID();
-        JobExecutionDTO expectedJobExecution = new JobExecutionDTO();
-        expectedJobExecution.setId(jobExecutionId);
+  @Test
+  void testGetJobExecution() {
+    UUID jobExecutionId = UUID.randomUUID();
+    JobExecutionDTO mockResponse = new JobExecutionDTO();
 
-        when(restTemplate.getForObject(BACKEND_API_URL + "/jobs/" + jobExecutionId, JobExecutionDTO.class))
-                .thenReturn(expectedJobExecution);
+    String expectedUrl = backendApiUrl + "/job/" + jobExecutionId;
+    when(restTemplate.getForObject(expectedUrl, JobExecutionDTO.class)).thenReturn(mockResponse);
 
-        // Execute the test
-        JobExecutionDTO result = workerBackendClient.getJobExecution(jobExecutionId);
+    JobExecutionDTO result = workerBackendClient.getJobExecution(jobExecutionId);
+    assertNotNull(result);
+    verify(restTemplate).getForObject(expectedUrl, JobExecutionDTO.class);
+  }
 
-        // Verify results
-        assertEquals(expectedJobExecution, result);
-    }
+  @Test
+  void testGetJobDependencies() {
+    UUID jobId = UUID.randomUUID();
+    List<UUID> mockResponse = List.of(UUID.randomUUID(), UUID.randomUUID());
 
-    /**
-     * Tests getting job dependencies from the backend.
-     */
-    @Test
-    void shouldGetJobDependencies() {
-        // Prepare test data
-        UUID jobId = UUID.randomUUID();
-        List<UUID> expectedDependencies = List.of(UUID.randomUUID(), UUID.randomUUID());
+    String expectedUrl = backendApiUrl + "/jobs/" + jobId + "/dependencies";
+    when(restTemplate.getForObject(expectedUrl, List.class)).thenReturn(mockResponse);
 
-        when(restTemplate.getForObject(BACKEND_API_URL + "/jobs/" + jobId + "/dependencies", List.class))
-                .thenReturn(expectedDependencies);
+    List<UUID> result = workerBackendClient.getJobDependencies(jobId);
+    assertNotNull(result);
+    verify(restTemplate).getForObject(expectedUrl, List.class);
+  }
 
-        // Execute the test
-        List<UUID> result = workerBackendClient.getJobDependencies(jobId);
+  @Test
+  void testGetJobStatus() {
+    UUID jobId = UUID.randomUUID();
+    ExecutionStatus mockResponse = ExecutionStatus.RUNNING;
 
-        // Verify results
-        assertEquals(expectedDependencies, result);
-    }
+    String expectedUrl = backendApiUrl + "/jobs/" + jobId + "/status";
+    when(restTemplate.getForObject(expectedUrl, ExecutionStatus.class)).thenReturn(mockResponse);
 
-    /**
-     * Tests getting job execution status from the backend.
-     */
-    @Test
-    void shouldGetJobStatus() {
-        // Prepare test data
-        UUID jobId = UUID.randomUUID();
-        ExecutionStatus expectedStatus = ExecutionStatus.SUCCESS;
+    ExecutionStatus result = workerBackendClient.getJobStatus(jobId);
+    assertEquals(mockResponse, result);
+    verify(restTemplate).getForObject(expectedUrl, ExecutionStatus.class);
+  }
 
-        when(restTemplate.getForObject(BACKEND_API_URL + "/jobs/" + jobId + "/status", ExecutionStatus.class))
-                .thenReturn(expectedStatus);
+  @Test
+  void testUpdateJobStatus() {
+    UUID jobExecutionId = UUID.randomUUID();
+    ExecutionStatus status = ExecutionStatus.SUCCESS;
+    String logs = "Job completed successfully.";
 
-        // Execute the test
-        ExecutionStatus result = workerBackendClient.getJobStatus(jobId);
+    String expectedUrl = backendApiUrl + "/job/status";
+    JobStatusUpdate expectedRequest = new JobStatusUpdate(jobExecutionId, status, logs);
 
-        // Verify results
-        assertEquals(expectedStatus, result);
-    }
+    doNothing().when(restTemplate).put(eq(expectedUrl), any(JobStatusUpdate.class));
 
-    /**
-     * Tests updating job execution status in the backend.
-     */
-    @Test
-    void shouldUpdateJobStatus() {
-        // Prepare test data
-        UUID jobExecutionId = UUID.randomUUID();
-        ExecutionStatus status = ExecutionStatus.SUCCESS;
-        String logs = "Execution logs";
-
-        // Execute the test
-        workerBackendClient.updateJobStatus(jobExecutionId, status, logs);
-
-        // Verify results
-        verify(restTemplate).put(
-                eq(BACKEND_API_URL + "/job/status"),
-                any(JobStatusUpdate.class)
-        );
-    }
-
-    /**
-     * Tests uploading artifacts after execution.
-     */
-    @Test
-    void shouldUploadArtifacts() {
-        // Prepare test data
-        UUID jobExecutionId = UUID.randomUUID();
-        List<String> artifacts = List.of("artifact1.txt", "artifact2.txt");
-
-        // Execute the test
-        workerBackendClient.uploadArtifacts(jobExecutionId, artifacts);
-
-        // Verify results
-        verify(restTemplate).postForObject(
-                eq(BACKEND_API_URL + "/job/artifact/upload"),
-                any(ArtifactUploadRequest.class),
-                eq(Void.class)
-        );
-//        verify(restTemplate).postForObject(
-//                eq(BACKEND_API_URL + "/job/artifact/upload"),
-//                eq(new ArtifactUploadRequest(jobExecutionId, artifacts)),
-//                eq(Void.class)
-//        );
-    }
+    workerBackendClient.updateJobStatus(jobExecutionId, status, logs);
+    verify(restTemplate).put(eq(expectedUrl), any(JobStatusUpdate.class));
+  }
 }

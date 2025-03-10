@@ -24,7 +24,10 @@ public class WorkerBackendClient {
   private String backendApiUrl;
 
   /**
-   * Retrieves job execution details from the backend.
+   * Retrieves the job execution details.
+   *
+   * @param jobExecutionId The job execution ID.
+   * @return The job execution details.
    */
   public JobExecutionDTO getJobExecution(UUID jobExecutionId) {
     String url = backendApiUrl + "/job/" + jobExecutionId;
@@ -33,7 +36,10 @@ public class WorkerBackendClient {
 
 
   /**
-   * Retrieves dependencies of a job.
+   * Retrieves the job dependencies.
+   *
+   * @param jobId The job ID.
+   * @return The list of job dependencies.
    */
   public List<UUID> getJobDependencies(UUID jobId) {
     String url = backendApiUrl + "/jobs/" + jobId + "/dependencies";
@@ -41,7 +47,10 @@ public class WorkerBackendClient {
   }
 
   /**
-   * Retrieves the execution status of a job.
+   * Retrieves the job execution status.
+   *
+   * @param jobId The job ID.
+   * @return The job execution status.
    */
   public ExecutionStatus getJobStatus(UUID jobId) {
     String url = backendApiUrl + "/jobs/" + jobId + "/status";

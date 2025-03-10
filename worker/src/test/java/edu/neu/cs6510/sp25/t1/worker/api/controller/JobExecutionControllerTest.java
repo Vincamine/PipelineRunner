@@ -1,59 +1,59 @@
 package edu.neu.cs6510.sp25.t1.worker.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
-import edu.neu.cs6510.sp25.t1.worker.service.PipelineExecutionWorkerService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
+import edu.neu.cs6510.sp25.t1.worker.service.PipelineExecutionWorkerService;
 
-/**
- * Unit tests for the JobExecutionController class.
- *
- * Tests the REST API endpoints for job execution.
- */
-@WebMvcTest(JobExecutionController.class)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+
+@ExtendWith(MockitoExtension.class)
 class JobExecutionControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+  @Mock
+  private PipelineExecutionWorkerService pipelineExecutionWorkerService;
 
-    @MockBean
-    private PipelineExecutionWorkerService pipelineExecutionWorkerService;
+  @InjectMocks
+  private JobExecutionController jobExecutionController;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+  private JobExecutionDTO job;
 
-    /**
-     * Tests that a job execution request is properly queued and returns the expected response.
-     *
-     * @throws Exception if any error occurs during the test
-     */
-    @Test
-    void shouldQueueJobExecution() throws Exception {
-        // Prepare test data
-        JobExecutionDTO job = new JobExecutionDTO();
-        job.setId(UUID.randomUUID());
+  @BeforeEach
+  void setUp() {
+    job = new JobExecutionDTO();
+    job.setId(UUID.randomUUID());
+  }
 
-        // Execute the test
-        mockMvc.perform(post("/api/job/execute")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(job)))
-                .andExpect(status().isOk())
-                .andExpect(content().json("{\"status\": \"QUEUED\"}"));
+  @Test
+  void testExecuteJob_Success() {
+    doNothing().when(pipelineExecutionWorkerService).executeJob(job);
 
-        // Verify service method was called
-        verify(pipelineExecutionWorkerService).executeJob(any(JobExecutionDTO.class));
-    }
+    ResponseEntity<?> response = jobExecutionController.executeJob(job);
+
+    assertEquals(202, response.getStatusCodeValue());
+    assertEquals("{\"status\": \"QUEUED\"}", response.getBody());
+    verify(pipelineExecutionWorkerService).executeJob(job);
+  }
+
+  @Test
+  void testExecuteJob_Failure() {
+    doThrow(new RuntimeException("Execution error")).when(pipelineExecutionWorkerService).executeJob(job);
+
+    ResponseEntity<?> response = jobExecutionController.executeJob(job);
+
+    assertEquals(400, response.getStatusCodeValue());
+    assertEquals("{\"error\": \"Job execution failed.\"}", response.getBody());
+    verify(pipelineExecutionWorkerService).executeJob(job);
+  }
 }
