@@ -1,74 +1,114 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
+import edu.neu.cs6510.sp25.t1.cli.CliApp;
+import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
 import picocli.CommandLine;
 
 /**
- * Fetches and prints reports of pipeline executions.
+ * Implements the `report` command to fetch past pipeline execution reports using the backend API.
  */
-@CommandLine.Command(name = "report", description = "Fetches pipeline execution reports.")
+@CommandLine.Command(
+        name = "report",
+        description = "Retrieves pipeline execution reports from the CI/CD backend."
+)
 public class ReportCommand implements Callable<Integer> {
 
-  @CommandLine.Option(names = {"--repo", "-r"}, description = "Repository URL or path", required = true)
-  private String repo;
+  @CommandLine.ParentCommand
+  private CliApp parent; // Inherit global CLI options
 
-  @CommandLine.Option(names = "--pipeline", description = "Pipeline name")
-  private String pipeline;
+  @CommandLine.Option(names = {"--run"}, description = "Specify the run number for a detailed report.")
+  private Integer runNumber;
 
-  @CommandLine.Option(names = "--run", description = "Specific pipeline execution run ID")
-  private String runId;
+  @CommandLine.Option(names = {"--stage"}, description = "Specify the stage name for a detailed report.")
+  private String stageName;
 
-  @CommandLine.Option(names = "--stage", description = "Stage name to filter report")
-  private String stage;
+  @CommandLine.Option(names = {"--job"}, description = "Specify the job name for a detailed report.")
+  private String jobName;
 
-  @CommandLine.Option(names = "--job", description = "Job name to filter report")
-  private String job;
+  private final CliBackendClient backendClient = new CliBackendClient("http://localhost:8080");
 
+  /**
+   * Main entry point for the `report` command.
+   *
+   * @return 0 if successful, 1 if API request failed
+   */
   @Override
   public Integer call() {
-    PipelineLogger.info("Fetching report for repository: " + repo);
-
-    String apiUrl = buildReportApiUrl();
-    HttpClient client = HttpClient.newHttpClient();
-    HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(apiUrl))
-            .header("Accept", "application/json")
-            .GET()
-            .build();
+    String pipelineName = parent.pipeline;
+    if (pipelineName == null) {
+      System.err.println("[Error] Please specify a pipeline using --pipeline.");
+      return 1;
+    }
 
     try {
-      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-      if (response.statusCode() == 200) {
-        System.out.println(response.body());
-        return 0;
+      if (runNumber == null) {
+        return fetchPipelineHistory(pipelineName);
+      } else if (stageName == null) {
+        return fetchPipelineRunSummary(pipelineName, runNumber);
+      } else if (jobName == null) {
+        return fetchStageSummary(pipelineName, runNumber, stageName);
       } else {
-        System.err.println("Error: Failed to fetch report. Status: " + response.statusCode());
-        return 1;
+        return fetchJobSummary(pipelineName, runNumber, stageName, jobName);
       }
-    } catch (Exception e) {
-      System.err.println("Error fetching report: " + e.getMessage());
+    } catch (IOException e) {
+      System.err.println("[Error] API request failed: " + e.getMessage());
       return 1;
     }
   }
 
   /**
-   * Builds the API URL based on provided CLI arguments.
+   * Fetch past runs of a specific pipeline.
+   *
+   * @param pipelineName Name of the pipeline
+   * @return 0 if successful, 1 if API request failed
    */
-  private String buildReportApiUrl() {
-    StringBuilder url = new StringBuilder("http://localhost:8080/api/report?repo=" + repo);
+  private Integer fetchPipelineHistory(String pipelineName) throws IOException {
+    System.out.println("Fetching past runs for pipeline: " + pipelineName);
+    String response = backendClient.fetchPipelineReport(pipelineName, -1, null, null); // -1 means "fetch all runs"
+    System.out.println(response);
+    return 0;
+  }
 
-    if (pipeline != null) url.append("&pipeline=").append(pipeline);
-    if (runId != null) url.append("&run=").append(runId);
-    if (stage != null) url.append("&stage=").append(stage);
-    if (job != null) url.append("&job=").append(job);
+  /**
+   * Fetch summary of a specific pipeline run.
+   *
+   * @param pipelineName Name of the pipeline
+   * @return 0 if successful, 1 if API request failed
+   */
+  private Integer fetchPipelineRunSummary(String pipelineName, int run) throws IOException {
+    System.out.println("Fetching run summary for pipeline: " + pipelineName + ", Run: " + run);
+    String response = backendClient.fetchPipelineReport(pipelineName, run, null, null);
+    System.out.println(response);
+    return 0;
+  }
 
-    return url.toString();
+  /**
+   * Fetch summary of a specific stage in a pipeline run.
+   *
+   * @param pipelineName Name of the pipeline
+   * @return 0 if successful, 1 if API request failed
+   */
+  private Integer fetchStageSummary(String pipelineName, int run, String stage) throws IOException {
+    System.out.println("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + run + ", Stage: " + stage);
+    String response = backendClient.fetchPipelineReport(pipelineName, run, stage, null);
+    System.out.println(response);
+    return 0;
+  }
+
+  /**
+   * Fetch summary of a specific job in a stage.
+   * This is the most detailed report.
+   *
+   * @param pipelineName Name of the pipeline
+   * @return 0 if successful, 1 if API request failed
+   */
+  private Integer fetchJobSummary(String pipelineName, int run, String stage, String job) throws IOException {
+    System.out.println("Fetching job summary for pipeline: " + pipelineName + ", Run: " + run + ", Stage: " + stage + ", Job: " + job);
+    String response = backendClient.fetchPipelineReport(pipelineName, run, stage, job);
+    System.out.println(response);
+    return 0;
   }
 }

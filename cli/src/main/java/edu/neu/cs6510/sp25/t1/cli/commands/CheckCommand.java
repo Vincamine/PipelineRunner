@@ -1,36 +1,45 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
-import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
-import picocli.CommandLine;
-
 import java.io.File;
 import java.util.concurrent.Callable;
 
+import edu.neu.cs6510.sp25.t1.cli.CliApp;
+import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
+import picocli.CommandLine;
+
 /**
- * Command to validate a pipeline YAML file without executing it.
+ * Implements the `check` command to validate a pipeline YAML file.
  */
-@CommandLine.Command(name = "check", description = "Validates a pipeline YAML file.")
+@CommandLine.Command(
+        name = "check",
+        description = "Validates a pipeline configuration file without running it."
+)
 public class CheckCommand implements Callable<Integer> {
 
-  @CommandLine.Option(names = {"-f", "--file"}, description = "Path to the pipeline configuration file", required = true)
-  private String filePath;
+  @CommandLine.ParentCommand
+  private CliApp parent; // Inherit global options from CliApp
 
   @Override
   public Integer call() {
-    File file = new File(filePath);
+    String filePath = parent.filePath; // Use the file path from CliApp
 
-    if (!file.exists()) {
-      System.err.println("Error: Pipeline file " + filePath + " does not exist.");
+    File yamlFile = new File(filePath);
+    if (!yamlFile.exists() || !yamlFile.isFile()) {
+      System.err.println("[Error] File not found: " + filePath);
       return 1;
     }
 
     try {
+      System.out.println("Checking pipeline configuration: " + filePath);
       YamlPipelineValidator.validatePipeline(filePath);
-      PipelineLogger.info("Pipeline file is valid: " + filePath);
+      System.out.println("Pipeline configuration is valid!");
       return 0;
-    } catch (Exception e) {
-      System.err.println("Error: " + e.getMessage());
+    } catch (ValidationException e) {
+      System.err.println("Pipeline validation failed!");
+      for (String line : e.getMessage().split("\n")) {
+        System.err.println("  ➜ " + line);
+      }
       return 1;
     }
   }

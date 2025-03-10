@@ -1,249 +1,138 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.cli.CliApp;
 import edu.neu.cs6510.sp25.t1.cli.validation.utils.GitUtils;
 import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
-import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
-import edu.neu.cs6510.sp25.t1.common.model.Job;
-import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
-import edu.neu.cs6510.sp25.t1.common.model.Stage;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import picocli.CommandLine;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Executes a CI/CD pipeline with support for local and remote execution.
+ * Handles the `run` command for executing a CI/CD pipeline.
  */
-@CommandLine.Command(name = "run", description = "Runs a CI/CD pipeline.")
+@CommandLine.Command(
+        name = "run",
+        description = "Runs a CI/CD pipeline after validating its configuration."
+)
 public class RunCommand implements Callable<Integer> {
 
-  @CommandLine.Option(names = {"-r", "--repo"}, description = "Repository URL or path")
-  private String repo;
+  private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+  private static final String BACKEND_URL = "http://localhost:8080/api/pipeline/run"; // Change as needed
 
+  @CommandLine.ParentCommand
+  private CliApp parent; // Inherits options from CliApp
 
-  @CommandLine.Option(names = "--pipeline", description = "Pipeline name")
-  private String pipeline;
-
-  @CommandLine.Option(names = {"-f", "--file"}, description = "Path to the pipeline configuration file")
-  private String file;
-
-  @CommandLine.Option(names = "--branch", description = "Git branch (default: main)")
-  private String branch = "main";
-
-  @CommandLine.Option(names = "--commit", description = "Git commit hash (default: latest)")
-  private String commit;
-
-  @CommandLine.Option(names = "--local", description = "Run the pipeline locally")
-  private boolean local;
-
-  private static final Set<String> runningPipelines = new HashSet<>();
-
+  /**
+   * Validates the pipeline configuration file and runs the pipeline.
+   *
+   * @return 0 if successful, 1 if an error occurred.
+   */
   @Override
   public Integer call() {
-    if (file == null && pipeline == null) {
-      System.err.println("Error: Either --file or --pipeline must be specified.");
-      return 1;
-    }
-    if (file != null && pipeline != null) {
-      System.err.println("Error: --file and --pipeline are mutually exclusive.");
-      return 1;
-    }
-
-    GitUtils.validateRepo(file);
-    String executionKey = repo + ":" + (file != null ? file : pipeline);
-
-    synchronized (runningPipelines) {
-      if (runningPipelines.contains(executionKey)) {
-        System.err.println("Warning: Duplicate execution detected. Keeping oldest request.");
-        return 1;
-      }
-      runningPipelines.add(executionKey);
-
-    }
-
     try {
-      YamlPipelineValidator.validatePipeline(file);
-      Pipeline pipelineConfig = YamlParser.parseYaml(new File(file));
+      // Access options from CliApp
+      String repo = parent.repo;
+      String branch = parent.branch;
+      String commit = parent.commit.isEmpty() ? GitUtils.getLatestCommitHash() : parent.commit;
+      String filePath = parent.filePath;
+      String pipeline = parent.pipeline;
+      boolean localRun = parent.localRun;
 
-      if (pipelineConfig == null) {
-        System.err.println("Error: Failed to parse pipeline configuration.");
-        return 1;
+      // Validate the pipeline configuration file
+      System.out.println("Validating pipeline configuration: " + filePath);
+      YamlPipelineValidator.validatePipeline(filePath);
+      System.out.println("Pipeline configuration is valid!");
+
+      // Run the pipeline (either locally or remotely)
+      if (localRun) {
+        return runPipelineLocally(repo, branch, commit, pipeline, filePath);
+      } else {
+        return runPipelineRemotely(repo, branch, commit, pipeline, filePath);
       }
 
-      PipelineLogger.info("Executing pipeline: " + pipelineConfig.getName());
-      return executePipeline(pipelineConfig);
     } catch (Exception e) {
-      System.err.println("Error: " + e.getMessage());
+      System.err.println("[Error] " + e.getMessage());
       return 1;
-    } finally {
-      synchronized (runningPipelines) {
-        runningPipelines.remove(executionKey);
-      }
     }
   }
 
   /**
-   * Executes the pipeline while ensuring correct job dependencies and status tracking.
+   * Triggers a remote pipeline execution via the backend API.
+   *
+   * @param repo     The repository path or URL.
+   * @param branch   The Git branch.
+   * @param commit   The commit hash.
+   * @param pipeline The pipeline name (if specified).
+   * @param filePath The pipeline configuration file path.
+   * @return 0 if successful, 1 if an error occurred.
    */
-  private int executePipeline(Pipeline pipeline) {
-    Map<String, String> stageStatuses = new HashMap<>();
-    Map<String, String> jobStatuses = new HashMap<>();
+  private Integer runPipelineRemotely(String repo, String branch, String commit, String pipeline, String filePath) {
+    try {
+      String jsonPayload = String.format(
+              "{\"repo\": \"%s\", \"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\"}",
+              repo, branch, commit, pipeline != null ? pipeline : filePath
+      );
 
-    List<Stage> orderedStages = orderStagesByExecution(pipeline);
+      Request request = createPostRequest(BACKEND_URL, jsonPayload);
+      Response response = HTTP_CLIENT.newCall(request).execute();
 
-    for (Stage stage : orderedStages) {
-      PipelineLogger.info("Starting stage: " + stage.getName());
-      stageStatuses.put(stage.getName(), "RUNNING");
-
-      List<Job> jobs = stage.getJobs();
-      Map<Job, Future<Boolean>> jobResults = new HashMap<>();
-
-      ExecutorService executor = Executors.newFixedThreadPool(jobs.size());
-
-      for (Job job : jobs) {
-        if (job.getDependencies().isEmpty() || dependenciesCompleted(job, jobStatuses)) {
-          jobStatuses.put(job.getName(), "RUNNING");
-          jobResults.put(job, executor.submit(() -> executeJob(job)));
-        } else {
-          jobStatuses.put(job.getName(), "PENDING");
-        }
-      }
-
-      boolean stageSuccess = true;
-      for (Map.Entry<Job, Future<Boolean>> entry : jobResults.entrySet()) {
-        try {
-          boolean success = entry.getValue().get();
-          jobStatuses.put(entry.getKey().getName(), success ? "SUCCESSFUL" : "FAILED");
-          if (!success) stageSuccess = false;
-        } catch (Exception e) {
-          jobStatuses.put(entry.getKey().getName(), "FAILED");
-          stageSuccess = false;
-        }
-      }
-
-      executor.shutdown();
-      if (!stageSuccess) {
-        stageStatuses.put(stage.getName(), "FAILED");
-        PipelineLogger.error("Stage " + stage.getName() + " failed. Stopping execution.");
+      if (!response.isSuccessful()) {
+        System.err.println("[Error] Failed to trigger remote pipeline execution.");
         return 1;
       }
-      stageStatuses.put(stage.getName(), "SUCCESSFUL");
-    }
 
-    PipelineLogger.info("Pipeline execution completed successfully.");
+      System.out.println("[Success] Pipeline execution started.");
+      System.out.println("Response: " + response.body().string());
+      return 0;
+
+    } catch (IOException e) {
+      System.err.println("[Error] Failed to communicate with backend: " + e.getMessage());
+      return 1;
+    }
+  }
+
+  /**
+   * Simulates a local pipeline execution
+   *
+   * @param repo     The repository path or URL.
+   * @param branch   The Git branch.
+   * @param commit   The commit hash.
+   * @param pipeline The pipeline name (if specified).
+   * @param filePath The pipeline configuration file path.
+   * @return 0 if successful, 1 if an error occurred.
+   */
+  private Integer runPipelineLocally(String repo, String branch, String commit, String pipeline, String filePath) {
+    System.out.println("[Local Execution] Running the pipeline locally...");
+    System.out.println("[Local Execution] Repository: " + repo);
+    System.out.println("[Local Execution] Branch: " + branch);
+    System.out.println("[Local Execution] Commit: " + commit);
+    System.out.println("[Local Execution] Pipeline: " + (pipeline != null ? pipeline : filePath));
+
+    System.out.println("[Local Execution] Simulating pipeline execution...");
+    System.out.println("[Local Execution] Pipeline execution completed successfully.");
     return 0;
   }
 
   /**
-   * Executes an individual job inside a Docker container or locally.
+   * Creates a POST request with the given payload.
+   *
+   * @param url     The request URL.
+   * @param payload The request payload.
+   * @return The constructed request object.
    */
-  private boolean executeJob(Job job) {
-    PipelineLogger.info("Executing job: " + job.getName());
-
-    List<String> command = new ArrayList<>();
-    command.add("docker");
-    command.add("run");
-    command.add("--rm");
-    command.add(job.getDockerImage());
-
-    for (String scriptCommand : job.getScript()) {
-      command.add("/bin/sh");
-      command.add("-c");
-      command.add(scriptCommand);
-    }
-
-    ProcessBuilder processBuilder = new ProcessBuilder(command);
-    processBuilder.redirectErrorStream(true);
-
-    try {
-      Process process = processBuilder.start();
-      int exitCode = process.waitFor();
-      return exitCode == 0;
-    } catch (IOException | InterruptedException e) {
-      Thread.currentThread().interrupt();
-      PipelineLogger.error("Error executing job: " + job.getName() + " - " + e.getMessage());
-      return false;
-    }
-  }
-
-  /**
-   * Orders stages based on dependencies.
-   */
-  private List<Stage> orderStagesByExecution(Pipeline pipeline) {
-    List<Stage> orderedStages = new ArrayList<>();
-    Map<String, Stage> stageMap = new HashMap<>();
-
-    for (Stage stage : pipeline.getStages()) {
-      stageMap.put(stage.getName(), stage);
-    }
-
-    Set<String> visited = new HashSet<>();
-    for (Stage stage : pipeline.getStages()) {
-      if (!visited.contains(stage.getName())) {
-        visitStage(stage, stageMap, visited, orderedStages);
-      }
-    }
-    return orderedStages;
-  }
-
-  /**
-   * Recursively processes job dependencies to determine execution order.
-   */
-  
-  private void visitStage(Stage stage, Map<String, Stage> stageMap, Set<String> visited, List<Stage> orderedStages) {
-    if (visited.contains(stage.getName())) return;
-    visited.add(stage.getName());
-
-    for (Job job : stage.getJobs()) {
-      for (UUID dependencyUUID : job.getDependencies()) {
-        String dependency = dependencyUUID.toString();
-        Stage dependentStage = findStageContainingJob(dependency, stageMap);
-        if (dependentStage != null) {
-          visitStage(dependentStage, stageMap, visited, orderedStages);
-        }
-      }
-    }
-    orderedStages.add(stage);
-  }
-
-  /**
-   * Finds the stage that contains a specific job.
-   */
-  private Stage findStageContainingJob(String jobUUID, Map<String, Stage> stageMap) {
-    for (Stage stage : stageMap.values()) {
-      for (Job job : stage.getJobs()) {
-        if (job.getId().toString().equals(jobUUID)) {
-          return stage;
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Checks if all dependencies of a job have completed successfully.
-   */
-  private boolean dependenciesCompleted(Job job, Map<String, String> jobStatuses) {
-    for (UUID dependencyUUID : job.getDependencies()) {
-      String dependency = dependencyUUID.toString();
-      if (!"SUCCESSFUL".equals(jobStatuses.get(dependency))) {
-        return false;
-      }
-    }
-    return true;
+  private Request createPostRequest(String url, String payload) {
+    RequestBody body = RequestBody.create(payload, MediaType.get("application/json; charset=utf-8"));
+    return new Request.Builder()
+            .url(url)
+            .post(body)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Accept", "application/json")
+            .build();
   }
 }
