@@ -38,7 +38,8 @@ public class JobController {
   /**
    * Constructor for JobController.
    *
-   * @param jobExecutionService JobExecutionService instance
+   * @param jobExecutionService JobExecutionService object
+   * @param workerClient        WorkerClient object
    */
   public JobController(JobExecutionService jobExecutionService, WorkerClient workerClient) {
     this.jobExecutionService = jobExecutionService;

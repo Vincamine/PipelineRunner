@@ -164,7 +164,9 @@ public class PipelineValidator {
       PipelineLogger.error("⚠️ Cycle detected: " + formatCycle(cycle));
       return;
     }
-    if (visited.contains(jobName)) return;
+    if (visited.contains(jobName)) {
+      return;
+    }
 
     visited.add(jobName);
     recursionStack.add(jobName);

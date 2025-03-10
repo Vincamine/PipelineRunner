@@ -1,11 +1,15 @@
 package edu.neu.cs6510.sp25.t1.common.dto;
 
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
-import lombok.*;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
