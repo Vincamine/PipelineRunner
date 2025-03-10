@@ -4,10 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
@@ -29,6 +27,9 @@ public class PipelineExecutionService {
 
   /**
    * Retrieves a pipeline execution by ID.
+   *
+   * @param pipelineExecutionId ID of the pipeline execution
+   * @return response containing pipeline execution ID and status
    */
   public PipelineExecutionResponse getPipelineExecution(UUID pipelineExecutionId) {
     PipelineExecutionDTO dto = pipelineExecutionRepository.findById(pipelineExecutionId)
@@ -38,7 +39,10 @@ public class PipelineExecutionService {
   }
 
   /**
-   * Starts a new pipeline execution.
+   * Starts a new run of a pipeline.
+   *
+   * @param request request containing pipeline ID and commit hash
+   * @return response containing pipeline execution ID and status
    */
   @Transactional
   public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request) {
@@ -54,7 +58,10 @@ public class PipelineExecutionService {
   }
 
   /**
-   * Checks if a pipeline execution is a duplicate.
+   * Checks if a pipeline execution with the same pipeline ID and run number already exists.
+   *
+   * @param request request containing pipeline ID and run number
+   * @return true if a duplicate execution exists, false otherwise
    */
   public boolean isDuplicateExecution(PipelineExecutionRequest request) {
     Optional<PipelineExecutionEntity> existingExecution = pipelineExecutionRepository.findByPipelineIdAndRunNumber(

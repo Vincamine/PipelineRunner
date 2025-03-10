@@ -1,9 +1,9 @@
 package edu.neu.cs6510.sp25.t1.backend.mapper;
 
+import org.springframework.stereotype.Component;
+
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
-
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper for converting between JobExecutionEntity and JobExecutionDTO.

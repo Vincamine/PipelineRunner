@@ -12,6 +12,9 @@ import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/**
+ * Controller class for handling pipeline execution related endpoints.
+ */
 @RestController
 @RequestMapping("/api/pipeline")
 @Tag(name = "Pipeline API", description = "Endpoints for managing pipeline executions")
@@ -19,10 +22,21 @@ public class PipelineController {
 
   private final PipelineExecutionService pipelineExecutionService;
 
+  /**
+   * Constructor for PipelineController.
+   *
+   * @param pipelineExecutionService PipelineExecutionService instance
+   */
   public PipelineController(PipelineExecutionService pipelineExecutionService) {
     this.pipelineExecutionService = pipelineExecutionService;
   }
 
+  /**
+   * Endpoint for retrieving the status of a pipeline execution.
+   *
+   * @param executionId UUID of the pipeline execution
+   * @return ResponseEntity object
+   */
   @GetMapping("/status/{executionId}")
   @Operation(summary = "Get pipeline execution status", description = "Retrieves the status of a running or completed pipeline execution.")
   public ResponseEntity<?> getPipelineStatus(@PathVariable UUID executionId) {

@@ -1,11 +1,10 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -14,13 +13,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
@@ -28,8 +20,16 @@ import edu.neu.cs6510.sp25.t1.backend.mapper.StageExecutionMapper;
 import edu.neu.cs6510.sp25.t1.common.dto.StageExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
-@ExtendWith(MockitoExtension.class)
-public class StageExecutionServiceTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class StageExecutionServiceTest {
 
   @Mock
   private StageExecutionRepository stageExecutionRepository;
@@ -43,175 +43,195 @@ public class StageExecutionServiceTest {
   @InjectMocks
   private StageExecutionService stageExecutionService;
 
-  private UUID stageExecutionId;
-  private UUID pipelineExecutionId;
-  private UUID stageId;
-  private StageExecutionEntity stageExecutionEntity;
-  private StageExecutionDTO stageExecutionDTO;
+  private UUID testStageExecutionId;
+  private UUID testPipelineExecutionId;
+  private UUID testStageId;
+  private StageExecutionEntity testStageExecutionEntity;
+  private StageExecutionDTO testStageExecutionDTO;
+  private List<JobExecutionEntity> testSuccessfulJobs;
+  private List<JobExecutionEntity> testMixedStatusJobs;
 
   @BeforeEach
-  public void setup() {
-    stageExecutionId = UUID.randomUUID();
-    pipelineExecutionId = UUID.randomUUID();
-    stageId = UUID.randomUUID();
+  void setUp() {
+    MockitoAnnotations.openMocks(this);
 
-    // Setup stage execution entity
-    stageExecutionEntity = new StageExecutionEntity();
-    stageExecutionEntity.setId(stageExecutionId);
-    stageExecutionEntity.setPipelineExecutionId(pipelineExecutionId);
-    stageExecutionEntity.setStageId(stageId);
-    stageExecutionEntity.setStatus(ExecutionStatus.PENDING);
-    stageExecutionEntity.setStartTime(Instant.now());
+    // Initialize test data
+    testStageExecutionId = UUID.randomUUID();
+    testPipelineExecutionId = UUID.randomUUID();
+    testStageId = UUID.randomUUID();
 
-    // Setup stage execution DTO
-    stageExecutionDTO = new StageExecutionDTO();
-    // Populate stageExecutionDTO fields as needed
+    // Create test stage execution entity
+    testStageExecutionEntity = new StageExecutionEntity();
+    testStageExecutionEntity.setId(testStageExecutionId);
+    testStageExecutionEntity.setPipelineExecutionId(testPipelineExecutionId);
+    testStageExecutionEntity.setStageId(testStageId);
+    testStageExecutionEntity.setStatus(ExecutionStatus.RUNNING);
+    testStageExecutionEntity.setStartTime(Instant.now().minusSeconds(3600));
+
+    // Create test stage execution DTO
+    testStageExecutionDTO = new StageExecutionDTO();
+    testStageExecutionDTO.setId(testStageExecutionId);
+    testStageExecutionDTO.setPipelineExecutionId(testPipelineExecutionId);
+    testStageExecutionDTO.setStageId(testStageId);
+    testStageExecutionDTO.setStatus(ExecutionStatus.RUNNING);
+    testStageExecutionDTO.setStartTime(Instant.now().minusSeconds(3600));
+
+    // Create test successful jobs
+    JobExecutionEntity successfulJob1 = new JobExecutionEntity();
+    successfulJob1.setId(UUID.randomUUID());
+    successfulJob1.setStageExecutionId(testStageExecutionId);
+    successfulJob1.setStatus(ExecutionStatus.SUCCESS);
+
+    JobExecutionEntity successfulJob2 = new JobExecutionEntity();
+    successfulJob2.setId(UUID.randomUUID());
+    successfulJob2.setStageExecutionId(testStageExecutionId);
+    successfulJob2.setStatus(ExecutionStatus.SUCCESS);
+
+    testSuccessfulJobs = Arrays.asList(successfulJob1, successfulJob2);
+
+    // Create test mixed status jobs (some successful, some failed)
+    JobExecutionEntity mixedJob1 = new JobExecutionEntity();
+    mixedJob1.setId(UUID.randomUUID());
+    mixedJob1.setStageExecutionId(testStageExecutionId);
+    mixedJob1.setStatus(ExecutionStatus.SUCCESS);
+
+    JobExecutionEntity mixedJob2 = new JobExecutionEntity();
+    mixedJob2.setId(UUID.randomUUID());
+    mixedJob2.setStageExecutionId(testStageExecutionId);
+    mixedJob2.setStatus(ExecutionStatus.FAILED);
+
+    testMixedStatusJobs = Arrays.asList(mixedJob1, mixedJob2);
   }
 
   @Test
-  public void testGetStageExecution_Success() {
+  void testGetStageExecution_Success() {
     // Arrange
-    when(stageExecutionRepository.findById(stageExecutionId)).thenReturn(Optional.of(stageExecutionEntity));
-    when(stageExecutionMapper.toDTO(stageExecutionEntity)).thenReturn(stageExecutionDTO);
+    when(stageExecutionRepository.findById(testStageExecutionId))
+            .thenReturn(Optional.of(testStageExecutionEntity));
+    when(stageExecutionMapper.toDTO(testStageExecutionEntity))
+            .thenReturn(testStageExecutionDTO);
 
     // Act
-    StageExecutionDTO result = stageExecutionService.getStageExecution(stageExecutionId);
+    StageExecutionDTO result = stageExecutionService.getStageExecution(testStageExecutionId);
 
     // Assert
     assertNotNull(result);
-    assertEquals(stageExecutionDTO, result);
-    verify(stageExecutionRepository).findById(stageExecutionId);
-    verify(stageExecutionMapper).toDTO(stageExecutionEntity);
+    assertEquals(testStageExecutionId, result.getId());
+    verify(stageExecutionRepository, times(1)).findById(testStageExecutionId);
+    verify(stageExecutionMapper, times(1)).toDTO(testStageExecutionEntity);
   }
 
   @Test
-  public void testGetStageExecution_NotFound() {
+  void testGetStageExecution_NotFound() {
     // Arrange
-    when(stageExecutionRepository.findById(stageExecutionId)).thenReturn(Optional.empty());
+    when(stageExecutionRepository.findById(testStageExecutionId))
+            .thenReturn(Optional.empty());
 
     // Act & Assert
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-      stageExecutionService.getStageExecution(stageExecutionId);
+      stageExecutionService.getStageExecution(testStageExecutionId);
     });
+
     assertEquals("Stage Execution not found", exception.getMessage());
-    verify(stageExecutionRepository).findById(stageExecutionId);
+    verify(stageExecutionRepository, times(1)).findById(testStageExecutionId);
     verify(stageExecutionMapper, never()).toDTO(any());
   }
 
   @Test
-  public void testGetStageStatus_Found() {
+  void testGetStageStatus_Found() {
     // Arrange
-    when(stageExecutionRepository.findByPipelineExecutionIdAndStageId(pipelineExecutionId, stageId))
-            .thenReturn(Optional.of(stageExecutionEntity));
+    when(stageExecutionRepository.findByPipelineExecutionIdAndStageId(testPipelineExecutionId, testStageId))
+            .thenReturn(Optional.of(testStageExecutionEntity));
 
     // Act
-    String status = stageExecutionService.getStageStatus(pipelineExecutionId, stageId);
+    String status = stageExecutionService.getStageStatus(testPipelineExecutionId, testStageId);
 
     // Assert
-    assertEquals(ExecutionStatus.PENDING.toString(), status);
-    verify(stageExecutionRepository).findByPipelineExecutionIdAndStageId(pipelineExecutionId, stageId);
+    assertEquals("RUNNING", status);
+    verify(stageExecutionRepository, times(1)).findByPipelineExecutionIdAndStageId(testPipelineExecutionId, testStageId);
   }
 
   @Test
-  public void testGetStageStatus_NotFound() {
+  void testGetStageStatus_NotFound() {
     // Arrange
-    when(stageExecutionRepository.findByPipelineExecutionIdAndStageId(pipelineExecutionId, stageId))
+    when(stageExecutionRepository.findByPipelineExecutionIdAndStageId(testPipelineExecutionId, testStageId))
             .thenReturn(Optional.empty());
 
     // Act
-    String status = stageExecutionService.getStageStatus(pipelineExecutionId, stageId);
+    String status = stageExecutionService.getStageStatus(testPipelineExecutionId, testStageId);
 
     // Assert
     assertEquals("Stage not found", status);
-    verify(stageExecutionRepository).findByPipelineExecutionIdAndStageId(pipelineExecutionId, stageId);
+    verify(stageExecutionRepository, times(1)).findByPipelineExecutionIdAndStageId(testPipelineExecutionId, testStageId);
   }
 
   @Test
-  public void testFinalizeStageExecution_AllJobsSuccess() {
+  void testFinalizeStageExecution_AllJobsSuccess() {
     // Arrange
-    List<JobExecutionEntity> successfulJobs = Arrays.asList(
-            createJobExecution(UUID.randomUUID(), ExecutionStatus.SUCCESS),
-            createJobExecution(UUID.randomUUID(), ExecutionStatus.SUCCESS)
-    );
-
-    when(jobExecutionService.getJobsByStageExecution(stageExecutionId)).thenReturn(successfulJobs);
-    when(stageExecutionRepository.findById(stageExecutionId)).thenReturn(Optional.of(stageExecutionEntity));
-    when(stageExecutionRepository.save(stageExecutionEntity)).thenReturn(stageExecutionEntity);
+    when(jobExecutionService.getJobsByStageExecution(testStageExecutionId))
+            .thenReturn(testSuccessfulJobs);
+    when(stageExecutionRepository.findById(testStageExecutionId))
+            .thenReturn(Optional.of(testStageExecutionEntity));
 
     // Act
-    stageExecutionService.finalizeStageExecution(stageExecutionId);
+    stageExecutionService.finalizeStageExecution(testStageExecutionId);
 
     // Assert
-    assertEquals(ExecutionStatus.SUCCESS, stageExecutionEntity.getStatus());
-    verify(jobExecutionService).getJobsByStageExecution(stageExecutionId);
-    verify(stageExecutionRepository).findById(stageExecutionId);
-    verify(stageExecutionRepository).save(stageExecutionEntity);
+    verify(jobExecutionService, times(1)).getJobsByStageExecution(testStageExecutionId);
+    verify(stageExecutionRepository, times(1)).findById(testStageExecutionId);
+    verify(stageExecutionRepository, times(1)).save(testStageExecutionEntity);
+    assertEquals(ExecutionStatus.SUCCESS, testStageExecutionEntity.getStatus());
   }
 
   @Test
-  public void testFinalizeStageExecution_SomeJobsFailed() {
+  void testFinalizeStageExecution_SomeJobsFailed() {
     // Arrange
-    List<JobExecutionEntity> mixedStatusJobs = Arrays.asList(
-            createJobExecution(UUID.randomUUID(), ExecutionStatus.SUCCESS),
-            createJobExecution(UUID.randomUUID(), ExecutionStatus.FAILED)
-    );
-
-    when(jobExecutionService.getJobsByStageExecution(stageExecutionId)).thenReturn(mixedStatusJobs);
+    when(jobExecutionService.getJobsByStageExecution(testStageExecutionId))
+            .thenReturn(testMixedStatusJobs);
 
     // Act
-    stageExecutionService.finalizeStageExecution(stageExecutionId);
+    stageExecutionService.finalizeStageExecution(testStageExecutionId);
 
     // Assert
-    verify(jobExecutionService).getJobsByStageExecution(stageExecutionId);
-    // Verify that repository findById and save were never called
+    verify(jobExecutionService, times(1)).getJobsByStageExecution(testStageExecutionId);
     verify(stageExecutionRepository, never()).findById(any());
     verify(stageExecutionRepository, never()).save(any());
   }
 
   @Test
-  public void testFinalizeStageExecution_NoJobs() {
+  void testFinalizeStageExecution_NoJobs() {
     // Arrange
-    when(jobExecutionService.getJobsByStageExecution(stageExecutionId)).thenReturn(Collections.emptyList());
-    when(stageExecutionRepository.findById(stageExecutionId)).thenReturn(Optional.of(stageExecutionEntity));
-    when(stageExecutionRepository.save(stageExecutionEntity)).thenReturn(stageExecutionEntity);
+    when(jobExecutionService.getJobsByStageExecution(testStageExecutionId))
+            .thenReturn(Collections.emptyList());
+    when(stageExecutionRepository.findById(testStageExecutionId))
+            .thenReturn(Optional.of(testStageExecutionEntity));
 
     // Act
-    stageExecutionService.finalizeStageExecution(stageExecutionId);
+    stageExecutionService.finalizeStageExecution(testStageExecutionId);
 
     // Assert
-    // An empty list means "all" jobs are successful (vacuously true)
-    assertEquals(ExecutionStatus.SUCCESS, stageExecutionEntity.getStatus());
-    verify(jobExecutionService).getJobsByStageExecution(stageExecutionId);
-    verify(stageExecutionRepository).findById(stageExecutionId);
-    verify(stageExecutionRepository).save(stageExecutionEntity);
+    verify(jobExecutionService, times(1)).getJobsByStageExecution(testStageExecutionId);
+    verify(stageExecutionRepository, times(1)).findById(testStageExecutionId);
+    verify(stageExecutionRepository, times(1)).save(testStageExecutionEntity);
+    assertEquals(ExecutionStatus.SUCCESS, testStageExecutionEntity.getStatus());
   }
 
   @Test
-  public void testFinalizeStageExecution_StageNotFound() {
+  void testFinalizeStageExecution_StageNotFound() {
     // Arrange
-    List<JobExecutionEntity> successfulJobs = Arrays.asList(
-            createJobExecution(UUID.randomUUID(), ExecutionStatus.SUCCESS)
-    );
-
-    when(jobExecutionService.getJobsByStageExecution(stageExecutionId)).thenReturn(successfulJobs);
-    when(stageExecutionRepository.findById(stageExecutionId)).thenReturn(Optional.empty());
+    when(jobExecutionService.getJobsByStageExecution(testStageExecutionId))
+            .thenReturn(testSuccessfulJobs);
+    when(stageExecutionRepository.findById(testStageExecutionId))
+            .thenReturn(Optional.empty());
 
     // Act & Assert
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-      stageExecutionService.finalizeStageExecution(stageExecutionId);
+      stageExecutionService.finalizeStageExecution(testStageExecutionId);
     });
-    assertEquals("Stage Execution not found", exception.getMessage());
-    verify(jobExecutionService).getJobsByStageExecution(stageExecutionId);
-    verify(stageExecutionRepository).findById(stageExecutionId);
-    verify(stageExecutionRepository, never()).save(any());
-  }
 
-  // Helper method to create test data
-  private JobExecutionEntity createJobExecution(UUID id, ExecutionStatus status) {
-    JobExecutionEntity job = new JobExecutionEntity();
-    job.setId(id);
-    job.setStageExecutionId(stageExecutionId);
-    job.setStatus(status);
-    return job;
+    assertEquals("Stage Execution not found", exception.getMessage());
+    verify(jobExecutionService, times(1)).getJobsByStageExecution(testStageExecutionId);
+    verify(stageExecutionRepository, times(1)).findById(testStageExecutionId);
+    verify(stageExecutionRepository, never()).save(any());
   }
 }

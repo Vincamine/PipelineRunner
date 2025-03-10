@@ -14,175 +14,202 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class JobExecutionMapperTest {
+class JobExecutionMapperTest {
 
-  private JobExecutionMapper mapper;
+  private JobExecutionMapper jobExecutionMapper;
 
-  private UUID id;
-  private UUID stageExecutionId;
-  private UUID jobId;
-  private String commitHash;
-  private boolean isLocal;
-  private ExecutionStatus status;
-  private Instant startTime;
-  private Instant completionTime;
-  private boolean allowFailure;
+  private UUID testId;
+  private UUID testStageExecutionId;
+  private UUID testJobId;
+  private String testCommitHash;
+  private boolean testIsLocal;
+  private ExecutionStatus testStatus;  // Use enum type
+  private Instant testStartTime;
+  private Instant testCompletionTime;
+  private boolean testAllowFailure;
 
   @BeforeEach
-  public void setup() {
-    mapper = new JobExecutionMapper();
+  void setUp() {
+    jobExecutionMapper = new JobExecutionMapper();
 
     // Initialize test data
-    id = UUID.randomUUID();
-    stageExecutionId = UUID.randomUUID();
-    jobId = UUID.randomUUID();
-    commitHash = "abc123";
-    isLocal = true;
-    status = ExecutionStatus.SUCCESS;
-    startTime = Instant.now();
-    completionTime = Instant.now().plusSeconds(60);
-    allowFailure = false;
+    testId = UUID.randomUUID();
+    testStageExecutionId = UUID.randomUUID();
+    testJobId = UUID.randomUUID();
+    testCommitHash = "abc123";
+    testIsLocal = true;
+    testStatus = ExecutionStatus.SUCCESS;  // Use enum value
+    testStartTime = Instant.now().minusSeconds(3600);
+    testCompletionTime = Instant.now();
+    testAllowFailure = false;
   }
 
   @Test
-  public void testToDTO_AllFieldsPopulated() {
+  void testToDTOWithValidEntity() {
     // Arrange
-    JobExecutionEntity entity = JobExecutionEntity.builder()
-            .id(id)
-            .stageExecutionId(stageExecutionId)
-            .jobId(jobId)
-            .commitHash(commitHash)
-            .isLocal(isLocal)
-            .status(status)
-            .startTime(startTime)
-            .completionTime(completionTime)
-            .allowFailure(allowFailure)
-            .build();
+    JobExecutionEntity entity = new JobExecutionEntity();
+    entity.setId(testId);
+    entity.setStageExecutionId(testStageExecutionId);
+    entity.setJobId(testJobId);
+    entity.setCommitHash(testCommitHash);
+    entity.setLocal(testIsLocal);
+    entity.setStatus(testStatus);
+    entity.setStartTime(testStartTime);
+    entity.setCompletionTime(testCompletionTime);
+    entity.setAllowFailure(testAllowFailure);
 
     // Act
-    JobExecutionDTO dto = mapper.toDTO(entity);
+    JobExecutionDTO dto = jobExecutionMapper.toDTO(entity);
 
     // Assert
     assertNotNull(dto);
-    assertEquals(id, dto.getId());
-    assertEquals(stageExecutionId, dto.getStageExecutionId());
-    assertEquals(jobId, dto.getJobId());
-    assertEquals(commitHash, dto.getCommitHash());
-    assertEquals(isLocal, dto.isLocal());
-    assertEquals(status, dto.getStatus());
-    assertEquals(startTime, dto.getStartTime());
-    assertEquals(completionTime, dto.getCompletionTime());
-    assertEquals(allowFailure, dto.isAllowFailure());
+    assertEquals(testId, dto.getId());
+    assertEquals(testStageExecutionId, dto.getStageExecutionId());
+    assertEquals(testJobId, dto.getJobId());
+    assertEquals(testCommitHash, dto.getCommitHash());
+    assertEquals(testIsLocal, dto.isLocal());
+    assertEquals(testStatus, dto.getStatus());
+    assertEquals(testStartTime, dto.getStartTime());
+    assertEquals(testCompletionTime, dto.getCompletionTime());
+    assertEquals(testAllowFailure, dto.isAllowFailure());
   }
 
   @Test
-  public void testToDTO_NullEntity() {
+  void testToDTOWithNullEntity() {
     // Act
-    JobExecutionDTO dto = mapper.toDTO(null);
+    JobExecutionDTO dto = jobExecutionMapper.toDTO(null);
 
     // Assert
     assertNull(dto);
   }
 
   @Test
-  public void testToDTO_NullFieldsInEntity() {
+  void testToEntityWithValidDTO() {
     // Arrange
-    JobExecutionEntity entity = JobExecutionEntity.builder()
-            .id(id)
-            .stageExecutionId(null)
-            .jobId(jobId)
-            .commitHash(null)
-            .isLocal(isLocal)
-            .status(null)
-            .startTime(null)
-            .completionTime(null)
-            .allowFailure(allowFailure)
-            .build();
+    JobExecutionDTO dto = new JobExecutionDTO();
+    dto.setId(testId);
+    dto.setStageExecutionId(testStageExecutionId);
+    dto.setJobId(testJobId);
+    dto.setCommitHash(testCommitHash);
+    dto.setLocal(testIsLocal);
+    dto.setStatus(testStatus);
+    dto.setStartTime(testStartTime);
+    dto.setCompletionTime(testCompletionTime);
+    dto.setAllowFailure(testAllowFailure);
 
     // Act
-    JobExecutionDTO dto = mapper.toDTO(entity);
-
-    // Assert
-    assertNotNull(dto);
-    assertEquals(id, dto.getId());
-    assertNull(dto.getStageExecutionId());
-    assertEquals(jobId, dto.getJobId());
-    assertNull(dto.getCommitHash());
-    assertEquals(isLocal, dto.isLocal());
-    assertNull(dto.getStatus());
-    assertNull(dto.getStartTime());
-    assertNull(dto.getCompletionTime());
-    assertEquals(allowFailure, dto.isAllowFailure());
-  }
-
-  @Test
-  public void testToEntity_AllFieldsPopulated() {
-    // Arrange
-    JobExecutionDTO dto = JobExecutionDTO.builder()
-            .id(id)
-            .stageExecutionId(stageExecutionId)
-            .jobId(jobId)
-            .commitHash(commitHash)
-            .isLocal(isLocal)
-            .status(status)
-            .startTime(startTime)
-            .completionTime(completionTime)
-            .allowFailure(allowFailure)
-            .build();
-
-    // Act
-    JobExecutionEntity entity = mapper.toEntity(dto);
+    JobExecutionEntity entity = jobExecutionMapper.toEntity(dto);
 
     // Assert
     assertNotNull(entity);
-    assertEquals(id, entity.getId());
-    assertEquals(stageExecutionId, entity.getStageExecutionId());
-    assertEquals(jobId, entity.getJobId());
-    assertEquals(commitHash, entity.getCommitHash());
-    assertEquals(isLocal, entity.isLocal());
-    assertEquals(status, entity.getStatus());
-    assertEquals(startTime, entity.getStartTime());
-    assertEquals(completionTime, entity.getCompletionTime());
-    assertEquals(allowFailure, entity.isAllowFailure());
+    assertEquals(testId, entity.getId());
+    assertEquals(testStageExecutionId, entity.getStageExecutionId());
+    assertEquals(testJobId, entity.getJobId());
+    assertEquals(testCommitHash, entity.getCommitHash());
+    assertEquals(testIsLocal, entity.isLocal());
+    assertEquals(testStatus, entity.getStatus());
+    assertEquals(testStartTime, entity.getStartTime());
+    assertEquals(testCompletionTime, entity.getCompletionTime());
+    assertEquals(testAllowFailure, entity.isAllowFailure());
   }
 
   @Test
-  public void testToEntity_NullDTO() {
+  void testToEntityWithNullDTO() {
     // Act
-    JobExecutionEntity entity = mapper.toEntity(null);
+    JobExecutionEntity entity = jobExecutionMapper.toEntity(null);
 
     // Assert
     assertNull(entity);
   }
 
   @Test
-  public void testToEntity_NullFieldsInDTO() {
+  void testBidirectionalMapping() {
     // Arrange
-    JobExecutionDTO dto = JobExecutionDTO.builder()
-            .id(id)
-            .stageExecutionId(null)
-            .jobId(jobId)
-            .commitHash(null)
-            .isLocal(isLocal)
-            .status(null)
-            .startTime(null)
-            .completionTime(null)
-            .allowFailure(allowFailure)
-            .build();
+    JobExecutionEntity originalEntity = new JobExecutionEntity();
+    originalEntity.setId(testId);
+    originalEntity.setStageExecutionId(testStageExecutionId);
+    originalEntity.setJobId(testJobId);
+    originalEntity.setCommitHash(testCommitHash);
+    originalEntity.setLocal(testIsLocal);
+    originalEntity.setStatus(testStatus);
+    originalEntity.setStartTime(testStartTime);
+    originalEntity.setCompletionTime(testCompletionTime);
+    originalEntity.setAllowFailure(testAllowFailure);
 
     // Act
-    JobExecutionEntity entity = mapper.toEntity(dto);
+    JobExecutionDTO dto = jobExecutionMapper.toDTO(originalEntity);
+    JobExecutionEntity convertedEntity = jobExecutionMapper.toEntity(dto);
+
+    // Assert
+    assertNotNull(convertedEntity);
+    assertEquals(originalEntity.getId(), convertedEntity.getId());
+    assertEquals(originalEntity.getStageExecutionId(), convertedEntity.getStageExecutionId());
+    assertEquals(originalEntity.getJobId(), convertedEntity.getJobId());
+    assertEquals(originalEntity.getCommitHash(), convertedEntity.getCommitHash());
+    assertEquals(originalEntity.isLocal(), convertedEntity.isLocal());
+    assertEquals(originalEntity.getStatus(), convertedEntity.getStatus());
+    assertEquals(originalEntity.getStartTime(), convertedEntity.getStartTime());
+    assertEquals(originalEntity.getCompletionTime(), convertedEntity.getCompletionTime());
+    assertEquals(originalEntity.isAllowFailure(), convertedEntity.isAllowFailure());
+  }
+
+  @Test
+  void testToDTOWithPartialEntity() {
+    // Arrange - Entity with some null fields
+    JobExecutionEntity entity = new JobExecutionEntity();
+    entity.setId(testId);
+    entity.setStageExecutionId(testStageExecutionId);
+    entity.setJobId(testJobId);
+    // commitHash is null
+    entity.setLocal(testIsLocal);
+    entity.setStatus(testStatus);
+    // startTime is null
+    entity.setCompletionTime(testCompletionTime);
+    entity.setAllowFailure(testAllowFailure);
+
+    // Act
+    JobExecutionDTO dto = jobExecutionMapper.toDTO(entity);
+
+    // Assert
+    assertNotNull(dto);
+    assertEquals(testId, dto.getId());
+    assertEquals(testStageExecutionId, dto.getStageExecutionId());
+    assertEquals(testJobId, dto.getJobId());
+    assertNull(dto.getCommitHash());
+    assertEquals(testIsLocal, dto.isLocal());
+    assertEquals(testStatus, dto.getStatus());
+    assertNull(dto.getStartTime());
+    assertEquals(testCompletionTime, dto.getCompletionTime());
+    assertEquals(testAllowFailure, dto.isAllowFailure());
+  }
+
+  @Test
+  void testToEntityWithPartialDTO() {
+    // Arrange - DTO with some null fields
+    JobExecutionDTO dto = new JobExecutionDTO();
+    dto.setId(testId);
+    dto.setStageExecutionId(testStageExecutionId);
+    dto.setJobId(testJobId);
+    // commitHash is null
+    dto.setLocal(testIsLocal);
+    // status is null
+    dto.setStartTime(testStartTime);
+    // completionTime is null
+    dto.setAllowFailure(testAllowFailure);
+
+    // Act
+    JobExecutionEntity entity = jobExecutionMapper.toEntity(dto);
 
     // Assert
     assertNotNull(entity);
-    assertEquals(id, entity.getId());
-    assertNull(entity.getStageExecutionId());
-    assertEquals(jobId, entity.getJobId());
+    assertEquals(testId, entity.getId());
+    assertEquals(testStageExecutionId, entity.getStageExecutionId());
+    assertEquals(testJobId, entity.getJobId());
     assertNull(entity.getCommitHash());
-    assertEquals(isLocal, entity.isLocal());
+    assertEquals(testIsLocal, entity.isLocal());
     assertNull(entity.getStatus());
-    assertNull(entity.getStartTime());
+    assertEquals(testStartTime, entity.getStartTime());
     assertNull(entity.getCompletionTime());
-    assertEquals(allowFailure, entity.isAllowFailure());
+    assertEquals(testAllowFailure, entity.isAllowFailure());
   }
 }

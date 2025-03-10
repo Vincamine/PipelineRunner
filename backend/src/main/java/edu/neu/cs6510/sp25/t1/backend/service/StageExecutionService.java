@@ -25,7 +25,10 @@ public class StageExecutionService {
   private final JobExecutionService jobExecutionService;
 
   /**
-   * Retrieves a stage execution by ID.
+   * Retrieves all stage executions for a
+   *
+   * @param stageExecutionId stage execution ID
+   * @return list of stage executions
    */
   public StageExecutionDTO getStageExecution(UUID stageExecutionId) {
     return stageExecutionRepository.findById(stageExecutionId)
@@ -34,7 +37,11 @@ public class StageExecutionService {
   }
 
   /**
-   * Retrieves the status of a stage execution by pipeline execution ID and stage ID.
+   * Retrieves all stage executions for a
+   *
+   * @param pipelineExecutionId pipeline Execution ID
+   * @param stageId             stage ID
+   * @return list of stage executions
    */
   public String getStageStatus(UUID pipelineExecutionId, UUID stageId) {
     return stageExecutionRepository.findByPipelineExecutionIdAndStageId(pipelineExecutionId, stageId)
@@ -43,7 +50,9 @@ public class StageExecutionService {
   }
 
   /**
-   * Finalizes stage execution if all jobs have succeeded.
+   * finalizes a stage execution
+   *
+   * @param stageExecutionId stage execution ID
    */
   @Transactional
   public void finalizeStageExecution(UUID stageExecutionId) {
