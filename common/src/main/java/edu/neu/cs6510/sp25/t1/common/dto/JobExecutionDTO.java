@@ -66,11 +66,6 @@ public class JobExecutionDTO {
   private boolean allowFailure;
 
   /**
-   * Log output of the job execution.
-   */
-  private String logs;
-
-  /**
    * The full Job details associated with this execution.
    */
   private JobDTO job;

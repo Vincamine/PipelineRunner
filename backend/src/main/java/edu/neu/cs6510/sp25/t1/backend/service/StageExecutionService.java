@@ -34,16 +34,13 @@ public class StageExecutionService {
   }
 
   /**
-   * Retrieves the status of a stage execution by pipeline execution ID and stage name.
+   * Retrieves the status of a stage execution by pipeline execution ID and stage ID.
    */
   public String getStageStatus(UUID pipelineExecutionId, UUID stageId) {
     return stageExecutionRepository.findByPipelineExecutionIdAndStageId(pipelineExecutionId, stageId)
-            .map(stageExecution -> stageExecution.getStatus().toString()) // Convert status to string
+            .map(stageExecution -> stageExecution.getStatus().toString())
             .orElse("Stage not found");
   }
-
-
-
 
   /**
    * Finalizes stage execution if all jobs have succeeded.

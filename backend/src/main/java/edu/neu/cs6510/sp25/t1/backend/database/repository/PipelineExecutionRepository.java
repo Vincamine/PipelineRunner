@@ -60,4 +60,9 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
   @Query("SELECT p.name FROM PipelineExecutionEntity pe JOIN PipelineEntity p ON pe.pipelineId = p.id WHERE pe.pipelineId = :pipelineId")
   Optional<String> findPipelineNameByPipelineId(@Param("pipelineId") UUID pipelineId);
 
+  /**
+   * Fetch the pipeline ID by pipeline name.
+   */
+  @Query("SELECT p.id FROM PipelineEntity p WHERE p.name = :pipelineName")
+  Optional<UUID> findPipelineIdByName(@Param("pipelineName") String pipelineName);
 }
