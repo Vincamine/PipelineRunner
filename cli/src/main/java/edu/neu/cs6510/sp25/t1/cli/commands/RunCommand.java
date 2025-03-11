@@ -23,10 +23,29 @@ import picocli.CommandLine;
 public class RunCommand implements Callable<Integer> {
 
   private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
-  private static final String BACKEND_URL = "http://localhost:8080/api/pipeline/run"; // Change as needed
+  private static final String REMOTE_BACKEND_URL = "http://localhost:8080/api/pipeline/run";
+  private static final String LOCAL_BACKEND_URL = "http://localhost:8080/api/pipeline/run-local"; // Local execution endpoint
 
   @CommandLine.ParentCommand
-  private CliApp parent; // Inherits options from CliApp
+  private CliApp parent; // Inherits global CLI options
+
+  @CommandLine.Option(names = {"--repo", "-r"}, description = "Specify the repository URL.")
+  private String repo;
+
+  @CommandLine.Option(names = {"--branch", "-b"}, description = "Specify the Git branch.", defaultValue = "main")
+  private String branch;
+
+  @CommandLine.Option(names = {"--commit", "-c"}, description = "Specify the commit hash. Defaults to latest commit.")
+  private String commit;
+
+  @CommandLine.Option(names = {"-f", "--file"}, description = "Specify the pipeline config file.")
+  private String filePath;
+
+  @CommandLine.Option(names = {"--pipeline", "-p"}, description = "Specify the pipeline name to run.")
+  private String pipeline;
+
+  @CommandLine.Option(names = {"--local"}, description = "Run the pipeline locally.")
+  private boolean localRun;
 
   /**
    * Validates the pipeline configuration file and runs the pipeline.
@@ -36,13 +55,16 @@ public class RunCommand implements Callable<Integer> {
   @Override
   public Integer call() {
     try {
-      // Access options from CliApp
-      String repo = parent.repo;
-      String branch = parent.branch;
-      String commit = parent.commit.isEmpty() ? GitUtils.getLatestCommitHash() : parent.commit;
-      String filePath = parent.filePath;
-      String pipeline = parent.pipeline;
-      boolean localRun = parent.localRun;
+      // If no explicit commit is provided, fetch latest
+      if (commit == null || commit.isEmpty()) {
+        commit = GitUtils.getLatestCommitHash();
+      }
+
+      // Ensure a valid file path is provided when running locally
+      if (localRun && (filePath == null || filePath.isEmpty())) {
+        System.err.println("[Error] Pipeline configuration file must be specified when running locally (-f).");
+        return 1;
+      }
 
       // Validate the pipeline configuration file
       System.out.println("Validating pipeline configuration: " + filePath);
@@ -51,9 +73,9 @@ public class RunCommand implements Callable<Integer> {
 
       // Run the pipeline (either locally or remotely)
       if (localRun) {
-        return runPipelineLocally(repo, branch, commit, pipeline, filePath);
+        return runPipelineLocally();
       } else {
-        return runPipelineRemotely(repo, branch, commit, pipeline, filePath);
+        return runPipelineRemotely();
       }
 
     } catch (Exception e) {
@@ -65,21 +87,21 @@ public class RunCommand implements Callable<Integer> {
   /**
    * Triggers a remote pipeline execution via the backend API.
    *
-   * @param repo     The repository path or URL.
-   * @param branch   The Git branch.
-   * @param commit   The commit hash.
-   * @param pipeline The pipeline name (if specified).
-   * @param filePath The pipeline configuration file path.
    * @return 0 if successful, 1 if an error occurred.
    */
-  private Integer runPipelineRemotely(String repo, String branch, String commit, String pipeline, String filePath) {
+  private Integer runPipelineRemotely() {
     try {
+      if (repo == null || repo.isEmpty()) {
+        System.err.println("[Error] Repository (--repo) must be specified for remote execution.");
+        return 1;
+      }
+
       String jsonPayload = String.format(
               "{\"repo\": \"%s\", \"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\"}",
-              repo, branch, commit, pipeline != null ? pipeline : filePath
+              repo, branch, commit, (pipeline != null ? pipeline : "")
       );
 
-      Request request = createPostRequest(BACKEND_URL, jsonPayload);
+      Request request = createPostRequest(REMOTE_BACKEND_URL, jsonPayload);
       Response response = HTTP_CLIENT.newCall(request).execute();
 
       if (!response.isSuccessful()) {
@@ -87,7 +109,7 @@ public class RunCommand implements Callable<Integer> {
         return 1;
       }
 
-      System.out.println("[Success] Pipeline execution started.");
+      System.out.println("[Success] Pipeline execution started remotely.");
       System.out.println("Response: " + response.body().string());
       return 0;
 
@@ -98,25 +120,33 @@ public class RunCommand implements Callable<Integer> {
   }
 
   /**
-   * Simulates a local pipeline execution
+   * Triggers a **local** pipeline execution via the backend API.
    *
-   * @param repo     The repository path or URL.
-   * @param branch   The Git branch.
-   * @param commit   The commit hash.
-   * @param pipeline The pipeline name (if specified).
-   * @param filePath The pipeline configuration file path.
    * @return 0 if successful, 1 if an error occurred.
    */
-  private Integer runPipelineLocally(String repo, String branch, String commit, String pipeline, String filePath) {
-    System.out.println("[Local Execution] Running the pipeline locally...");
-    System.out.println("[Local Execution] Repository: " + repo);
-    System.out.println("[Local Execution] Branch: " + branch);
-    System.out.println("[Local Execution] Commit: " + commit);
-    System.out.println("[Local Execution] Pipeline: " + (pipeline != null ? pipeline : filePath));
+  private Integer runPipelineLocally() {
+    try {
+      String jsonPayload = String.format(
+              "{\"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\", \"file\": \"%s\", \"local\": true}",
+              branch, commit, (pipeline != null ? pipeline : ""), filePath
+      );
 
-    System.out.println("[Local Execution] Simulating pipeline execution...");
-    System.out.println("[Local Execution] Pipeline execution completed successfully.");
-    return 0;
+      Request request = createPostRequest(LOCAL_BACKEND_URL, jsonPayload);
+      Response response = HTTP_CLIENT.newCall(request).execute();
+
+      if (!response.isSuccessful()) {
+        System.err.println("[Error] Failed to trigger local pipeline execution.");
+        return 1;
+      }
+
+      System.out.println("[Success] Pipeline execution started locally.");
+      System.out.println("Response: " + response.body().string());
+      return 0;
+
+    } catch (IOException e) {
+      System.err.println("[Error] Failed to communicate with local backend: " + e.getMessage());
+      return 1;
+    }
   }
 
   /**

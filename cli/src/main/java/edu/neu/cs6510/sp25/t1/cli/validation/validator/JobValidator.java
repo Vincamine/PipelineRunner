@@ -7,6 +7,7 @@ import java.util.Set;
 
 import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.model.Job;
 import edu.neu.cs6510.sp25.t1.common.model.Stage;
 
@@ -66,6 +67,8 @@ public class JobValidator {
     if (!errors.isEmpty()) {
       throw new ValidationException(String.join("\n", errors));
     }
+
+    PipelineLogger.info("Job validation successful. All jobs are correctly defined in: " + filename);
   }
 
   /**

@@ -15,7 +15,7 @@ import ch.qos.logback.core.FileAppender;
  * Uses SLF4J with Logback and ensures logs print to the console and a log file.
  */
 public class PipelineLogger {
-  private static final Logger logger = LoggerFactory.getLogger(PipelineLogger.class);
+  private static final Logger logger = LoggerFactory.getLogger("cicd-logger"); // ✅ Set logger name explicitly
   private static final String LOG_FILE_PATH = "logs/pipeline_system.log"; // Log file path
 
   static {
@@ -32,7 +32,7 @@ public class PipelineLogger {
     // Define log pattern (includes time, level, thread, and message)
     PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     encoder.setContext(context);
-    encoder.setPattern("[%d{HH:mm:ss}] [%thread] %-5level %logger{36} - %msg%n"); // Enhanced log format
+    encoder.setPattern("[%d{HH:mm:ss}] [%thread] %-5level cicd-logger - %msg%n"); // ✅ Replaces %logger with "cicd-logger"
     encoder.start();
 
     // Console Appender
@@ -49,7 +49,7 @@ public class PipelineLogger {
     fileAppender.start();
 
     // Get the root logger and attach appenders
-    ch.qos.logback.classic.Logger rootLogger = context.getLogger("edu.neu.cs6510.sp25.t1");
+    ch.qos.logback.classic.Logger rootLogger = context.getLogger("cicd-logger"); // ✅ Ensures the logger is named correctly
     rootLogger.setLevel(Level.DEBUG); // Capture DEBUG and above
     rootLogger.addAppender(consoleAppender);
     rootLogger.addAppender(fileAppender);
@@ -61,7 +61,7 @@ public class PipelineLogger {
    * @param message The message to log.
    */
   public static void info(String message) {
-    logger.info("[PipelineLogger] {}", message);
+    logger.info("{}", message); // ✅ No need to include "[PipelineLogger]"
   }
 
   /**
@@ -70,7 +70,7 @@ public class PipelineLogger {
    * @param message The message to log.
    */
   public static void warn(String message) {
-    logger.warn("[PipelineLogger] {}", message);
+    logger.warn("{}", message);
   }
 
   /**
@@ -79,7 +79,7 @@ public class PipelineLogger {
    * @param message The message to log.
    */
   public static void error(String message) {
-    logger.error("[PipelineLogger] {}", message);
+    logger.error("{}", message);
   }
 
   /**
@@ -88,6 +88,6 @@ public class PipelineLogger {
    * @param message The message to log.
    */
   public static void debug(String message) {
-    logger.debug("[PipelineLogger] {}", message);
+    logger.debug("{}", message);
   }
 }

@@ -60,7 +60,6 @@ public class YamlParser {
       }
 
       System.out.println("Parsing YAML file: " + yamlFile.getAbsolutePath());
-      System.out.println("YAML Content: \n" + content);
 
       Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
 
