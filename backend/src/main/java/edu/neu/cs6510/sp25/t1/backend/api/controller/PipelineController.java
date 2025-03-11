@@ -13,6 +13,7 @@ import java.util.UUID;
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -60,6 +61,8 @@ public class PipelineController {
   @PostMapping("/run")
   @Operation(summary = "Trigger pipeline execution", description = "Starts a new pipeline execution.")
   public ResponseEntity<PipelineExecutionResponse> runPipeline(@RequestBody PipelineExecutionRequest request) {
+    PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
+
     PipelineExecutionResponse response = pipelineExecutionService.startPipelineExecution(request);
     return ResponseEntity.ok(response);
   }

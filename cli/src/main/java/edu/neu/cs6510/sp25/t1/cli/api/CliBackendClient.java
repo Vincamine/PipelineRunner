@@ -52,14 +52,15 @@ public class CliBackendClient {
    * @param branch   The Git branch to use.
    * @param commit   The commit hash.
    * @param pipeline The name of the pipeline to execute.
+   * @param filePath The YAML configuration file path (newly added).
    * @return The execution ID if successful.
    * @throws IOException If an API error occurs.
    */
-  public String triggerPipelineExecution(String repo, String branch, String commit, String pipeline) throws IOException {
+  public String triggerPipelineExecution(String repo, String branch, String commit, String pipeline, String filePath) throws IOException {
     String url = String.format("%s/api/pipeline/run", backendUrl);
     String jsonPayload = String.format(
-            "{\"repo\": \"%s\", \"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\"}",
-            repo, branch, commit, pipeline
+            "{\"repo\": \"%s\", \"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\", \"filePath\": \"%s\"}",
+            repo, branch, commit, pipeline, filePath
     );
 
     Request request = createPostRequest(url, jsonPayload);
@@ -67,6 +68,7 @@ public class CliBackendClient {
 
     return response.body() != null ? response.body().string() : "Error: Empty response";
   }
+
 
   /**
    * Fetches execution reports for a **pipeline, stage, or job**.

@@ -23,8 +23,7 @@ import picocli.CommandLine;
 public class RunCommand implements Callable<Integer> {
 
   private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
-  private static final String REMOTE_BACKEND_URL = "http://localhost:8080/api/pipeline/run";
-  private static final String LOCAL_BACKEND_URL = "http://localhost:8080/api/pipeline/run-local"; // Local execution endpoint
+  private static final String BACKEND_URL = "http://localhost:8080/api/pipeline/run"; // Unified URL
 
   @CommandLine.ParentCommand
   private CliApp parent; // Inherits global CLI options
@@ -72,11 +71,7 @@ public class RunCommand implements Callable<Integer> {
       System.out.println("Pipeline configuration is valid!");
 
       // Run the pipeline (either locally or remotely)
-      if (localRun) {
-        return runPipelineLocally();
-      } else {
-        return runPipelineRemotely();
-      }
+      return triggerPipelineExecution();
 
     } catch (Exception e) {
       System.err.println("[Error] " + e.getMessage());
@@ -85,66 +80,39 @@ public class RunCommand implements Callable<Integer> {
   }
 
   /**
-   * Triggers a remote pipeline execution via the backend API.
+   * Triggers a pipeline execution via the backend API.
    *
    * @return 0 if successful, 1 if an error occurred.
    */
-  private Integer runPipelineRemotely() {
+  private Integer triggerPipelineExecution() {
     try {
-      if (repo == null || repo.isEmpty()) {
+      if (!localRun && (repo == null || repo.isEmpty())) {
         System.err.println("[Error] Repository (--repo) must be specified for remote execution.");
         return 1;
       }
 
       String jsonPayload = String.format(
-              "{\"repo\": \"%s\", \"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\"}",
-              repo, branch, commit, (pipeline != null ? pipeline : "")
+              "{\"repo\": \"%s\", \"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\", \"filePath\": \"%s\", \"local\": %s}",
+              (repo != null ? repo : ""), branch, commit, (pipeline != null ? pipeline : ""), filePath, localRun
       );
 
-      Request request = createPostRequest(REMOTE_BACKEND_URL, jsonPayload);
+      Request request = createPostRequest(BACKEND_URL, jsonPayload);
       Response response = HTTP_CLIENT.newCall(request).execute();
 
       if (!response.isSuccessful()) {
-        System.err.println("[Error] Failed to trigger remote pipeline execution.");
+        String responseBody = response.body() != null ? response.body().string() : "Empty response";
+        System.err.println("[Error] Failed pipeline execution.");
+        System.err.println("HTTP Status: " + response.code());
+        System.err.println("Response: " + responseBody);
         return 1;
       }
 
-      System.out.println("[Success] Pipeline execution started remotely.");
+      System.out.println("[Success] Pipeline execution started.");
       System.out.println("Response: " + response.body().string());
       return 0;
 
     } catch (IOException e) {
       System.err.println("[Error] Failed to communicate with backend: " + e.getMessage());
-      return 1;
-    }
-  }
-
-  /**
-   * Triggers a **local** pipeline execution via the backend API.
-   *
-   * @return 0 if successful, 1 if an error occurred.
-   */
-  private Integer runPipelineLocally() {
-    try {
-      String jsonPayload = String.format(
-              "{\"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\", \"file\": \"%s\", \"local\": true}",
-              branch, commit, (pipeline != null ? pipeline : ""), filePath
-      );
-
-      Request request = createPostRequest(LOCAL_BACKEND_URL, jsonPayload);
-      Response response = HTTP_CLIENT.newCall(request).execute();
-
-      if (!response.isSuccessful()) {
-        System.err.println("[Error] Failed to trigger local pipeline execution.");
-        return 1;
-      }
-
-      System.out.println("[Success] Pipeline execution started locally.");
-      System.out.println("Response: " + response.body().string());
-      return 0;
-
-    } catch (IOException e) {
-      System.err.println("[Error] Failed to communicate with local backend: " + e.getMessage());
       return 1;
     }
   }
