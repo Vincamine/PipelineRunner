@@ -6,12 +6,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.mapper.PipelineExecutionMapper;
 import edu.neu.cs6510.sp25.t1.backend.utils.YamlPipelineUtils;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
@@ -29,6 +34,11 @@ import lombok.RequiredArgsConstructor;
 public class PipelineExecutionService {
   private final PipelineExecutionRepository pipelineExecutionRepository;
   private final PipelineExecutionMapper pipelineExecutionMapper;
+  private final StageExecutionService stageExecutionService;
+  private final StageExecutionRepository stageExecutionRepository;
+  private final PipelineTransactionService pipelineTransactionService;
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
 
   /**
    * Retrieves a pipeline execution by ID.
@@ -58,7 +68,7 @@ public class PipelineExecutionService {
       resolvedPath = Paths.get(System.getProperty("user.dir")).resolve(request.getFilePath()).normalize();
     }
 
-    PipelineLogger.info("Corrected pipeline file path: " + resolvedPath.toString());
+    PipelineLogger.info("Corrected pipeline file path: " + resolvedPath);
 
     try {
       PipelineLogger.info("Attempting to read pipeline YAML...");
@@ -67,7 +77,7 @@ public class PipelineExecutionService {
       PipelineLogger.info("Successfully read pipeline YAML. Now validating...");
       YamlPipelineUtils.validatePipelineConfig(pipelineConfig);
 
-      PipelineLogger.info("YAML validation completed for: " + resolvedPath.toString());
+      PipelineLogger.info("YAML validation completed for: " + resolvedPath);
     } catch (Exception e) {
       PipelineLogger.error("ERROR reading pipeline YAML: " + e.getMessage());
       throw new RuntimeException("YAML parsing failed: " + e.getMessage(), e);
@@ -76,7 +86,7 @@ public class PipelineExecutionService {
     // Add debug logs before saving to database
     PipelineLogger.info("Preparing to save pipeline execution to DB...");
 
-    PipelineExecutionEntity newExecution = PipelineExecutionEntity.builder()
+    PipelineExecutionEntity pipelineExecution = PipelineExecutionEntity.builder()
             .pipelineId(request.getPipelineId())
             .commitHash(request.getCommitHash())
             .isLocal(request.isLocal())
@@ -84,44 +94,44 @@ public class PipelineExecutionService {
             .startTime(Instant.now())
             .build();
 
-    try {
-      PipelineLogger.info("Saving pipeline execution to database...");
-      newExecution = pipelineExecutionRepository.save(newExecution);
-      PipelineLogger.info("Successfully saved pipeline execution: " + newExecution.getId());
-    } catch (Exception e) {
-      PipelineLogger.error("Database error: " + e.getMessage());
-      throw new RuntimeException("Database error while saving pipeline execution: " + e.getMessage(), e);
+    pipelineExecution = pipelineExecutionRepository.save(pipelineExecution);
+    UUID executionId = pipelineExecution.getId();
+
+    executeStagesSequentially(executionId);
+
+    return new PipelineExecutionResponse(executionId.toString(), "RUNNING");
+  }
+
+  private void executeStagesSequentially(UUID pipelineExecutionId) {
+    PipelineLogger.info("Retrieving stages for execution...");
+
+    List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionId(pipelineExecutionId);
+    for (StageExecutionEntity stage : stages) {
+      UUID stageExecutionId = stage.getId();
+      PipelineLogger.info("Executing stage: " + stageExecutionId);
+
+      stageExecutionService.executeStage(stageExecutionId);
+
+      waitForStageCompletion(stageExecutionId);
     }
 
-    return new PipelineExecutionResponse(newExecution.getId().toString(), "PENDING");
-  }
-
-
-  /**
-   * Checks if a pipeline execution with the same pipeline ID and run number already exists.
-   *
-   * @param request request containing pipeline ID and run number
-   * @return true if a duplicate execution exists, false otherwise
-   */
-  public boolean isDuplicateExecution(PipelineExecutionRequest request) {
-    Optional<PipelineExecutionEntity> existingExecution = pipelineExecutionRepository.findByPipelineIdAndRunNumber(
-            request.getPipelineId(), request.getRunNumber()
-    );
-    return existingExecution.isPresent();
+    pipelineTransactionService.finalizePipelineExecution(pipelineExecutionId);
   }
 
   /**
-   * Finalizes a pipeline execution.
+   * Waits for a stage to complete.
    *
-   * @param pipelineExecutionId ID of the pipeline execution
+   * @param stageExecutionId ID of the stage execution
    */
-  @Transactional
-  public void finalizePipelineExecution(UUID pipelineExecutionId) {
-    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
-            .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
+  public void waitForStageCompletion(UUID stageExecutionId) {
+    scheduler.scheduleAtFixedRate(() -> {
+      ExecutionStatus status = stageExecutionRepository.findById(stageExecutionId)
+              .map(StageExecutionEntity::getStatus)
+              .orElse(ExecutionStatus.FAILED);
 
-    pipelineExecution.updateState(ExecutionStatus.SUCCESS);
-    pipelineExecutionRepository.save(pipelineExecution);
+      if (status == ExecutionStatus.SUCCESS) {
+        scheduler.shutdown();
+      }
+    }, 0, 5, TimeUnit.SECONDS);
   }
-
 }
