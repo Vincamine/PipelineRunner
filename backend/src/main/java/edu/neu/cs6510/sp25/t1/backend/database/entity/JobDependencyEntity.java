@@ -25,10 +25,10 @@ public class JobDependencyEntity {
   private UUID id;
 
   @ManyToOne
-  @JoinColumn(name = "job_id", nullable = false)
+  @JoinColumn(name = "job_id")
   private JobExecutionEntity job;  // The job that has dependencies
 
   @ManyToOne
-  @JoinColumn(name = "depends_on_job_id", nullable = false)
+  @JoinColumn(name = "depends_on_job_id")
   private JobExecutionEntity dependency;  // The job that must run first
 }

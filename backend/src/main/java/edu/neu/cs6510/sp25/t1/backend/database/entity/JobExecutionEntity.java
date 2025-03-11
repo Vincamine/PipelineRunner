@@ -40,33 +40,33 @@ public class JobExecutionEntity {
   /**
    * Foreign key reference to the stage execution this job belongs to.
    */
-  @Column(name = "stage_execution_id", nullable = false)
+  @Column(name = "stage_execution_id")
   private UUID stageExecutionId;
 
   /**
    * Foreign key reference to the job being executed.
    */
-  @Column(name = "job_id", nullable = false)
+  @Column(name = "job_id")
   private UUID jobId;
 
 
   /**
    * The commit hash of the repository state for execution.
    */
-  @Column(name = "commit_hash", nullable = false, length = 40)
+  @Column(name = "commit_hash", length = 40)
   private String commitHash;
 
   /**
    * Indicates if the job is executed locally or remotely.
    */
-  @Column(name = "is_local", nullable = false)
+  @Column(name = "is_local")
   private boolean isLocal;
 
   /**
    * Execution status of the job (Pending, Running, Success, Failed, Canceled).
    */
   @Enumerated(EnumType.STRING)
-  @Column(name = "status", nullable = false)
+  @Column(name = "status")
   private ExecutionStatus status;
 
   /**
@@ -84,7 +84,7 @@ public class JobExecutionEntity {
   /**
    * Indicates whether this job execution is allowed to fail without affecting the pipeline.
    */
-  @Column(name = "allows_failure", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+  @Column(name = "allows_failure", columnDefinition = "BOOLEAN DEFAULT FALSE")
   private boolean allowFailure;
 
   /**

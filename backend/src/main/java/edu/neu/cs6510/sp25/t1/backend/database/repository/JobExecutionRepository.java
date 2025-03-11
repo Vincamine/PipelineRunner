@@ -1,7 +1,5 @@
 package edu.neu.cs6510.sp25.t1.backend.database.repository;
 
-import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 /**
  * Repository for managing JobExecution entities.
@@ -52,6 +53,7 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
   /**
    * Dynamically fetches the job name associated with a job execution.
    * and return the entity
+   *
    * @param stageExecutionId the ID of the stage execution
    * @return a list of job executions with the job name
    */
@@ -60,6 +62,7 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
 
   /**
    * Join jobExecution and job tables to fetch the job name by stageExecutionId
+   *
    * @param stageExecutionId the stage execution ID
    * @return a list of job names
    */
@@ -68,6 +71,7 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
 
   /**
    * Join jobExecution and job tables to fetch the job name by jobId
+   *
    * @param jobId the job ID
    * @return an optional job name
    */
@@ -76,8 +80,9 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
 
   /**
    * Join jobExecution and job tables to fetch the job name by jobName
+   *
    * @param stageExecutionId the stage execution ID
-   * @param jobName the name of the job
+   * @param jobName          the name of the job
    * @return a list of job executions with the job name
    */
   @Query("SELECT je FROM JobExecutionEntity je JOIN JobEntity j ON je.jobId = j.id WHERE je.stageExecutionId = :stageExecutionId AND j.name = :jobName ORDER BY je.startTime DESC")
@@ -85,10 +90,20 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
 
   /**
    * Find job dependencies by job ID.
+   *
    * @param jobId the job ID
    * @return a list of job dependencies
    */
   @Query("SELECT jd.dependency.id FROM JobDependencyEntity jd WHERE jd.job.id = :jobId")
   List<UUID> findDependenciesByJobId(@Param("jobId") UUID jobId);
+
+  /**
+   * Fetches job execution details (JobExecutionDTO) for a given stage execution ID.
+   *
+   * @param stageExecutionId the ID of the stage execution
+   * @return a list of JobExecutionDTOs with job execution metadata
+   */
+  @Query("SELECT je FROM JobExecutionEntity je WHERE je.stageExecutionId = :stageExecutionId")
+  List<JobExecutionEntity> findJobExecutionsByStageExecutionId(@Param("stageExecutionId") UUID stageExecutionId);
 
 }

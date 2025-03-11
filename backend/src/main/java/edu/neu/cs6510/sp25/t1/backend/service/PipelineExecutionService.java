@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,15 +10,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.mapper.PipelineExecutionMapper;
+import edu.neu.cs6510.sp25.t1.backend.service.event.StageCompletedEvent;
 import edu.neu.cs6510.sp25.t1.backend.utils.YamlPipelineUtils;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
@@ -36,8 +35,6 @@ public class PipelineExecutionService {
   private final PipelineExecutionMapper pipelineExecutionMapper;
   private final StageExecutionService stageExecutionService;
   private final StageExecutionRepository stageExecutionRepository;
-  private final PipelineTransactionService pipelineTransactionService;
-  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 
   /**
@@ -70,9 +67,10 @@ public class PipelineExecutionService {
 
     PipelineLogger.info("Corrected pipeline file path: " + resolvedPath);
 
+    Map<String, Object> pipelineConfig;
     try {
       PipelineLogger.info("Attempting to read pipeline YAML...");
-      Map<String, Object> pipelineConfig = YamlPipelineUtils.readPipelineYaml(resolvedPath.toString());
+      pipelineConfig = YamlPipelineUtils.readPipelineYaml(resolvedPath.toString());
 
       PipelineLogger.info("Successfully read pipeline YAML. Now validating...");
       YamlPipelineUtils.validatePipelineConfig(pipelineConfig);
@@ -83,9 +81,8 @@ public class PipelineExecutionService {
       throw new RuntimeException("YAML parsing failed: " + e.getMessage(), e);
     }
 
-    // Add debug logs before saving to database
+    // Save the pipeline execution
     PipelineLogger.info("Preparing to save pipeline execution to DB...");
-
     PipelineExecutionEntity pipelineExecution = PipelineExecutionEntity.builder()
             .pipelineId(request.getPipelineId())
             .commitHash(request.getCommitHash())
@@ -95,43 +92,111 @@ public class PipelineExecutionService {
             .build();
 
     pipelineExecution = pipelineExecutionRepository.save(pipelineExecution);
-    UUID executionId = pipelineExecution.getId();
+    pipelineExecutionRepository.flush(); // Force immediate commit
+    PipelineLogger.info("Successfully saved pipeline execution: " + pipelineExecution.getId());
 
-    executeStagesSequentially(executionId);
+    // **Create Stage Executions**
+    createStageExecutions(pipelineExecution.getId(), pipelineConfig);
 
-    return new PipelineExecutionResponse(executionId.toString(), "RUNNING");
+    // Execute Stages
+    executeStagesSequentially(pipelineExecution.getId());
+
+    return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
   }
 
+  /**
+   * Creates stage execution entities based on the pipeline YAML configuration.
+   *
+   * @param pipelineExecutionId ID of the pipeline execution
+   * @param pipelineConfig      Parsed pipeline configuration
+   */
+  @SuppressWarnings("unchecked")
+  private void createStageExecutions(UUID pipelineExecutionId, Map<String, Object> pipelineConfig) {
+    Object stagesObj = pipelineConfig.get("stages");
+
+    if (!(stagesObj instanceof List<?> rawStages)) {
+      PipelineLogger.error("Invalid pipeline structure: 'stages' must be a list.");
+      throw new RuntimeException("Invalid pipeline configuration: 'stages' key is missing or incorrect.");
+    }
+
+    List<Map<String, Object>> stages = rawStages.stream()
+            .filter(item -> item instanceof Map)  // Ensure item is a Map
+            .map(item -> (Map<String, Object>) item)
+            .toList();
+
+    if (stages.isEmpty()) {
+      PipelineLogger.error("No valid stages found in pipeline configuration!");
+      throw new RuntimeException("Pipeline must contain at least one valid stage.");
+    }
+
+    for (int order = 0; order < stages.size(); order++) {
+      Map<String, Object> stage = stages.get(order);
+      String stageName = (String) stage.get("name");
+
+      UUID stageId = UUID.randomUUID();
+      StageExecutionEntity stageExecution = StageExecutionEntity.builder()
+              .pipelineExecutionId(pipelineExecutionId)
+              .stageId(stageId)
+              .executionOrder(order)
+              .status(ExecutionStatus.PENDING)
+              .startTime(Instant.now())
+              .build();
+
+      stageExecutionRepository.save(stageExecution);
+      PipelineLogger.info("Saved stage execution: " + stageExecution.getId() + " for stage: " + stageName);
+    }
+  }
+
+
+  /**
+   * Executes stages sequentially for a pipeline execution.
+   *
+   * @param pipelineExecutionId ID of the pipeline execution
+   */
   private void executeStagesSequentially(UUID pipelineExecutionId) {
     PipelineLogger.info("Retrieving stages for execution...");
-
     List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionId(pipelineExecutionId);
     for (StageExecutionEntity stage : stages) {
       UUID stageExecutionId = stage.getId();
       PipelineLogger.info("Executing stage: " + stageExecutionId);
-
       stageExecutionService.executeStage(stageExecutionId);
-
-      waitForStageCompletion(stageExecutionId);
     }
-
-    pipelineTransactionService.finalizePipelineExecution(pipelineExecutionId);
   }
 
   /**
-   * Waits for a stage to complete.
+   * Event listener for stage completion.
    *
-   * @param stageExecutionId ID of the stage execution
+   * @param event stage completion event
    */
-  public void waitForStageCompletion(UUID stageExecutionId) {
-    scheduler.scheduleAtFixedRate(() -> {
-      ExecutionStatus status = stageExecutionRepository.findById(stageExecutionId)
-              .map(StageExecutionEntity::getStatus)
-              .orElse(ExecutionStatus.FAILED);
+  @EventListener
+  @Transactional
+  public void onStageCompleted(StageCompletedEvent event) {
+    UUID pipelineExecutionId = event.getPipelineExecutionId();
+    PipelineLogger.info("Stage completed in pipeline: " + pipelineExecutionId + " | Checking if pipeline is done...");
 
-      if (status == ExecutionStatus.SUCCESS) {
-        scheduler.shutdown();
-      }
-    }, 0, 5, TimeUnit.SECONDS);
+    List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionId(pipelineExecutionId);
+    boolean allSuccess = stages.stream().allMatch(s -> s.getStatus() == ExecutionStatus.SUCCESS);
+
+    if (allSuccess) {
+      PipelineLogger.info("All stages completed! Marking pipeline as done.");
+      finalizePipelineExecution(pipelineExecutionId);
+    }
+  }
+
+  /**
+   * Finalizes a pipeline execution.
+   *
+   * @param pipelineExecutionId ID of the pipeline execution
+   */
+  @Transactional
+  public void finalizePipelineExecution(UUID pipelineExecutionId) {
+    PipelineLogger.info("Finalizing pipeline execution: " + pipelineExecutionId);
+
+    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
+
+    pipelineExecution.updateState(ExecutionStatus.SUCCESS);
+    pipelineExecutionRepository.save(pipelineExecution);
+    PipelineLogger.info("Pipeline execution completed: " + pipelineExecutionId);
   }
 }

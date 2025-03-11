@@ -38,22 +38,22 @@ public class JobEntity {
   @GeneratedValue
   private UUID id;
 
-  @Column(name = "stage_id", nullable = false)
+  @Column(name = "stage_id")
   private UUID stageId;
 
-  @Column(name = "name", nullable = false)
+  @Column(name = "name")
   private String name;
 
-  @Column(name = "docker_image", nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'docker.io/library/alpine:latest'")
+  @Column(name = "docker_image", columnDefinition = "VARCHAR(255) DEFAULT 'docker.io/library/alpine:latest'")
   private String dockerImage = "docker.io/library/alpine:latest";
 
   @Column(name = "allow_failure", columnDefinition = "BOOLEAN DEFAULT FALSE")
   private boolean allowFailure = false;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
+  @Column(name = "created_at", updatable = false)
   private Instant createdAt;
 
-  @Column(name = "updated_at", nullable = false)
+  @Column(name = "updated_at")
   private Instant updatedAt;
 
   @ElementCollection

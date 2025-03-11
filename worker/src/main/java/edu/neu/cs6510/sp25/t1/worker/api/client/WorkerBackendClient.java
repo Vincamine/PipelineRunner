@@ -3,20 +3,23 @@ package edu.neu.cs6510.sp25.t1.worker.api.client;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientException;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Client for communicating with the backend API.
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class WorkerBackendClient {
   private final RestTemplate restTemplate;
 
@@ -24,59 +27,37 @@ public class WorkerBackendClient {
   private String backendApiUrl;
 
   /**
-   * Retrieves the job execution details.
+   * Retrieves the job execution details from the backend.
    *
    * @param jobExecutionId The job execution ID.
    * @return The job execution details.
    */
-  public JobExecutionDTO getJobExecution(UUID jobExecutionId) {
+  public Optional<JobExecutionDTO> getJobExecution(UUID jobExecutionId) {
     String url = backendApiUrl + "/job/" + jobExecutionId;
-    return restTemplate.getForObject(url, JobExecutionDTO.class);
+    try {
+      return Optional.ofNullable(restTemplate.getForObject(url, JobExecutionDTO.class));
+    } catch (RestClientException e) {
+      log.error("Failed to fetch job execution details for {}: {}", jobExecutionId, e.getMessage());
+      return Optional.empty();
+    }
   }
 
-
   /**
-   * Retrieves the job dependencies.
+   * Updates the job execution status in the backend.
    *
-   * @param jobId The job ID.
-   * @return The list of job dependencies.
-   */
-  public List<UUID> getJobDependencies(UUID jobId) {
-    String url = backendApiUrl + "/jobs/" + jobId + "/dependencies";
-    return restTemplate.getForObject(url, List.class);
-  }
-
-  /**
-   * Retrieves the job execution status.
-   *
-   * @param jobId The job ID.
-   * @return The job execution status.
-   */
-  public ExecutionStatus getJobStatus(UUID jobId) {
-    String url = backendApiUrl + "/jobs/" + jobId + "/status";
-    return restTemplate.getForObject(url, ExecutionStatus.class);
-  }
-
-  /**
-   * Updates the job execution status.
    * @param jobExecutionId The job execution ID.
-   * @param status The new status.
-   * @param logs The logs to attach to the status update.
+   * @param status The new execution status.
+   * @param logs Logs related to execution.
    */
   public void updateJobStatus(UUID jobExecutionId, ExecutionStatus status, String logs) {
     String url = backendApiUrl + "/job/status";
-
     JobStatusUpdate request = new JobStatusUpdate(jobExecutionId, status, logs);
 
-    restTemplate.put(url, request);
+    try {
+      restTemplate.put(url, request);
+      log.info("Job {} status updated to {}.", jobExecutionId, status);
+    } catch (RestClientException e) {
+      log.error("Failed to update job {} status: {}", jobExecutionId, e.getMessage());
+    }
   }
-
-// not used for now
-//  /**
-//   * Uploads artifacts after execution.
-//   */
-//  public void uploadArtifacts(UUID jobExecutionId, List<String> artifacts) {
-//    String url = backendApiUrl + "/job/artifact/upload";
-//    restTemplate.postForObject(url, new ArtifactUploadRequest(jobExecutionId, artifacts), Void.class);
-//  }
 }

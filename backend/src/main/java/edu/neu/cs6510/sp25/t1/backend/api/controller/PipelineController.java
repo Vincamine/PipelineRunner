@@ -37,7 +37,7 @@ public class PipelineController {
   }
 
   /**
-   * Endpoint for retrieving the status of a pipeline execution.
+   * Retrieve the status of a pipeline execution.
    *
    * @param executionId UUID of the pipeline execution
    * @return ResponseEntity object
@@ -53,7 +53,7 @@ public class PipelineController {
   }
 
   /**
-   * Endpoint for triggering a pipeline execution.
+   * Trigger a pipeline execution.
    *
    * @param request PipelineExecutionRequest object
    * @return ResponseEntity object
@@ -66,5 +66,4 @@ public class PipelineController {
     PipelineExecutionResponse response = pipelineExecutionService.startPipelineExecution(request);
     return ResponseEntity.ok(response);
   }
-
 }

@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
-import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import edu.neu.cs6510.sp25.t1.common.model.Job;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.model.Stage;

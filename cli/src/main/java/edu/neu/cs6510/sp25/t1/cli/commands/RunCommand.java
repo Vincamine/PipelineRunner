@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
-import edu.neu.cs6510.sp25.t1.cli.validation.utils.GitUtils;
-import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
+import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

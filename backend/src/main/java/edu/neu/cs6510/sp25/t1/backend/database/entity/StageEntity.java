@@ -35,16 +35,16 @@ public class StageEntity {
   @GeneratedValue
   private UUID id;
 
-  @Column(name = "pipeline_id", nullable = false)
+  @Column(name = "pipeline_id")
   private UUID pipelineId;
 
-  @Column(name = "name", nullable = false)
+  @Column(name = "name")
   private String name;
 
-  @Column(name = "execution_order", nullable = false, columnDefinition = "INT DEFAULT 0")
+  @Column(name = "execution_order", columnDefinition = "INT DEFAULT 0")
   private int executionOrder;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
+  @Column(name = "created_at", updatable = false)
   private Instant createdAt;
 
   @Column(name = "updated_at", nullable = false)

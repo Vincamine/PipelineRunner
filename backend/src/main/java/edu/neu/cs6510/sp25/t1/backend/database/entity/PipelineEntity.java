@@ -35,22 +35,22 @@ public class PipelineEntity {
   @GeneratedValue
   private UUID id;
 
-  @Column(name = "name", nullable = false, unique = true)
+  @Column(name = "name", unique = true)
   private String name;
 
-  @Column(name = "repository_url", nullable = false)
+  @Column(name = "repository_url")
   private String repositoryUrl;
 
-  @Column(name = "branch", nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'main'")
+  @Column(name = "branch", columnDefinition = "VARCHAR(255) DEFAULT 'main'")
   private String branch = "main";
 
   @Column(name = "commit_hash", length = 40)
   private String commitHash;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
+  @Column(name = "created_at", updatable = false)
   private Instant createdAt;
 
-  @Column(name = "updated_at", nullable = false)
+  @Column(name = "updated_at")
   private Instant updatedAt;
 
   @PrePersist

@@ -4,9 +4,12 @@ import org.springframework.context.ApplicationEvent;
 
 import java.util.UUID;
 
+import lombok.Getter;
+
 /**
  * Event fired when a job completes.
  */
+@Getter
 public class JobCompletedEvent extends ApplicationEvent {
   private final UUID jobExecutionId;
   private final UUID stageExecutionId;
@@ -24,11 +27,4 @@ public class JobCompletedEvent extends ApplicationEvent {
     this.stageExecutionId = stageExecutionId;
   }
 
-  public UUID getJobExecutionId() {
-    return jobExecutionId;
-  }
-
-  public UUID getStageExecutionId() {
-    return stageExecutionId;
-  }
 }

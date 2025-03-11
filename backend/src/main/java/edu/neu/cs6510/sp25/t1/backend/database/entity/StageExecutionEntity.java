@@ -41,39 +41,39 @@ public class StageExecutionEntity {
   /**
    * Foreign key reference to the stage being executed.
    */
-  @Column(name = "stage_id", nullable = false)
+  @Column(name = "stage_id")
   private UUID stageId;
 
   /**
    * Foreign key reference to the pipeline execution this stage belongs to.
    */
-  @Column(name = "pipeline_execution_id", nullable = false)
+  @Column(name = "pipeline_execution_id")
   private UUID pipelineExecutionId;
 
   /**
    * The execution order of the stage within the pipeline.
    */
-  @Column(name = "execution_order", nullable = false)
+  @Column(name = "execution_order")
   private int executionOrder;
 
 
   /**
    * Git commit hash associated with this stage execution.
    */
-  @Column(name = "commit_hash", nullable = false, length = 40)
+  @Column(name = "commit_hash", length = 40)
   private String commitHash;
 
   /**
    * Indicates whether this execution is local.
    */
-  @Column(name = "is_local", nullable = false)
+  @Column(name = "is_local")
   private boolean isLocal;
 
   /**
    * The execution status of the stage.
    */
   @Enumerated(EnumType.STRING)
-  @Column(name = "status", nullable = false)
+  @Column(name = "status")
   private ExecutionStatus status;
 
   /**

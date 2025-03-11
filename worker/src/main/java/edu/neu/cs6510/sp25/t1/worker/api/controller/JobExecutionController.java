@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
-import edu.neu.cs6510.sp25.t1.worker.service.PipelineExecutionWorkerService;
+import edu.neu.cs6510.sp25.t1.worker.service.WorkerExecutionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class JobExecutionController {
-  private final PipelineExecutionWorkerService pipelineExecutionWorkerService;
+  private final WorkerExecutionService workerExecutionService;
 
   /**
    * Executes a job.
@@ -32,10 +32,10 @@ public class JobExecutionController {
     log.info("Received job execution request: {}", job.getId());
 
     try {
-      pipelineExecutionWorkerService.executeJob(job);
+      workerExecutionService.executeJob(job);
       return ResponseEntity.accepted().body("{\"status\": \"QUEUED\"}");
     } catch (Exception e) {
-      log.error("Failed to queue job: {}", job.getId(), e);
+      log.error("Failed to queue job {}: {}", job.getId(), e.getMessage());
       return ResponseEntity.badRequest().body("{\"error\": \"Job execution failed.\"}");
     }
   }

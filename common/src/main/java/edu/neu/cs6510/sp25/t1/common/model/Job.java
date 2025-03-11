@@ -17,7 +17,7 @@ import lombok.Getter;
 public class Job {
 
   // Getters with lombok
-  private final UUID id;
+  private final UUID id;  // This will be generated when saving to the database
 
   private final UUID stageId;
 
@@ -27,7 +27,7 @@ public class Job {
 
   private final List<String> script;
 
-  private final List<UUID> dependencies;
+  private final List<String> dependencies;  // 🔧 Store as job names instead of UUIDs
 
   private final boolean allowFailure;
 
@@ -45,7 +45,7 @@ public class Job {
    * @param name         Job name
    * @param dockerImage  Docker image used for execution
    * @param script       List of commands to run (should be stored separately in DB)
-   * @param dependencies Job dependencies (other job IDs)
+   * @param dependencies Job dependencies (other job names, will be resolved to UUIDs later)
    * @param allowFailure Whether the job can fail without failing the pipeline
    * @param artifacts    List of artifacts produced by the job
    * @param createdAt    Timestamp when the job was created
@@ -58,7 +58,7 @@ public class Job {
           @JsonProperty("name") String name,
           @JsonProperty("dockerImage") String dockerImage,
           @JsonProperty("script") List<String> script,
-          @JsonProperty("dependencies") List<UUID> dependencies,
+          @JsonProperty("dependencies") List<String> dependencies,  // 🔧 Accept job names instead of UUIDs
           @JsonProperty("allowFailure") boolean allowFailure,
           @JsonProperty("artifacts") List<String> artifacts,
           @JsonProperty("createdAt") LocalDateTime createdAt,
@@ -68,7 +68,7 @@ public class Job {
     this.name = name;
     this.dockerImage = dockerImage;
     this.script = script != null ? script : List.of();
-    this.dependencies = dependencies != null ? dependencies : List.of();
+    this.dependencies = dependencies != null ? dependencies : List.of();  // 🔧 Default empty list
     this.allowFailure = allowFailure;
     this.artifacts = artifacts != null ? artifacts : List.of();
     this.createdAt = createdAt;

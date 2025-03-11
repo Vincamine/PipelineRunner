@@ -8,12 +8,14 @@ stages:
         script:
           - "javac -d out src/main/java/**/*.java"
         allowFailure: true
+        dependencies: []  # No dependencies for first job
 
       - name: "unit-tests"
         dockerImage: "openjdk:21-jdk-slim"
         script:
           - "./gradlew test"
         allowFailure: true
+        dependencies: ["compile"]  # Depends on "compile"
 
   - name: "package"
     jobs:
@@ -22,6 +24,7 @@ stages:
         script:
           - "./gradlew bootJar"
         allowFailure: true
+        dependencies: ["unit-tests"]  # Depends on "unit-tests"
 
   - name: "deploy"
     jobs:
@@ -30,4 +33,5 @@ stages:
         script:
           - "docker build -t my-cicd-app ."
           - "docker run -d -p 8080:8080 my-cicd-app"
-        allowFailure: false
+        allowFailure: true
+        dependencies: ["build-jar"]  # Depends on "build-jar"
