@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WorkerBackendClient {
   private final RestTemplate restTemplate;
 
-  @Value("${backend.api.url:http://backend-service/api}")
+  @Value("${backend.api.url:http://localhost:8080/api}")
   private String backendApiUrl;
 
   /**

@@ -21,6 +21,8 @@ import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.service.event.JobCompletedEvent;
+import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;
+import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import lombok.RequiredArgsConstructor;
@@ -265,5 +267,39 @@ public class JobExecutionService {
     jobExecutionRepository.save(jobExecution);
     jobExecutionRepository.flush(); // Ensure immediate persistence
     PipelineLogger.info("💾 Job execution saved: " + jobExecution.getId());
+  }
+
+  /**
+   * Get a job execution by ID.
+   *
+   * @param jobExecutionId The job execution ID
+   * @return The job execution DTO
+   * @throws IllegalArgumentException if the job execution is not found
+   */
+  public JobExecutionDTO getJobExecution(UUID jobExecutionId) {
+    JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
+            .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
+
+    // You'll need to convert this entity to a DTO
+    // This assumes you have a method or mapper for this conversion
+    return convertToDTO(jobExecution);
+  }
+
+  // Helper method to convert entity to DTO
+  private JobExecutionDTO convertToDTO(JobExecutionEntity entity) {
+    JobExecutionDTO dto = new JobExecutionDTO();
+    dto.setId(entity.getId());
+    dto.setAllowFailure(entity.isAllowFailure());
+    dto.setStatus(entity.getStatus());
+
+    // You'll need to fetch the job details and set them
+    JobDTO jobDTO = new JobDTO();
+    // Fill in job details from your database or other source
+    jobDTO.setId(entity.getJobId());
+    // Set other job properties
+
+    dto.setJob(jobDTO);
+
+    return dto;
   }
 }

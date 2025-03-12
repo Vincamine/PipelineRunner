@@ -12,6 +12,10 @@ artifacts:
 worker:
   max-concurrent-jobs: 5  # Limits the number of jobs processed in parallel
   artifact-storage-path: "/var/cicd/artifacts"  # Storage path for worker artifacts
-
   api:
     url: http://localhost:8081/api/worker  # Added worker API URL to match backend
+
+# Add this new section for backend configuration
+backend:
+  api:
+    url: http://localhost:8080/api  # URL for communicating with the backend service

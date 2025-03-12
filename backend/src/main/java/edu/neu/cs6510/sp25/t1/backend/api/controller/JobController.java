@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionService;
 import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
+import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -90,7 +91,22 @@ public class JobController {
     jobExecutionService.cancelJobExecution(jobExecutionId);
     return ResponseEntity.ok("{\"message\": \"Job execution canceled successfully.\"}");
   }
-
+  /**
+   * Get a job execution by ID.
+   *
+   * @param jobExecutionId UUID of the job execution
+   * @return ResponseEntity containing the job execution details
+   */
+  @GetMapping("/{jobExecutionId}")
+  @Operation(summary = "Get job execution details", description = "Retrieves details of a specific job execution.")
+  public ResponseEntity<?> getJobExecution(@PathVariable UUID jobExecutionId) {
+    try {
+      JobExecutionDTO jobExecution = jobExecutionService.getJobExecution(jobExecutionId);
+      return ResponseEntity.ok(jobExecution);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(404).body("{\"error\": \"Job execution not found.\"}");
+    }
+  }
 // not implemented yet for this version
 //  @PostMapping("/artifact/upload")
 //  @Operation(summary = "Upload job artifacts", description = "Receives artifact file paths after upload by workers.")
