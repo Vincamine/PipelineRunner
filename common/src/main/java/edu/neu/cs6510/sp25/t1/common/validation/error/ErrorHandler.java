@@ -1,7 +1,7 @@
 package edu.neu.cs6510.sp25.t1.common.validation.error;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
+import lombok.Getter;
 
 /**
  * Utility for structured error handling in validation and YAML parsing.
@@ -12,7 +12,6 @@ import java.util.logging.Logger;
  * - **Consistent logging for debugging**.
  */
 public class ErrorHandler {
-  private static final Logger LOGGER = Logger.getLogger(ErrorHandler.class.getName());
 
   private static final String VALIDATION_ERROR = "Validation Error";
 
@@ -23,6 +22,8 @@ public class ErrorHandler {
     private final String filename;
     private final int line;
     private final int column;
+
+    @Getter
     private final String path;
 
     /**
@@ -38,13 +39,6 @@ public class ErrorHandler {
       this.line = line;
       this.column = column;
       this.path = path;
-    }
-
-    /**
-     * @return The path to the error location.
-     */
-    public String getPath() {
-      return path;
     }
 
     /**
@@ -83,6 +77,6 @@ public class ErrorHandler {
    * @param message The error message.
    */
   public static void logError(String message) {
-    LOGGER.log(Level.SEVERE, message);
+    PipelineLogger.error(message);
   }
 }

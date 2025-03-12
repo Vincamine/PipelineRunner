@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 
@@ -15,7 +14,6 @@ import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
  * Utility class for Git-related operations and validations.
  */
 public class GitUtils {
-  private static final Logger LOGGER = Logger.getLogger(GitUtils.class.getName());
   private static final String PIPELINES_DIR = ".pipelines/";
 
   /**
@@ -27,7 +25,9 @@ public class GitUtils {
     String result = executeShellCommand("git rev-parse --is-inside-work-tree");
     boolean isGitRepo = "true".equalsIgnoreCase(result);
 
-    if (!isGitRepo) {
+    if (isGitRepo) {
+      PipelineLogger.info("Inside a valid Git repository.");
+    } else {
       PipelineLogger.error("Not inside a valid Git repository.");
     }
 
@@ -42,7 +42,9 @@ public class GitUtils {
   public static boolean hasPipelinesFolder() {
     boolean exists = Files.exists(Paths.get(PIPELINES_DIR));
 
-    if (!exists) {
+    if (exists) {
+      PipelineLogger.info(".pipelines/ directory exists.");
+    } else {
       PipelineLogger.error("Missing .pipelines/ directory in the repository root.");
     }
 
@@ -61,6 +63,7 @@ public class GitUtils {
 
     // Ensure .pipelines directory exists first
     if (!pipelinesDir.exists() || !pipelinesDir.isDirectory()) {
+      PipelineLogger.error("Missing .pipelines directory in the repository root.");
       throw new IllegalStateException("Error: Missing .pipelines directory in the repository root.");
     }
 
@@ -69,6 +72,7 @@ public class GitUtils {
       File[] yamlFiles = pipelinesDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml"));
 
       if (yamlFiles == null || yamlFiles.length == 0) {
+        PipelineLogger.error("No pipeline configuration files found inside .pipelines/.");
         throw new IllegalStateException("Error: No pipeline configuration files found inside .pipelines/.");
       }
 
@@ -78,6 +82,7 @@ public class GitUtils {
       File targetFile = new File(PIPELINES_DIR + filename);
 
       if (!targetFile.exists() || !targetFile.isFile()) {
+        PipelineLogger.error("Specified pipeline file '" + filename + "' does not exist inside .pipelines/.");
         throw new IllegalStateException("Error: Specified pipeline file '" + filename + "' does not exist inside .pipelines/.");
       }
 
@@ -91,9 +96,12 @@ public class GitUtils {
    * @return The current Git branch name or "main" if undetectable.
    */
   public static String getCurrentBranch() {
-    return Optional.ofNullable(executeShellCommand("git symbolic-ref --short HEAD"))
-            .filter(branch -> !branch.isEmpty())
+    String branch = Optional.of(executeShellCommand("git symbolic-ref --short HEAD"))
+            .filter(b -> !b.isEmpty())
             .orElse("main");
+
+    PipelineLogger.debug("Current Git branch: " + branch);
+    return branch;
   }
 
   /**
@@ -102,8 +110,11 @@ public class GitUtils {
    * @return The latest commit hash or an empty string if undetectable.
    */
   public static String getLatestCommitHash() {
-    return Optional.ofNullable(executeShellCommand("git rev-parse HEAD"))
+    String commitHash = Optional.of(executeShellCommand("git rev-parse HEAD"))
             .orElseThrow(() -> new IllegalStateException("Error: Unable to fetch the latest commit hash."));
+
+    PipelineLogger.debug("Latest commit hash: " + commitHash);
+    return commitHash;
   }
 
   /**
@@ -112,8 +123,11 @@ public class GitUtils {
    * @return The remote Git URL or an empty string if not set.
    */
   public static String getRemoteUrl() {
-    return Optional.ofNullable(executeShellCommand("git config --get remote.origin.url"))
+    String remoteUrl = Optional.of(executeShellCommand("git config --get remote.origin.url"))
             .orElse("");
+
+    PipelineLogger.debug("Remote repository URL: " + (remoteUrl.isEmpty() ? "Not set" : remoteUrl));
+    return remoteUrl;
   }
 
   /**
@@ -133,8 +147,15 @@ public class GitUtils {
 
       process.waitFor(); // Ensure process completion
 
+      if (result != null) {
+        PipelineLogger.debug("Command executed successfully: " + command);
+      } else {
+        PipelineLogger.error("Command execution failed: " + command);
+      }
+
       return result != null ? result.trim() : "";
     } catch (IOException | InterruptedException e) {
+      PipelineLogger.error("Shell command failed: " + command + " - Error: " + e.getMessage());
       Thread.currentThread().interrupt(); // Restore interrupted state
       return "";
     }
@@ -149,10 +170,36 @@ public class GitUtils {
    * @throws IllegalStateException if validation fails.
    */
   public static void validateRepo(String filename) {
-    if (!isInsideGitRepo()) {
+    if (isInsideGitRepo()) {
+      PipelineLogger.info("Inside a valid Git repository.");
+      validatePipelineFile(filename);
+    } else {
+      PipelineLogger.error("Not inside a valid Git repository.");
       throw new IllegalStateException("Error: Not inside a valid Git repository.");
     }
+  }
 
-    validatePipelineFile(filename);
+  /**
+   * Checks if the current directory is the root of a Git repository.
+   *
+   * @return true if in the Git root directory, false otherwise.
+   */
+  public static boolean isGitRootDirectory() {
+    String gitRoot = executeShellCommand("git rev-parse --show-toplevel");
+    String currentDir = Paths.get(System.getProperty("user.dir")).toAbsolutePath().toString();
+
+    if (gitRoot.isEmpty()) {
+      PipelineLogger.warn("Not inside a Git repository or unable to determine root.");
+      return false;
+    }
+
+    if (!gitRoot.equals(currentDir)) {
+      PipelineLogger.warn("CLI is not running from the Git repository root. Current: " + currentDir + ", Git Root: " + gitRoot);
+      return false;
+    }
+
+    PipelineLogger.info("Running inside the Git repository root: " + gitRoot);
+    return true;
   }
 }
+

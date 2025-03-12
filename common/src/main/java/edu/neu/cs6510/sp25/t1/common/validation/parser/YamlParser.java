@@ -23,8 +23,9 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 
 /**
  * Parses YAML files into Java objects while tracking exact line/column numbers.
@@ -47,19 +48,20 @@ public class YamlParser {
    */
   public static Pipeline parseYaml(File yamlFile) throws ValidationException {
     if (!yamlFile.exists() || !yamlFile.isFile()) {
+      PipelineLogger.error("YAML file not found: " + yamlFile.getAbsolutePath());
       throw new ValidationException(yamlFile.getName(), 0, 0, "YAML file not found: " + yamlFile.getAbsolutePath());
     }
 
     try (FileInputStream inputStream = new FileInputStream(yamlFile)) {
+      PipelineLogger.info("Parsing YAML file: " + yamlFile.getAbsolutePath());
       fieldLocations.clear();
 
       // Load raw content for debugging
       String content = new String(inputStream.readAllBytes());
       if (content.trim().isEmpty()) {
+        PipelineLogger.error("YAML file is empty: " + yamlFile.getAbsolutePath());
         throw new ValidationException(yamlFile.getName(), 1, 1, "YAML file is empty.");
       }
-
-      System.out.println("Parsing YAML file: " + yamlFile.getAbsolutePath());
 
       Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
 
@@ -69,17 +71,23 @@ public class YamlParser {
       // Second pass: Extract line/column locations
       Node rootNode = yaml.compose(new StringReader(content));
       if (rootNode == null) {
+        PipelineLogger.error("Invalid or empty YAML structure in: " + yamlFile.getAbsolutePath());
         throw new ValidationException(yamlFile.getName(), 1, 1, "Invalid or empty YAML structure.");
       }
 
       processNode(rootNode, "", fieldLocations);
+      PipelineLogger.info("YAML structure validated successfully: " + yamlFile.getAbsolutePath());
 
       // Convert to PipelineConfig
-      return yamlMapper.convertValue(data, Pipeline.class);
+      Pipeline pipeline = yamlMapper.convertValue(data, Pipeline.class);
+      PipelineLogger.info("Successfully converted YAML to Pipeline object: " + pipeline.getName());
+
+      return pipeline;
 
     } catch (JsonMappingException e) {
       int line = e.getLocation() != null ? e.getLocation().getLineNr() : 1;
       int column = e.getLocation() != null ? e.getLocation().getColumnNr() : 1;
+      PipelineLogger.error("Invalid YAML format in " + yamlFile.getAbsolutePath() + ": " + e.getOriginalMessage());
       throw new ValidationException(yamlFile.getName(), line, column, "Invalid YAML format: " + e.getOriginalMessage());
     } catch (YAMLException e) {
       int line = 1, column = 1;
@@ -87,8 +95,10 @@ public class YamlParser {
         line = markedE.getProblemMark().getLine() + 1;
         column = markedE.getProblemMark().getColumn() + 1;
       }
+      PipelineLogger.error("YAML parsing error in " + yamlFile.getAbsolutePath() + ": " + e.getMessage());
       throw new ValidationException(yamlFile.getName(), line, column, "YAML parsing error: " + e.getMessage());
     } catch (IOException e) {
+      PipelineLogger.error("Failed to read YAML file: " + e.getMessage());
       throw new ValidationException(yamlFile.getName(), 0, 0, "Failed to read file: " + e.getMessage());
     }
   }

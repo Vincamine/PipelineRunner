@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
 import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import okhttp3.MediaType;
@@ -54,27 +55,31 @@ public class RunCommand implements Callable<Integer> {
   @Override
   public Integer call() {
     try {
+      GitUtils.isGitRootDirectory();
+      PipelineLogger.info("Starting pipeline execution...");
+
       // If no explicit commit is provided, fetch latest
       if (commit == null || commit.isEmpty()) {
         commit = GitUtils.getLatestCommitHash();
+        PipelineLogger.debug("Using latest commit: " + commit);
       }
 
       // Ensure a valid file path is provided when running locally
       if (localRun && (filePath == null || filePath.isEmpty())) {
-        System.err.println("[Error] Pipeline configuration file must be specified when running locally (-f).");
+        PipelineLogger.error("Pipeline configuration file must be specified when running locally (-f).");
         return 1;
       }
 
       // Validate the pipeline configuration file
-      System.out.println("Validating pipeline configuration: " + filePath);
+      PipelineLogger.info("Validating pipeline configuration: " + filePath);
       YamlPipelineValidator.validatePipeline(filePath);
-      System.out.println("Pipeline configuration is valid!");
+      PipelineLogger.info("Pipeline configuration is valid!");
 
       // Run the pipeline (either locally or remotely)
       return triggerPipelineExecution();
 
     } catch (Exception e) {
-      System.err.println("[Error] " + e.getMessage());
+      PipelineLogger.error("Execution Error:" + e.getMessage());
       return 1;
     }
   }
@@ -87,7 +92,7 @@ public class RunCommand implements Callable<Integer> {
   private Integer triggerPipelineExecution() {
     try {
       if (!localRun && (repo == null || repo.isEmpty())) {
-        System.err.println("[Error] Repository (--repo) must be specified for remote execution.");
+        PipelineLogger.error("Repository (--repo) must be specified for remote execution.");
         return 1;
       }
 
@@ -96,23 +101,26 @@ public class RunCommand implements Callable<Integer> {
               (repo != null ? repo : ""), branch, commit, (pipeline != null ? pipeline : ""), filePath, localRun
       );
 
+      PipelineLogger.debug("📡 Sending request to backend: " + BACKEND_URL);
+      PipelineLogger.debug("📝 Payload: " + jsonPayload);
+
       Request request = createPostRequest(BACKEND_URL, jsonPayload);
       Response response = HTTP_CLIENT.newCall(request).execute();
 
       if (!response.isSuccessful()) {
         String responseBody = response.body() != null ? response.body().string() : "Empty response";
-        System.err.println("[Error] Failed pipeline execution.");
-        System.err.println("HTTP Status: " + response.code());
-        System.err.println("Response: " + responseBody);
+        PipelineLogger.error("Failed pipeline execution.");
+        PipelineLogger.error("HTTP Status: " + response.code());
+        PipelineLogger.error("Response: " + responseBody);
         return 1;
       }
 
-      System.out.println("[Success] Pipeline execution started.");
-      System.out.println("Response: " + response.body().string());
+      PipelineLogger.info("Pipeline execution started.");
+      PipelineLogger.info("Response: " + response.body().string());
       return 0;
 
     } catch (IOException e) {
-      System.err.println("[Error] Failed to communicate with backend: " + e.getMessage());
+      PipelineLogger.error("Failed to communicate with backend: " + e.getMessage());
       return 1;
     }
   }

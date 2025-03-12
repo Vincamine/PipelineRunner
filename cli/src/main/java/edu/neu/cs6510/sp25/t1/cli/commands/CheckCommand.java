@@ -3,7 +3,9 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 import java.io.File;
 import java.util.concurrent.Callable;
 
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
 import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import picocli.CommandLine;
 
@@ -30,27 +32,27 @@ public class CheckCommand implements Callable<Integer> {
    */
   @Override
   public Integer call() {
-    if (filePath == null) {
-      System.err.println("[Error] File path cannot be null");
+    GitUtils.isGitRootDirectory();
+    if (filePath == null || filePath.trim().isEmpty()) {
+      PipelineLogger.error("File path cannot be null or empty.");
       return 1;
     }
 
     File yamlFile = new File(filePath);
-
     if (!yamlFile.exists() || !yamlFile.isFile()) {
-      System.err.println("[Error] File not found: " + filePath);
+      PipelineLogger.error("File not found: " + filePath);
       return 1;
     }
 
     try {
-      System.out.println("Checking pipeline configuration: " + filePath);
+      PipelineLogger.info("Checking pipeline configuration: " + filePath);
       YamlPipelineValidator.validatePipeline(filePath);
-      System.out.println("Pipeline configuration is valid!");
+      PipelineLogger.info("Pipeline configuration is valid!");
       return 0;
     } catch (ValidationException e) {
-      System.err.println("Pipeline validation failed!");
+      PipelineLogger.error("Pipeline validation failed!");
       for (String line : e.getMessage().split("\n")) {
-        System.err.println("  ➜ " + line);
+        PipelineLogger.error("  ➜ " + line);
       }
       return 1;
     }
