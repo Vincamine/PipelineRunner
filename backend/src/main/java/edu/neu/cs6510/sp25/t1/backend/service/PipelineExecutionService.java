@@ -11,8 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.mapper.PipelineExecutionMapper;
@@ -35,7 +37,7 @@ public class PipelineExecutionService {
   private final PipelineExecutionMapper pipelineExecutionMapper;
   private final StageExecutionService stageExecutionService;
   private final StageExecutionRepository stageExecutionRepository;
-
+  private final JobExecutionRepository jobExecutionRepository;
 
   /**
    * Retrieves a pipeline execution by ID.
@@ -60,58 +62,118 @@ public class PipelineExecutionService {
   public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request) {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
-    Path resolvedPath = Paths.get(request.getFilePath());
-    if (!resolvedPath.isAbsolute()) {
-      resolvedPath = Paths.get(System.getProperty("user.dir")).resolve(request.getFilePath()).normalize();
+    // Resolve and validate the pipeline file path
+    Path resolvedPath = resolveAndValidatePipelinePath(request.getFilePath());
+
+    // Parse and validate the pipeline YAML configuration
+    Map<String, Object> pipelineConfig = parseAndValidatePipelineYaml(resolvedPath.toString());
+
+    try {
+      // Create and save the pipeline execution entity
+      PipelineLogger.info("Preparing to save pipeline execution to DB...");
+      PipelineExecutionEntity pipelineExecution = createPipelineExecution(request);
+
+      // Save the pipeline execution to the database
+      pipelineExecution = savePipelineExecution(pipelineExecution);
+
+      // Create and save stage executions with their jobs
+      createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
+
+      // Now that all entities are saved, execute the stages
+      executeStagesSequentially(pipelineExecution.getId());
+
+      return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
+    } catch (Exception e) {
+      PipelineLogger.error("Failed to start pipeline execution: " + e.getMessage());
+      throw new RuntimeException("Pipeline execution failed: " + e.getMessage());
     }
+  }
 
+  /**
+   * Resolves and validates the pipeline file path.
+   *
+   * @param filePath the file path from the request
+   * @return the resolved path
+   */
+  private Path resolveAndValidatePipelinePath(String filePath) {
+    Path resolvedPath = Paths.get(filePath);
+    if (!resolvedPath.isAbsolute()) {
+      resolvedPath = Paths.get(System.getProperty("user.dir")).resolve(filePath).normalize();
+    }
     PipelineLogger.info("Corrected pipeline file path: " + resolvedPath);
+    return resolvedPath;
+  }
 
-    Map<String, Object> pipelineConfig;
+  /**
+   * Parses and validates the pipeline YAML configuration.
+   *
+   * @param pipelinePath the path to the pipeline YAML file
+   * @return the parsed pipeline configuration
+   */
+  private Map<String, Object> parseAndValidatePipelineYaml(String pipelinePath) {
     try {
       PipelineLogger.info("Attempting to read pipeline YAML...");
-      pipelineConfig = YamlPipelineUtils.readPipelineYaml(resolvedPath.toString());
+      Map<String, Object> pipelineConfig = YamlPipelineUtils.readPipelineYaml(pipelinePath);
 
       PipelineLogger.info("Successfully read pipeline YAML. Now validating...");
       YamlPipelineUtils.validatePipelineConfig(pipelineConfig);
 
-      PipelineLogger.info("YAML validation completed for: " + resolvedPath);
+      PipelineLogger.info("YAML validation completed for: " + pipelinePath);
+      return pipelineConfig;
     } catch (Exception e) {
       PipelineLogger.error("ERROR reading pipeline YAML: " + e.getMessage());
       throw new RuntimeException("YAML parsing failed: " + e.getMessage(), e);
     }
+  }
 
-    // Save the pipeline execution
-    PipelineLogger.info("Preparing to save pipeline execution to DB...");
-    PipelineExecutionEntity pipelineExecution = PipelineExecutionEntity.builder()
+  /**
+   * Creates a new pipeline execution entity.
+   *
+   * @param request the pipeline execution request
+   * @return the created pipeline execution entity
+   */
+  private PipelineExecutionEntity createPipelineExecution(PipelineExecutionRequest request) {
+    return PipelineExecutionEntity.builder()
             .pipelineId(request.getPipelineId())
             .commitHash(request.getCommitHash())
             .isLocal(request.isLocal())
             .status(ExecutionStatus.PENDING)
             .startTime(Instant.now())
             .build();
-
-    pipelineExecution = pipelineExecutionRepository.save(pipelineExecution);
-    pipelineExecutionRepository.flush(); // Force immediate commit
-    PipelineLogger.info("Successfully saved pipeline execution: " + pipelineExecution.getId());
-
-    // **Create Stage Executions**
-    createStageExecutions(pipelineExecution.getId(), pipelineConfig);
-
-    // Execute Stages
-    executeStagesSequentially(pipelineExecution.getId());
-
-    return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
   }
 
   /**
-   * Creates stage execution entities based on the pipeline YAML configuration.
+   * Saves a pipeline execution to the database.
+   *
+   * @param pipelineExecution the pipeline execution entity to save
+   * @return the saved pipeline execution entity
+   */
+  private PipelineExecutionEntity savePipelineExecution(PipelineExecutionEntity pipelineExecution) {
+    try {
+      pipelineExecution = pipelineExecutionRepository.save(pipelineExecution);
+      pipelineExecutionRepository.flush(); // Force immediate commit
+      PipelineLogger.info("Successfully saved pipeline execution: " + pipelineExecution.getId());
+
+      // Verify the save was successful
+      PipelineExecutionEntity savedEntity = pipelineExecutionRepository.findById(pipelineExecution.getId())
+              .orElseThrow(() -> new RuntimeException("Failed to verify pipeline execution was saved"));
+      PipelineLogger.info("Verified pipeline execution exists in database: " + savedEntity.getId());
+
+      return pipelineExecution;
+    } catch (Exception e) {
+      PipelineLogger.error("Error saving pipeline execution: " + e.getMessage());
+      throw new RuntimeException("Failed to save pipeline execution: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Creates and saves stage execution entities based on the pipeline YAML configuration.
    *
    * @param pipelineExecutionId ID of the pipeline execution
    * @param pipelineConfig      Parsed pipeline configuration
    */
-  @SuppressWarnings("unchecked")
-  private void createStageExecutions(UUID pipelineExecutionId, Map<String, Object> pipelineConfig) {
+  @Transactional
+  protected void createAndSaveStageExecutions(UUID pipelineExecutionId, Map<String, Object> pipelineConfig) {
     Object stagesObj = pipelineConfig.get("stages");
 
     if (!(stagesObj instanceof List<?> rawStages)) {
@@ -129,24 +191,72 @@ public class PipelineExecutionService {
       throw new RuntimeException("Pipeline must contain at least one valid stage.");
     }
 
-    for (int order = 0; order < stages.size(); order++) {
-      Map<String, Object> stage = stages.get(order);
-      String stageName = (String) stage.get("name");
+    PipelineLogger.info("Creating " + stages.size() + " stage executions for pipeline: " + pipelineExecutionId);
 
-      UUID stageId = UUID.randomUUID();
+    for (int order = 0; order < stages.size(); order++) {
+      Map<String, Object> stageConfig = stages.get(order);
+      String stageName = (String) stageConfig.get("name");
+
+      // Create the stage execution entity without explicit ID (let JPA generate it)
       StageExecutionEntity stageExecution = StageExecutionEntity.builder()
               .pipelineExecutionId(pipelineExecutionId)
-              .stageId(stageId)
+              .stageId(UUID.randomUUID())  // Generate a new stageId
               .executionOrder(order)
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
 
-      stageExecutionRepository.save(stageExecution);
-      PipelineLogger.info("Saved stage execution: " + stageExecution.getId() + " for stage: " + stageName);
+      // Save the stage execution and let JPA generate the ID
+      stageExecution = stageExecutionRepository.save(stageExecution);
+      stageExecutionRepository.flush();  // Ensure it's committed
+      PipelineLogger.info("Saved stage execution with generated ID: " + stageExecution.getId());
+
+      // Extract and create job executions
+      List<JobExecutionEntity> jobs = createJobExecutions(stageConfig, stageExecution);
+
+      // Save job executions
+      if (!jobs.isEmpty()) {
+        PipelineLogger.info("Saving " + jobs.size() + " jobs for stage: " + stageExecution.getId());
+        jobs = jobExecutionRepository.saveAll(jobs);
+        jobExecutionRepository.flush();  // Ensure they're committed
+
+        PipelineLogger.info("✅ Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
+      } else {
+        PipelineLogger.warn("⚠ No jobs defined for stage: " + stageExecution.getId());
+      }
     }
   }
 
+  /**
+   * Creates job execution entities for a stage.
+   *
+   * @param stageConfig    stage configuration from YAML
+   * @param stageExecution stage execution entity
+   * @return list of job execution entities
+   */
+  @SuppressWarnings("unchecked")
+  private List<JobExecutionEntity> createJobExecutions(Map<String, Object> stageConfig, StageExecutionEntity stageExecution) {
+    List<Map<String, Object>> jobsConfig = (List<Map<String, Object>>) stageConfig.get("jobs");
+
+    if (jobsConfig == null || jobsConfig.isEmpty()) {
+      PipelineLogger.warn("⚠ No jobs defined in YAML for stage: " + stageExecution.getId());
+      return List.of();
+    }
+
+    return jobsConfig.stream().map(jobConfig -> {
+      UUID jobId = jobConfig.containsKey("id") ?
+              UUID.fromString(jobConfig.get("id").toString()) :
+              UUID.randomUUID();
+
+      return JobExecutionEntity.builder()
+              // Let JPA generate the ID instead of setting it explicitly
+              .stageExecution(stageExecution)
+              .jobId(jobId)
+              .status(ExecutionStatus.PENDING)
+              .startTime(Instant.now())
+              .build();
+    }).toList();
+  }
 
   /**
    * Executes stages sequentially for a pipeline execution.
@@ -156,6 +266,14 @@ public class PipelineExecutionService {
   private void executeStagesSequentially(UUID pipelineExecutionId) {
     PipelineLogger.info("Retrieving stages for execution...");
     List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionId(pipelineExecutionId);
+
+    if (stages.isEmpty()) {
+      PipelineLogger.error("No stages found for pipeline execution: " + pipelineExecutionId);
+      throw new RuntimeException("No stages found for execution");
+    }
+
+    PipelineLogger.info("Found " + stages.size() + " stages to execute");
+
     for (StageExecutionEntity stage : stages) {
       UUID stageExecutionId = stage.getId();
       PipelineLogger.info("Executing stage: " + stageExecutionId);

@@ -3,6 +3,7 @@ package edu.neu.cs6510.sp25.t1.backend.mapper;
 import org.springframework.stereotype.Component;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 
 /**
@@ -10,6 +11,8 @@ import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
  */
 @Component
 public class JobExecutionMapper {
+
+  private StageExecutionEntity stageExecutionEntity;
 
   /**
    * Converts a JobExecutionEntity to JobExecutionDTO.
@@ -24,7 +27,7 @@ public class JobExecutionMapper {
 
     return JobExecutionDTO.builder()
             .id(entity.getId())
-            .stageExecutionId(entity.getStageExecutionId())
+            .stageExecutionId(entity.getStageExecution().getId())
             .jobId(entity.getJobId())
             .commitHash(entity.getCommitHash())
             .isLocal(entity.isLocal())
@@ -48,7 +51,7 @@ public class JobExecutionMapper {
 
     return JobExecutionEntity.builder()
             .id(dto.getId())
-            .stageExecutionId(dto.getStageExecutionId())
+            .stageExecution(StageExecutionEntity.builder().id(dto.getStageExecutionId()).build())
             .jobId(dto.getJobId())
             .commitHash(dto.getCommitHash())
             .isLocal(dto.isLocal())

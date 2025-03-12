@@ -5,7 +5,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +32,7 @@ public class StageExecutionService {
   private final ApplicationEventPublisher eventPublisher;
 
   /**
-   * Executes a stage by starting all jobs in the stage and waiting for their completion.
+   * Executes a stage by starting all jobs in the stage.
    *
    * @param stageExecutionId ID of the stage execution
    */
@@ -47,43 +46,22 @@ public class StageExecutionService {
     // Set stage status to RUNNING
     stageExecution.updateState(ExecutionStatus.RUNNING);
     stageExecutionRepository.save(stageExecution);
+    stageExecutionRepository.flush(); // Make sure the status update is committed
 
-    // Save job executions to database
-    saveJobExecutions(stageExecutionId);
-
-    // Execute jobs with dependency handling
-    executeJobsByDependencies(stageExecutionId);
-  }
-
-  /**
-   * Saves job executions for a given stage execution.
-   * Ensures all jobs exist in the database before execution begins.
-   *
-   * @param stageExecutionId ID of the stage execution
-   */
-  private void saveJobExecutions(UUID stageExecutionId) {
-    // Retrieve job definitions for this stage (from some method like getJobDTOsForStage)
+    // Get job executions for this stage
     List<JobExecutionEntity> jobs = jobExecutionService.getJobExecutionsForStage(stageExecutionId);
 
     if (jobs.isEmpty()) {
-      PipelineLogger.error("No jobs found for stage execution: " + stageExecutionId);
-      throw new IllegalStateException("Stage must contain at least one job.");
+      PipelineLogger.warn("No jobs found for stage execution: " + stageExecutionId);
+      // If no jobs, mark the stage as successful
+      finalizeStageExecution(stageExecutionId);
+      return;
     }
 
-    for (JobExecutionEntity job : jobs) {
-      UUID jobExecutionId = UUID.randomUUID();
-      JobExecutionEntity jobExecution = JobExecutionEntity.builder()
-              .id(jobExecutionId)
-              .stageExecutionId(stageExecutionId)
-              .jobId(job.getId())
-              .status(ExecutionStatus.PENDING)
-              .startTime(Instant.now())
-              .build();
+    PipelineLogger.info("Found " + jobs.size() + " jobs to execute for stage: " + stageExecutionId);
 
-      // Save job execution to database
-      jobExecutionService.saveJobExecution(jobExecution);
-      PipelineLogger.info("Saved job execution: " + jobExecutionId);
-    }
+    // Execute jobs with dependency handling
+    executeJobsByDependencies(stageExecutionId);
   }
 
   /**
@@ -93,33 +71,49 @@ public class StageExecutionService {
    */
   private void executeJobsByDependencies(UUID stageExecutionId) {
     List<JobExecutionEntity> jobs = jobExecutionService.getJobsByStageExecution(stageExecutionId);
+
+    if (jobs.isEmpty()) {
+      PipelineLogger.warn("No jobs to execute for stage: " + stageExecutionId);
+      return;
+    }
+
     Map<UUID, List<UUID>> jobDependencies = new HashMap<>();
 
+    // Load dependencies for each job
     for (JobExecutionEntity job : jobs) {
       List<UUID> dependencies = jobExecutionService.getJobDependencies(job.getId());
       jobDependencies.put(job.getId(), dependencies);
+      PipelineLogger.info("Job " + job.getId() + " has " + dependencies.size() + " dependencies");
     }
 
     Set<UUID> executedJobs = new HashSet<>();
-
-    boolean jobsRemaining;  // Declare it outside
+    boolean jobsRemaining;
 
     do {
-      jobsRemaining = false; // Assume all jobs are executed unless we find one; to avoid infinite loop
+      jobsRemaining = false;
 
       for (JobExecutionEntity job : jobs) {
-        if (executedJobs.contains(job.getId())) continue; // Skip already executed jobs
+        // Skip already executed jobs
+        if (executedJobs.contains(job.getId())) continue;
 
-        List<UUID> dependencies = jobDependencies.get(job.getId());
+        List<UUID> dependencies = jobDependencies.getOrDefault(job.getId(), List.of());
+
+        // Check if all dependencies are satisfied
         if (executedJobs.containsAll(dependencies)) {
-          jobExecutionService.startJobExecution(job.getId());
-          executedJobs.add(job.getId());
-          jobsRemaining = true;  // A job was executed, so loop again
+          PipelineLogger.info("Starting job execution: " + job.getId() + " (all dependencies satisfied)");
+          try {
+            jobExecutionService.startJobExecution(job.getId());
+            executedJobs.add(job.getId());
+            jobsRemaining = true;
+          } catch (Exception e) {
+            PipelineLogger.error("Failed to start job: " + job.getId() + " - " + e.getMessage());
+          }
         }
       }
     } while (jobsRemaining);
-  }
 
+    PipelineLogger.info("Completed job dependency resolution for stage: " + stageExecutionId);
+  }
 
   /**
    * Event listener for job completion events.
@@ -137,7 +131,6 @@ public class StageExecutionService {
     // Check if any job failed but is allowed to fail
     boolean anyFailed = jobs.stream().anyMatch(j -> j.getStatus() == ExecutionStatus.FAILED);
     boolean allowFailures = jobs.stream().allMatch(JobExecutionEntity::isAllowFailure);
-    // Check if all failed jobs allow failures
 
     if (anyFailed && !allowFailures) {
       PipelineLogger.error("A job in the stage failed and failure is NOT allowed! Cancelling remaining jobs...");
@@ -148,12 +141,16 @@ public class StageExecutionService {
 
     // If all jobs in the stage are successful (or allowed failures), mark the stage as completed
     boolean allSuccessOrAllowedFailures = jobs.stream()
-            .allMatch(j -> j.getStatus() == ExecutionStatus.SUCCESS || (j.getStatus() == ExecutionStatus.FAILED && j.isAllowFailure()));
+            .allMatch(j -> j.getStatus() == ExecutionStatus.SUCCESS ||
+                    (j.getStatus() == ExecutionStatus.FAILED && j.isAllowFailure()));
 
     if (allSuccessOrAllowedFailures) {
       PipelineLogger.info("All jobs in stage completed! Finalizing stage.");
       finalizeStageExecution(stageExecutionId);
-      eventPublisher.publishEvent(new StageCompletedEvent(this, stageExecutionId, findPipelineId(stageExecutionId)));
+
+      // Find the pipeline ID and publish a stage completed event
+      UUID pipelineId = findPipelineId(stageExecutionId);
+      eventPublisher.publishEvent(new StageCompletedEvent(this, stageExecutionId, pipelineId));
     } else {
       PipelineLogger.info("Waiting for remaining jobs in stage...");
     }
@@ -173,11 +170,11 @@ public class StageExecutionService {
 
     stageExecution.updateState(ExecutionStatus.FAILED);
     stageExecutionRepository.save(stageExecution);
+    stageExecutionRepository.flush(); // Ensure it's committed
   }
 
-
   /**
-   * cancel remaining jobs if not allowed to fail
+   * Cancel remaining jobs if not allowed to fail
    *
    * @param stageExecutionId current stage execution id
    */
@@ -191,9 +188,8 @@ public class StageExecutionService {
       }
     }
 
-    PipelineLogger.info("🚨 All pending/running jobs in stage " + stageExecutionId + " are marked as CANCELED.");
+    PipelineLogger.info("All pending/running jobs in stage " + stageExecutionId + " are marked as CANCELED.");
   }
-
 
   /**
    * Finds the pipeline ID for a stage execution.
@@ -220,8 +216,9 @@ public class StageExecutionService {
             .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
 
     stageExecution.updateState(ExecutionStatus.SUCCESS);
-    stageExecutionRepository.save(stageExecution);
-    PipelineLogger.info("Stage execution completed: " + stageExecutionId);
+    stageExecution = stageExecutionRepository.save(stageExecution);
+    stageExecutionRepository.flush();
+    PipelineLogger.info("Stage execution completed: " + stageExecution.getId());
   }
 
   /**

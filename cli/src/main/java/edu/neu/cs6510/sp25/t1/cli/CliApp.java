@@ -46,17 +46,6 @@ public class CliApp implements Callable<Integer> {
 
   @Override
   public Integer call() {
-    // Validate execution inside a Git repository
-    if (!GitUtils.isInsideGitRepo()) {
-      System.err.println("[Error] Not inside a valid Git repository.");
-      return 1;
-    }
-
-    // Set commit hash if not specified
-    if (commit.isEmpty()) {
-      commit = GitUtils.getLatestCommitHash();
-    }
-
     System.out.println("CI/CD CLI - Ready! Use `--help` for available commands.");
     return 0;
   }

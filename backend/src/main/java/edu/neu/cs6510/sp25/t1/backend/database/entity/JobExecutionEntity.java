@@ -10,6 +10,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,10 +40,12 @@ public class JobExecutionEntity {
   private UUID id;
 
   /**
-   * Foreign key reference to the stage execution this job belongs to.
+   * Foreign key reference to the job being executed.
    */
-  @Column(name = "stage_execution_id")
-  private UUID stageExecutionId;
+  @ManyToOne
+  @JoinColumn(name = "stage_execution_id", nullable = false)
+  private StageExecutionEntity stageExecution;
+
 
   /**
    * Foreign key reference to the job being executed.

@@ -9,13 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.model.Job;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.model.Stage;
-import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
-import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
 import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import picocli.CommandLine;
 
@@ -38,34 +35,31 @@ public class DryRunCommand implements Callable<Integer> {
 
   @Override
   public Integer call() {
-    GitUtils.isGitRootDirectory();
     File pipelineFile = new File(filePath);
     if (!pipelineFile.exists() || !pipelineFile.isFile()) {
-      PipelineLogger.error("Error: Specified pipeline file does not exist: " + filePath);
+      System.err.println("Error: Specified pipeline file does not exist: " + filePath);
       return 1;
     }
 
     try {
-      PipelineLogger.info("Validating pipeline configuration: " + filePath);
+      System.out.println("Validating pipeline configuration: " + filePath);
       YamlPipelineValidator.validatePipeline(filePath);
 
       Pipeline pipeline = YamlParser.parseYaml(pipelineFile);
       List<Stage> orderedStages = orderStagesByExecution(pipeline);
 
-      PipelineLogger.info("✅ Pipeline validation successful! Execution plan:");
+      System.out.println("\nExecution Plan:");
       printExecutionPlan(orderedStages);
 
       return 0;
-    } catch (ValidationException e) {
-      PipelineLogger.error("Pipeline validation failed: " + e.getMessage());
-      return 1;
+
     } catch (Exception e) {
-      PipelineLogger.error("Unexpected error: " + e.getMessage());
+      System.err.println("Validation failed: " + e.getMessage());
       return 1;
     }
   }
 
-  private List<Stage> orderStagesByExecution(Pipeline pipeline) throws ValidationException {
+  private List<Stage> orderStagesByExecution(Pipeline pipeline) {
     List<Stage> orderedStages = new ArrayList<>();
     Map<String, Stage> stageMap = new HashMap<>();
     Set<String> visited = new HashSet<>();
@@ -78,7 +72,7 @@ public class DryRunCommand implements Callable<Integer> {
     for (Stage stage : pipeline.getStages()) {
       if (!visited.contains(stage.getName())) {
         if (!visitStage(stage, stageMap, visited, recursionStack, orderedStages)) {
-          throw new ValidationException("Cyclic dependency detected in pipeline stages.");
+          throw new RuntimeException("Error: Cyclic dependency detected in pipeline stages.");
         }
       }
     }
@@ -97,7 +91,7 @@ public class DryRunCommand implements Callable<Integer> {
     recursionStack.add(stage.getName());
 
     for (Job job : stage.getJobs()) {
-      for (String dependency : job.getDependencies()) {
+      for (String dependency : job.getDependencies()) {  // 🔹 Changed from UUID to job name
         Stage dependentStage = findStageContainingJob(dependency, stageMap);
         if (dependentStage != null && !visitStage(dependentStage, stageMap, visited, recursionStack, orderedStages)) {
           return false;
@@ -110,7 +104,7 @@ public class DryRunCommand implements Callable<Integer> {
     return true;
   }
 
-  private Stage findStageContainingJob(String jobName, Map<String, Stage> stageMap) {
+  private Stage findStageContainingJob(String jobName, Map<String, Stage> stageMap) {  // 🔹 Changed parameter from UUID to String
     for (Stage stage : stageMap.values()) {
       for (Job job : stage.getJobs()) {
         if (job.getName().equals(jobName)) {
@@ -123,7 +117,6 @@ public class DryRunCommand implements Callable<Integer> {
 
   private void printExecutionPlan(List<Stage> orderedStages) {
     StringBuilder yamlOutput = new StringBuilder();
-    yamlOutput.append("Execution Plan:\n");
 
     for (Stage stage : orderedStages) {
       yamlOutput.append(stage.getName()).append(":\n");
@@ -137,6 +130,6 @@ public class DryRunCommand implements Callable<Integer> {
       }
     }
 
-    PipelineLogger.info(yamlOutput.toString());
+    System.out.println(yamlOutput);
   }
 }

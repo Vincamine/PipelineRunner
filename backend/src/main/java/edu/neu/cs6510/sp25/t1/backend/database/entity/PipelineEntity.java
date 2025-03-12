@@ -41,6 +41,7 @@ public class PipelineEntity {
   @Column(name = "repository_url")
   private String repositoryUrl;
 
+  @Builder.Default
   @Column(name = "branch", columnDefinition = "VARCHAR(255) DEFAULT 'main'")
   private String branch = "main";
 

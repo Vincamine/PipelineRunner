@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * Handles job execution requests from the backend.
  */
 @RestController
-@RequestMapping("/api/job")
+@RequestMapping("/api/worker")
 @RequiredArgsConstructor
 @Slf4j
 public class JobExecutionController {

@@ -169,7 +169,11 @@ public class ReportService {
       throw new IllegalArgumentException("Stage execution not found for stage: " + stageName);
     }
 
-    List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecutionIdAndJobNameOrderByStartTimeDesc(stages.getFirst().getId(), jobName);
+    StageExecutionEntity stageExecution = stageExecutionRepository.findById(stages.getFirst().getId())
+            .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
+
+    List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecutionAndJobNameOrderByStartTimeDesc(stageExecution.getId(), jobName);
+
 
     if (jobs.isEmpty()) {
       throw new IllegalArgumentException("Job execution not found for job: " + jobName);
@@ -195,7 +199,10 @@ public class ReportService {
    * @return stage report
    */
   private StageReportDTO createStageReport(StageExecutionEntity stage) {
-    List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecutionId(stage.getId());
+    StageExecutionEntity stageExecution = stageExecutionRepository.findById(stage.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
+
+    List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecution(stageExecution);
 
     List<JobReportDTO> jobReports = jobs.stream()
             .map(job -> new JobReportDTO(

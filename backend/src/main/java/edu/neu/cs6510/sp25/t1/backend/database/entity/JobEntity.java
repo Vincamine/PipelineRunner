@@ -44,9 +44,11 @@ public class JobEntity {
   @Column(name = "name")
   private String name;
 
+  @Builder.Default
   @Column(name = "docker_image", columnDefinition = "VARCHAR(255) DEFAULT 'docker.io/library/alpine:latest'")
   private String dockerImage = "docker.io/library/alpine:latest";
 
+  @Builder.Default
   @Column(name = "allow_failure", columnDefinition = "BOOLEAN DEFAULT FALSE")
   private boolean allowFailure = false;
 

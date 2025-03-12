@@ -1,11 +1,13 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
@@ -15,7 +17,9 @@ import java.util.List;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.service.event.JobCompletedEvent;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
@@ -26,8 +30,12 @@ import lombok.RequiredArgsConstructor;
 public class JobExecutionService {
   private final JobExecutionRepository jobExecutionRepository;
   private final ApplicationEventPublisher eventPublisher;
+  private final StageExecutionRepository stageExecutionRepository;
   private final RestTemplate restTemplate = new RestTemplate();
-  private static final String WORKER_URL = "http://localhost:5000/api/worker/execute";
+  @Value("${worker.api.execute-url}")
+  private String workerExecuteUrl;
+  @Value("${worker.api.cancel-url}")
+  private String workerCancelUrl;
 
   /**
    * Start a job
@@ -44,13 +52,47 @@ public class JobExecutionService {
     jobExecution.updateState(ExecutionStatus.RUNNING);
     jobExecution.setStartTime(Instant.now());
     jobExecutionRepository.save(jobExecution);
+    jobExecutionRepository.flush(); // Force flush to ensure job state is saved
 
+    // Use separate transaction for worker communication to prevent rollback of job state
+    sendJobToWorkerInNewTransaction(jobExecutionId);
+  }
+
+  /**
+   * Send job to worker in a new transaction to prevent rollback of job state
+   *
+   * @param jobExecutionId job execution ID
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void sendJobToWorkerInNewTransaction(UUID jobExecutionId) {
     try {
       sendJobToWorker(jobExecutionId);
     } catch (Exception e) {
+      // Update job status to failed but in a new transaction
+      updateJobStatusAfterWorkerFailure(jobExecutionId, e.getMessage());
+      PipelineLogger.error("Job execution failed: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Update job status after worker failure in a new transaction
+   *
+   * @param jobExecutionId job execution ID
+   * @param errorMessage   error message
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void updateJobStatusAfterWorkerFailure(UUID jobExecutionId, String errorMessage) {
+    try {
+      JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
+              .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
+
       jobExecution.updateState(ExecutionStatus.FAILED);
       jobExecutionRepository.save(jobExecution);
-      PipelineLogger.error("Job execution failed: " + e.getMessage());
+      jobExecutionRepository.flush();
+
+      PipelineLogger.info("Updated job status to FAILED due to worker error: " + errorMessage);
+    } catch (Exception e) {
+      PipelineLogger.error("Failed to update job status after worker failure: " + e.getMessage());
     }
   }
 
@@ -69,12 +111,18 @@ public class JobExecutionService {
     ResponseEntity<String> response;
 
     try {
-      response = restTemplate.postForEntity(WORKER_URL, request, String.class);
+      PipelineLogger.info("Sending request to worker: " + workerExecuteUrl);
+      response = restTemplate.postForEntity(workerExecuteUrl, request, String.class);
     } catch (ResourceAccessException e) {
+      PipelineLogger.error("Worker is unreachable: " + e.getMessage());
       throw new RuntimeException("Worker is unreachable: " + e.getMessage());
+    } catch (Exception e) {
+      PipelineLogger.error("Error sending request to worker: " + e.getMessage());
+      throw new RuntimeException("Error communicating with worker: " + e.getMessage());
     }
 
     if (!response.getStatusCode().is2xxSuccessful()) {
+      PipelineLogger.error("Worker returned non-success status code: " + response.getStatusCode());
       throw new RuntimeException("Worker job execution failed: " + response.getBody());
     }
 
@@ -94,9 +142,10 @@ public class JobExecutionService {
 
     jobExecution.updateState(newStatus);
     jobExecutionRepository.save(jobExecution);
+    jobExecutionRepository.flush(); // Ensure the status update is persisted
 
     if (newStatus == ExecutionStatus.SUCCESS) {
-      eventPublisher.publishEvent(new JobCompletedEvent(this, jobExecutionId, jobExecution.getStageExecutionId()));
+      eventPublisher.publishEvent(new JobCompletedEvent(this, jobExecutionId, jobExecution.getStageExecution().getId()));
     }
   }
 
@@ -115,12 +164,28 @@ public class JobExecutionService {
     if (jobExecution.getStatus() == ExecutionStatus.PENDING || jobExecution.getStatus() == ExecutionStatus.RUNNING) {
       jobExecution.updateState(ExecutionStatus.CANCELED);
       jobExecutionRepository.save(jobExecution);
+      jobExecutionRepository.flush(); // Ensure the status update is persisted
       PipelineLogger.info("Job execution canceled in backend: " + jobExecutionId);
 
-      // Send cancel request to worker
-      sendCancelRequestToWorker(jobExecutionId);
+      // Send cancel request to worker in a new transaction
+      sendCancelRequestInNewTransaction(jobExecutionId);
     } else {
       PipelineLogger.warn("Cannot cancel job execution. Current status: " + jobExecution.getStatus());
+    }
+  }
+
+  /**
+   * Send cancel request in a new transaction
+   *
+   * @param jobExecutionId job execution ID
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void sendCancelRequestInNewTransaction(UUID jobExecutionId) {
+    try {
+      sendCancelRequestToWorker(jobExecutionId);
+    } catch (Exception e) {
+      PipelineLogger.error("Failed to send cancel request to worker: " + e.getMessage());
+      // No need to rollback status change even if worker communication fails
     }
   }
 
@@ -138,7 +203,7 @@ public class JobExecutionService {
     ResponseEntity<String> response;
 
     try {
-      response = restTemplate.postForEntity(WORKER_URL + "/cancel", request, String.class);
+      response = restTemplate.postForEntity(workerCancelUrl + "/cancel", request, String.class);
       if (response.getStatusCode().is2xxSuccessful()) {
         PipelineLogger.info("Cancel request confirmed by worker for job: " + jobExecutionId);
       } else {
@@ -149,7 +214,6 @@ public class JobExecutionService {
     }
   }
 
-
   /**
    * Get jobs by stage execution id
    *
@@ -157,7 +221,10 @@ public class JobExecutionService {
    * @return list of job executions
    */
   public List<JobExecutionEntity> getJobsByStageExecution(UUID stageExecutionId) {
-    return jobExecutionRepository.findByStageExecutionId(stageExecutionId);
+    StageExecutionEntity stageExecution = stageExecutionRepository.findById(stageExecutionId)
+            .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
+
+    return jobExecutionRepository.findByStageExecution(stageExecution);
   }
 
   /**
@@ -171,7 +238,6 @@ public class JobExecutionService {
     return jobExecutionRepository.findDependenciesByJobId(jobId);
   }
 
-
   /**
    * Retrieves job definitions for a given stage execution.
    *
@@ -179,9 +245,14 @@ public class JobExecutionService {
    * @return list of job DTOs
    */
   public List<JobExecutionEntity> getJobExecutionsForStage(UUID stageExecutionId) {
-    // Fetch jobs from database based on stage execution ID
-    // This should be replaced with the actual method to get jobs
-    return jobExecutionRepository.findJobExecutionsByStageExecutionId(stageExecutionId);
+    StageExecutionEntity stageExecution = stageExecutionRepository.findById(stageExecutionId)
+            .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
+
+    List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecution(stageExecution);
+
+    PipelineLogger.info("🔍 Found " + jobs.size() + " jobs for stage execution ID: " + stageExecutionId);
+
+    return jobs;
   }
 
   /**
@@ -192,6 +263,7 @@ public class JobExecutionService {
   @Transactional
   public void saveJobExecution(JobExecutionEntity jobExecution) {
     jobExecutionRepository.save(jobExecution);
+    jobExecutionRepository.flush(); // Ensure immediate persistence
     PipelineLogger.info("💾 Job execution saved: " + jobExecution.getId());
   }
 }

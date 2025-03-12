@@ -19,7 +19,7 @@ public class WorkerClient {
 
   private final RestTemplate restTemplate;
 
-  @Value("${worker.service.url:http://localhost:5000/api/worker}")  // Default URL
+  @Value("${worker.service.url:http://localhost:8081/api/worker}")  // Default URL
   private String workerServiceUrl;
 
   /**
