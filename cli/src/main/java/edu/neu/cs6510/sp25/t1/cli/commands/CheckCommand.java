@@ -3,7 +3,6 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 import java.io.File;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.cli.CliApp;
 import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
 import picocli.CommandLine;
@@ -17,8 +16,12 @@ import picocli.CommandLine;
 )
 public class CheckCommand implements Callable<Integer> {
 
-  @CommandLine.ParentCommand
-  private CliApp parent; // Inherit global options from CliApp
+  @CommandLine.Option(
+          names = {"--file", "-f"},
+          description = "Path to the pipeline YAML configuration file.",
+          required = true
+  )
+  private String filePath;
 
   /**
    * Validates a pipeline configuration file.
@@ -27,8 +30,6 @@ public class CheckCommand implements Callable<Integer> {
    */
   @Override
   public Integer call() {
-    String filePath = parent.filePath;
-
     if (filePath == null) {
       System.err.println("[Error] File path cannot be null");
       return 1;

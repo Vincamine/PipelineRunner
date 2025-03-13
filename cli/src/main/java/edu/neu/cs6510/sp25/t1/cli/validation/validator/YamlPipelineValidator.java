@@ -3,7 +3,6 @@ package edu.neu.cs6510.sp25.t1.cli.validation.validator;
 import java.io.File;
 
 import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
-import edu.neu.cs6510.sp25.t1.cli.validation.manager.PipelineNameManager;
 import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
@@ -12,17 +11,14 @@ import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
  * YamlPipelineValidator is the top-level validator that ensures the entire pipeline configuration is valid.
  * <p>
  * It validates:
- * - YAML Parsing**: Ensures the YAML file is correctly formatted.
- * - Pipeline Structure**: Uses `PipelineValidator` to check pipeline-level validation.
- * - Job Validation**: Uses `JobValidator` to validate individual job definitions.
- * - Error Handling**: Throws `ValidationException` if any validation issues are found.
+ * - **YAML Parsing**: Ensures the YAML file is correctly formatted.
+ * - **Pipeline Structure**: Uses `PipelineValidator` to check pipeline-level validation.
+ * - **Job Validation**: Uses `JobValidator` to validate individual job definitions.
  * <p>
  * Usage:
  * - Call `YamlPipelineValidator.validatePipeline(filePath)` to validate a pipeline YAML file.
  */
 public class YamlPipelineValidator {
-  private static final PipelineNameManager pipelineNameManager = new PipelineNameManager();
-
 
   /**
    * Validates a pipeline configuration file.
@@ -40,15 +36,7 @@ public class YamlPipelineValidator {
     // Parse YAML into PipelineConfig
     Pipeline pipeline = YamlParser.parseYaml(yamlFile);
 
-    // Validate pipeline name uniqueness
-    if (!pipelineNameManager.isPipelineNameUnique(pipeline.getName())) {
-      String suggestedName = pipelineNameManager.suggestUniquePipelineName(pipeline.getName());
-      PipelineLogger.warn("Duplicate pipeline name detected: " + pipeline.getName() + ". Suggested: " + suggestedName);
-      throw new ValidationException(filePath, 1, 1,
-              "Pipeline name '" + pipeline.getName() + "' is already in use. Suggested: '" + suggestedName + "'.");
-    }
-
-    // Validate pipeline structure
+    // Validate pipeline structure using PipelineValidator
     PipelineValidator.validate(pipeline, filePath);
 
     // Validate job configurations

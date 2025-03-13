@@ -1,16 +1,9 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.cli.CliApp;
 import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
 import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
 import edu.neu.cs6510.sp25.t1.common.model.Job;
@@ -28,13 +21,15 @@ import picocli.CommandLine;
 )
 public class DryRunCommand implements Callable<Integer> {
 
-  @CommandLine.ParentCommand
-  private CliApp parent; // Inherit global options from CliApp
+  @CommandLine.Option(
+          names = {"--file", "-f"},
+          description = "Path to the pipeline YAML configuration file.",
+          required = true
+  )
+  private String filePath;
 
   @Override
   public Integer call() {
-    String filePath = parent.filePath; // Use the file path from CliApp
-
     File pipelineFile = new File(filePath);
     if (!pipelineFile.exists() || !pipelineFile.isFile()) {
       System.err.println("Error: Specified pipeline file does not exist: " + filePath);

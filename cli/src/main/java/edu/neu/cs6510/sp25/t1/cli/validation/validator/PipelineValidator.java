@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
-import edu.neu.cs6510.sp25.t1.cli.validation.manager.PipelineNameManager;
 import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.model.Job;
@@ -52,19 +51,10 @@ public class PipelineValidator {
    */
   public static void validate(Pipeline pipeline, String filename) throws ValidationException {
     List<String> errors = new ArrayList<>();
-    final PipelineNameManager pipelineNameManager = new PipelineNameManager();
 
     // Ensure pipeline name exists
     if (pipeline == null || pipeline.getName() == null || pipeline.getName().isEmpty()) {
       errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "name"), "Pipeline name is required."));
-    } else {
-      // Check pipeline name uniqueness
-      if (!pipelineNameManager.isPipelineNameUnique(pipeline.getName())) {
-        String suggestedName = pipelineNameManager.suggestUniquePipelineName(pipeline.getName());
-        errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, "name"),
-                "Pipeline name '" + pipeline.getName() + "' is already in use. Suggested alternative: '" + suggestedName + "'."));
-        PipelineLogger.warn("Duplicate pipeline name detected: " + pipeline.getName() + ". Suggested: " + suggestedName);
-      }
     }
 
     // Ensure at least one stage exists
@@ -96,29 +86,21 @@ public class PipelineValidator {
       throw new ValidationException(String.join("\n", errors));
     }
 
-    PipelineLogger.info("Pipeline validation passed: " + filename);
+    PipelineLogger.info("Pipeline validation successful. Structure, job dependencies are correctly configured in: " + filename);
   }
-
 
   /**
    * Ensures all job dependencies reference existing jobs.
-   *
-   * @param pipeline The pipeline configuration.
-   * @param filename The YAML filename.
-   * @param jobNames The set of all defined job names.
-   * @param errors   The list of validation errors to populate.
    */
   private static void validateDependenciesExist(Pipeline pipeline, String filename, Set<String> jobNames, List<String> errors) {
     for (Stage stage : pipeline.getStages()) {
       for (Job job : stage.getJobs()) {
-        if (job.getDependencies() != null && !job.getDependencies().isEmpty()) { // Only check when dependencies exist
-          for (UUID dependency : job.getDependencies()) {
-            String dependencyStr = dependency.toString();
-            if (!jobNames.contains(dependencyStr)) { // Ensure dependency exists in the pipeline
-              errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, dependencyStr),
-                      "Job '" + job.getName() + "' depends on a non-existent job '" + dependencyStr + "'."));
-              PipelineLogger.warn("Job '" + job.getName() + "' has an invalid dependency: '" + dependencyStr + "'");
-            }
+        for (UUID dependency : job.getDependencies()) {
+          String dependencyStr = dependency.toString();
+          if (!jobNames.contains(dependencyStr)) {
+            errors.add(formatError(filename, YamlParser.getFieldLineNumber(filename, dependencyStr),
+                    "Job '" + job.getName() + "' depends on a non-existent job '" + dependencyStr + "'."));
+            PipelineLogger.warn("Job '" + job.getName() + "' has an invalid dependency: '" + dependencyStr + "'");
           }
         }
       }
@@ -127,9 +109,6 @@ public class PipelineValidator {
 
   /**
    * Detects cyclic dependencies in job execution.
-   *
-   * @param pipeline The pipeline configuration.
-   * @return A list of detected cycles.
    */
   public static List<List<String>> detectCycles(Pipeline pipeline) {
     List<List<String>> detectedCycles = new ArrayList<>();

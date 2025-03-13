@@ -3,7 +3,6 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.cli.CliApp;
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
 import picocli.CommandLine;
 
@@ -16,8 +15,8 @@ import picocli.CommandLine;
 )
 public class ReportCommand implements Callable<Integer> {
 
-  @CommandLine.ParentCommand
-  private CliApp parent; // Inherit global CLI options
+  @CommandLine.Option(names = {"--pipeline", "-p"}, description = "Specify the pipeline name.", required = true)
+  private String pipelineName;
 
   @CommandLine.Option(names = {"--run"}, description = "Specify the run number for a detailed report.")
   private Integer runNumber;
@@ -37,21 +36,15 @@ public class ReportCommand implements Callable<Integer> {
    */
   @Override
   public Integer call() {
-    String pipelineName = parent.pipeline;
-    if (pipelineName == null) {
-      System.err.println("[Error] Please specify a pipeline using --pipeline.");
-      return 1;
-    }
-
     try {
       if (runNumber == null) {
-        return fetchPipelineHistory(pipelineName);
+        return fetchPipelineHistory();
       } else if (stageName == null) {
-        return fetchPipelineRunSummary(pipelineName, runNumber);
+        return fetchPipelineRunSummary();
       } else if (jobName == null) {
-        return fetchStageSummary(pipelineName, runNumber, stageName);
+        return fetchStageSummary();
       } else {
-        return fetchJobSummary(pipelineName, runNumber, stageName, jobName);
+        return fetchJobSummary();
       }
     } catch (IOException e) {
       System.err.println("[Error] API request failed: " + e.getMessage());
@@ -62,10 +55,9 @@ public class ReportCommand implements Callable<Integer> {
   /**
    * Fetch past runs of a specific pipeline.
    *
-   * @param pipelineName Name of the pipeline
    * @return 0 if successful, 1 if API request failed
    */
-  private Integer fetchPipelineHistory(String pipelineName) throws IOException {
+  private Integer fetchPipelineHistory() throws IOException {
     System.out.println("Fetching past runs for pipeline: " + pipelineName);
     String response = backendClient.fetchPipelineReport(pipelineName, -1, null, null); // -1 means "fetch all runs"
     System.out.println(response);
@@ -74,45 +66,39 @@ public class ReportCommand implements Callable<Integer> {
 
   /**
    * Fetch summary of a specific pipeline run.
-   * @param pipelineName Name of the pipeline
-   * @param run Run number
+   *
    * @return 0 if successful, 1 if API request failed
    * @throws IOException if API request fails
    */
-  private Integer fetchPipelineRunSummary(String pipelineName, int run) throws IOException {
-    System.out.println("Fetching run summary for pipeline: " + pipelineName + ", Run: " + run);
-    String response = backendClient.fetchPipelineReport(pipelineName, run, null, null);
+  private Integer fetchPipelineRunSummary() throws IOException {
+    System.out.println("Fetching run summary for pipeline: " + pipelineName + ", Run: " + runNumber);
+    String response = backendClient.fetchPipelineReport(pipelineName, runNumber, null, null);
     System.out.println(response);
     return 0;
   }
 
   /**
    * Fetch summary of a specific stage in a pipeline run.
-   * @param pipelineName Name of the pipeline
-   * @param run Run number
-   * @param stage Stage name
+   *
    * @return 0 if successful, 1 if API request failed
    * @throws IOException if API request fails
    */
-  private Integer fetchStageSummary(String pipelineName, int run, String stage) throws IOException {
-    System.out.println("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + run + ", Stage: " + stage);
-    String response = backendClient.fetchPipelineReport(pipelineName, run, stage, null);
+  private Integer fetchStageSummary() throws IOException {
+    System.out.println("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName);
+    String response = backendClient.fetchPipelineReport(pipelineName, runNumber, stageName, null);
     System.out.println(response);
     return 0;
   }
 
   /**
    * Fetch summary of a specific job in a pipeline stage.
-   * @param pipelineName Name of the pipeline
-   * @param run Run number
-   * @param stage Stage name
-   * @param job Job name
+   *
    * @return 0 if successful, 1 if API request failed
    * @throws IOException if API request fails
    */
-  private Integer fetchJobSummary(String pipelineName, int run, String stage, String job) throws IOException {
-    System.out.println("Fetching job summary for pipeline: " + pipelineName + ", Run: " + run + ", Stage: " + stage + ", Job: " + job);
-    String response = backendClient.fetchPipelineReport(pipelineName, run, stage, job);
+  private Integer fetchJobSummary() throws IOException {
+    System.out.println("Fetching job summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName + ", Job: " + jobName);
+    String response = backendClient.fetchPipelineReport(pipelineName, runNumber, stageName, jobName);
     System.out.println(response);
     return 0;
   }
