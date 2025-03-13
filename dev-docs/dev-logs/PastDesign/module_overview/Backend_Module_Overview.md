@@ -66,8 +66,8 @@ Models represent **database entities**.
 ### 📌 6. **Clients (`client/`)**
 Clients interact with **external services**.
 
-| Client | External Service | Description |
-|--------|----------------|-------------|
+| Client | External Service                                         | Description |
+|--------|----------------------------------------------------------|-------------|
 | `WorkerClient` | Worker Service (`http://localhost:8081/api/jobEntities`) | Sends jobEntities for execution |
 
 ---

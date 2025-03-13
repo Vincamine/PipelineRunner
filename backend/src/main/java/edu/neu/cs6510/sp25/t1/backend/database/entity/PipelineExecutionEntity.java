@@ -34,20 +34,20 @@ public class PipelineExecutionEntity {
   @GeneratedValue
   private UUID id;
 
-  @Column(name = "pipeline_id", nullable = false)
+  @Column(name = "pipeline_id")
   private UUID pipelineId;
 
-  @Column(name = "run_number", nullable = false)
+  @Column(name = "run_number")
   private int runNumber;
 
-  @Column(name = "commit_hash", nullable = false, length = 40)
+  @Column(name = "commit_hash", length = 40)
   private String commitHash;
 
-  @Column(name = "is_local", nullable = false)
+  @Column(name = "is_local")
   private boolean isLocal;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "status", nullable = false)
+  @Column(name = "status")
   private ExecutionStatus status;
 
   @Column(name = "start_time")

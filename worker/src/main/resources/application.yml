@@ -1,11 +1,21 @@
 server:
-  port: 8081
+  port: 8081  # Worker service runs on port 8081
+
 docker:
-  image-pull-policy: "Always"
-  volume-mounts: "/workspace"
+  image-pull-policy: "Always"  # Ensures the latest images are pulled
+  volume-mounts: "/workspace"  # Mounted directory for Docker volumes
+
 artifacts:
-  storage-path: "/artifacts"
-  retention-days: 7
+  storage-path: "/artifacts"  # Path where artifacts are stored
+  retention-days: 7  # Retention period for stored artifacts
+
 worker:
-  max-concurrent-jobs: 5
-  artifact-storage-path: "/var/cicd/artifacts"
+  max-concurrent-jobs: 5  # Limits the number of jobs processed in parallel
+  artifact-storage-path: "/var/cicd/artifacts"  # Storage path for worker artifacts
+  api:
+    url: http://localhost:8081/api/worker  # Added worker API URL to match backend
+
+# Add this new section for backend configuration
+backend:
+  api:
+    url: http://localhost:8080/api  # URL for communicating with the backend service

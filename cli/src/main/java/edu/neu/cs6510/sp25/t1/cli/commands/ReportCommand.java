@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
+import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
 import picocli.CommandLine;
 
 /**
@@ -36,6 +38,7 @@ public class ReportCommand implements Callable<Integer> {
    */
   @Override
   public Integer call() {
+    GitUtils.isGitRootDirectory();
     try {
       if (runNumber == null) {
         return fetchPipelineHistory();
@@ -47,7 +50,7 @@ public class ReportCommand implements Callable<Integer> {
         return fetchJobSummary();
       }
     } catch (IOException e) {
-      System.err.println("[Error] API request failed: " + e.getMessage());
+      PipelineLogger.error("API request failed: " + e.getMessage());
       return 1;
     }
   }
@@ -58,9 +61,9 @@ public class ReportCommand implements Callable<Integer> {
    * @return 0 if successful, 1 if API request failed
    */
   private Integer fetchPipelineHistory() throws IOException {
-    System.out.println("Fetching past runs for pipeline: " + pipelineName);
+    PipelineLogger.info("Fetching past runs for pipeline: " + pipelineName);
     String response = backendClient.fetchPipelineReport(pipelineName, -1, null, null); // -1 means "fetch all runs"
-    System.out.println(response);
+    PipelineLogger.info(response);
     return 0;
   }
 
@@ -71,9 +74,9 @@ public class ReportCommand implements Callable<Integer> {
    * @throws IOException if API request fails
    */
   private Integer fetchPipelineRunSummary() throws IOException {
-    System.out.println("Fetching run summary for pipeline: " + pipelineName + ", Run: " + runNumber);
+    PipelineLogger.info("Fetching run summary for pipeline: " + pipelineName + ", Run: " + runNumber);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, null, null);
-    System.out.println(response);
+    PipelineLogger.info(response);
     return 0;
   }
 
@@ -84,9 +87,9 @@ public class ReportCommand implements Callable<Integer> {
    * @throws IOException if API request fails
    */
   private Integer fetchStageSummary() throws IOException {
-    System.out.println("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName);
+    PipelineLogger.info("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, stageName, null);
-    System.out.println(response);
+    PipelineLogger.info(response);
     return 0;
   }
 
@@ -97,9 +100,9 @@ public class ReportCommand implements Callable<Integer> {
    * @throws IOException if API request fails
    */
   private Integer fetchJobSummary() throws IOException {
-    System.out.println("Fetching job summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName + ", Job: " + jobName);
+    PipelineLogger.info("Fetching job summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName + ", Job: " + jobName);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, stageName, jobName);
-    System.out.println(response);
+    PipelineLogger.info(response);
     return 0;
   }
 }

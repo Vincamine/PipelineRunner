@@ -30,4 +30,4 @@ stages:
         script:
           - "docker build -t my-cicd-app ."
           - "docker run -d -p 8080:8080 my-cicd-app"
-        allowFailure: false
+        allowFailure: true

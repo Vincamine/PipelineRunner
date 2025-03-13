@@ -1,14 +1,19 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.cli.validation.parser.YamlParser;
-import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
 import edu.neu.cs6510.sp25.t1.common.model.Job;
 import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
 import edu.neu.cs6510.sp25.t1.common.model.Stage;
+import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
+import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import picocli.CommandLine;
 
 /**
@@ -86,7 +91,7 @@ public class DryRunCommand implements Callable<Integer> {
     recursionStack.add(stage.getName());
 
     for (Job job : stage.getJobs()) {
-      for (UUID dependency : job.getDependencies()) {
+      for (String dependency : job.getDependencies()) {  // 🔹 Changed from UUID to job name
         Stage dependentStage = findStageContainingJob(dependency, stageMap);
         if (dependentStage != null && !visitStage(dependentStage, stageMap, visited, recursionStack, orderedStages)) {
           return false;
@@ -99,10 +104,10 @@ public class DryRunCommand implements Callable<Integer> {
     return true;
   }
 
-  private Stage findStageContainingJob(UUID jobUUID, Map<String, Stage> stageMap) {
+  private Stage findStageContainingJob(String jobName, Map<String, Stage> stageMap) {  // 🔹 Changed parameter from UUID to String
     for (Stage stage : stageMap.values()) {
       for (Job job : stage.getJobs()) {
-        if (job.getId().equals(jobUUID)) {
+        if (job.getName().equals(jobName)) {
           return stage;
         }
       }
@@ -125,6 +130,6 @@ public class DryRunCommand implements Callable<Integer> {
       }
     }
 
-    System.out.println(yamlOutput.toString());
+    System.out.println(yamlOutput);
   }
 }

@@ -6,7 +6,7 @@ import edu.neu.cs6510.sp25.t1.cli.commands.CheckCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.DryRunCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.ReportCommand;
 import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
-import edu.neu.cs6510.sp25.t1.cli.validation.utils.GitUtils;
+import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
 import picocli.CommandLine;
 
 /**
@@ -46,17 +46,6 @@ public class CliApp implements Callable<Integer> {
 
   @Override
   public Integer call() {
-    // Validate execution inside a Git repository
-    if (!GitUtils.isInsideGitRepo()) {
-      System.err.println("[Error] Not inside a valid Git repository.");
-      return 1;
-    }
-
-    // Set commit hash if not specified
-    if (commit.isEmpty()) {
-      commit = GitUtils.getLatestCommitHash();
-    }
-
     System.out.println("CI/CD CLI - Ready! Use `--help` for available commands.");
     return 0;
   }

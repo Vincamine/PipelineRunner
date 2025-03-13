@@ -3,8 +3,8 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 import java.io.File;
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.cli.validation.error.ValidationException;
-import edu.neu.cs6510.sp25.t1.cli.validation.validator.YamlPipelineValidator;
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import picocli.CommandLine;
 
 /**
