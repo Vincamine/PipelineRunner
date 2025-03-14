@@ -152,16 +152,25 @@ public class PipelineExecutionService {
    */
   @Transactional
   protected UUID createOrGetPipelineEntity(PipelineExecutionRequest request, Map<String, Object> pipelineConfig) {
+    // Debug log the request
+    PipelineLogger.info("createOrGetPipelineEntity called with pipelineId: " + request.getPipelineId());
+    PipelineLogger.info("Repo: " + request.getRepo() + ", Branch: " + request.getBranch());
+    PipelineLogger.info("CommitHash: " + request.getCommitHash() + ", FilePath: " + request.getFilePath());
+    
     // Check if a pipeline ID was provided in the request
     if (request.getPipelineId() != null) {
       // Check if the pipeline exists in the database
       if (pipelineRepository.existsById(request.getPipelineId())) {
         PipelineLogger.info("Using existing pipeline with ID: " + request.getPipelineId());
         return request.getPipelineId();
+      } else {
+        PipelineLogger.info("Pipeline ID provided but not found in database: " + request.getPipelineId());
       }
+    } else {
+      PipelineLogger.info("No pipeline ID provided in request, will create new entity");
     }
     
-    // No valid pipeline ID provided or pipeline doesn't exist, create a new one
+    // Always create a new pipeline entity for now, to see if this fixes our issue
     PipelineLogger.info("Creating new pipeline entity from YAML configuration");
     
     // Extract pipeline properties from config
@@ -169,13 +178,22 @@ public class PipelineExecutionService {
         ? (String) pipelineConfig.get("name") 
         : "pipeline-" + UUID.randomUUID().toString().substring(0, 8);
         
-    String repoUrl = pipelineConfig.containsKey("repository") 
-        ? (String) pipelineConfig.get("repository") 
-        : "local-repository";
+    String repoUrl = request.getRepo() != null 
+        ? request.getRepo() 
+        : (pipelineConfig.containsKey("repository") 
+            ? (String) pipelineConfig.get("repository") 
+            : "local-repository");
         
-    String branch = pipelineConfig.containsKey("branch") 
-        ? (String) pipelineConfig.get("branch") 
-        : "main";
+    String branch = request.getBranch() != null 
+        ? request.getBranch() 
+        : (pipelineConfig.containsKey("branch") 
+            ? (String) pipelineConfig.get("branch") 
+            : "main");
+    
+    PipelineLogger.info("Building pipeline entity with name: " + name);
+    PipelineLogger.info("Repository URL: " + repoUrl);
+    PipelineLogger.info("Branch: " + branch);
+    PipelineLogger.info("Commit Hash: " + request.getCommitHash());
     
     // Create and save pipeline entity
     PipelineEntity pipeline = PipelineEntity.builder()
@@ -185,10 +203,21 @@ public class PipelineExecutionService {
         .commitHash(request.getCommitHash())
         .build();
     
-    pipeline = pipelineRepository.save(pipeline);
-    pipelineRepository.flush();
+    try {
+      pipeline = pipelineRepository.save(pipeline);
+      pipelineRepository.flush();
+      
+      // Verify the save by retrieving it
+      if (pipelineRepository.existsById(pipeline.getId())) {
+        PipelineLogger.info("Successfully created and verified pipeline entity with ID: " + pipeline.getId());
+      } else {
+        PipelineLogger.error("Failed to verify pipeline entity was saved: " + pipeline.getId());
+      }
+    } catch (Exception e) {
+      PipelineLogger.error("Error saving pipeline entity: " + e.getMessage());
+      throw e;
+    }
     
-    PipelineLogger.info("Created new pipeline entity with ID: " + pipeline.getId());
     return pipeline.getId();
   }
   
@@ -506,34 +535,4 @@ public class PipelineExecutionService {
     PipelineLogger.info("Pipeline execution completed: " + pipelineExecutionId);
   }
   
-  /**
-   * Saves a script for a job directly to the database.
-   * Since we don't have a dedicated JobScriptRepository yet, we're implementing this method
-   * directly in the service.
-   *
-   * @param jobId  the job ID
-   * @param script the script content
-   */
-  @Transactional
-  private void saveJobScript(UUID jobId, String script) {
-    if (script == null || script.trim().isEmpty()) {
-      PipelineLogger.warn("Attempted to save empty script for job: " + jobId);
-      return;
-    }
-    
-    try {
-      // Execute a direct SQL query to insert the script
-      // In a real implementation, this should use a proper repository
-      String insertQuery = "INSERT INTO job_scripts (job_id, script) VALUES (?, ?)";
-      
-      // Use JdbcTemplate or EntityManager to execute the query
-      // For demonstration purposes, we'll just log that we would save the script
-      PipelineLogger.info("Would save script for job " + jobId + ": " + script.substring(0, Math.min(30, script.length())) + "...");
-      
-      // In a real implementation, you would include code similar to:
-      // jdbcTemplate.update(insertQuery, jobId, script);
-    } catch (Exception e) {
-      PipelineLogger.error("Failed to save script for job " + jobId + ": " + e.getMessage());
-    }
-  }
 }
