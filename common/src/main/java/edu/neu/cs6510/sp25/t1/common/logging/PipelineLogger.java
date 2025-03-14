@@ -18,6 +18,9 @@ public class PipelineLogger {
   private static final Logger logger = LoggerFactory.getLogger("cicd-logger"); //  Set logger name explicitly
   private static final String LOG_FILE_PATH = "logs/pipeline_system.log"; // Log file path
 
+  // Verbose mode flag
+  private static boolean verbose = false;
+
   static {
     configureLogging();
   }
@@ -53,6 +56,18 @@ public class PipelineLogger {
     rootLogger.setLevel(Level.DEBUG); // Capture DEBUG and above
     rootLogger.addAppender(consoleAppender);
     rootLogger.addAppender(fileAppender);
+  }
+
+  /**
+   * Enables or disables verbose logging.
+   *
+   * @param enableVerbose If true, sets logging level to DEBUG; otherwise, INFO.
+   */
+  public static void setVerbose(boolean enableVerbose) {
+    verbose = enableVerbose;
+    LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    ch.qos.logback.classic.Logger rootLogger = context.getLogger("cicd-logger");
+    rootLogger.setLevel(enableVerbose ? Level.DEBUG : Level.INFO);
   }
 
   /**

@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.utils;
 
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
@@ -23,7 +24,7 @@ public class YamlPipelineUtils {
    * @return Parsed YAML as a Map.
    * @throws IOException If reading the file fails.
    */
-  public static Map<String, Object> readPipelineYaml(String filePath) throws IOException {
+  public static Map<String, Object> readPipelineYaml(String filePath) throws IOException, ValidationException {
     Path path = Paths.get(filePath).isAbsolute()
             ? Paths.get(filePath)
             : Paths.get(System.getProperty("user.dir")).resolve(filePath).normalize();
@@ -32,7 +33,8 @@ public class YamlPipelineUtils {
 
     if (!Files.exists(path)) {
       PipelineLogger.error("Pipeline configuration file not found: " + filePath);
-      throw new IllegalArgumentException("Pipeline configuration file not found: " + filePath);
+//      throw new IllegalArgumentException("Pipeline configuration file not found: " + filePath);
+        throw new ValidationException(filePath, 1, 1, "Pipeline configuration file not found");
     }
 
     try (FileInputStream fileInputStream = new FileInputStream(path.toFile())) {

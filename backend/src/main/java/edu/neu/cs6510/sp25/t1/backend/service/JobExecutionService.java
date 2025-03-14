@@ -1,7 +1,5 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
-import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
@@ -18,8 +16,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import edu.neu.cs6510.sp25.t1.backend.error.WorkerCommunicationException;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.service.event.JobCompletedEvent;
@@ -27,6 +28,7 @@ import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
+import edu.neu.cs6510.sp25.t1.backend.error.GlobalExceptionHandler;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -120,10 +122,10 @@ public class JobExecutionService {
       response = restTemplate.postForEntity(workerExecuteUrl, request, String.class);
     } catch (ResourceAccessException e) {
       PipelineLogger.error("Worker is unreachable: " + e.getMessage());
-      throw new RuntimeException("Worker is unreachable: " + e.getMessage());
+      throw new WorkerCommunicationException("Worker is unreachable: " + e.getMessage());
     } catch (Exception e) {
       PipelineLogger.error("Error sending request to worker: " + e.getMessage());
-      throw new RuntimeException("Error communicating with worker: " + e.getMessage());
+      throw new WorkerCommunicationException("Error communicating with worker: " + e.getMessage());
     }
 
     if (!response.getStatusCode().is2xxSuccessful()) {
