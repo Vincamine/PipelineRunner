@@ -1,5 +1,7 @@
 package edu.neu.cs6510.sp25.t1.worker.execution;
 
+import edu.neu.cs6510.sp25.t1.worker.error.DockerExecutionException;
+import edu.neu.cs6510.sp25.t1.worker.error.JobExecutionConfigException;
 import org.springframework.stereotype.Component;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -27,23 +29,33 @@ public class DockerExecutor {
   public ExecutionStatus execute(JobExecutionDTO jobExecution) {
     try {
       JobDTO job = jobExecution.getJob();
+      if (job == null) {
+        throw new JobExecutionConfigException("Job details are missing");
+      }
       String dockerImage = job.getDockerImage();
       List<String> script = job.getScript();
+      if (script == null || script.isEmpty()) {
+        throw new JobExecutionConfigException("Script commands are missing");
+      }
 
       // Build the Docker command
       String[] command = buildDockerCommand(dockerImage, script);
       log.info("Executing Docker command: {}", String.join(" ", command));
+      if (dockerImage == null || dockerImage.trim().isEmpty()) {
+        throw new JobExecutionConfigException("Docker image is not specified");
+      }
 
       ProcessBuilder processBuilder = new ProcessBuilder(command);
       processBuilder.redirectErrorStream(true);
       Process process = processBuilder.start();
 
       // Capture logs
+      StringBuilder outputLogs = new StringBuilder();
       try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-        StringBuilder outputLogs = new StringBuilder();
         String line;
         while ((line = reader.readLine()) != null) {
           outputLogs.append(line).append("\n");
+          log.debug("Docker output: {}", line);
         }
         log.info("Docker Execution Logs:\n{}", outputLogs);
       }
@@ -51,11 +63,20 @@ public class DockerExecutor {
       int exitCode = process.waitFor();
       log.info("Docker job exited with code: {}", exitCode);
 
-      return exitCode == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
+      if (exitCode != 0) {
+        String errorMessage = "Docker execution failed with exit code: " + exitCode;
+        log.error("❌ {}", errorMessage);
+        log.error("Execution logs: {}", outputLogs.toString());
+        throw new DockerExecutionException(errorMessage + "\nLogs: " + outputLogs.toString(), exitCode);
+      }
 
+      return ExecutionStatus.SUCCESS;
+
+    } catch (DockerExecutionException | JobExecutionConfigException e) {
+      throw e;
     } catch (Exception e) {
       log.error("❌ Docker execution failed: {}", e.getMessage(), e);
-      return ExecutionStatus.FAILED;
+      throw new DockerExecutionException("Docker execution failed: " + e.getMessage(), e);
     }
   }
 
