@@ -51,6 +51,9 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok:1.18.36")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
 
+    //adding docker library
+    implementation("com.github.docker-java:docker-java:3.2.13")
+    implementation("com.github.docker-java:docker-java-transport-httpclient5:3.2.13")
 
 }
 
