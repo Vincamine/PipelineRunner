@@ -27,7 +27,7 @@ public class YamlPipelineUtils {
     Path path = Paths.get(filePath).isAbsolute()
             ? Paths.get(filePath)
             : Paths.get(System.getProperty("user.dir")).resolve(filePath).normalize();
-    PipelineLogger.info("🔍 Checking pipeline file: " + path);
+    PipelineLogger.info("Checking pipeline file: " + path);
 
 
     if (!Files.exists(path)) {
