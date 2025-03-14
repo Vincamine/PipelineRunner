@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import edu.neu.cs6510.sp25.t1.backend.error.PipelineExecutionException;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,13 +63,13 @@ public class PipelineExecutionService {
   public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request) {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
-    // Resolve and validate the pipeline file path
-    Path resolvedPath = resolveAndValidatePipelinePath(request.getFilePath());
-
-    // Parse and validate the pipeline YAML configuration
-    Map<String, Object> pipelineConfig = parseAndValidatePipelineYaml(resolvedPath.toString());
-
     try {
+      // Resolve and validate the pipeline file path
+      Path resolvedPath = resolveAndValidatePipelinePath(request.getFilePath());
+
+      // Parse and validate the pipeline YAML configuration
+      Map<String, Object> pipelineConfig = parseAndValidatePipelineYaml(resolvedPath.toString());
+
       // Create and save the pipeline execution entity
       PipelineLogger.info("Preparing to save pipeline execution to DB...");
       PipelineExecutionEntity pipelineExecution = createPipelineExecution(request);
@@ -76,16 +77,21 @@ public class PipelineExecutionService {
       // Save the pipeline execution to the database
       pipelineExecution = savePipelineExecution(pipelineExecution);
 
-      // Create and save stage executions with their jobs
-      createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
+      try {
+        // Create and save stage executions with their jobs
+        createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
 
-      // Now that all entities are saved, execute the stages
-      executeStagesSequentially(pipelineExecution.getId());
+        // Now that all entities are saved, execute the stages
+        executeStagesSequentially(pipelineExecution.getId());
 
-      return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
+        return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
+      } catch (Exception e) {
+        PipelineLogger.error("Failed during pipeline execution setup: " + e.getMessage());
+        throw new PipelineExecutionException("Failed to setup pipeline execution: " + e.getMessage(), e);
+      }
     } catch (Exception e) {
       PipelineLogger.error("Failed to start pipeline execution: " + e.getMessage());
-      throw new RuntimeException("Pipeline execution failed: " + e.getMessage());
+      throw new PipelineExecutionException("Failed to start pipeline: " + e.getMessage(), e);
     }
   }
 
