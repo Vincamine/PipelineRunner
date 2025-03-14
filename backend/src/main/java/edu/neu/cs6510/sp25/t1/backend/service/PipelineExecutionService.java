@@ -19,7 +19,6 @@ import edu.neu.cs6510.sp25.t1.backend.database.entity.StageEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
-import edu.neu.cs6510.sp25.t1.backend.database.repository.JobScriptRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
@@ -48,7 +47,6 @@ public class PipelineExecutionService {
   private final StageRepository stageRepository;
   private final JobExecutionRepository jobExecutionRepository;
   private final JobRepository jobRepository;
-  private final JobScriptRepository jobScriptRepository;
 
   /**
    * Retrieves a pipeline execution by ID.
@@ -278,7 +276,7 @@ public class PipelineExecutionService {
         Object scriptObj = jobConfig.get("script");
         if (scriptObj instanceof String) {
           // Single script line
-          jobScriptRepository.saveScript(job.getId(), (String) scriptObj);
+          saveJobScript(job.getId(), (String) scriptObj);
         } else if (scriptObj instanceof List) {
           // Multiple script lines
           List<String> scripts = ((List<?>) scriptObj).stream()
@@ -287,7 +285,7 @@ public class PipelineExecutionService {
               .toList();
           
           for (String script : scripts) {
-            jobScriptRepository.saveScript(job.getId(), script);
+            saveJobScript(job.getId(), script);
           }
         }
       }
@@ -437,6 +435,9 @@ public class PipelineExecutionService {
       return JobExecutionEntity.builder()
               .stageExecution(stageExecution)
               .jobId(job.getId())  // Use actual job ID
+              .commitHash(stageExecution.getCommitHash())  // Use commit hash from stage execution
+              .isLocal(stageExecution.getIsLocal())        // Use isLocal from stage execution
+              .allowsFailure(job.getAllowFailure())        // Use allowFailure from job entity
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
