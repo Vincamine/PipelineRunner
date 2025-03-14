@@ -19,6 +19,7 @@ import edu.neu.cs6510.sp25.t1.backend.database.entity.StageEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobScriptRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
