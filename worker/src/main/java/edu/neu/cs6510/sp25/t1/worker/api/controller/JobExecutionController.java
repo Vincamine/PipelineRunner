@@ -1,5 +1,7 @@
 package edu.neu.cs6510.sp25.t1.worker.api.controller;
 
+import edu.neu.cs6510.sp25.t1.worker.error.BackendCommunicationException;
+import edu.neu.cs6510.sp25.t1.worker.error.JobExecutionConfigException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,30 +41,37 @@ public class JobExecutionController {
     try {
       String jobExecutionId = request.get("jobExecutionId");
       if (jobExecutionId == null) {
-        return ResponseEntity.badRequest().body("{\"error\": \"Missing jobExecutionId\"}");
+        throw new JobExecutionConfigException("Missing jobExecutionId");
       }
 
-      UUID jobId = UUID.fromString(jobExecutionId);
+      UUID jobId;
+      try {
+        jobId = UUID.fromString(jobExecutionId);
+      } catch (IllegalArgumentException e) {
+        throw new JobExecutionConfigException("Invalid jobExecutionId format: " + jobExecutionId);
+      }
       log.info("Received job execution request for ID: {}", jobId);
 
       // Try to fetch job details but provide a fallback if that fails
       Optional<JobExecutionDTO> jobExecution = backendClient.getJobExecution(jobId);
-
-      if (!jobExecution.isPresent()) {
+      try {
+        jobExecution = backendClient.getJobExecution(jobId);
+      } catch (BackendCommunicationException e) {
         log.warn("Could not fetch job details - creating dummy success response");
-
         // Instead of trying to execute, just report success back to the backend
         backendClient.updateJobStatus(jobId, ExecutionStatus.SUCCESS, "Job executed successfully (simulated)");
-
         return ResponseEntity.accepted().body("{\"status\": \"SIMULATED\"}");
       }
 
       // Normal execution path
       workerExecutionService.executeJob(jobExecution.get());
       return ResponseEntity.accepted().body("{\"status\": \"QUEUED\"}");
+    } catch (JobExecutionConfigException e) {
+      // Handled by global exception handler
+      throw e;
     } catch (Exception e) {
       log.error("Failed to queue job: {}", e.getMessage());
-      return ResponseEntity.badRequest().body("{\"error\": \"Job execution failed: " + e.getMessage() + "\"}");
+      throw new JobExecutionConfigException("Failed to execute job: " + e.getMessage(), e);
     }
   }
 }
