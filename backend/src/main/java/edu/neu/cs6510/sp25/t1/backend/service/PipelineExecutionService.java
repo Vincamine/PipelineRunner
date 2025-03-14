@@ -278,7 +278,7 @@ public class PipelineExecutionService {
         Object scriptObj = jobConfig.get("script");
         if (scriptObj instanceof String) {
           // Single script line
-          saveJobScript(job.getId(), (String) scriptObj);
+          jobScriptRepository.saveScript(job.getId(), (String) scriptObj);
         } else if (scriptObj instanceof List) {
           // Multiple script lines
           List<String> scripts = ((List<?>) scriptObj).stream()
@@ -287,7 +287,7 @@ public class PipelineExecutionService {
               .toList();
           
           for (String script : scripts) {
-            saveJobScript(job.getId(), script);
+            jobScriptRepository.saveScript(job.getId(), script);
           }
         }
       }
