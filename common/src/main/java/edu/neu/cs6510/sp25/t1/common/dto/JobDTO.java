@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.common.dto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +32,6 @@ public class JobDTO {
   private List<UUID> dependencies;
   private boolean allowFailure;
   private List<String> artifacts;
-  private LocalDateTime createdAt;
-  private LocalDateTime updatedAt;
+  private Instant createdAt;
+  private Instant updatedAt;
 }
