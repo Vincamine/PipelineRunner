@@ -48,6 +48,7 @@ public class PipelineExecutionService {
   private final StageRepository stageRepository;
   private final JobExecutionRepository jobExecutionRepository;
   private final JobRepository jobRepository;
+  private final JobScriptRepository jobScriptRepository;
 
   /**
    * Retrieves a pipeline execution by ID.
