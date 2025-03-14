@@ -41,10 +41,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PipelineExecutionService {
   private final PipelineExecutionRepository pipelineExecutionRepository;
+  private final PipelineRepository pipelineRepository;
   private final PipelineExecutionMapper pipelineExecutionMapper;
   private final StageExecutionService stageExecutionService;
   private final StageExecutionRepository stageExecutionRepository;
+  private final StageRepository stageRepository;
   private final JobExecutionRepository jobExecutionRepository;
+  private final JobRepository jobRepository;
+  private final JobScriptRepository jobScriptRepository;
 
   /**
    * Retrieves a pipeline execution by ID.
@@ -377,11 +381,17 @@ public class PipelineExecutionService {
               .findFirst()
               .orElseThrow(() -> new RuntimeException("Stage definition not found for order: " + finalOrder));
       
+      // Get pipeline execution to retrieve commit hash
+      PipelineExecutionEntity pipelineExec = pipelineExecutionRepository.findById(pipelineExecutionId)
+              .orElseThrow(() -> new RuntimeException("Pipeline execution not found"));
+      
       // Create the stage execution entity
       StageExecutionEntity stageExecution = StageExecutionEntity.builder()
               .pipelineExecutionId(pipelineExecutionId)
               .stageId(matchingStage.getId())  // Use actual stage ID 
               .executionOrder(order)
+              .commitHash(pipelineExec.getCommitHash())  // Use commit hash from pipeline execution
+              .isLocal(pipelineExec.getIsLocal())        // Use isLocal from pipeline execution
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
