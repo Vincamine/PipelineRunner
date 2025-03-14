@@ -239,7 +239,7 @@ public class PipelineExecutionService {
     List<Map<String, Object>> jobsConfig = (List<Map<String, Object>>) stageConfig.get("jobs");
 
     if (jobsConfig == null || jobsConfig.isEmpty()) {
-      PipelineLogger.warn("⚠ No jobs defined in YAML for stage: " + stageExecution.getId());
+      PipelineLogger.warn("No jobs defined in YAML for stage: " + stageExecution.getId());
       return List.of();
     }
 
