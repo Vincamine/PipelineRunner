@@ -69,9 +69,15 @@ public class PipelineExecutionService {
     Map<String, Object> pipelineConfig = parseAndValidatePipelineYaml(resolvedPath.toString());
 
     try {
+      // Create or get pipeline entity first (ensuring it exists in pipelines table)
+      UUID pipelineId = createOrGetPipelineEntity(request, pipelineConfig);
+      
+      // Create pipeline stages and jobs from the configuration
+      createPipelineDefinition(pipelineId, pipelineConfig);
+      
       // Create and save the pipeline execution entity
       PipelineLogger.info("Preparing to save pipeline execution to DB...");
-      PipelineExecutionEntity pipelineExecution = createPipelineExecution(request);
+      PipelineExecutionEntity pipelineExecution = createPipelineExecution(request, pipelineId);
 
       // Save the pipeline execution to the database
       pipelineExecution = savePipelineExecution(pipelineExecution);
