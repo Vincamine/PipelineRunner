@@ -436,12 +436,12 @@ public class PipelineExecutionService {
               .stageExecution(stageExecution)
               .jobId(job.getId())  // Use actual job ID
               .commitHash(stageExecution.getCommitHash())  // Use commit hash from stage execution
-              .isLocal(stageExecution.getIsLocal())        // Use isLocal from stage execution
-              .allowsFailure(job.getAllowFailure())        // Use allowFailure from job entity
+              .isLocal(stageExecution.isLocal())        // Use isLocal from stage execution
+              .allowsFailure(job.isAllowFailure())        // Use allowFailure from job entity
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
-    }).toList();
+    }).collect(java.util.stream.Collectors.toList());
   }
 
   /**
