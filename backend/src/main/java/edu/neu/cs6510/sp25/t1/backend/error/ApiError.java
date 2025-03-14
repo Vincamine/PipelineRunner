@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.backend.utils;
+package edu.neu.cs6510.sp25.t1.backend.error;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
