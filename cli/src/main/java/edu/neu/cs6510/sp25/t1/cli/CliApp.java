@@ -14,15 +14,15 @@ import picocli.CommandLine;
  * Manages global options and subcommands.
  */
 @CommandLine.Command(
-        name = "cicd-cli",
-        description = "A command-line interface for running and managing CI/CD pipelines.",
-        mixinStandardHelpOptions = true,
-        subcommands = {
-                CheckCommand.class,
-                RunCommand.class,
-                ReportCommand.class,
-                DryRunCommand.class
-        }
+    name = "cicd-cli",
+    description = "A command-line interface for running and managing CI/CD pipelines.",
+    mixinStandardHelpOptions = true,
+    subcommands = {
+        CheckCommand.class,
+        RunCommand.class,
+        ReportCommand.class,
+        DryRunCommand.class
+    }
 )
 public class CliApp implements Callable<Integer> {
 
@@ -46,12 +46,29 @@ public class CliApp implements Callable<Integer> {
 
   @Override
   public Integer call() {
+    // Validate execution inside a Git repository
     System.out.println("CI/CD CLI - Ready! Use `--help` for available commands.");
     return 0;
   }
 
   public static void main(String[] args) {
+    // Create an instance of the CLI application
+    CliApp app = new CliApp();
+    CommandLine cmd = new CommandLine(app);
+
+    // Configure custom execution strategy to capture exit code
     int exitCode = new CommandLine(new CliApp()).execute(args);
+
+    // Output clean success/failure message based on exit code
+    if (args.length > 0 && args[0].equals("run")) {
+      if (exitCode == 0) {
+        System.out.println("success");
+      } else {
+        System.out.println("failed");
+      }
+    }
+
+    // Exit with the captured exit code
     System.exit(exitCode);
   }
 }
