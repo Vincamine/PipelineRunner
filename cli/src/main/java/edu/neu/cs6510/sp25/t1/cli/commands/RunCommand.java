@@ -18,8 +18,8 @@ import picocli.CommandLine;
  * Handles the `run` command for executing a CI/CD pipeline.
  */
 @CommandLine.Command(
-        name = "run",
-        description = "Runs a CI/CD pipeline after validating its configuration."
+  name = "run",
+  description = "Runs a CI/CD pipeline after validating its configuration."
 )
 public class RunCommand implements Callable<Integer> {
 
