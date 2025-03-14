@@ -299,6 +299,15 @@ public class PipelineExecutionService {
    */
   @SuppressWarnings("unchecked")
   private void createJobDefinitions(UUID stageId, Map<String, Object> stageConfig) {
+    // Verify the stage exists first
+    StageEntity stage = stageRepository.findById(stageId)
+        .orElseThrow(() -> {
+            PipelineLogger.error("Stage not found with ID: " + stageId);
+            return new RuntimeException("Stage not found: " + stageId);
+        });
+    
+    PipelineLogger.info("Found stage entity with ID: " + stageId + ", name: " + stage.getName());
+    
     List<Map<String, Object>> jobsConfig = (List<Map<String, Object>>) stageConfig.get("jobs");
     
     if (jobsConfig == null || jobsConfig.isEmpty()) {
@@ -306,15 +315,27 @@ public class PipelineExecutionService {
       return;
     }
     
+    PipelineLogger.info("Found " + jobsConfig.size() + " jobs in stage configuration");
+    
     for (Map<String, Object> jobConfig : jobsConfig) {
       String jobName = (String) jobConfig.get("name");
+      PipelineLogger.info("Creating job with name: " + jobName + " for stage: " + stageId);
+      
       String dockerImage = jobConfig.containsKey("image") 
           ? (String) jobConfig.get("image") 
           : "docker.io/library/alpine:latest";
       
-      boolean allowFailure = jobConfig.containsKey("allow_failure") 
-          ? (boolean) jobConfig.get("allow_failure") 
-          : false;
+      boolean allowFailure = false;
+      if (jobConfig.containsKey("allow_failure")) {
+        Object allowFailureObj = jobConfig.get("allow_failure");
+        if (allowFailureObj instanceof Boolean) {
+          allowFailure = (Boolean) allowFailureObj;
+        } else if (allowFailureObj instanceof String) {
+          allowFailure = Boolean.parseBoolean((String) allowFailureObj);
+        }
+      }
+      
+      PipelineLogger.info("Job details - Name: " + jobName + ", Docker image: " + dockerImage + ", Allow failure: " + allowFailure);
       
       // Create and save the job entity
       JobEntity job = JobEntity.builder()
@@ -324,26 +345,44 @@ public class PipelineExecutionService {
           .allowFailure(allowFailure)
           .build();
       
-      job = jobRepository.save(job);
-      jobRepository.flush();
-      
-      // Handle job scripts if present
-      if (jobConfig.containsKey("script")) {
-        Object scriptObj = jobConfig.get("script");
-        if (scriptObj instanceof String) {
-          // Single script line
-          jobScriptRepository.saveScript(job.getId(), (String) scriptObj);
-        } else if (scriptObj instanceof List) {
-          // Multiple script lines
-          List<String> scripts = ((List<?>) scriptObj).stream()
-              .filter(s -> s instanceof String)
-              .map(s -> (String) s)
-              .toList();
-          
-          for (String script : scripts) {
-            jobScriptRepository.saveScript(job.getId(), script);
-          }
+      try {
+        job = jobRepository.save(job);
+        jobRepository.flush();
+        
+        // Verify the job was saved
+        if (jobRepository.existsById(job.getId())) {
+          PipelineLogger.info("Successfully created job with ID: " + job.getId());
+        } else {
+          PipelineLogger.error("Failed to verify job was saved: " + job.getId());
         }
+        
+        // Handle job scripts if present
+        if (jobConfig.containsKey("script")) {
+          Object scriptObj = jobConfig.get("script");
+          if (scriptObj instanceof String) {
+            // Single script line
+            String script = (String) scriptObj;
+            PipelineLogger.info("Adding script to job " + job.getId() + ": " + 
+                (script.length() > 30 ? script.substring(0, 30) + "..." : script));
+            jobScriptRepository.saveScript(job.getId(), script);
+          } else if (scriptObj instanceof List) {
+            // Multiple script lines
+            List<String> scripts = ((List<?>) scriptObj).stream()
+                .filter(s -> s instanceof String)
+                .map(s -> (String) s)
+                .toList();
+            
+            PipelineLogger.info("Adding " + scripts.size() + " script lines to job " + job.getId());
+            for (String script : scripts) {
+              jobScriptRepository.saveScript(job.getId(), script);
+            }
+          }
+        } else {
+          PipelineLogger.warn("No scripts defined for job: " + job.getId());
+        }
+      } catch (Exception e) {
+        PipelineLogger.error("Error saving job entity: " + e.getMessage(), e);
+        throw e;
       }
     }
   }
