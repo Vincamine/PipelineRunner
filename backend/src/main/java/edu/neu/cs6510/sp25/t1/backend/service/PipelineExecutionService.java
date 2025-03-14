@@ -100,27 +100,24 @@ public class PipelineExecutionService {
         // Create and save stage executions with their jobs
         createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
 
-      // Verify all entities were properly saved by querying count from each table
-      try {
-        // Check pipeline exists
-        if (!pipelineRepository.existsById(pipelineId)) {
-          PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
-        } else {
-          PipelineLogger.info("Successfully verified pipeline entity: " + pipelineId);
-        }
-        
-        // Check stages exist
-        List<StageEntity> stages = stageRepository.findByPipelineId(pipelineId);
-        PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
-        
-        // Check jobs exist for each stage
-        for (StageEntity stage : stages) {
-          List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
-          PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
-        }
-      } catch (Exception e) {
-        PipelineLogger.error("Error verifying saved entities: " + e.getMessage());
+
+      // Check pipeline exists
+      if (!pipelineRepository.existsById(pipelineId)) {
+        PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
+      } else {
+        PipelineLogger.info("Successfully verified pipeline entity: " + pipelineId);
       }
+
+      // Check stages exist
+      List<StageEntity> stages = stageRepository.findByPipelineId(pipelineId);
+      PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
+
+      // Check jobs exist for each stage
+      for (StageEntity stage : stages) {
+        List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
+        PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
+      }
+
       
       // Now that all entities are saved, execute the stages
       executeStagesSequentially(pipelineExecution.getId());
