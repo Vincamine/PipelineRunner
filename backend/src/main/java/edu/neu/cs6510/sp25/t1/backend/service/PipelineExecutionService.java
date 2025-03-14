@@ -248,7 +248,6 @@ public class PipelineExecutionService {
    * @param pipelineId the pipeline ID
    * @param pipelineConfig the parsed pipeline configuration
    */
-  @Transactional
   protected void createPipelineDefinition(UUID pipelineId, Map<String, Object> pipelineConfig) {
     PipelineLogger.info("Creating stage and job definitions for pipeline: " + pipelineId);
     
@@ -455,7 +454,6 @@ public class PipelineExecutionService {
    * @param pipelineExecutionId ID of the pipeline execution
    * @param pipelineConfig      Parsed pipeline configuration
    */
-  @Transactional
   protected void createAndSaveStageExecutions(UUID pipelineExecutionId, Map<String, Object> pipelineConfig) {
     Object stagesObj = pipelineConfig.get("stages");
 
