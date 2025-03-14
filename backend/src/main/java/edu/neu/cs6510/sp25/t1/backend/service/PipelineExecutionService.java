@@ -96,12 +96,34 @@ public class PipelineExecutionService {
       // Create and save stage executions with their jobs
       createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
 
+      // Verify all entities were properly saved by querying count from each table
+      try {
+        // Check pipeline exists
+        if (!pipelineRepository.existsById(pipelineId)) {
+          PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
+        } else {
+          PipelineLogger.info("Successfully verified pipeline entity: " + pipelineId);
+        }
+        
+        // Check stages exist
+        List<StageEntity> stages = stageRepository.findByPipelineId(pipelineId);
+        PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
+        
+        // Check jobs exist for each stage
+        for (StageEntity stage : stages) {
+          List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
+          PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
+        }
+      } catch (Exception e) {
+        PipelineLogger.error("Error verifying saved entities: " + e.getMessage());
+      }
+      
       // Now that all entities are saved, execute the stages
       executeStagesSequentially(pipelineExecution.getId());
 
       return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
     } catch (Exception e) {
-      PipelineLogger.error("Failed to start pipeline execution: " + e.getMessage());
+      PipelineLogger.error("Failed to start pipeline execution: " + e.getMessage() + " | " + e);
       throw new RuntimeException("Pipeline execution failed: " + e.getMessage());
     }
   }
@@ -150,7 +172,6 @@ public class PipelineExecutionService {
    * @param pipelineConfig the pipeline configuration from YAML
    * @return the ID of the pipeline entity
    */
-  @Transactional
   protected UUID createOrGetPipelineEntity(PipelineExecutionRequest request, Map<String, Object> pipelineConfig) {
     // Debug log the request
     PipelineLogger.info("createOrGetPipelineEntity called with pipelineId: " + request.getPipelineId());
