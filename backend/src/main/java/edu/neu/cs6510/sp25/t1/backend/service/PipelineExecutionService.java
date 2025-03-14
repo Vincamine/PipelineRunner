@@ -231,6 +231,15 @@ public class PipelineExecutionService {
   protected void createPipelineDefinition(UUID pipelineId, Map<String, Object> pipelineConfig) {
     PipelineLogger.info("Creating stage and job definitions for pipeline: " + pipelineId);
     
+    // Verify the pipeline exists first
+    PipelineEntity pipeline = pipelineRepository.findById(pipelineId)
+        .orElseThrow(() -> {
+            PipelineLogger.error("Pipeline not found with ID: " + pipelineId);
+            return new RuntimeException("Pipeline not found: " + pipelineId);
+        });
+    
+    PipelineLogger.info("Found pipeline entity with ID: " + pipelineId + ", name: " + pipeline.getName());
+    
     Object stagesObj = pipelineConfig.get("stages");
     if (!(stagesObj instanceof List<?> rawStages)) {
       PipelineLogger.error("Invalid pipeline structure: 'stages' must be a list.");
@@ -247,9 +256,13 @@ public class PipelineExecutionService {
       throw new RuntimeException("Pipeline must contain at least one valid stage.");
     }
     
+    PipelineLogger.info("Found " + stages.size() + " stages in pipeline configuration");
+    
     for (int order = 0; order < stages.size(); order++) {
       Map<String, Object> stageConfig = stages.get(order);
       String stageName = (String) stageConfig.get("name");
+      
+      PipelineLogger.info("Creating stage with name: " + stageName + ", order: " + order);
       
       // Create and save the stage entity
       StageEntity stage = StageEntity.builder()
@@ -258,11 +271,23 @@ public class PipelineExecutionService {
           .executionOrder(order)
           .build();
       
-      stage = stageRepository.save(stage);
-      stageRepository.flush();
-      
-      // Create and save job entities for this stage
-      createJobDefinitions(stage.getId(), stageConfig);
+      try {
+        stage = stageRepository.save(stage);
+        stageRepository.flush();
+        
+        // Verify the stage was saved
+        if (stageRepository.existsById(stage.getId())) {
+          PipelineLogger.info("Successfully created stage with ID: " + stage.getId());
+        } else {
+          PipelineLogger.error("Failed to verify stage was saved: " + stage.getId());
+        }
+        
+        // Create and save job entities for this stage
+        createJobDefinitions(stage.getId(), stageConfig);
+      } catch (Exception e) {
+        PipelineLogger.error("Error saving stage entity: " + e.getMessage());
+        throw e;
+      }
     }
   }
   
