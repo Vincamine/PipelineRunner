@@ -381,7 +381,7 @@ public class PipelineExecutionService {
           PipelineLogger.warn("No scripts defined for job: " + job.getId());
         }
       } catch (Exception e) {
-        PipelineLogger.error("Error saving job entity: " + e.getMessage(), e);
+        PipelineLogger.error("Error saving job entity: " + e.getMessage() + " | " + e);
         throw e;
       }
     }
