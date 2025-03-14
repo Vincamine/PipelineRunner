@@ -437,7 +437,7 @@ public class PipelineExecutionService {
               .jobId(job.getId())  // Use actual job ID
               .commitHash(stageExecution.getCommitHash())  // Use commit hash from stage execution
               .isLocal(stageExecution.isLocal())        // Use isLocal from stage execution
-              .allowsFailure(job.isAllowFailure())        // Use allowFailure from job entity
+              .allowFailure(job.isAllowFailure())        // Use allowFailure from job entity
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
