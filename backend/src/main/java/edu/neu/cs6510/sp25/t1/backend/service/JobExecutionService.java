@@ -308,6 +308,10 @@ public class JobExecutionService {
     jobDTO.setDockerImage(jobEntity.getDockerImage());
     jobDTO.setAllowFailure(jobEntity.isAllowFailure());
     jobDTO.setCreatedAt(jobEntity.getCreatedAt());
+    jobDTO.setUpdatedAt(jobEntity.getUpdatedAt());
+    jobDTO.setScript(jobEntity.getScript());
+    jobDTO.setDependencies(jobEntity.getDependencies());
+    // job_artifacts needs re-work
 
     dto.setJob(jobDTO);
 
