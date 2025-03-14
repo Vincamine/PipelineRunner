@@ -9,9 +9,9 @@ spring:
     allow-circular-references: true  # Allow circular references in Spring beans
 
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:54321/cicd_db}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cicd_db}
     username: ${DATABASE_USER:postgres}
-    password: ${DATABASE_PASSWORD:Li930227}
+    password: ${DATABASE_PASSWORD:postgress}
     driver-class-name: org.postgresql.Driver
 
   jpa:
