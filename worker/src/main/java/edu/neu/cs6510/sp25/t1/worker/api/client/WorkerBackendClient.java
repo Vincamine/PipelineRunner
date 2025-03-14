@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.worker.api.client;
 
+import edu.neu.cs6510.sp25.t1.worker.error.BackendCommunicationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -38,7 +39,7 @@ public class WorkerBackendClient {
       return Optional.ofNullable(restTemplate.getForObject(url, JobExecutionDTO.class));
     } catch (RestClientException e) {
       log.error("Failed to fetch job execution details for {}: {}", jobExecutionId, e.getMessage());
-      return Optional.empty();
+      throw new BackendCommunicationException("Failed to fetch job execution details: " + e.getMessage(), e);
     }
   }
 
@@ -58,6 +59,7 @@ public class WorkerBackendClient {
       log.info("Job {} status updated to {}.", jobExecutionId, status);
     } catch (RestClientException e) {
       log.error("Failed to update job {} status: {}", jobExecutionId, e.getMessage());
+      throw new BackendCommunicationException("Failed to update job status: " + e.getMessage(), e);
     }
   }
 }
