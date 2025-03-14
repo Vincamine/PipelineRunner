@@ -133,14 +133,166 @@ public class PipelineExecutionService {
   }
 
   /**
+   * Creates or retrieves an existing pipeline entity based on the request.
+   *
+   * @param request the pipeline execution request 
+   * @param pipelineConfig the pipeline configuration from YAML
+   * @return the ID of the pipeline entity
+   */
+  @Transactional
+  protected UUID createOrGetPipelineEntity(PipelineExecutionRequest request, Map<String, Object> pipelineConfig) {
+    // Check if a pipeline ID was provided in the request
+    if (request.getPipelineId() != null) {
+      // Check if the pipeline exists in the database
+      if (pipelineRepository.existsById(request.getPipelineId())) {
+        PipelineLogger.info("Using existing pipeline with ID: " + request.getPipelineId());
+        return request.getPipelineId();
+      }
+    }
+    
+    // No valid pipeline ID provided or pipeline doesn't exist, create a new one
+    PipelineLogger.info("Creating new pipeline entity from YAML configuration");
+    
+    // Extract pipeline properties from config
+    String name = pipelineConfig.containsKey("name") 
+        ? (String) pipelineConfig.get("name") 
+        : "pipeline-" + UUID.randomUUID().toString().substring(0, 8);
+        
+    String repoUrl = pipelineConfig.containsKey("repository") 
+        ? (String) pipelineConfig.get("repository") 
+        : "local-repository";
+        
+    String branch = pipelineConfig.containsKey("branch") 
+        ? (String) pipelineConfig.get("branch") 
+        : "main";
+    
+    // Create and save pipeline entity
+    PipelineEntity pipeline = PipelineEntity.builder()
+        .name(name)
+        .repositoryUrl(repoUrl)
+        .branch(branch)
+        .commitHash(request.getCommitHash())
+        .build();
+    
+    pipeline = pipelineRepository.save(pipeline);
+    pipelineRepository.flush();
+    
+    PipelineLogger.info("Created new pipeline entity with ID: " + pipeline.getId());
+    return pipeline.getId();
+  }
+  
+  /**
+   * Creates stage and job entities based on pipeline configuration.
+   *
+   * @param pipelineId the pipeline ID
+   * @param pipelineConfig the parsed pipeline configuration
+   */
+  @Transactional
+  protected void createPipelineDefinition(UUID pipelineId, Map<String, Object> pipelineConfig) {
+    PipelineLogger.info("Creating stage and job definitions for pipeline: " + pipelineId);
+    
+    Object stagesObj = pipelineConfig.get("stages");
+    if (!(stagesObj instanceof List<?> rawStages)) {
+      PipelineLogger.error("Invalid pipeline structure: 'stages' must be a list.");
+      throw new RuntimeException("Invalid pipeline configuration: 'stages' key is missing or incorrect.");
+    }
+    
+    List<Map<String, Object>> stages = rawStages.stream()
+        .filter(item -> item instanceof Map)
+        .map(item -> (Map<String, Object>) item)
+        .toList();
+    
+    if (stages.isEmpty()) {
+      PipelineLogger.error("No valid stages found in pipeline configuration!");
+      throw new RuntimeException("Pipeline must contain at least one valid stage.");
+    }
+    
+    for (int order = 0; order < stages.size(); order++) {
+      Map<String, Object> stageConfig = stages.get(order);
+      String stageName = (String) stageConfig.get("name");
+      
+      // Create and save the stage entity
+      StageEntity stage = StageEntity.builder()
+          .pipelineId(pipelineId)
+          .name(stageName)
+          .executionOrder(order)
+          .build();
+      
+      stage = stageRepository.save(stage);
+      stageRepository.flush();
+      
+      // Create and save job entities for this stage
+      createJobDefinitions(stage.getId(), stageConfig);
+    }
+  }
+  
+  /**
+   * Creates job entities based on stage configuration.
+   *
+   * @param stageId the stage ID
+   * @param stageConfig the stage configuration from YAML
+   */
+  @SuppressWarnings("unchecked")
+  private void createJobDefinitions(UUID stageId, Map<String, Object> stageConfig) {
+    List<Map<String, Object>> jobsConfig = (List<Map<String, Object>>) stageConfig.get("jobs");
+    
+    if (jobsConfig == null || jobsConfig.isEmpty()) {
+      PipelineLogger.warn("No jobs defined in YAML for stage: " + stageId);
+      return;
+    }
+    
+    for (Map<String, Object> jobConfig : jobsConfig) {
+      String jobName = (String) jobConfig.get("name");
+      String dockerImage = jobConfig.containsKey("image") 
+          ? (String) jobConfig.get("image") 
+          : "docker.io/library/alpine:latest";
+      
+      boolean allowFailure = jobConfig.containsKey("allow_failure") 
+          ? (boolean) jobConfig.get("allow_failure") 
+          : false;
+      
+      // Create and save the job entity
+      JobEntity job = JobEntity.builder()
+          .stageId(stageId)
+          .name(jobName)
+          .dockerImage(dockerImage)
+          .allowFailure(allowFailure)
+          .build();
+      
+      job = jobRepository.save(job);
+      jobRepository.flush();
+      
+      // Handle job scripts if present
+      if (jobConfig.containsKey("script")) {
+        Object scriptObj = jobConfig.get("script");
+        if (scriptObj instanceof String) {
+          // Single script line
+          jobScriptRepository.saveScript(job.getId(), (String) scriptObj);
+        } else if (scriptObj instanceof List) {
+          // Multiple script lines
+          List<String> scripts = ((List<?>) scriptObj).stream()
+              .filter(s -> s instanceof String)
+              .map(s -> (String) s)
+              .toList();
+          
+          for (String script : scripts) {
+            jobScriptRepository.saveScript(job.getId(), script);
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Creates a new pipeline execution entity.
    *
    * @param request the pipeline execution request
+   * @param pipelineId the ID of the pipeline entity
    * @return the created pipeline execution entity
    */
-  private PipelineExecutionEntity createPipelineExecution(PipelineExecutionRequest request) {
+  private PipelineExecutionEntity createPipelineExecution(PipelineExecutionRequest request, UUID pipelineId) {
     return PipelineExecutionEntity.builder()
-            .pipelineId(request.getPipelineId())
+            .pipelineId(pipelineId)
             .commitHash(request.getCommitHash())
             .isLocal(request.isLocal())
             .status(ExecutionStatus.PENDING)
