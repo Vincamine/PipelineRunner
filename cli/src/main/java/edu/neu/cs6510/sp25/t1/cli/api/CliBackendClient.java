@@ -165,4 +165,53 @@ public class CliBackendClient {
 
     return response;
   }
+
+  /**
+   * Executes an HTTP request with retry logic for transient errors.
+   *
+   * @param request The OkHttp Request object.
+   * @return The Response object.
+   * @throws IOException If an API error occurs after retries.
+   */
+  private Response executeRequestWithRetry(Request request) throws IOException {
+    int maxRetries = 3;
+    int retryCount = 0;
+    IOException lastException = null;
+
+    while (retryCount < maxRetries) {
+      try {
+        Response response = httpClient.newCall(request).execute();
+        if (response.isSuccessful()) {
+          return response;
+        } else if (response.code() >= 500) {
+          // Only retry on server errors
+          LOGGER.warn("Server error ({}), retrying ({}/{})",
+              response.code(), retryCount + 1, maxRetries);
+        } else {
+          // Don't retry on client errors
+          String errorMessage = response.body() != null ?
+              response.body().string() : "Unknown error";
+          throw new IOException("API Error: " + response.code() +
+              " - " + errorMessage);
+        }
+      } catch (IOException e) {
+        lastException = e;
+        LOGGER.warn("Request failed, retrying ({}/{}): {}",
+            retryCount + 1, maxRetries, e.getMessage());
+      }
+
+      retryCount++;
+      try {
+        Thread.sleep(1000 * retryCount); // Exponential backoff
+      } catch (InterruptedException ie) {
+        Thread.currentThread().interrupt();
+        throw new IOException("Interrupted during retry", ie);
+      }
+    }
+
+    throw lastException != null ? lastException :
+        new IOException("Failed after " + maxRetries + " retries");
+  }
+
+
 }

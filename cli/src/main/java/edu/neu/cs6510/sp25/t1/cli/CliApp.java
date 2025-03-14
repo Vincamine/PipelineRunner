@@ -41,14 +41,19 @@ public class CliApp implements Callable<Integer> {
   @CommandLine.Option(names = {"--local"}, description = "Run the pipeline locally.")
   public boolean localRun;
 
-  @CommandLine.Option(names = {"--vv"}, description = "Enable verbose output (detailed logs).")
+  @CommandLine.Option(names = {"--vv", "--verbose"}, description = "Enable verbose output (detailed logs).")
   private boolean verbose;
 
   @Override
   public Integer call() {
-    // Validate execution inside a Git repository
-    System.out.println("CI/CD CLI - Ready! Use `--help` for available commands.");
-    return 0;
+    // Check if the current directory is a Git repository
+    try {
+      System.out.println("CI/CD CLI - Ready! Use `--help` for available commands.");
+      return 0;
+    } catch (Exception e) {
+      System.err.println("Failed to initialize CLI: " + e.getMessage());
+      return 1;
+    }
   }
 
   public static void main(String[] args) {

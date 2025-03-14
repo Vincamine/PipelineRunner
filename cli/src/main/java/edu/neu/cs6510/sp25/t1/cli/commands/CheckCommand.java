@@ -2,10 +2,14 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import java.io.File;
 import java.util.concurrent.Callable;
+import java.io.FileNotFoundException;
+
 
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import picocli.CommandLine;
+
 
 /**
  * Implements the `check` command to validate a pipeline YAML file.
@@ -23,6 +27,12 @@ public class CheckCommand implements Callable<Integer> {
   )
   private String filePath;
 
+  @CommandLine.Option(
+      names = {"--verbose"},
+      description = "Enable verbose output."
+  )
+  private boolean checkVerbose;
+
   /**
    * Validates a pipeline configuration file.
    *
@@ -30,6 +40,9 @@ public class CheckCommand implements Callable<Integer> {
    */
   @Override
   public Integer call() {
+    if (checkVerbose) {
+      PipelineLogger.setVerbose(true);
+    }
     if (filePath == null) {
       System.err.println("[Error] File path cannot be null");
       return 1;
