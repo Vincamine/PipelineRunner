@@ -69,7 +69,7 @@ public class PipelineExecutionService {
    * @param request request containing pipeline ID and commit hash
    * @return response containing pipeline execution ID and status
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class) 
   public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request) {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
