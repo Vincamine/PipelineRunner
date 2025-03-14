@@ -189,4 +189,37 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiError> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        PipelineLogger.error("Resource not found: " + ex.getMessage());
+        ApiError apiError = new ApiError(
+                HttpStatus.NOT_FOUND,
+                "Resource Not Found",
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(WorkerCommunicationException.class)
+    public ResponseEntity<ApiError> handleWorkerCommunicationException(WorkerCommunicationException ex) {
+        PipelineLogger.error("Worker communication error: " + ex.getMessage());
+        ApiError apiError = new ApiError(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Worker Communication Error",
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(apiError, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    @ExceptionHandler(PipelineExecutionException.class)
+    public ResponseEntity<ApiError> handlePipelineExecutionException(PipelineExecutionException ex) {
+        PipelineLogger.error("Pipeline execution error: " + ex.getMessage());
+        ApiError apiError = new ApiError(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Pipeline Execution Error",
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
