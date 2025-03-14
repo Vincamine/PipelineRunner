@@ -465,6 +465,10 @@ public class PipelineExecutionService {
     }
 
     PipelineLogger.info("Creating " + stages.size() + " stage executions for pipeline: " + pipelineExecutionId);
+    
+    String commitHash = pipelineExecution.getCommitHash();
+    boolean isLocal = pipelineExecution.isLocal();
+    PipelineLogger.info("Using commit hash: " + commitHash + " and isLocal: " + isLocal);
 
     for (int order = 0; order < stages.size(); order++) {
       // Find the matching stage entity for this order
@@ -474,38 +478,39 @@ public class PipelineExecutionService {
               .findFirst()
               .orElseThrow(() -> new RuntimeException("Stage definition not found for order: " + finalOrder));
       
-      // Get pipeline execution to retrieve commit hash
-      PipelineExecutionEntity pipelineExec = pipelineExecutionRepository.findById(pipelineExecutionId)
-              .orElseThrow(() -> new RuntimeException("Pipeline execution not found"));
-      
       // Create the stage execution entity
       StageExecutionEntity stageExecution = StageExecutionEntity.builder()
               .pipelineExecutionId(pipelineExecutionId)
               .stageId(matchingStage.getId())  // Use actual stage ID 
               .executionOrder(order)
-              .commitHash(pipelineExec.getCommitHash())  // Use commit hash from pipeline execution
-              .isLocal(pipelineExec.isLocal())        // Use isLocal from pipeline execution
+              .commitHash(commitHash)  // Use commit hash from pipeline execution
+              .isLocal(isLocal)        // Use isLocal from pipeline execution
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
 
-      // Save the stage execution
-      stageExecution = stageExecutionRepository.save(stageExecution);
-      stageExecutionRepository.flush();  
-      PipelineLogger.info("Saved stage execution with ID: " + stageExecution.getId() + " for stage: " + matchingStage.getId());
+      try {
+        // Save the stage execution
+        stageExecution = stageExecutionRepository.save(stageExecution);
+        stageExecutionRepository.flush();  
+        PipelineLogger.info("Saved stage execution with ID: " + stageExecution.getId() + " for stage: " + matchingStage.getId());
 
-      // Extract and create job executions
-      List<JobExecutionEntity> jobs = createJobExecutions(matchingStage.getId(), stageExecution);
+        // Extract and create job executions
+        List<JobExecutionEntity> jobs = createJobExecutions(matchingStage.getId(), stageExecution);
 
-      // Save job executions
-      if (!jobs.isEmpty()) {
-        PipelineLogger.info("Saving " + jobs.size() + " jobs for stage: " + stageExecution.getId());
-        jobs = jobExecutionRepository.saveAll(jobs);
-        jobExecutionRepository.flush(); 
+        // Save job executions
+        if (!jobs.isEmpty()) {
+          PipelineLogger.info("Saving " + jobs.size() + " jobs for stage: " + stageExecution.getId());
+          jobs = jobExecutionRepository.saveAll(jobs);
+          jobExecutionRepository.flush(); 
 
-        PipelineLogger.info("✅ Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
-      } else {
-        PipelineLogger.warn("⚠ No jobs defined for stage: " + stageExecution.getId());
+          PipelineLogger.info("✅ Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
+        } else {
+          PipelineLogger.warn("⚠ No jobs defined for stage: " + stageExecution.getId());
+        }
+      } catch (Exception e) {
+        PipelineLogger.error("Error saving stage execution: " + e.getMessage() + " | " + e);
+        throw e;
       }
     }
   }
