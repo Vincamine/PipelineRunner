@@ -11,12 +11,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.StageEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobScriptRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.StageRepository;
 import edu.neu.cs6510.sp25.t1.backend.mapper.PipelineExecutionMapper;
 import edu.neu.cs6510.sp25.t1.backend.service.event.StageCompletedEvent;
 import edu.neu.cs6510.sp25.t1.backend.utils.YamlPipelineUtils;
@@ -349,34 +356,49 @@ public class PipelineExecutionService {
       throw new RuntimeException("Pipeline must contain at least one valid stage.");
     }
 
+    // Get pipeline execution to retrieve pipelineId
+    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
+            .orElseThrow(() -> new RuntimeException("Pipeline execution not found: " + pipelineExecutionId));
+    
+    // Get all stages for this pipeline
+    List<StageEntity> pipelineStages = stageRepository.findByPipelineId(pipelineExecution.getPipelineId());
+    if (pipelineStages.isEmpty()) {
+      PipelineLogger.error("No stage definitions found for pipeline: " + pipelineExecution.getPipelineId());
+      throw new RuntimeException("Pipeline stage definitions not found");
+    }
+
     PipelineLogger.info("Creating " + stages.size() + " stage executions for pipeline: " + pipelineExecutionId);
 
     for (int order = 0; order < stages.size(); order++) {
-      Map<String, Object> stageConfig = stages.get(order);
-      String stageName = (String) stageConfig.get("name");
-
-      // Create the stage execution entity without explicit ID (let JPA generate it)
+      // Find the matching stage entity for this order
+      int finalOrder = order;
+      StageEntity matchingStage = pipelineStages.stream()
+              .filter(stage -> stage.getExecutionOrder() == finalOrder)
+              .findFirst()
+              .orElseThrow(() -> new RuntimeException("Stage definition not found for order: " + finalOrder));
+      
+      // Create the stage execution entity
       StageExecutionEntity stageExecution = StageExecutionEntity.builder()
               .pipelineExecutionId(pipelineExecutionId)
-              .stageId(UUID.randomUUID())  // Generate a new stageId
+              .stageId(matchingStage.getId())  // Use actual stage ID 
               .executionOrder(order)
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
 
-      // Save the stage execution and let JPA generate the ID
+      // Save the stage execution
       stageExecution = stageExecutionRepository.save(stageExecution);
-      stageExecutionRepository.flush();  // Ensure it's committed
-      PipelineLogger.info("Saved stage execution with generated ID: " + stageExecution.getId());
+      stageExecutionRepository.flush();  
+      PipelineLogger.info("Saved stage execution with ID: " + stageExecution.getId() + " for stage: " + matchingStage.getId());
 
       // Extract and create job executions
-      List<JobExecutionEntity> jobs = createJobExecutions(stageConfig, stageExecution);
+      List<JobExecutionEntity> jobs = createJobExecutions(matchingStage.getId(), stageExecution);
 
       // Save job executions
       if (!jobs.isEmpty()) {
         PipelineLogger.info("Saving " + jobs.size() + " jobs for stage: " + stageExecution.getId());
         jobs = jobExecutionRepository.saveAll(jobs);
-        jobExecutionRepository.flush();  // Ensure they're committed
+        jobExecutionRepository.flush(); 
 
         PipelineLogger.info("✅ Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
       } else {
@@ -388,28 +410,23 @@ public class PipelineExecutionService {
   /**
    * Creates job execution entities for a stage.
    *
-   * @param stageConfig    stage configuration from YAML
+   * @param stageId       ID of the stage entity
    * @param stageExecution stage execution entity
    * @return list of job execution entities
    */
-  @SuppressWarnings("unchecked")
-  private List<JobExecutionEntity> createJobExecutions(Map<String, Object> stageConfig, StageExecutionEntity stageExecution) {
-    List<Map<String, Object>> jobsConfig = (List<Map<String, Object>>) stageConfig.get("jobs");
-
-    if (jobsConfig == null || jobsConfig.isEmpty()) {
-      PipelineLogger.warn("No jobs defined in YAML for stage: " + stageExecution.getId());
+  private List<JobExecutionEntity> createJobExecutions(UUID stageId, StageExecutionEntity stageExecution) {
+    // Get all jobs for this stage
+    List<JobEntity> stageJobs = jobRepository.findByStageId(stageId);
+    
+    if (stageJobs.isEmpty()) {
+      PipelineLogger.warn("No job definitions found for stage: " + stageId);
       return List.of();
     }
 
-    return jobsConfig.stream().map(jobConfig -> {
-      UUID jobId = jobConfig.containsKey("id") ?
-              UUID.fromString(jobConfig.get("id").toString()) :
-              UUID.randomUUID();
-
+    return stageJobs.stream().map(job -> {
       return JobExecutionEntity.builder()
-              // Let JPA generate the ID instead of setting it explicitly
               .stageExecution(stageExecution)
-              .jobId(jobId)
+              .jobId(job.getId())  // Use actual job ID
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
