@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import edu.neu.cs6510.sp25.t1.backend.error.PipelineExecutionException;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,24 +69,22 @@ public class PipelineExecutionService {
    * @param request request containing pipeline ID and commit hash
    * @return response containing pipeline execution ID and status
    */
-  @Transactional(rollbackFor = Exception.class) 
+  @Transactional(rollbackFor = Exception.class)
   public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request) {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
-    try {
-      // Resolve and validate the pipeline file path
-      Path resolvedPath = resolveAndValidatePipelinePath(request.getFilePath());
+    // Resolve and validate the pipeline file path
+    Path resolvedPath = resolveAndValidatePipelinePath(request.getFilePath());
 
-      // Parse and validate the pipeline YAML configuration
-      Map<String, Object> pipelineConfig = parseAndValidatePipelineYaml(resolvedPath.toString());
+    // Parse and validate the pipeline YAML configuration
+    Map<String, Object> pipelineConfig = parseAndValidatePipelineYaml(resolvedPath.toString());
 
     try {
       // Create or get pipeline entity first (ensuring it exists in pipelines table)
       UUID pipelineId = createOrGetPipelineEntity(request, pipelineConfig);
-      
+
       // Create pipeline stages and jobs from the configuration
       createPipelineDefinition(pipelineId, pipelineConfig);
-      
 
       // Create and save the pipeline execution entity
       PipelineLogger.info("Preparing to save pipeline execution to DB...");
@@ -96,38 +93,35 @@ public class PipelineExecutionService {
       // Save the pipeline execution to the database
       pipelineExecution = savePipelineExecution(pipelineExecution);
 
+      // Create and save stage executions with their jobs
+      createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
+
+      // Verify all entities were properly saved by querying count from each table
       try {
-        // Create and save stage executions with their jobs
-        createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
+        // Check pipeline exists
+        if (!pipelineRepository.existsById(pipelineId)) {
+          PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
+        } else {
+          PipelineLogger.info("Successfully verified pipeline entity: " + pipelineId);
+        }
 
+        // Check stages exist
+        List<StageEntity> stages = stageRepository.findByPipelineId(pipelineId);
+        PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
 
-      // Check pipeline exists
-      if (!pipelineRepository.existsById(pipelineId)) {
-        PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
-      } else {
-        PipelineLogger.info("Successfully verified pipeline entity: " + pipelineId);
+        // Check jobs exist for each stage
+        for (StageEntity stage : stages) {
+          List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
+          PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
+        }
+      } catch (Exception e) {
+        PipelineLogger.error("Error verifying saved entities: " + e.getMessage());
       }
 
-      // Check stages exist
-      List<StageEntity> stages = stageRepository.findByPipelineId(pipelineId);
-      PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
-
-      // Check jobs exist for each stage
-      for (StageEntity stage : stages) {
-        List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
-        PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
-      }
-
-      
       // Now that all entities are saved, execute the stages
       executeStagesSequentially(pipelineExecution.getId());
 
-
-        return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
-      } catch (Exception e) {
-        PipelineLogger.error("Failed during pipeline execution setup: " + e.getMessage());
-        throw new PipelineExecutionException("Failed to setup pipeline execution: " + e.getMessage(), e);
-      }
+      return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
     } catch (Exception e) {
       PipelineLogger.error("Failed to start pipeline execution: " + e.getMessage() + " | " + e);
       throw new RuntimeException("Pipeline execution failed: " + e.getMessage());
