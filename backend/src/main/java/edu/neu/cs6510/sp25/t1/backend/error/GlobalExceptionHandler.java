@@ -102,22 +102,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Handles resource access exceptions typically occurring during service-to-service communication.
-     *
-     * @param ex the ResourceAccessException thrown when communication with a dependent service fails
-     * @return ResponseEntity containing an ApiError with a SERVICE_UNAVAILABLE status
-     */
-    @ExceptionHandler(ResourceAccessException.class)
-    public ResponseEntity<ApiError> handleResourceAccessException(ResourceAccessException ex) {
-        PipelineLogger.error("Worker communication error: " + ex.getMessage());
-        ApiError apiError = new ApiError(
-                HttpStatus.SERVICE_UNAVAILABLE,
-                "Worker Communication Error",
-                "Failed to communicate with worker service: " + ex.getMessage()
-        );
-        return new ResponseEntity<>(apiError, HttpStatus.SERVICE_UNAVAILABLE);
-    }
+
 
     /**
      * Handles database access exceptions and returns an INTERNAL_SERVER_ERROR response.
@@ -190,6 +175,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Handles resource access exceptions typically occurring during service-to-service communication.
+     *
+     * @param ex the ResourceAccessException thrown when communication with a dependent service fails
+     * @return ResponseEntity containing an ApiError with a SERVICE_UNAVAILABLE status
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiError> handleResourceNotFoundException(ResourceNotFoundException ex) {
         PipelineLogger.error("Resource not found: " + ex.getMessage());
@@ -201,6 +192,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * Handles resource access exceptions typically occurring during service-to-service communication.
+     *
+     * @param ex the ResourceAccessException thrown when communication with a dependent service fails
+     * @return ResponseEntity containing an ApiError with a SERVICE_UNAVAILABLE status
+     */
     @ExceptionHandler(WorkerCommunicationException.class)
     public ResponseEntity<ApiError> handleWorkerCommunicationException(WorkerCommunicationException ex) {
         PipelineLogger.error("Worker communication error: " + ex.getMessage());
@@ -212,6 +209,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
+    /**
+     * Handles pipeline execution exceptions and returns an INTERNAL_SERVER_ERROR response.
+     * This is specific to errors that occur during pipeline processing.
+     *
+     * @param ex the PipelineExecutionException thrown when a pipeline execution fails
+     * @return ResponseEntity containing an ApiError with an INTERNAL_SERVER_ERROR status
+     */
     @ExceptionHandler(PipelineExecutionException.class)
     public ResponseEntity<ApiError> handlePipelineExecutionException(PipelineExecutionException ex) {
         PipelineLogger.error("Pipeline execution error: " + ex.getMessage());
