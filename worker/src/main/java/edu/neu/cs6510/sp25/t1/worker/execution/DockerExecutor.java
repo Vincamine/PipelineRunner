@@ -91,6 +91,7 @@ public class DockerExecutor {
       Integer exitCode = dockerClient.waitContainerCmd(containerID).start().awaitStatusCode();
       log.info("Container exited with code: {}", exitCode);
 
+      // need ?
       dockerClient.removeContainerCmd(containerID).withForce(true).exec();
 
       return exitCode == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
@@ -108,51 +109,4 @@ public class DockerExecutor {
       }
     }
   }
-//      // Capture logs
-//      StringBuilder outputLogs = new StringBuilder();
-//      try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-//        String line;
-//        while ((line = reader.readLine()) != null) {
-//          outputLogs.append(line).append("\n");
-//          log.debug("Docker output: {}", line);
-//        }
-//        log.info("Docker Execution Logs:\n{}", outputLogs);
-//      }
-//
-//      int exitCode = process.waitFor();
-//      log.info("Docker job exited with code: {}", exitCode);
-//
-//      if (exitCode != 0) {
-//        String errorMessage = "Docker execution failed with exit code: " + exitCode;
-//        log.error("❌ {}", errorMessage);
-//        log.error("Execution logs: {}", outputLogs.toString());
-//        throw new DockerExecutionException(errorMessage + "\nLogs: " + outputLogs.toString(), exitCode);
-//      }
-//
-//      return ExecutionStatus.SUCCESS;
-//
-//    } catch (DockerExecutionException | JobExecutionConfigException e) {
-//      throw e;
-//    } catch (Exception e) {
-//      log.error("❌ Docker execution failed: {}", e.getMessage(), e);
-//      throw new DockerExecutionException("Docker execution failed: " + e.getMessage(), e);
-//    }
-
-
-//  private String[] buildDockerCommand(String dockerImage, List<String> script) {
-//    StringBuilder scriptCommands = new StringBuilder();
-//    for (String cmd : script) {
-//      scriptCommands.append(cmd).append(" && ");
-//    }
-//
-//    if (scriptCommands.length() > 4) {
-//      scriptCommands.setLength(scriptCommands.length() - 4);
-//    }
-//
-//    return new String[]{
-//            "docker", "run", "--rm",
-//            dockerImage,
-//            "sh", "-c", scriptCommands.toString()
-//    };
-//  }
 }
