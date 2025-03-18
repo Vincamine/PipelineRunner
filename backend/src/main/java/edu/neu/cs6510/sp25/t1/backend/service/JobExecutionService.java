@@ -312,6 +312,7 @@ public class JobExecutionService {
     jobDTO.setCreatedAt(jobEntity.getCreatedAt());
     jobDTO.setUpdatedAt(jobEntity.getUpdatedAt());
     jobDTO.setScript(jobEntity.getScript());
+    jobDTO.setWorkingDir(jobEntity.getWorkingDir());
     jobDTO.setDependencies(jobEntity.getDependencies());
     // job_artifacts needs re-work
 

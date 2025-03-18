@@ -2,6 +2,8 @@ package edu.neu.cs6510.sp25.t1.worker.execution;
 
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
@@ -9,6 +11,7 @@ import edu.neu.cs6510.sp25.t1.worker.error.DockerExecutionException;
 import edu.neu.cs6510.sp25.t1.worker.error.JobExecutionConfigException;
 import org.springframework.stereotype.Component;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.List;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
@@ -49,8 +52,15 @@ public class DockerExecutor {
       throw new JobExecutionConfigException("Job details are missing");
     }
 
+    // 55-56 is about to make container path unique for every job
+    String jobId = String.valueOf(job.getId());
+    String containerPath = "/app/" + jobId;
+
     String dockerImage = job.getDockerImage();
     List<String> script = job.getScript();
+
+    // retrieve working Directory from job database
+    String workingDirectory = job.getWorkingDir();
 
     if (script == null || script.isEmpty()) {
       throw new JobExecutionConfigException("Script commands are missing");
@@ -60,15 +70,32 @@ public class DockerExecutor {
       throw new JobExecutionConfigException("Docker image is not specified");
     }
 
+    // confirm we have workDir
+    if (workingDirectory == null || workingDirectory.trim().isEmpty()) {
+      throw new JobExecutionConfigException("Working directory is not specified");
+    }
+
+    // verified the file exists in the working Dir
+    File dir = new File(workingDirectory);
+    if (!dir.exists() || !dir.isDirectory()) {
+      throw new JobExecutionConfigException("Working directory does not exist or is not a directory");
+    }
+
     String containerID = null;
+    log.info("Executing job {} in container path {} with working directory {}", jobId, containerPath, workingDirectory);
 
     // using docker client
     try {
       dockerClient.pullImageCmd(dockerImage).start().awaitCompletion();
       String command = String.join(" && ", script);
 
+      Volume volume = new Volume(containerPath);
+      Bind bind = new Bind(workingDirectory, volume);
+
       var container = dockerClient.createContainerCmd(dockerImage)
           .withCmd("sh", "-c", command)
+          .withBinds(bind)
+          .withWorkingDir(containerPath)
           .exec();
 
       containerID = container.getId();
@@ -92,7 +119,7 @@ public class DockerExecutor {
       log.info("Container exited with code: {}", exitCode);
 
       // need ?
-      dockerClient.removeContainerCmd(containerID).withForce(true).exec();
+      //dockerClient.removeContainerCmd(containerID).withForce(true).exec();
 
       return exitCode == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {

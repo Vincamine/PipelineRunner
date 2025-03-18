@@ -29,6 +29,8 @@ public class JobDTO {
   private String name;
   private String dockerImage;
   private List<String> script;
+  // adding workingDir to jobDto
+  private String workingDir;
   private List<UUID> dependencies;
   private boolean allowFailure;
   private List<String> artifacts;
