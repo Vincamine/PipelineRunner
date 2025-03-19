@@ -103,6 +103,7 @@ public class JobExecutionMapper {
             .name(entity.getName())
             .dockerImage(entity.getDockerImage())
             .script(entity.getScript())
+            .workingDir(entity.getWorkingDir())
             .dependencies(entity.getDependencies())
             .allowFailure(entity.isAllowFailure())
             .artifacts(entity.getArtifacts())
