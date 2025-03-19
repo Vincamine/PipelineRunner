@@ -1,6 +1,23 @@
 server:
   port: 8081  # Worker service runs on port 8081
 
+spring:
+  application:
+    name: cicd-worker  # Name of the worker application
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:54321/cicd_db}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:Li930227}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
 docker:
   image-pull-policy: "Always"  # Ensures the latest images are pulled
   volume-mounts: "/workspace"  # Mounted directory for Docker volumes
