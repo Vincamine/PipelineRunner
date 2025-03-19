@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.worker.api.controller;
 
+import edu.neu.cs6510.sp25.t1.worker.service.WorkerJobQueue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
