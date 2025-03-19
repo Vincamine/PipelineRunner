@@ -55,8 +55,7 @@ public class JobExecutionService {
 
     jobExecution.updateState(ExecutionStatus.RUNNING);
     jobExecution.setStartTime(Instant.now());
-    jobExecutionRepository.save(jobExecution);
-    jobExecutionRepository.flush(); // Force flush to ensure job state is saved
+    jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
 
     // Use separate transaction for worker communication to prevent rollback of job state
     sendJobToWorkerInNewTransaction(jobExecutionId);
@@ -91,8 +90,7 @@ public class JobExecutionService {
               .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
 
       jobExecution.updateState(ExecutionStatus.FAILED);
-      jobExecutionRepository.save(jobExecution);
-      jobExecutionRepository.flush();
+      jobExecutionRepository.saveAndFlush(jobExecution);
 
       PipelineLogger.info("Updated job status to FAILED due to worker error: " + errorMessage);
     } catch (Exception e) {
@@ -145,8 +143,7 @@ public class JobExecutionService {
             .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
 
     jobExecution.updateState(newStatus);
-    jobExecutionRepository.save(jobExecution);
-    jobExecutionRepository.flush(); // Ensure the status update is persisted
+    jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
 
     if (newStatus == ExecutionStatus.SUCCESS) {
       eventPublisher.publishEvent(new JobCompletedEvent(this, jobExecutionId, jobExecution.getStageExecution().getId()));
@@ -167,8 +164,7 @@ public class JobExecutionService {
 
     if (jobExecution.getStatus() == ExecutionStatus.PENDING || jobExecution.getStatus() == ExecutionStatus.RUNNING) {
       jobExecution.updateState(ExecutionStatus.CANCELED);
-      jobExecutionRepository.save(jobExecution);
-      jobExecutionRepository.flush(); // Ensure the status update is persisted
+      jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
       PipelineLogger.info("Job execution canceled in backend: " + jobExecutionId);
 
       // Send cancel request to worker in a new transaction
@@ -266,8 +262,7 @@ public class JobExecutionService {
    */
   @Transactional
   public void saveJobExecution(JobExecutionEntity jobExecution) {
-    jobExecutionRepository.save(jobExecution);
-    jobExecutionRepository.flush(); // Ensure immediate persistence
+    jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
     PipelineLogger.info("💾 Job execution saved: " + jobExecution.getId());
   }
 

@@ -32,9 +32,13 @@ public class YamlPipelineUtils {
 
 
     if (!Files.exists(path)) {
-      PipelineLogger.error("Pipeline configuration file not found: " + filePath);
-//      throw new IllegalArgumentException("Pipeline configuration file not found: " + filePath);
-        throw new ValidationException(filePath, 1, 1, "Pipeline configuration file not found");
+      PipelineLogger.error("Pipeline configuration file not found: " + path.toAbsolutePath());
+      throw new ValidationException(filePath, 1, 1, "Pipeline configuration file not found: " + path.toAbsolutePath());
+    }
+    
+    if (!Files.isReadable(path)) {
+      PipelineLogger.error("Pipeline configuration file is not readable: " + path.toAbsolutePath());
+      throw new ValidationException(filePath, 1, 1, "Pipeline configuration file is not readable: " + path.toAbsolutePath());
     }
 
     try (FileInputStream fileInputStream = new FileInputStream(path.toFile())) {

@@ -45,8 +45,7 @@ public class StageExecutionService {
 
     // Set stage status to RUNNING
     stageExecution.updateState(ExecutionStatus.RUNNING);
-    stageExecutionRepository.save(stageExecution);
-    stageExecutionRepository.flush(); // Make sure the status update is committed
+    stageExecutionRepository.saveAndFlush(stageExecution); // Save and flush in one operation
 
     // Get job executions for this stage
     List<JobExecutionEntity> jobs = jobExecutionService.getJobExecutionsForStage(stageExecutionId);
@@ -169,8 +168,7 @@ public class StageExecutionService {
             .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
 
     stageExecution.updateState(ExecutionStatus.FAILED);
-    stageExecutionRepository.save(stageExecution);
-    stageExecutionRepository.flush(); // Ensure it's committed
+    stageExecutionRepository.saveAndFlush(stageExecution); // Save and flush in one operation
   }
 
   /**
@@ -216,8 +214,7 @@ public class StageExecutionService {
             .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
 
     stageExecution.updateState(ExecutionStatus.SUCCESS);
-    stageExecution = stageExecutionRepository.save(stageExecution);
-    stageExecutionRepository.flush();
+    stageExecution = stageExecutionRepository.saveAndFlush(stageExecution);
     PipelineLogger.info("Stage execution completed: " + stageExecution.getId());
   }
 
