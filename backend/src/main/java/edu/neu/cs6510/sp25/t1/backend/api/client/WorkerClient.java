@@ -1,10 +1,8 @@
 package edu.neu.cs6510.sp25.t1.backend.api.client;
 
 import org.springframework.stereotype.Component;
-
 import java.util.UUID;
 import java.util.Optional;
-
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 
 /**
@@ -12,7 +10,6 @@ import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
  */
 @Component
 public class WorkerClient {
-
   /**
    * Simulates notifying about a job assignment.
    *
