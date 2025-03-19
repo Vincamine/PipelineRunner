@@ -21,6 +21,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+cicd:
+  rabbitmq:
+    job-queue: cicd-job-queue
+
 logging:
   level:
     root: INFO  # Default logging level

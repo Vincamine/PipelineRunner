@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
@@ -31,6 +32,8 @@ import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.backend.error.GlobalExceptionHandler;
 import lombok.RequiredArgsConstructor;
 
+
+
 @Service
 @RequiredArgsConstructor
 public class JobExecutionService {
@@ -44,6 +47,11 @@ public class JobExecutionService {
   @Value("${worker.api.cancel-url}")
   private String workerCancelUrl;
 
+  private final RabbitTemplate rabbitTemplate;
+
+  @Value("${cicd.rabbitmq.job-queue}")
+  private String jobQueueName;
+
   /**
    * Start a job
    *
@@ -51,7 +59,7 @@ public class JobExecutionService {
    */
   @Transactional
   public void startJobExecution(UUID jobExecutionId) {
-    PipelineLogger.info("Sending job execution request to worker: " + jobExecutionId);
+    PipelineLogger.info("Preparing to send job execution to message queue: " + jobExecutionId);
 
     JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
             .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
@@ -61,8 +69,50 @@ public class JobExecutionService {
     jobExecutionRepository.save(jobExecution);
     jobExecutionRepository.flush(); // Force flush to ensure job state is saved
 
-    // Use separate transaction for worker communication to prevent rollback of job state
-    sendJobToWorkerInNewTransaction(jobExecutionId);
+    // Use separate transaction for message queue communication
+    sendJobToQueueInNewTransaction(jobExecutionId);
+  }
+
+  /**
+   * Send job to message queue in a new transaction
+   *
+   * @param jobExecutionId job execution ID
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void sendJobToQueueInNewTransaction(UUID jobExecutionId) {
+    try {
+      JobExecutionDTO jobExecutionDTO = getJobExecution(jobExecutionId);
+
+      // Send job to RabbitMQ queue
+      rabbitTemplate.convertAndSend(jobQueueName, jobExecutionDTO);
+      PipelineLogger.info("Job successfully sent to message queue: " + jobExecutionId);
+    } catch (Exception e) {
+      // Update job status to failed but in a new transaction
+      updateJobStatusAfterQueueFailure(jobExecutionId, e.getMessage());
+      PipelineLogger.error("Failed to queue job execution: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Update job status after queue failure in a new transaction
+   *
+   * @param jobExecutionId job execution ID
+   * @param errorMessage   error message
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void updateJobStatusAfterQueueFailure(UUID jobExecutionId, String errorMessage) {
+    try {
+      JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
+              .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
+
+      jobExecution.updateState(ExecutionStatus.FAILED);
+      jobExecutionRepository.save(jobExecution);
+      jobExecutionRepository.flush();
+
+      PipelineLogger.info("Updated job status to FAILED due to queue error: " + errorMessage);
+    } catch (Exception e) {
+      PipelineLogger.error("Failed to update job status after queue failure: " + e.getMessage());
+    }
   }
 
   /**
