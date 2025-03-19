@@ -1,19 +1,21 @@
 package edu.neu.cs6510.sp25.t1.worker.api.controller;
 
+import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import edu.neu.cs6510.sp25.t1.worker.service.JobDataService;
 import edu.neu.cs6510.sp25.t1.worker.service.WorkerJobQueue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * REST controller for worker status and control endpoints.
+ * REST controller for worker status, monitoring, and control endpoints.
+ * Provides functionality to check worker status, view active jobs,
+ * and control job execution.
  */
 @RestController
 @RequestMapping("/api/worker")
@@ -21,31 +23,74 @@ import java.util.Map;
 @Slf4j
 public class WorkerStatusController {
     private final WorkerJobQueue jobQueue;
+    private final JobDataService jobDataService;
 
     /**
-     * Gets the current status of the worker.
+     * Gets the current status of the worker including information about
+     * active jobs and system health.
      *
      * @return Response with worker status information
      */
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getWorkerStatus() {
         Map<String, Object> status = new HashMap<>();
-        status.put("active_jobs", jobQueue.getActiveJobCount());
         status.put("status", "running");
+        status.put("active_jobs", jobQueue.getActiveJobCount());
         return ResponseEntity.ok(status);
     }
 
     /**
-     * Manually triggers the job polling process.
-     * Useful for testing or immediate job execution.
+     * Gets detailed information about all jobs currently being processed.
      *
-     * @return Response indicating the polling has been initiated
+     * @return Response with active job details
      */
-    @PostMapping("/poll")
-    public ResponseEntity<Map<String, String>> forcePoll() {
-        jobQueue.pollForJobs();
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "polling_initiated");
+    @GetMapping("/jobs/active")
+    public ResponseEntity<Map<String, Object>> getActiveJobs() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("active_job_count", jobQueue.getActiveJobCount());
+        response.put("jobs", jobQueue.getActiveJobs());
+
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Cancels a running job if possible.
+     *
+     * @param jobExecutionId The job execution ID to cancel
+     * @return Response indicating whether the cancellation was successful
+     */
+    @PostMapping("/jobs/{jobExecutionId}/cancel")
+    public ResponseEntity<Map<String, String>> cancelJob(@PathVariable UUID jobExecutionId) {
+        Map<String, String> response = new HashMap<>();
+
+        boolean cancelled = jobQueue.cancelJob(jobExecutionId);
+        if (cancelled) {
+            // Update job status in database
+            jobDataService.updateJobStatus(jobExecutionId, ExecutionStatus.CANCELED,
+                    "Job cancelled by user request");
+
+            response.put("status", "cancelled");
+            response.put("message", "Job cancelled successfully");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("status", "failed");
+            response.put("message", "Could not cancel job. It might be completed already or not found.");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Gets worker configuration and capability information.
+     *
+     * @return Response with worker configuration details
+     */
+    @GetMapping("/info")
+    public ResponseEntity<Map<String, Object>> getWorkerInfo() {
+        Map<String, Object> info = new HashMap<>();
+        info.put("max_concurrent_jobs", 5);
+        info.put("executor_type", "docker");
+        info.put("worker_id", UUID.randomUUID());
+
+        return ResponseEntity.ok(info);
     }
 }
