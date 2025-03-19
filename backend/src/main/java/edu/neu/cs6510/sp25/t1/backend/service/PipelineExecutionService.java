@@ -4,6 +4,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -140,11 +141,28 @@ public class PipelineExecutionService {
    * @return the resolved path
    */
   private Path resolveAndValidatePipelinePath(String filePath) {
+    if (filePath == null || filePath.trim().isEmpty()) {
+      throw new IllegalArgumentException("Pipeline file path cannot be null or empty");
+    }
+    
     Path resolvedPath = Paths.get(filePath);
     if (!resolvedPath.isAbsolute()) {
       resolvedPath = Paths.get(System.getProperty("user.dir")).resolve(filePath).normalize();
     }
-    PipelineLogger.info("Corrected pipeline file path: " + resolvedPath);
+    
+    PipelineLogger.info("Corrected pipeline file path: " + resolvedPath.toAbsolutePath());
+    
+    // Validate file exists and is readable
+    if (!Files.exists(resolvedPath)) {
+      PipelineLogger.error("Pipeline configuration file not found: " + resolvedPath.toAbsolutePath());
+      throw new IllegalArgumentException("Pipeline configuration file not found: " + resolvedPath.toAbsolutePath());
+    }
+    
+    if (!Files.isReadable(resolvedPath)) {
+      PipelineLogger.error("Pipeline configuration file is not readable: " + resolvedPath.toAbsolutePath());
+      throw new IllegalArgumentException("Pipeline configuration file is not readable: " + resolvedPath.toAbsolutePath());
+    }
+    
     return resolvedPath;
   }
 
@@ -230,8 +248,7 @@ public class PipelineExecutionService {
         .build();
     
     try {
-      pipeline = pipelineRepository.save(pipeline);
-      pipelineRepository.flush();
+      pipeline = pipelineRepository.saveAndFlush(pipeline);
       
       // Verify the save by retrieving it
       if (pipelineRepository.existsById(pipeline.getId())) {
@@ -437,8 +454,7 @@ public class PipelineExecutionService {
    */
   private PipelineExecutionEntity savePipelineExecution(PipelineExecutionEntity pipelineExecution) {
     try {
-      pipelineExecution = pipelineExecutionRepository.save(pipelineExecution);
-      pipelineExecutionRepository.flush(); // Force immediate commit
+      pipelineExecution = pipelineExecutionRepository.saveAndFlush(pipelineExecution); // Save and flush in one operation
       PipelineLogger.info("Successfully saved pipeline execution: " + pipelineExecution.getId());
 
       // Verify the save was successful
@@ -515,8 +531,7 @@ public class PipelineExecutionService {
 
       try {
         // Save the stage execution
-        stageExecution = stageExecutionRepository.save(stageExecution);
-        stageExecutionRepository.flush();  
+        stageExecution = stageExecutionRepository.saveAndFlush(stageExecution);
         PipelineLogger.info("Saved stage execution with ID: " + stageExecution.getId() + " for stage: " + matchingStage.getId());
 
         // Extract and create job executions
@@ -525,8 +540,8 @@ public class PipelineExecutionService {
         // Save job executions
         if (!jobs.isEmpty()) {
           PipelineLogger.info("Saving " + jobs.size() + " jobs for stage: " + stageExecution.getId());
-          jobs = jobExecutionRepository.saveAll(jobs);
-          jobExecutionRepository.flush(); 
+          jobs = jobExecutionRepository.saveAll(jobs).stream().toList();
+          // No need to flush here, let Spring manage the transaction
 
           PipelineLogger.info("✅ Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
         } else {
@@ -624,7 +639,7 @@ public class PipelineExecutionService {
             .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
 
     pipelineExecution.updateState(ExecutionStatus.SUCCESS);
-    pipelineExecutionRepository.save(pipelineExecution);
+    pipelineExecutionRepository.saveAndFlush(pipelineExecution);
     PipelineLogger.info("Pipeline execution completed: " + pipelineExecutionId);
   }
   

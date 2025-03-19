@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import edu.neu.cs6510.sp25.t1.backend.error.ApiError;
 
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
@@ -60,10 +62,23 @@ public class PipelineController {
    */
   @PostMapping("/run")
   @Operation(summary = "Trigger pipeline execution", description = "Starts a new pipeline execution.")
-  public ResponseEntity<PipelineExecutionResponse> runPipeline(@RequestBody PipelineExecutionRequest request) {
+  public ResponseEntity<?> runPipeline(@RequestBody PipelineExecutionRequest request) {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
-    PipelineExecutionResponse response = pipelineExecutionService.startPipelineExecution(request);
-    return ResponseEntity.ok(response);
+    try {
+      // Validate filePath exists
+      if (request.getFilePath() == null || request.getFilePath().isEmpty()) {
+        PipelineLogger.error("Pipeline file path is missing in the request");
+        return ResponseEntity.badRequest().body(
+            new ApiError(HttpStatus.BAD_REQUEST, "Invalid Request", "Pipeline file path is required"));
+      }
+
+      PipelineExecutionResponse response = pipelineExecutionService.startPipelineExecution(request);
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      PipelineLogger.error("Failed pipeline execution: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+          new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "Pipeline Execution Failed", e.getMessage()));
+    }
   }
 }
