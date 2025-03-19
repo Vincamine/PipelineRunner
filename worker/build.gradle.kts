@@ -10,12 +10,17 @@ repositories {
 
 dependencies {
     implementation(project(":common")) // Shared models and utilities
+    implementation(project(":backend"))
 
     // Spring Boot for Worker Service API
     implementation("org.springframework.boot:spring-boot-starter-web")
 
     // WebClient (for sending job status updates)
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    // JPA and Database
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:3.4.3")
+    runtimeOnly("org.postgresql:postgresql:42.7.5")
 
     // Swagger dependencies
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0")

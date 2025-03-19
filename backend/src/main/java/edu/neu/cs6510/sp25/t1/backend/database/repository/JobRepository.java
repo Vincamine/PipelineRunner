@@ -30,4 +30,5 @@ public interface JobRepository extends JpaRepository<JobEntity, UUID> {
    * @return List of job entities.
    */
   List<JobEntity> findByStageId(UUID stageId);
+
 }

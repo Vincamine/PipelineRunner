@@ -23,6 +23,7 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
 
   List<JobExecutionEntity> findByJobId(UUID jobId);
 
+
   List<JobExecutionEntity> findByStatus(ExecutionStatus status);
 
   Optional<JobExecutionEntity> findByCommitHash(String commitHash);
