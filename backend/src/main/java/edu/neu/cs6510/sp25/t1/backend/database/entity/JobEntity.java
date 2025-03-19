@@ -58,6 +58,9 @@ public class JobEntity {
   @Column(name = "updated_at")
   private Instant updatedAt;
 
+  @Column(name = "working_dir")
+  private String workingDir;
+
   @ElementCollection
   @CollectionTable(name = "job_scripts", joinColumns = @JoinColumn(name = "job_id"))
   @Column(name = "script")

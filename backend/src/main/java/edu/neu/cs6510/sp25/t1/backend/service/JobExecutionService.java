@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import edu.neu.cs6510.sp25.t1.backend.error.WorkerCommunicationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
@@ -17,8 +16,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import edu.neu.cs6510.sp25.t1.backend.error.WorkerCommunicationException;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.service.event.JobCompletedEvent;
@@ -36,6 +38,7 @@ public class JobExecutionService {
   private final ApplicationEventPublisher eventPublisher;
   private final StageExecutionRepository stageExecutionRepository;
   private final RestTemplate restTemplate = new RestTemplate();
+  private final JobRepository jobRepository;
   @Value("${worker.api.execute-url}")
   private String workerExecuteUrl;
   @Value("${worker.api.cancel-url}")
@@ -298,7 +301,20 @@ public class JobExecutionService {
     JobDTO jobDTO = new JobDTO();
     // Fill in job details from your database or other source
     jobDTO.setId(entity.getJobId());
+    // Fetch job data from JobEntity
+    JobEntity jobEntity = jobRepository.findById(entity.getJobId())
+        .orElseThrow(() -> new IllegalArgumentException("Job not found"));
     // Set other job properties
+    jobDTO.setStageId(jobEntity.getStageId());
+    jobDTO.setName(jobEntity.getName());
+    jobDTO.setDockerImage(jobEntity.getDockerImage());
+    jobDTO.setAllowFailure(jobEntity.isAllowFailure());
+    jobDTO.setCreatedAt(jobEntity.getCreatedAt());
+    jobDTO.setUpdatedAt(jobEntity.getUpdatedAt());
+    jobDTO.setScript(jobEntity.getScript());
+    jobDTO.setWorkingDir(jobEntity.getWorkingDir());
+    jobDTO.setDependencies(jobEntity.getDependencies());
+    // job_artifacts needs re-work
 
     dto.setJob(jobDTO);
 

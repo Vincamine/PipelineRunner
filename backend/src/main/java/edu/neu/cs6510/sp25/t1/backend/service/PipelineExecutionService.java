@@ -92,7 +92,12 @@ public class PipelineExecutionService {
 
       // Save the pipeline execution to the database
       pipelineExecution = savePipelineExecution(pipelineExecution);
-
+      // saveAllDetails into DB
+      // param pipelineCoonfig
+      // return void
+      // -> all saving to db
+      // function start execution
+      //
       // Create and save stage executions with their jobs
       createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
 
