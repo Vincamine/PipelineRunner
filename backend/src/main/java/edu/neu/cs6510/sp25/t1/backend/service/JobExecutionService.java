@@ -156,6 +156,23 @@ public class JobExecutionService {
     eventPublisher.publishEvent(new JobCompletedEvent(this, jobExecutionId, stageExecutionId));
     PipelineLogger.info("Published job completed event for job: " + jobExecutionId);
   }
+  
+  /**
+   * Cleans up dependency maps for a stage after it's completed.
+   * This prevents memory leaks by removing data structures that are no longer needed.
+   *
+   * @param stageExecutionId ID of the completed stage
+   */
+  @Transactional
+  public void cleanupStageData(UUID stageExecutionId) {
+    // Remove job dependencies for this stage
+    stageDependenciesMap.remove(stageExecutionId);
+    
+    // Remove queued jobs set for this stage
+    stageQueuedJobsMap.remove(stageExecutionId);
+    
+    PipelineLogger.info("Cleaned up in-memory data for completed stage: " + stageExecutionId);
+  }
 
   /**
    * Cancels a job execution.
