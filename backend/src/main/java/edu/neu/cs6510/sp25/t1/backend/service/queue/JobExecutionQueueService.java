@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import edu.neu.cs6510.sp25.t1.backend.config.ServiceLocator;
 import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionService;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import jakarta.annotation.PostConstruct;
@@ -19,23 +20,17 @@ import jakarta.annotation.PostConstruct;
 public class JobExecutionQueueService {
     
     private final ExecutionQueue<UUID> jobQueue;
-    private JobExecutionService jobExecutionService;
-    private final ApplicationContext applicationContext;
     
     @Autowired
-    public JobExecutionQueueService(ApplicationContext applicationContext) {
+    public JobExecutionQueueService() {
         this.jobQueue = new ExecutionQueue<>();
-        this.applicationContext = applicationContext;
     }
     
     /**
      * Initialize the job queue processor.
-     * Gets the JobExecutionService lazily to break the circular dependency.
      */
     @PostConstruct
     public void init() {
-        // Get the JobExecutionService lazily from the ApplicationContext
-        this.jobExecutionService = applicationContext.getBean(JobExecutionService.class);
         jobQueue.setProcessor(this::processJobExecution);
     }
     
@@ -57,7 +52,9 @@ public class JobExecutionQueueService {
     private void processJobExecution(UUID jobExecutionId) {
         try {
             PipelineLogger.info("Processing job execution from queue: " + jobExecutionId);
-            jobExecutionService.processJobExecution(jobExecutionId);
+            // Use ServiceLocator to get JobExecutionService to avoid circular dependency
+            ServiceLocator.getBean(JobExecutionService.class)
+                .processJobExecution(jobExecutionId);
         } catch (Exception e) {
             PipelineLogger.error("Error processing job execution: " + jobExecutionId + " - " + e.getMessage());
         }

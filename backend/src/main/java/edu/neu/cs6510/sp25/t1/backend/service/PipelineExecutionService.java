@@ -29,7 +29,7 @@ import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionReposito
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageRepository;
 import edu.neu.cs6510.sp25.t1.backend.mapper.PipelineExecutionMapper;
 import edu.neu.cs6510.sp25.t1.backend.service.event.StageCompletedEvent;
-import edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService;
+import edu.neu.cs6510.sp25.t1.backend.config.ServiceLocator;
 import edu.neu.cs6510.sp25.t1.backend.service.queue.StageExecutionQueueService;
 import edu.neu.cs6510.sp25.t1.backend.utils.YamlPipelineUtils;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
@@ -59,7 +59,6 @@ public class PipelineExecutionService {
   private final JobRepository jobRepository;
   private final JobScriptRepository jobScriptRepository;
   private final ApplicationEventPublisher eventPublisher;
-  private final PipelineExecutionQueueService pipelineExecutionQueueService;
   private final StageExecutionQueueService stageExecutionQueueService;
 
   /**
@@ -113,7 +112,9 @@ public class PipelineExecutionService {
       verifyEntitiesSaved(pipelineId);
 
       // Add pipeline execution to queue instead of executing directly
-      pipelineExecutionQueueService.enqueuePipelineExecution(pipelineExecution.getId());
+      // Use ServiceLocator to get PipelineExecutionQueueService to avoid circular dependency
+      ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService.class)
+          .enqueuePipelineExecution(pipelineExecution.getId());
 
       return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "PENDING");
     } catch (Exception e) {

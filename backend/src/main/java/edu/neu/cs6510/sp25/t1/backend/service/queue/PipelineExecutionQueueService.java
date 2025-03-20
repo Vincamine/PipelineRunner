@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
+import edu.neu.cs6510.sp25.t1.backend.config.ServiceLocator;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import jakarta.annotation.PostConstruct;
 
@@ -19,7 +19,6 @@ import jakarta.annotation.PostConstruct;
 public class PipelineExecutionQueueService {
     
     private final ExecutionQueue<UUID> pipelineQueue;
-    private PipelineExecutionService pipelineExecutionService;
     private final ApplicationContext applicationContext;
     
     @Autowired
@@ -30,12 +29,9 @@ public class PipelineExecutionQueueService {
     
     /**
      * Initialize the pipeline queue processor.
-     * Gets the PipelineExecutionService lazily to break the circular dependency.
      */
     @PostConstruct
     public void init() {
-        // Get the PipelineExecutionService lazily from the ApplicationContext
-        this.pipelineExecutionService = applicationContext.getBean(PipelineExecutionService.class);
         pipelineQueue.setProcessor(this::processPipelineExecution);
     }
     
@@ -57,7 +53,9 @@ public class PipelineExecutionQueueService {
     private void processPipelineExecution(UUID pipelineExecutionId) {
         try {
             PipelineLogger.info("Processing pipeline execution from queue: " + pipelineExecutionId);
-            pipelineExecutionService.processPipelineExecution(pipelineExecutionId);
+            // Use ServiceLocator to get PipelineExecutionService to avoid circular dependency
+            ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService.class)
+                .processPipelineExecution(pipelineExecutionId);
         } catch (Exception e) {
             PipelineLogger.error("Error processing pipeline execution: " + pipelineExecutionId + " - " + e.getMessage());
         }

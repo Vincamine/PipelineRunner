@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import edu.neu.cs6510.sp25.t1.backend.service.StageExecutionService;
+import edu.neu.cs6510.sp25.t1.backend.config.ServiceLocator;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import jakarta.annotation.PostConstruct;
 
@@ -19,7 +19,6 @@ import jakarta.annotation.PostConstruct;
 public class StageExecutionQueueService {
     
     private final ExecutionQueue<UUID> stageQueue;
-    private StageExecutionService stageExecutionService;
     private final ApplicationContext applicationContext;
     
     @Autowired
@@ -30,12 +29,9 @@ public class StageExecutionQueueService {
     
     /**
      * Initialize the stage queue processor.
-     * Gets the StageExecutionService lazily to break the circular dependency.
      */
     @PostConstruct
     public void init() {
-        // Get the StageExecutionService lazily from the ApplicationContext
-        this.stageExecutionService = applicationContext.getBean(StageExecutionService.class);
         stageQueue.setProcessor(this::processStageExecution);
     }
     
@@ -57,7 +53,9 @@ public class StageExecutionQueueService {
     private void processStageExecution(UUID stageExecutionId) {
         try {
             PipelineLogger.info("Processing stage execution from queue: " + stageExecutionId);
-            stageExecutionService.processStageExecution(stageExecutionId);
+            // Use ServiceLocator to get StageExecutionService to avoid circular dependency
+            ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.StageExecutionService.class)
+                .processStageExecution(stageExecutionId);
         } catch (Exception e) {
             PipelineLogger.error("Error processing stage execution: " + stageExecutionId + " - " + e.getMessage());
         }
