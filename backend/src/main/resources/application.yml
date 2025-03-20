@@ -21,27 +21,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
-
-cicd:
-  rabbitmq:
-    job-queue: cicd-job-queue
+# Removed RabbitMQ configuration as it's no longer needed for queue-based execution
 
 logging:
   level:
     root: INFO  # Default logging level
     edu.neu.cs6510.sp25.t1: DEBUG  # Enable debugging for this project
 
-worker:
-  api:
-    execute-url: http://localhost:8081/api/worker/execute
-    cancel-url: http://localhost:8081/api/worker/cancel
+# Worker configuration removed as we've disconnected from worker module
 
+# Execution queue configuration
+execution:
+  queue:
+    max-concurrent-pipelines: 5  # Maximum number of pipelines that can run concurrently
+    max-concurrent-stages: 10    # Maximum number of stages that can run concurrently
+    max-concurrent-jobs: 20      # Maximum number of jobs that can run concurrently
 
 management:
   endpoints:
