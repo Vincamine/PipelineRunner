@@ -37,13 +37,29 @@ public class PipelineExecutionQueueService {
     
     /**
      * Adds a pipeline execution to the queue.
+     * This is the entry point for the pipeline → stage → job hierarchy of queues.
      *
      * @param pipelineExecutionId the ID of the pipeline execution to add to the queue
      */
     public void enqueuePipelineExecution(UUID pipelineExecutionId) {
         //WRONG: only pipeline queue. no stage and job queue
         PipelineLogger.info("Adding pipeline execution to queue: " + pipelineExecutionId);
-        pipelineQueue.enqueue(pipelineExecutionId);
+        
+        // Verify the pipeline execution exists in the database before queuing
+        try {
+            boolean exists = ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository.class)
+                .existsById(pipelineExecutionId);
+            
+            if (!exists) {
+                PipelineLogger.error("Cannot queue pipeline execution that doesn't exist in database: " + pipelineExecutionId);
+                return;
+            }
+            
+            // All checks passed, add to queue
+            pipelineQueue.enqueue(pipelineExecutionId);
+        } catch (Exception e) {
+            PipelineLogger.error("Error verifying pipeline execution before queuing: " + e.getMessage());
+        }
     }
     
     /**
