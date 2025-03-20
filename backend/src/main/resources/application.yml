@@ -9,9 +9,9 @@ spring:
     allow-circular-references: true  # Allow circular references in Spring beans
 
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cicd_db}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:54321/cicd_db}
     username: ${DATABASE_USER:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
+    password: ${DATABASE_PASSWORD:Li930227}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -20,6 +20,17 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+cicd:
+  rabbitmq:
+    job-queue: cicd-job-queue
 
 logging:
   level:

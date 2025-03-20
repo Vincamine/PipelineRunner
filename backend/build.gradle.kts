@@ -25,6 +25,9 @@ dependencies {
     //implementation("org.hibernate.orm:hibernate-core:6.6.9.Final")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
 
+    // rabbitMQ
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
+
     // Jakarta Persistence (JPA Annotations)
     //implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
 

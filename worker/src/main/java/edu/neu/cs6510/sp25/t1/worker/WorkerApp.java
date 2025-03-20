@@ -9,6 +9,10 @@ import edu.neu.cs6510.sp25.t1.worker.config.DockerProperties;
 import edu.neu.cs6510.sp25.t1.worker.config.WorkerApiProperties;
 import edu.neu.cs6510.sp25.t1.worker.config.WorkerProperties;
 
+/**
+ * Main entry point for the CI/CD Worker application.
+ * Responsible for executing jobs and updating their status in the database.
+ */
 @SpringBootApplication
 @EnableConfigurationProperties({DockerProperties.class, ArtifactProperties.class, WorkerProperties.class, WorkerApiProperties.class})
 public class WorkerApp {
