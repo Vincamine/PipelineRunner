@@ -76,6 +76,7 @@ public class JobExecutionService {
    * Send job to message queue in a new transaction
    *
    * @param jobExecutionId job execution ID
+   *
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void sendJobToQueueInNewTransaction(UUID jobExecutionId) {

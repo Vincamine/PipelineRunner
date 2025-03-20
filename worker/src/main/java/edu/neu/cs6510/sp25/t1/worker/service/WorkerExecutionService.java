@@ -3,7 +3,7 @@ package edu.neu.cs6510.sp25.t1.worker.service;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.worker.execution.DockerExecutor;
-import edu.neu.cs6510.sp25.t1.worker.api.client.WorkerBackendClient;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
