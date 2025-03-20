@@ -31,9 +31,12 @@ public class PipelineExecutionQueueService {
     
     /**
      * Initialize the pipeline queue processor.
+     * Gets the PipelineExecutionService lazily to break the circular dependency.
      */
     @PostConstruct
     public void init() {
+        // Get the PipelineExecutionService lazily from the ApplicationContext
+        this.pipelineExecutionService = applicationContext.getBean(PipelineExecutionService.class);
         pipelineQueue.setProcessor(this::processPipelineExecution);
     }
     
