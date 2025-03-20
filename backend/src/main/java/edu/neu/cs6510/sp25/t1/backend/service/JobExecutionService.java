@@ -214,13 +214,14 @@ public class JobExecutionService {
   
   /**
    * Finds jobs that are ready for execution after a job has completed.
+   * Uses synchronization to prevent race conditions when multiple jobs complete concurrently.
    *
    * @param stageExecutionId ID of the stage execution
    * @param completedJobId ID of the job that has completed
    * @return list of job IDs that are ready for execution
    */
   @Transactional
-  public List<UUID> findJobsReadyForExecution(UUID stageExecutionId, UUID completedJobId) {
+  public synchronized List<UUID> findJobsReadyForExecution(UUID stageExecutionId, UUID completedJobId) {
     // Get the dependencies map for this stage
     Map<UUID, List<UUID>> jobDependencies = stageDependenciesMap.get(stageExecutionId);
     if (jobDependencies == null) {
@@ -228,8 +229,8 @@ public class JobExecutionService {
       return Collections.emptyList();
     }
     
-    // Get the set of queued jobs for this stage
-    Set<UUID> queuedJobs = stageQueuedJobsMap.getOrDefault(stageExecutionId, ConcurrentHashMap.newKeySet());
+    // Get the set of queued jobs for this stage, ensuring it exists
+    Set<UUID> queuedJobs = stageQueuedJobsMap.computeIfAbsent(stageExecutionId, k -> ConcurrentHashMap.newKeySet());
     
     // Mark this job as queued (to handle case where a job completes before all dependent jobs are queued)
     queuedJobs.add(completedJobId);
@@ -237,9 +238,11 @@ public class JobExecutionService {
     // Find jobs that depend on the completed job and check if all their dependencies are satisfied
     List<UUID> readyJobs = new ArrayList<>();
     
-    for (Map.Entry<UUID, List<UUID>> entry : jobDependencies.entrySet()) {
+    // Create a defensive copy of the entry set to avoid concurrent modification
+    for (Map.Entry<UUID, List<UUID>> entry : new HashMap<>(jobDependencies).entrySet()) {
       UUID jobId = entry.getKey();
-      List<UUID> dependencies = entry.getValue();
+      // Create a defensive copy of the dependencies list
+      List<UUID> dependencies = new ArrayList<>(entry.getValue());
       
       // Skip if job has no dependencies or has already been queued
       if (dependencies.isEmpty() || queuedJobs.contains(jobId)) {
@@ -260,6 +263,7 @@ public class JobExecutionService {
         if (allDependenciesSatisfied) {
           readyJobs.add(jobId);
           queuedJobs.add(jobId); // Mark as queued
+          PipelineLogger.info("Job " + jobId + " is now ready for execution - all dependencies satisfied");
         }
       }
     }
