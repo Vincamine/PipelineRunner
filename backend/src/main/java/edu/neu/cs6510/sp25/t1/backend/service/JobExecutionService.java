@@ -124,13 +124,19 @@ public class JobExecutionService {
     JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
         .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
     
-    jobExecution.updateState(status);
-    
-    if (status == ExecutionStatus.RUNNING) {
+    // Set start time when job starts running
+    if (status == ExecutionStatus.RUNNING && jobExecution.getStartTime() == null) {
       jobExecution.setStartTime(Instant.now());
-    } else if (status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) {
+    }
+    
+    // Set end time when job reaches a terminal state
+    if ((status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) 
+        && jobExecution.getEndTime() == null) {
       jobExecution.setEndTime(Instant.now());
     }
+    
+    // Update the state after setting timestamps to ensure correct order
+    jobExecution.updateState(status);
     
     jobExecutionRepository.saveAndFlush(jobExecution);
     PipelineLogger.info("Updated job execution status to " + status + ": " + jobExecutionId);
