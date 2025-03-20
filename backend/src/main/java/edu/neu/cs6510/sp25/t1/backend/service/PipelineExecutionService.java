@@ -159,13 +159,7 @@ public class PipelineExecutionService {
       pipelineExecution.setStartTime(Instant.now());
     }
     
-    // Set end time when pipeline reaches a terminal state
-    if ((status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) 
-        && pipelineExecution.getEndTime() == null) {
-      pipelineExecution.setEndTime(Instant.now());
-    }
-    
-    // Update state after setting timestamps to ensure correct order
+    // Update state which will set completionTime for terminal states
     pipelineExecution.updateState(status);
     
     pipelineExecutionRepository.saveAndFlush(pipelineExecution);
