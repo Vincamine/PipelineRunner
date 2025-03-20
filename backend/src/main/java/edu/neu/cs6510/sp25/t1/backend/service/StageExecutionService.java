@@ -217,6 +217,9 @@ public class StageExecutionService {
     // Cancel any remaining jobs
     cancelRemainingJobs(stageExecutionId);
     
+    // Clean up in-memory data for this stage to prevent memory leaks
+    jobExecutionService.cleanupStageData(stageExecutionId);
+    
     // Publish stage completed event
     UUID pipelineExecutionId = findPipelineId(stageExecutionId);
     publishStageCompletedEvent(stageExecutionId, pipelineExecutionId);
@@ -261,6 +264,9 @@ public class StageExecutionService {
   public void finalizeStageExecution(UUID stageExecutionId) {
     PipelineLogger.info("Finalizing stage execution: " + stageExecutionId);
     updateStageStatus(stageExecutionId, ExecutionStatus.SUCCESS);
+    
+    // Clean up in-memory data for this stage to prevent memory leaks
+    jobExecutionService.cleanupStageData(stageExecutionId);
     
     // Find the pipeline ID and publish a stage completed event
     UUID pipelineExecutionId = findPipelineId(stageExecutionId);
