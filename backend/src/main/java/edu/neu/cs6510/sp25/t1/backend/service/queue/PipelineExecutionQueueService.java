@@ -20,13 +20,13 @@ import jakarta.annotation.PostConstruct;
 public class PipelineExecutionQueueService {
     
     private final ExecutionQueue<UUID> pipelineQueue;
-    private final PipelineExecutionService pipelineExecutionService;
+    private PipelineExecutionService pipelineExecutionService;
+    private final ApplicationContext applicationContext;
     
     @Autowired
-    public PipelineExecutionQueueService(
-            PipelineExecutionService pipelineExecutionService) {
+    public PipelineExecutionQueueService(ApplicationContext applicationContext) {
         this.pipelineQueue = new ExecutionQueue<>();
-        this.pipelineExecutionService = pipelineExecutionService;
+        this.applicationContext = applicationContext;
     }
     
     /**
