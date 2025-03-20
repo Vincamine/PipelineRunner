@@ -55,7 +55,7 @@ public class StageController {
   @PostMapping("/execute/{stageExecutionId}")
   @Operation(summary = "Start stage execution", description = "Manually triggers execution of a pipeline stage.")
   public ResponseEntity<String> executeStage(@PathVariable UUID stageExecutionId) {
-    stageExecutionService.executeStage(stageExecutionId);
+    stageExecutionService.processStageExecution(stageExecutionId);
     return ResponseEntity.ok("{\"message\": \"Stage execution started successfully.\"}");
   }
 }
