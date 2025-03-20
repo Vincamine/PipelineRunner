@@ -69,10 +69,10 @@ public class JobExecutionService {
     jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
 
     // Use separate transaction for message queue communication
-    sendJobToQueueInNewTransaction(jobExecutionId);
+    //Need a new ServiceClass after save and flush //Only send UUID to queue
+    // to deal with the logic of sendJobToQueueInNewTransaction(jobExecutionId);
   }
 
-//Need a new ServiceClass after save and flush //Only send UUID to queue
 
   /**
    * Update job status after queue failure in a new transaction
