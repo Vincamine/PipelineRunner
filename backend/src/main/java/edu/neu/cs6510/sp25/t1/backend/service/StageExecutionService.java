@@ -39,8 +39,9 @@ public class StageExecutionService {
   private final ApplicationEventPublisher eventPublisher;
 
   /**
-   * Processes a stage execution from the queue.
-   * This method is called by the queue service to process a stage execution.
+   * Processes a stage execution from the queue or when triggered directly.
+   * This method is called by the queue service to process a stage execution
+   * or when manually triggered via the API.
    *
    * @param stageExecutionId ID of the stage execution to process
    */
