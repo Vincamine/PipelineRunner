@@ -97,6 +97,7 @@ public class JobDataService {
      * @param jobExecutionId The job execution ID
      * @return Optional containing the job execution details, or empty if not found
      */
+    @Transactional
     public Optional<JobExecutionDTO> getJobExecutionById(UUID jobExecutionId) {
         Optional<JobExecutionEntity> jobExecution = jobExecutionRepository.findById(jobExecutionId);
 
@@ -106,6 +107,11 @@ public class JobDataService {
 
         JobExecutionEntity entity = jobExecution.get();
         Optional<JobEntity> jobEntity = jobRepository.findById(entity.getJobId());
+
+        jobEntity.ifPresent(job -> {
+            // Force initialization of the script collection
+            job.getScript().size(); // forces Hibernate to load it
+        });
 
         return Optional.of(mapper.toJobExecutionDto(entity, jobEntity.orElse(null)));
     }
