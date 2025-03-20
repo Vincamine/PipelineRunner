@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import edu.neu.cs6510.sp25.t1.worker.config.ArtifactProperties;
-import edu.neu.cs6510.sp25.t1.worker.config.DockerProperties;
+
 import edu.neu.cs6510.sp25.t1.worker.config.WorkerApiProperties;
 import edu.neu.cs6510.sp25.t1.worker.config.WorkerProperties;
 import org.springframework.context.annotation.ComponentScan;
@@ -17,7 +17,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * Responsible for executing jobs and updating their status in the database.
  */
 @SpringBootApplication
-@EnableConfigurationProperties({DockerProperties.class, ArtifactProperties.class, WorkerProperties.class, WorkerApiProperties.class})
+@EnableConfigurationProperties({ArtifactProperties.class, WorkerProperties.class, WorkerApiProperties.class})
 @ComponentScan(basePackages = {
         "edu.neu.cs6510.sp25.t1.worker",
         "edu.neu.cs6510.sp25.t1.backend.database.repository",
