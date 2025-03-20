@@ -77,13 +77,7 @@ public class StageExecutionService {
       stageExecution.setStartTime(Instant.now());
     }
     
-    // Set end time when stage reaches a terminal state
-    if ((status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) 
-        && stageExecution.getEndTime() == null) {
-      stageExecution.setEndTime(Instant.now());
-    }
-    
-    // Update the state after setting timestamps to ensure correct order
+    // Update the state which will set completionTime for terminal states
     stageExecution.updateState(status);
     
     stageExecutionRepository.saveAndFlush(stageExecution);
