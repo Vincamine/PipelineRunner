@@ -72,11 +72,19 @@ public class StageExecutionService {
     StageExecutionEntity stageExecution = stageExecutionRepository.findById(stageExecutionId)
         .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
     
-    stageExecution.updateState(status);
+    // Set start time when stage starts running
+    if (status == ExecutionStatus.RUNNING && stageExecution.getStartTime() == null) {
+      stageExecution.setStartTime(Instant.now());
+    }
     
-    if (status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) {
+    // Set end time when stage reaches a terminal state
+    if ((status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) 
+        && stageExecution.getEndTime() == null) {
       stageExecution.setEndTime(Instant.now());
     }
+    
+    // Update the state after setting timestamps to ensure correct order
+    stageExecution.updateState(status);
     
     stageExecutionRepository.saveAndFlush(stageExecution);
     PipelineLogger.info("Updated stage execution status to " + status + ": " + stageExecutionId);
