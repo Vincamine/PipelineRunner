@@ -193,18 +193,18 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles resource access exceptions typically occurring during service-to-service communication.
+     * Handles resource access exceptions typically occurring during external service communication.
      *
      * @param ex the ResourceAccessException thrown when communication with a dependent service fails
      * @return ResponseEntity containing an ApiError with a SERVICE_UNAVAILABLE status
      */
-    @ExceptionHandler(WorkerCommunicationException.class)
-    public ResponseEntity<ApiError> handleWorkerCommunicationException(WorkerCommunicationException ex) {
-        PipelineLogger.error("Worker communication error: " + ex.getMessage());
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ApiError> handleResourceAccessException(ResourceAccessException ex) {
+        PipelineLogger.error("External service communication error: " + ex.getMessage());
         ApiError apiError = new ApiError(
                 HttpStatus.SERVICE_UNAVAILABLE,
-                "Worker Communication Error",
-                ex.getMessage()
+                "External Service Communication Error",
+                "A required external service is currently unavailable"
         );
         return new ResponseEntity<>(apiError, HttpStatus.SERVICE_UNAVAILABLE);
     }

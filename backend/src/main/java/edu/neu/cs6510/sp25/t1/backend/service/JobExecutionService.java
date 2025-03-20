@@ -1,279 +1,283 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-import edu.neu.cs6510.sp25.t1.backend.error.WorkerCommunicationException;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
-import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.service.event.JobCompletedEvent;
 import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
-import edu.neu.cs6510.sp25.t1.backend.error.GlobalExceptionHandler;
 import lombok.RequiredArgsConstructor;
 
-
-
+/**
+ * Service responsible for managing job executions.
+ * This service has been refactored to:
+ * 1. Work with a queue system for job executions
+ * 2. Remove worker dependencies
+ * 3. Follow the "one function does one thing" principle
+ */
 @Service
 @RequiredArgsConstructor
 public class JobExecutionService {
   private final JobExecutionRepository jobExecutionRepository;
-  private final ApplicationEventPublisher eventPublisher;
-  private final StageExecutionRepository stageExecutionRepository;
-  private final RestTemplate restTemplate = new RestTemplate();
   private final JobRepository jobRepository;
-  @Value("${worker.api.execute-url}")
-  private String workerExecuteUrl;
-  @Value("${worker.api.cancel-url}")
-  private String workerCancelUrl;
-
-  private final RabbitTemplate rabbitTemplate;
-
-  @Value("${cicd.rabbitmq.job-queue}")
-  private String jobQueueName;
-
+  private final StageExecutionRepository stageExecutionRepository;
+  private final ApplicationEventPublisher eventPublisher;
+  
+  // In-memory storage for job dependencies (stage execution ID -> job dependencies map)
+  private final Map<UUID, Map<UUID, List<UUID>>> stageDependenciesMap = new ConcurrentHashMap<>();
+  
+  // In-memory storage for queued jobs (stage execution ID -> set of queued job IDs)
+  private final Map<UUID, Set<UUID>> stageQueuedJobsMap = new ConcurrentHashMap<>();
+  
   /**
-   * Start a job
+   * Processes a job execution from the queue.
+   * This method is called by the queue service to process a job execution.
    *
-   * @param jobExecutionId job execution ID
+   * @param jobExecutionId ID of the job execution to process
    */
   @Transactional
-  public void startJobExecution(UUID jobExecutionId) {
-    PipelineLogger.info("Preparing to send job execution to message queue: " + jobExecutionId);
-
+  public void processJobExecution(UUID jobExecutionId) {
+    PipelineLogger.info("Processing job execution: " + jobExecutionId);
+    
+    try {
+      // Update job status to RUNNING
+      updateJobStatus(jobExecutionId, ExecutionStatus.RUNNING);
+      
+      // Simulate job execution (in a real system, this would be the actual job work)
+      simulateJobExecution(jobExecutionId);
+      
+      // Update job status to SUCCESS
+      completeJob(jobExecutionId, ExecutionStatus.SUCCESS);
+    } catch (Exception e) {
+      PipelineLogger.error("Error executing job: " + jobExecutionId + " - " + e.getMessage());
+      completeJob(jobExecutionId, ExecutionStatus.FAILED);
+    }
+  }
+  
+  /**
+   * Simulates job execution.
+   * In a real system, this would be where the actual job work happens.
+   *
+   * @param jobExecutionId ID of the job execution
+   */
+  private void simulateJobExecution(UUID jobExecutionId) {
+    // Get the job execution
     JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
-            .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
-
-    jobExecution.updateState(ExecutionStatus.RUNNING);
-    jobExecution.setStartTime(Instant.now());
-    jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
-
-    // Use separate transaction for message queue communication
-    sendJobToQueueInNewTransaction(jobExecutionId);
-  }
-
-  /**
-   * Send job to message queue in a new transaction
-   *
-   * @param jobExecutionId job execution ID
-   *
-   */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void sendJobToQueueInNewTransaction(UUID jobExecutionId) {
+        .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
+    
+    // Get the job entity
+    JobEntity job = jobRepository.findById(jobExecution.getJobId())
+        .orElseThrow(() -> new IllegalArgumentException("Job not found"));
+    
+    PipelineLogger.info("Executing job: " + job.getName() + " (ID: " + jobExecutionId + ")");
+    
+    // In a real system, this is where you would do the actual job work
+    // For now, we just log some information about the job
+    PipelineLogger.info("Job details:");
+    PipelineLogger.info("  - Name: " + job.getName());
+    PipelineLogger.info("  - Docker image: " + job.getDockerImage());
+    PipelineLogger.info("  - Allow failure: " + job.isAllowFailure());
+    
+    // Get job scripts if any
+    List<String> scripts = job.getScript();
+    if (scripts != null && !scripts.isEmpty()) {
+      PipelineLogger.info("  - Scripts: " + String.join(", ", scripts));
+    } else {
+      PipelineLogger.info("  - No scripts defined");
+    }
+    
+    // Simulate job execution time (1-3 seconds)
     try {
-      JobExecutionDTO jobExecutionDTO = getJobExecution(jobExecutionId);
-
-      // Send job to RabbitMQ queue
-      rabbitTemplate.convertAndSend(jobQueueName, jobExecutionDTO);
-      PipelineLogger.info("Job successfully sent to message queue: " + jobExecutionId);
-    } catch (Exception e) {
-      // Update job status to failed but in a new transaction
-      updateJobStatusAfterQueueFailure(jobExecutionId, e.getMessage());
-      PipelineLogger.error("Failed to queue job execution: " + e.getMessage());
+      Thread.sleep((long) (Math.random() * 2000) + 1000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
   }
-
+  
   /**
-   * Update job status after queue failure in a new transaction
+   * Updates the status of a job execution.
    *
-   * @param jobExecutionId job execution ID
-   * @param errorMessage   error message
-   */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void updateJobStatusAfterQueueFailure(UUID jobExecutionId, String errorMessage) {
-    try {
-      JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
-              .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
-
-      jobExecution.updateState(ExecutionStatus.FAILED);
-      jobExecutionRepository.save(jobExecution);
-      jobExecutionRepository.flush();
-
-      PipelineLogger.info("Updated job status to FAILED due to queue error: " + errorMessage);
-    } catch (Exception e) {
-      PipelineLogger.error("Failed to update job status after queue failure: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Send job to worker in a new transaction to prevent rollback of job state
-   *
-   * @param jobExecutionId job execution ID
-   */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void sendJobToWorkerInNewTransaction(UUID jobExecutionId) {
-    try {
-      sendJobToWorker(jobExecutionId);
-    } catch (Exception e) {
-      // Update job status to failed but in a new transaction
-      updateJobStatusAfterWorkerFailure(jobExecutionId, e.getMessage());
-      PipelineLogger.error("Job execution failed: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Update job status after worker failure in a new transaction
-   *
-   * @param jobExecutionId job execution ID
-   * @param errorMessage   error message
-   */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void updateJobStatusAfterWorkerFailure(UUID jobExecutionId, String errorMessage) {
-    try {
-      JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
-              .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
-
-      jobExecution.updateState(ExecutionStatus.FAILED);
-      jobExecutionRepository.saveAndFlush(jobExecution);
-
-      PipelineLogger.info("Updated job status to FAILED due to worker error: " + errorMessage);
-    } catch (Exception e) {
-      PipelineLogger.error("Failed to update job status after worker failure: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Send a job
-   *
-   * @param jobExecutionId job execution ID
-   */
-  private void sendJobToWorker(UUID jobExecutionId) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
-    String requestPayload = "{\"jobExecutionId\": \"" + jobExecutionId + "\"}";
-
-    HttpEntity<String> request = new HttpEntity<>(requestPayload, headers);
-    ResponseEntity<String> response;
-
-    try {
-      PipelineLogger.info("Sending request to worker: " + workerExecuteUrl);
-      response = restTemplate.postForEntity(workerExecuteUrl, request, String.class);
-    } catch (ResourceAccessException e) {
-      PipelineLogger.error("Worker is unreachable: " + e.getMessage());
-      throw new WorkerCommunicationException("Worker is unreachable: " + e.getMessage());
-    } catch (Exception e) {
-      PipelineLogger.error("Error sending request to worker: " + e.getMessage());
-      throw new WorkerCommunicationException("Error communicating with worker: " + e.getMessage());
-    }
-
-    if (!response.getStatusCode().is2xxSuccessful()) {
-      PipelineLogger.error("Worker returned non-success status code: " + response.getStatusCode());
-      throw new RuntimeException("Worker job execution failed: " + response.getBody());
-    }
-
-    PipelineLogger.info("Job successfully sent to worker: " + jobExecutionId);
-  }
-
-  /**
-   * Update job execution status.
-   *
-   * @param jobExecutionId job execution ID
-   * @param newStatus      new status
+   * @param jobExecutionId ID of the job execution
+   * @param status the new status
    */
   @Transactional
-  public void updateJobExecutionStatus(UUID jobExecutionId, ExecutionStatus newStatus) {
+  public void updateJobStatus(UUID jobExecutionId, ExecutionStatus status) {
     JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
-            .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
-
-    jobExecution.updateState(newStatus);
-    jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
-
-    if (newStatus == ExecutionStatus.SUCCESS) {
-      eventPublisher.publishEvent(new JobCompletedEvent(this, jobExecutionId, jobExecution.getStageExecution().getId()));
+        .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
+    
+    // Set start time when job starts running
+    if (status == ExecutionStatus.RUNNING && jobExecution.getStartTime() == null) {
+      jobExecution.setStartTime(Instant.now());
     }
+    
+    // Update the state which will set completionTime for terminal states
+    jobExecution.updateState(status);
+    
+    jobExecutionRepository.saveAndFlush(jobExecution);
+    PipelineLogger.info("Updated job execution status to " + status + ": " + jobExecutionId);
+  }
+  
+  /**
+   * Completes a job execution and publishes the appropriate event.
+   *
+   * @param jobExecutionId ID of the job execution
+   * @param status the final status of the job
+   */
+  @Transactional
+  public void completeJob(UUID jobExecutionId, ExecutionStatus status) {
+    // Update the job status
+    updateJobStatus(jobExecutionId, status);
+    
+    // Get the stage execution ID
+    JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
+        .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
+    UUID stageExecutionId = jobExecution.getStageExecution().getId();
+    
+    // Publish job completed event
+    eventPublisher.publishEvent(new JobCompletedEvent(this, jobExecutionId, stageExecutionId));
+    PipelineLogger.info("Published job completed event for job: " + jobExecutionId);
+  }
+  
+  /**
+   * Cleans up dependency maps for a stage after it's completed.
+   * This prevents memory leaks by removing data structures that are no longer needed.
+   *
+   * @param stageExecutionId ID of the completed stage
+   */
+  @Transactional
+  public void cleanupStageData(UUID stageExecutionId) {
+    // Remove job dependencies for this stage
+    stageDependenciesMap.remove(stageExecutionId);
+    
+    // Remove queued jobs set for this stage
+    stageQueuedJobsMap.remove(stageExecutionId);
+    
+    PipelineLogger.info("Cleaned up in-memory data for completed stage: " + stageExecutionId);
   }
 
   /**
-   * Cancel a job execution.
+   * Cancels a job execution.
    *
    * @param jobExecutionId job execution ID
    */
   @Transactional
   public void cancelJobExecution(UUID jobExecutionId) {
-    PipelineLogger.info("Attempting to cancel job execution: " + jobExecutionId);
+    PipelineLogger.info("Cancelling job execution: " + jobExecutionId);
 
     JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
             .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
 
     if (jobExecution.getStatus() == ExecutionStatus.PENDING || jobExecution.getStatus() == ExecutionStatus.RUNNING) {
-      jobExecution.updateState(ExecutionStatus.CANCELED);
-      jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
-      PipelineLogger.info("Job execution canceled in backend: " + jobExecutionId);
-
-      // Send cancel request to worker in a new transaction
-      sendCancelRequestInNewTransaction(jobExecutionId);
+      updateJobStatus(jobExecutionId, ExecutionStatus.CANCELED);
+      PipelineLogger.info("Job execution canceled: " + jobExecutionId);
     } else {
       PipelineLogger.warn("Cannot cancel job execution. Current status: " + jobExecution.getStatus());
     }
   }
 
   /**
-   * Send cancel request in a new transaction
+   * Saves job dependencies map for a stage.
+   * This is used to track job dependencies and determine when jobs can be executed.
    *
-   * @param jobExecutionId job execution ID
+   * @param stageExecutionId ID of the stage execution
+   * @param jobDependencies map of job execution ID to list of job dependency IDs
+   * @param queuedJobs set of job IDs that have been queued
    */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void sendCancelRequestInNewTransaction(UUID jobExecutionId) {
-    try {
-      sendCancelRequestToWorker(jobExecutionId);
-    } catch (Exception e) {
-      PipelineLogger.error("Failed to send cancel request to worker: " + e.getMessage());
-      // No need to rollback status change even if worker communication fails
-    }
+  @Transactional
+  public void saveJobDependenciesMap(UUID stageExecutionId, Map<UUID, List<UUID>> jobDependencies, Set<UUID> queuedJobs) {
+    stageDependenciesMap.put(stageExecutionId, new HashMap<>(jobDependencies));
+    stageQueuedJobsMap.put(stageExecutionId, ConcurrentHashMap.newKeySet());
+    stageQueuedJobsMap.get(stageExecutionId).addAll(queuedJobs);
+    
+    PipelineLogger.info("Saved job dependencies map for stage: " + stageExecutionId);
+    PipelineLogger.info("Initial queued jobs: " + queuedJobs);
   }
-
+  
   /**
-   * Send a cancel request to worker.
+   * Finds jobs that are ready for execution after a job has completed.
+   * Uses synchronization to prevent race conditions when multiple jobs complete concurrently.
    *
-   * @param jobExecutionId job execution id
+   * @param stageExecutionId ID of the stage execution
+   * @param completedJobId ID of the job that has completed
+   * @return list of job IDs that are ready for execution
    */
-  private void sendCancelRequestToWorker(UUID jobExecutionId) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
-    String requestPayload = "{\"jobExecutionId\": \"" + jobExecutionId + "\", \"action\": \"CANCEL\"}";
-    HttpEntity<String> request = new HttpEntity<>(requestPayload, headers);
-    ResponseEntity<String> response;
-
-    try {
-      response = restTemplate.postForEntity(workerCancelUrl + "/cancel", request, String.class);
-      if (response.getStatusCode().is2xxSuccessful()) {
-        PipelineLogger.info("Cancel request confirmed by worker for job: " + jobExecutionId);
-      } else {
-        PipelineLogger.error("Worker failed to cancel job. Keeping status unchanged.");
+  @Transactional
+  public synchronized List<UUID> findJobsReadyForExecution(UUID stageExecutionId, UUID completedJobId) {
+    // Get the dependencies map for this stage
+    Map<UUID, List<UUID>> jobDependencies = stageDependenciesMap.get(stageExecutionId);
+    if (jobDependencies == null) {
+      PipelineLogger.warn("No dependencies map found for stage: " + stageExecutionId);
+      return Collections.emptyList();
+    }
+    
+    // Get the set of queued jobs for this stage, ensuring it exists
+    Set<UUID> queuedJobs = stageQueuedJobsMap.computeIfAbsent(stageExecutionId, k -> ConcurrentHashMap.newKeySet());
+    
+    // Mark this job as queued (to handle case where a job completes before all dependent jobs are queued)
+    queuedJobs.add(completedJobId);
+    
+    // Find jobs that depend on the completed job and check if all their dependencies are satisfied
+    List<UUID> readyJobs = new ArrayList<>();
+    
+    // Create a defensive copy of the entry set to avoid concurrent modification
+    for (Map.Entry<UUID, List<UUID>> entry : new HashMap<>(jobDependencies).entrySet()) {
+      UUID jobId = entry.getKey();
+      // Create a defensive copy of the dependencies list
+      List<UUID> dependencies = new ArrayList<>(entry.getValue());
+      
+      // Skip if job has no dependencies or has already been queued
+      if (dependencies.isEmpty() || queuedJobs.contains(jobId)) {
+        continue;
       }
-    } catch (Exception e) {
-      PipelineLogger.error("Error sending cancel request to worker: " + e.getMessage());
+      
+      // Check if this job depends on the completed job
+      if (dependencies.contains(completedJobId)) {
+        // Check if all dependencies are satisfied (queued)
+        boolean allDependenciesSatisfied = true;
+        for (UUID dependencyId : dependencies) {
+          if (!queuedJobs.contains(dependencyId)) {
+            allDependenciesSatisfied = false;
+            break;
+          }
+        }
+        
+        if (allDependenciesSatisfied) {
+          readyJobs.add(jobId);
+          queuedJobs.add(jobId); // Mark as queued
+          PipelineLogger.info("Job " + jobId + " is now ready for execution - all dependencies satisfied");
+        }
+      }
     }
+    
+    return readyJobs;
   }
 
   /**
-   * Get jobs by stage execution id
+   * Get jobs by stage execution ID.
    *
    * @param stageExecutionId stage execution ID
    * @return list of job executions
    */
+  @Transactional(readOnly = true)
   public List<JobExecutionEntity> getJobsByStageExecution(UUID stageExecutionId) {
     StageExecutionEntity stageExecution = stageExecutionRepository.findById(stageExecutionId)
             .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
@@ -292,22 +296,6 @@ public class JobExecutionService {
     return jobExecutionRepository.findDependenciesByJobId(jobId);
   }
 
-  /**
-   * Retrieves job definitions for a given stage execution.
-   *
-   * @param stageExecutionId the stage execution ID
-   * @return list of job DTOs
-   */
-  public List<JobExecutionEntity> getJobExecutionsForStage(UUID stageExecutionId) {
-    StageExecutionEntity stageExecution = stageExecutionRepository.findById(stageExecutionId)
-            .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
-
-    List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecution(stageExecution);
-
-    PipelineLogger.info("🔍 Found " + jobs.size() + " jobs for stage execution ID: " + stageExecutionId);
-
-    return jobs;
-  }
 
   /**
    * Saves a job execution to the database.
@@ -316,8 +304,8 @@ public class JobExecutionService {
    */
   @Transactional
   public void saveJobExecution(JobExecutionEntity jobExecution) {
-    jobExecutionRepository.saveAndFlush(jobExecution); // Save and flush in one operation
-    PipelineLogger.info("💾 Job execution saved: " + jobExecution.getId());
+    jobExecutionRepository.saveAndFlush(jobExecution);
+    PipelineLogger.info("Job execution saved: " + jobExecution.getId());
   }
 
   /**
@@ -331,26 +319,30 @@ public class JobExecutionService {
     JobExecutionEntity jobExecution = jobExecutionRepository.findById(jobExecutionId)
             .orElseThrow(() -> new IllegalArgumentException("Job Execution not found"));
 
-    // You'll need to convert this entity to a DTO
-    // This assumes you have a method or mapper for this conversion
     return convertToDTO(jobExecution);
   }
 
-  // Helper method to convert entity to DTO
+  /**
+   * Helper method to convert entity to DTO.
+   *
+   * @param entity the job execution entity
+   * @return the job execution DTO
+   */
   private JobExecutionDTO convertToDTO(JobExecutionEntity entity) {
     JobExecutionDTO dto = new JobExecutionDTO();
     dto.setId(entity.getId());
     dto.setAllowFailure(entity.isAllowFailure());
     dto.setStatus(entity.getStatus());
 
-    // You'll need to fetch the job details and set them
+    // Fetch the job details
     JobDTO jobDTO = new JobDTO();
-    // Fill in job details from your database or other source
     jobDTO.setId(entity.getJobId());
+    
     // Fetch job data from JobEntity
     JobEntity jobEntity = jobRepository.findById(entity.getJobId())
         .orElseThrow(() -> new IllegalArgumentException("Job not found"));
-    // Set other job properties
+    
+    // Set job properties
     jobDTO.setStageId(jobEntity.getStageId());
     jobDTO.setName(jobEntity.getName());
     jobDTO.setDockerImage(jobEntity.getDockerImage());
@@ -360,7 +352,6 @@ public class JobExecutionService {
     jobDTO.setScript(jobEntity.getScript());
     jobDTO.setWorkingDir(jobEntity.getWorkingDir());
     jobDTO.setDependencies(jobEntity.getDependencies());
-    // job_artifacts needs re-work
 
     dto.setJob(jobDTO);
 

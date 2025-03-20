@@ -47,7 +47,7 @@ public class JobController {
   @Operation(summary = "Start job execution", description = "Triggers the execution of a job.")
   public ResponseEntity<String> executeJob(@PathVariable UUID jobExecutionId) {
     try {
-      jobExecutionService.startJobExecution(jobExecutionId);
+      jobExecutionService.processJobExecution(jobExecutionId);
       return ResponseEntity.ok("{\"message\": \"Job execution started successfully.\"}");
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(404).body("{\"error\": \"Job execution not found.\"}");
@@ -63,7 +63,7 @@ public class JobController {
   @PutMapping("/status")
   @Operation(summary = "Update job execution status", description = "Allows workers to update job execution status.")
   public ResponseEntity<String> updateJobStatus(@RequestBody JobStatusUpdate updateRequest) {
-    jobExecutionService.updateJobExecutionStatus(updateRequest.getJobExecutionId(), updateRequest.getStatus());
+    jobExecutionService.updateJobStatus(updateRequest.getJobExecutionId(), updateRequest.getStatus());
     return ResponseEntity.ok("{\"message\": \"Job status updated successfully.\"}");
   }
 

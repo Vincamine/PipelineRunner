@@ -1,17 +1,21 @@
 package edu.neu.cs6510.sp25.t1.common.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import lombok.Getter;
+import edu.neu.cs6510.sp25.t1.common.model.deserializer.StageDeserializer;
 
 /**
  * Represents a stage in a CI/CD pipeline configuration.
  */
 @Getter
+@JsonDeserialize(using = StageDeserializer.class)
 public class Stage {
   // Getter with lombok
   private final UUID id;
@@ -33,6 +37,7 @@ public class Stage {
    * @param createdAt      Timestamp of stage creation
    * @param updatedAt      Timestamp of last update
    */
+  @JsonCreator
   public Stage(
           @JsonProperty("id") UUID id,
           @JsonProperty("name") String name,
@@ -49,5 +54,19 @@ public class Stage {
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
-
+  
+  /**
+   * Simple constructor for string deserialization - used when stage name is provided as a string.
+   * 
+   * @param name The name of the stage
+   */
+  public Stage(String name) {
+    this.id = null;
+    this.name = name;
+    this.pipelineId = null;
+    this.executionOrder = 0;
+    this.jobs = List.of();
+    this.createdAt = null;
+    this.updatedAt = null;
+  }
 }
