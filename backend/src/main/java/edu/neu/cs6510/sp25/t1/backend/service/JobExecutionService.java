@@ -256,6 +256,7 @@ public class JobExecutionService {
    * @param stageExecutionId stage execution ID
    * @return list of job executions
    */
+  @Transactional(readOnly = true)
   public List<JobExecutionEntity> getJobsByStageExecution(UUID stageExecutionId) {
     StageExecutionEntity stageExecution = stageExecutionRepository.findById(stageExecutionId)
             .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
