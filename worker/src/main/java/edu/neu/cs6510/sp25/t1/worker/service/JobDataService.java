@@ -111,6 +111,7 @@ public class JobDataService {
         jobEntity.ifPresent(job -> {
             // Force initialization of the script collection
             job.getScript().size(); // forces Hibernate to load it
+            job.getArtifacts().size();
         });
 
         return Optional.of(mapper.toJobExecutionDto(entity, jobEntity.orElse(null)));
