@@ -41,6 +41,7 @@ public class PipelineExecutionQueueService {
      * @param pipelineExecutionId the ID of the pipeline execution to add to the queue
      */
     public void enqueuePipelineExecution(UUID pipelineExecutionId) {
+        //WRONG: only pipeline queue. no stage and job queue
         PipelineLogger.info("Adding pipeline execution to queue: " + pipelineExecutionId);
         pipelineQueue.enqueue(pipelineExecutionId);
     }

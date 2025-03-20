@@ -41,10 +41,9 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Service responsible for managing pipeline executions.
- * This service has been refactored to:
- * 1. Work with a queue system for pipeline, stage, and job executions
- * 2. Remove worker dependencies
- * 3. Follow the "one function does one thing" principle
+ * This service handles the creation, execution, and status updates of pipeline executions.
+ * It also interacts with the queue service to manage the execution order.
+ * This service is responsible for adding pipeline executions to the queue
  */
 @Service
 @RequiredArgsConstructor
@@ -82,6 +81,7 @@ public class PipelineExecutionService {
    * @return response containing pipeline execution ID and status
    */
   @Transactional(rollbackFor = Exception.class)
+  //WRONG: return 3 queues instead of executing directly. Need make sure all entities are saved in database
   public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request) {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
@@ -108,13 +108,20 @@ public class PipelineExecutionService {
       // Create and save stage executions with their jobs
       createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
 
+      // Force flush to ensure all entities are written to the database before queuing
+      pipelineExecutionRepository.flush();
+      stageExecutionRepository.flush();
+      jobExecutionRepository.flush();
+
       // Verify entities were properly saved (optional but helpful for debugging)
       verifyEntitiesSaved(pipelineId);
 
       // Add pipeline execution to queue instead of executing directly
       // Use ServiceLocator to get PipelineExecutionQueueService to avoid circular dependency
+      // CHECK: how to use worker to execute the queue? no constructor?
       ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService.class)
           .enqueuePipelineExecution(pipelineExecution.getId());
+      //CHECK: ensure all ID (pipeline, stage, job) are put in database and also put in queue
 
       return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "PENDING");
     } catch (Exception e) {
@@ -645,6 +652,7 @@ public class PipelineExecutionService {
             .orElseThrow(() -> new RuntimeException("Pipeline execution not found: " + pipelineExecutionId));
     
     // Get all stages for this pipeline
+    //WRONG I didn't save the stages yet
     List<StageEntity> pipelineStages = stageRepository.findByPipelineId(pipelineExecution.getPipelineId());
     if (pipelineStages.isEmpty()) {
       PipelineLogger.error("No stage definitions found for pipeline: " + pipelineExecution.getPipelineId());
@@ -698,6 +706,7 @@ public class PipelineExecutionService {
       PipelineLogger.info("Saved stage execution with ID: " + stageExecution.getId() + " for stage: " + matchingStage.getId());
 
       // Extract and create job executions
+      //WRONG not created jobs yet
       List<JobExecutionEntity> jobs = createJobExecutions(matchingStage.getId(), stageExecution);
 
       // Save job executions
@@ -706,9 +715,9 @@ public class PipelineExecutionService {
         jobs = jobExecutionRepository.saveAll(jobs).stream().toList();
         // No need to flush here, let Spring manage the transaction
 
-        PipelineLogger.info("✅ Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
+        PipelineLogger.info("Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
       } else {
-        PipelineLogger.warn("⚠ No jobs defined for stage: " + stageExecution.getId());
+        PipelineLogger.warn("No jobs defined for stage: " + stageExecution.getId());
       }
     } catch (Exception e) {
       PipelineLogger.error("Error saving stage execution: " + e.getMessage() + " | " + e);
@@ -764,6 +773,7 @@ public class PipelineExecutionService {
       PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
 
       // Check jobs exist for each stage
+      // WRONG: jobexecution not created yet. Should use job excuation
       for (StageEntity stage : stages) {
         List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
         PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
