@@ -154,11 +154,19 @@ public class PipelineExecutionService {
     PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
         .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
     
-    pipelineExecution.updateState(status);
+    // Set start time when pipeline starts running
+    if (status == ExecutionStatus.RUNNING && pipelineExecution.getStartTime() == null) {
+      pipelineExecution.setStartTime(Instant.now());
+    }
     
-    if (status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) {
+    // Set end time when pipeline reaches a terminal state
+    if ((status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) 
+        && pipelineExecution.getEndTime() == null) {
       pipelineExecution.setEndTime(Instant.now());
     }
+    
+    // Update state after setting timestamps to ensure correct order
+    pipelineExecution.updateState(status);
     
     pipelineExecutionRepository.saveAndFlush(pipelineExecution);
     PipelineLogger.info("Updated pipeline execution status to " + status + ": " + pipelineExecutionId);
