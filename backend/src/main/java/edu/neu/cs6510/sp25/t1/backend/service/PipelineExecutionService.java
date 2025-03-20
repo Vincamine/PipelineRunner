@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,8 @@ import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionReposito
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageRepository;
 import edu.neu.cs6510.sp25.t1.backend.mapper.PipelineExecutionMapper;
 import edu.neu.cs6510.sp25.t1.backend.service.event.StageCompletedEvent;
+import edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService;
+import edu.neu.cs6510.sp25.t1.backend.service.queue.StageExecutionQueueService;
 import edu.neu.cs6510.sp25.t1.backend.utils.YamlPipelineUtils;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
@@ -37,6 +40,10 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Service responsible for managing pipeline executions.
+ * This service has been refactored to:
+ * 1. Work with a queue system for pipeline, stage, and job executions
+ * 2. Remove worker dependencies
+ * 3. Follow the "one function does one thing" principle
  */
 @Service
 @RequiredArgsConstructor
@@ -50,6 +57,9 @@ public class PipelineExecutionService {
   private final JobExecutionRepository jobExecutionRepository;
   private final JobRepository jobRepository;
   private final JobScriptRepository jobScriptRepository;
+  private final ApplicationEventPublisher eventPublisher;
+  private final PipelineExecutionQueueService pipelineExecutionQueueService;
+  private final StageExecutionQueueService stageExecutionQueueService;
 
   /**
    * Retrieves a pipeline execution by ID.
@@ -65,9 +75,10 @@ public class PipelineExecutionService {
   }
 
   /**
-   * Starts a new run of a pipeline after reading and validating the YAML configuration.
+   * Starts a new pipeline execution by parsing YAML, saving entities, and queuing execution.
+   * This method does validation, entity creation, and queuing but doesn't do actual execution logic.
    *
-   * @param request request containing pipeline ID and commit hash
+   * @param request request containing pipeline details and YAML file path
    * @return response containing pipeline execution ID and status
    */
   @Transactional(rollbackFor = Exception.class)
@@ -93,45 +104,89 @@ public class PipelineExecutionService {
 
       // Save the pipeline execution to the database
       pipelineExecution = savePipelineExecution(pipelineExecution);
-      // saveAllDetails into DB
-      // param pipelineCoonfig
-      // return void
-      // -> all saving to db
-      // function start execution
-      //
+      
       // Create and save stage executions with their jobs
       createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
 
-      // Verify all entities were properly saved by querying count from each table
-      try {
-        // Check pipeline exists
-        if (!pipelineRepository.existsById(pipelineId)) {
-          PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
-        } else {
-          PipelineLogger.info("Successfully verified pipeline entity: " + pipelineId);
-        }
+      // Verify entities were properly saved (optional but helpful for debugging)
+      verifyEntitiesSaved(pipelineId);
 
-        // Check stages exist
-        List<StageEntity> stages = stageRepository.findByPipelineId(pipelineId);
-        PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
+      // Add pipeline execution to queue instead of executing directly
+      pipelineExecutionQueueService.enqueuePipelineExecution(pipelineExecution.getId());
 
-        // Check jobs exist for each stage
-        for (StageEntity stage : stages) {
-          List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
-          PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
-        }
-      } catch (Exception e) {
-        PipelineLogger.error("Error verifying saved entities: " + e.getMessage());
-      }
-
-      // Now that all entities are saved, execute the stages
-      executeStagesSequentially(pipelineExecution.getId());
-
-      return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "RUNNING");
+      return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "PENDING");
     } catch (Exception e) {
       PipelineLogger.error("Failed to start pipeline execution: " + e.getMessage() + " | " + e);
       throw new RuntimeException("Pipeline execution failed: " + e.getMessage());
     }
+  }
+
+  /**
+   * Process a pipeline execution from the queue.
+   * This method is called by the queue service to process a pipeline execution.
+   *
+   * @param pipelineExecutionId ID of the pipeline execution to process
+   */
+  @Transactional
+  public void processPipelineExecution(UUID pipelineExecutionId) {
+    PipelineLogger.info("Processing pipeline execution: " + pipelineExecutionId);
+    
+    try {
+      // Update pipeline status to RUNNING
+      updatePipelineStatus(pipelineExecutionId, ExecutionStatus.RUNNING);
+      
+      // Queue stages for execution
+      queueStagesForExecution(pipelineExecutionId);
+    } catch (Exception e) {
+      PipelineLogger.error("Failed to process pipeline execution: " + e.getMessage());
+      updatePipelineStatus(pipelineExecutionId, ExecutionStatus.FAILED);
+    }
+  }
+  
+  /**
+   * Updates the status of a pipeline execution.
+   *
+   * @param pipelineExecutionId ID of the pipeline execution
+   * @param status the new status
+   */
+  @Transactional
+  public void updatePipelineStatus(UUID pipelineExecutionId, ExecutionStatus status) {
+    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
+        .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
+    
+    pipelineExecution.updateState(status);
+    
+    if (status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) {
+      pipelineExecution.setEndTime(Instant.now());
+    }
+    
+    pipelineExecutionRepository.saveAndFlush(pipelineExecution);
+    PipelineLogger.info("Updated pipeline execution status to " + status + ": " + pipelineExecutionId);
+  }
+
+  /**
+   * Queue stages for execution based on their order.
+   *
+   * @param pipelineExecutionId ID of the pipeline execution
+   */
+  private void queueStagesForExecution(UUID pipelineExecutionId) {
+    List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionId(pipelineExecutionId);
+    
+    if (stages.isEmpty()) {
+      PipelineLogger.error("No stages found for pipeline execution: " + pipelineExecutionId);
+      throw new RuntimeException("No stages found for execution");
+    }
+    
+    PipelineLogger.info("Queueing " + stages.size() + " stages for execution");
+    
+    // Sort stages by execution order
+    stages.stream()
+        .sorted((s1, s2) -> Integer.compare(s1.getExecutionOrder(), s2.getExecutionOrder()))
+        .forEach(stage -> {
+          // Add each stage to the stage execution queue
+          stageExecutionQueueService.enqueueStageExecution(stage.getId());
+          PipelineLogger.info("Stage queued for execution: " + stage.getId() + " (order: " + stage.getExecutionOrder() + ")");
+        });
   }
 
   /**
@@ -195,6 +250,7 @@ public class PipelineExecutionService {
    * @param pipelineConfig the pipeline configuration from YAML
    * @return the ID of the pipeline entity
    */
+  @Transactional
   protected UUID createOrGetPipelineEntity(PipelineExecutionRequest request, Map<String, Object> pipelineConfig) {
     // Debug log the request
     PipelineLogger.info("createOrGetPipelineEntity called with pipelineId: " + request.getPipelineId());
@@ -214,25 +270,10 @@ public class PipelineExecutionService {
       PipelineLogger.info("No pipeline ID provided in request, will create new entity");
     }
     
-    // Always create a new pipeline entity for now, to see if this fixes our issue
-    PipelineLogger.info("Creating new pipeline entity from YAML configuration");
-    
     // Extract pipeline properties from config
-    String name = pipelineConfig.containsKey("name") 
-        ? (String) pipelineConfig.get("name") 
-        : "pipeline-" + UUID.randomUUID().toString().substring(0, 8);
-        
-    String repoUrl = request.getRepo() != null 
-        ? request.getRepo() 
-        : (pipelineConfig.containsKey("repository") 
-            ? (String) pipelineConfig.get("repository") 
-            : "local-repository");
-        
-    String branch = request.getBranch() != null 
-        ? request.getBranch() 
-        : (pipelineConfig.containsKey("branch") 
-            ? (String) pipelineConfig.get("branch") 
-            : "main");
+    String name = extractPipelineName(pipelineConfig);
+    String repoUrl = extractRepositoryUrl(request, pipelineConfig);
+    String branch = extractBranch(request, pipelineConfig);
     
     PipelineLogger.info("Building pipeline entity with name: " + name);
     PipelineLogger.info("Repository URL: " + repoUrl);
@@ -265,11 +306,54 @@ public class PipelineExecutionService {
   }
   
   /**
+   * Extract name from pipeline configuration.
+   *
+   * @param pipelineConfig the pipeline configuration
+   * @return the pipeline name
+   */
+  private String extractPipelineName(Map<String, Object> pipelineConfig) {
+    return pipelineConfig.containsKey("name") 
+        ? (String) pipelineConfig.get("name") 
+        : "pipeline-" + UUID.randomUUID().toString().substring(0, 8);
+  }
+  
+  /**
+   * Extract repository URL from request or pipeline configuration.
+   *
+   * @param request the pipeline execution request
+   * @param pipelineConfig the pipeline configuration
+   * @return the repository URL
+   */
+  private String extractRepositoryUrl(PipelineExecutionRequest request, Map<String, Object> pipelineConfig) {
+    return request.getRepo() != null 
+        ? request.getRepo() 
+        : (pipelineConfig.containsKey("repository") 
+            ? (String) pipelineConfig.get("repository") 
+            : "local-repository");
+  }
+  
+  /**
+   * Extract branch from request or pipeline configuration.
+   *
+   * @param request the pipeline execution request
+   * @param pipelineConfig the pipeline configuration
+   * @return the branch name
+   */
+  private String extractBranch(PipelineExecutionRequest request, Map<String, Object> pipelineConfig) {
+    return request.getBranch() != null 
+        ? request.getBranch() 
+        : (pipelineConfig.containsKey("branch") 
+            ? (String) pipelineConfig.get("branch") 
+            : "main");
+  }
+  
+  /**
    * Creates stage and job entities based on pipeline configuration.
    *
    * @param pipelineId the pipeline ID
    * @param pipelineConfig the parsed pipeline configuration
    */
+  @Transactional
   protected void createPipelineDefinition(UUID pipelineId, Map<String, Object> pipelineConfig) {
     PipelineLogger.info("Creating stage and job definitions for pipeline: " + pipelineId);
     
@@ -282,16 +366,7 @@ public class PipelineExecutionService {
     
     PipelineLogger.info("Found pipeline entity with ID: " + pipelineId + ", name: " + pipeline.getName());
     
-    Object stagesObj = pipelineConfig.get("stages");
-    if (!(stagesObj instanceof List<?> rawStages)) {
-      PipelineLogger.error("Invalid pipeline structure: 'stages' must be a list.");
-      throw new RuntimeException("Invalid pipeline configuration: 'stages' key is missing or incorrect.");
-    }
-    
-    List<Map<String, Object>> stages = rawStages.stream()
-        .filter(item -> item instanceof Map)
-        .map(item -> (Map<String, Object>) item)
-        .toList();
+    List<Map<String, Object>> stages = extractStagesFromConfig(pipelineConfig);
     
     if (stages.isEmpty()) {
       PipelineLogger.error("No valid stages found in pipeline configuration!");
@@ -302,34 +377,66 @@ public class PipelineExecutionService {
     
     for (int order = 0; order < stages.size(); order++) {
       Map<String, Object> stageConfig = stages.get(order);
-      String stageName = (String) stageConfig.get("name");
+      createStageWithJobs(pipelineId, stageConfig, order);
+    }
+  }
+  
+  /**
+   * Extract stages from pipeline configuration.
+   *
+   * @param pipelineConfig the pipeline configuration
+   * @return list of stage configurations
+   */
+  @SuppressWarnings("unchecked")
+  private List<Map<String, Object>> extractStagesFromConfig(Map<String, Object> pipelineConfig) {
+    Object stagesObj = pipelineConfig.get("stages");
+    if (!(stagesObj instanceof List<?> rawStages)) {
+      PipelineLogger.error("Invalid pipeline structure: 'stages' must be a list.");
+      throw new RuntimeException("Invalid pipeline configuration: 'stages' key is missing or incorrect.");
+    }
+    
+    return rawStages.stream()
+        .filter(item -> item instanceof Map)
+        .map(item -> (Map<String, Object>) item)
+        .toList();
+  }
+  
+  /**
+   * Create a stage entity with its jobs.
+   *
+   * @param pipelineId the pipeline ID
+   * @param stageConfig the stage configuration
+   * @param order the execution order
+   */
+  @Transactional
+  private void createStageWithJobs(UUID pipelineId, Map<String, Object> stageConfig, int order) {
+    String stageName = (String) stageConfig.get("name");
+    
+    PipelineLogger.info("Creating stage with name: " + stageName + ", order: " + order);
+    
+    // Create and save the stage entity
+    StageEntity stage = StageEntity.builder()
+        .pipelineId(pipelineId)
+        .name(stageName)
+        .executionOrder(order)
+        .build();
+    
+    try {
+      stage = stageRepository.save(stage);
+      stageRepository.flush();
       
-      PipelineLogger.info("Creating stage with name: " + stageName + ", order: " + order);
-      
-      // Create and save the stage entity
-      StageEntity stage = StageEntity.builder()
-          .pipelineId(pipelineId)
-          .name(stageName)
-          .executionOrder(order)
-          .build();
-      
-      try {
-        stage = stageRepository.save(stage);
-        stageRepository.flush();
-        
-        // Verify the stage was saved
-        if (stageRepository.existsById(stage.getId())) {
-          PipelineLogger.info("Successfully created stage with ID: " + stage.getId());
-        } else {
-          PipelineLogger.error("Failed to verify stage was saved: " + stage.getId());
-        }
-        
-        // Create and save job entities for this stage
-        createJobDefinitions(stage.getId(), stageConfig);
-      } catch (Exception e) {
-        PipelineLogger.error("Error saving stage entity: " + e.getMessage());
-        throw e;
+      // Verify the stage was saved
+      if (stageRepository.existsById(stage.getId())) {
+        PipelineLogger.info("Successfully created stage with ID: " + stage.getId());
+      } else {
+        PipelineLogger.error("Failed to verify stage was saved: " + stage.getId());
       }
+      
+      // Create and save job entities for this stage
+      createJobDefinitions(stage.getId(), stageConfig);
+    } catch (Exception e) {
+      PipelineLogger.error("Error saving stage entity: " + e.getMessage());
+      throw e;
     }
   }
   
@@ -360,71 +467,116 @@ public class PipelineExecutionService {
     PipelineLogger.info("Found " + jobsConfig.size() + " jobs in stage configuration");
     
     for (Map<String, Object> jobConfig : jobsConfig) {
-      String jobName = (String) jobConfig.get("name");
-      PipelineLogger.info("Creating job with name: " + jobName + " for stage: " + stageId);
+      createJob(stageId, jobConfig);
+    }
+  }
+  
+  /**
+   * Create a job entity.
+   *
+   * @param stageId the stage ID
+   * @param jobConfig the job configuration
+   */
+  @Transactional
+  private void createJob(UUID stageId, Map<String, Object> jobConfig) {
+    String jobName = (String) jobConfig.get("name");
+    PipelineLogger.info("Creating job with name: " + jobName + " for stage: " + stageId);
+    
+    String dockerImage = extractDockerImage(jobConfig);
+    boolean allowFailure = extractAllowFailure(jobConfig);
+    
+    PipelineLogger.info("Job details - Name: " + jobName + ", Docker image: " + dockerImage + ", Allow failure: " + allowFailure);
+    
+    // Create and save the job entity
+    JobEntity job = JobEntity.builder()
+        .stageId(stageId)
+        .name(jobName)
+        .dockerImage(dockerImage)
+        .allowFailure(allowFailure)
+        .build();
+    
+    try {
+      job = jobRepository.save(job);
+      jobRepository.flush();
       
-      String dockerImage = jobConfig.containsKey("image") 
-          ? (String) jobConfig.get("image") 
-          : "docker.io/library/alpine:latest";
-      
-      boolean allowFailure = false;
-      if (jobConfig.containsKey("allow_failure")) {
-        Object allowFailureObj = jobConfig.get("allow_failure");
-        if (allowFailureObj instanceof Boolean) {
-          allowFailure = (Boolean) allowFailureObj;
-        } else if (allowFailureObj instanceof String) {
-          allowFailure = Boolean.parseBoolean((String) allowFailureObj);
-        }
+      // Verify the job was saved
+      if (jobRepository.existsById(job.getId())) {
+        PipelineLogger.info("Successfully created job with ID: " + job.getId());
+      } else {
+        PipelineLogger.error("Failed to verify job was saved: " + job.getId());
       }
       
-      PipelineLogger.info("Job details - Name: " + jobName + ", Docker image: " + dockerImage + ", Allow failure: " + allowFailure);
+      // Handle job scripts if present
+      saveJobScripts(job.getId(), jobConfig);
+    } catch (Exception e) {
+      PipelineLogger.error("Error saving job entity: " + e.getMessage() + " | " + e);
+      throw e;
+    }
+  }
+  
+  /**
+   * Extract docker image from job configuration.
+   *
+   * @param jobConfig the job configuration
+   * @return the docker image
+   */
+  private String extractDockerImage(Map<String, Object> jobConfig) {
+    return jobConfig.containsKey("image") 
+        ? (String) jobConfig.get("image") 
+        : "docker.io/library/alpine:latest";
+  }
+  
+  /**
+   * Extract allow failure flag from job configuration.
+   *
+   * @param jobConfig the job configuration
+   * @return true if failure is allowed, false otherwise
+   */
+  private boolean extractAllowFailure(Map<String, Object> jobConfig) {
+    if (!jobConfig.containsKey("allow_failure")) {
+      return false;
+    }
+    
+    Object allowFailureObj = jobConfig.get("allow_failure");
+    if (allowFailureObj instanceof Boolean) {
+      return (Boolean) allowFailureObj;
+    } else if (allowFailureObj instanceof String) {
+      return Boolean.parseBoolean((String) allowFailureObj);
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Save job scripts.
+   *
+   * @param jobId the job ID
+   * @param jobConfig the job configuration
+   */
+  @SuppressWarnings("unchecked")
+  private void saveJobScripts(UUID jobId, Map<String, Object> jobConfig) {
+    if (!jobConfig.containsKey("script")) {
+      PipelineLogger.warn("No scripts defined for job: " + jobId);
+      return;
+    }
+    
+    Object scriptObj = jobConfig.get("script");
+    if (scriptObj instanceof String) {
+      // Single script line
+      String script = (String) scriptObj;
+      PipelineLogger.info("Adding script to job " + jobId + ": " + 
+          (script.length() > 30 ? script.substring(0, 30) + "..." : script));
+      jobScriptRepository.saveScript(jobId, script);
+    } else if (scriptObj instanceof List) {
+      // Multiple script lines
+      List<String> scripts = ((List<?>) scriptObj).stream()
+          .filter(s -> s instanceof String)
+          .map(s -> (String) s)
+          .toList();
       
-      // Create and save the job entity
-      JobEntity job = JobEntity.builder()
-          .stageId(stageId)
-          .name(jobName)
-          .dockerImage(dockerImage)
-          .allowFailure(allowFailure)
-          .build();
-      
-      try {
-        job = jobRepository.save(job);
-        jobRepository.flush();
-        
-        // Verify the job was saved
-        if (jobRepository.existsById(job.getId())) {
-          PipelineLogger.info("Successfully created job with ID: " + job.getId());
-        } else {
-          PipelineLogger.error("Failed to verify job was saved: " + job.getId());
-        }
-        
-        // Handle job scripts if present
-        if (jobConfig.containsKey("script")) {
-          Object scriptObj = jobConfig.get("script");
-          if (scriptObj instanceof String) {
-            // Single script line
-            String script = (String) scriptObj;
-            PipelineLogger.info("Adding script to job " + job.getId() + ": " + 
-                (script.length() > 30 ? script.substring(0, 30) + "..." : script));
-            jobScriptRepository.saveScript(job.getId(), script);
-          } else if (scriptObj instanceof List) {
-            // Multiple script lines
-            List<String> scripts = ((List<?>) scriptObj).stream()
-                .filter(s -> s instanceof String)
-                .map(s -> (String) s)
-                .toList();
-            
-            PipelineLogger.info("Adding " + scripts.size() + " script lines to job " + job.getId());
-            for (String script : scripts) {
-              jobScriptRepository.saveScript(job.getId(), script);
-            }
-          }
-        } else {
-          PipelineLogger.warn("No scripts defined for job: " + job.getId());
-        }
-      } catch (Exception e) {
-        PipelineLogger.error("Error saving job entity: " + e.getMessage() + " | " + e);
-        throw e;
+      PipelineLogger.info("Adding " + scripts.size() + " script lines to job " + jobId);
+      for (String script : scripts) {
+        jobScriptRepository.saveScript(jobId, script);
       }
     }
   }
@@ -475,18 +627,9 @@ public class PipelineExecutionService {
    * @param pipelineExecutionId ID of the pipeline execution
    * @param pipelineConfig      Parsed pipeline configuration
    */
+  @Transactional
   protected void createAndSaveStageExecutions(UUID pipelineExecutionId, Map<String, Object> pipelineConfig) {
-    Object stagesObj = pipelineConfig.get("stages");
-
-    if (!(stagesObj instanceof List<?> rawStages)) {
-      PipelineLogger.error("Invalid pipeline structure: 'stages' must be a list.");
-      throw new RuntimeException("Invalid pipeline configuration: 'stages' key is missing or incorrect.");
-    }
-
-    List<Map<String, Object>> stages = rawStages.stream()
-            .filter(item -> item instanceof Map)  // Ensure item is a Map
-            .map(item -> (Map<String, Object>) item)
-            .toList();
+    List<Map<String, Object>> stages = extractStagesFromConfig(pipelineConfig);
 
     if (stages.isEmpty()) {
       PipelineLogger.error("No valid stages found in pipeline configuration!");
@@ -511,46 +654,61 @@ public class PipelineExecutionService {
     PipelineLogger.info("Using commit hash: " + commitHash + " and isLocal: " + isLocal);
 
     for (int order = 0; order < stages.size(); order++) {
-      // Find the matching stage entity for this order
-      int finalOrder = order;
-      StageEntity matchingStage = pipelineStages.stream()
-              .filter(stage -> stage.getExecutionOrder() == finalOrder)
-              .findFirst()
-              .orElseThrow(() -> new RuntimeException("Stage definition not found for order: " + finalOrder));
-      
-      // Create the stage execution entity
-      StageExecutionEntity stageExecution = StageExecutionEntity.builder()
-              .pipelineExecutionId(pipelineExecutionId)
-              .stageId(matchingStage.getId())  // Use actual stage ID 
-              .executionOrder(order)
-              .commitHash(commitHash)  // Use commit hash from pipeline execution
-              .isLocal(isLocal)        // Use isLocal from pipeline execution
-              .status(ExecutionStatus.PENDING)
-              .startTime(Instant.now())
-              .build();
+      createStageExecution(pipelineExecutionId, pipelineStages, order, commitHash, isLocal);
+    }
+  }
+  
+  /**
+   * Create a stage execution entity.
+   *
+   * @param pipelineExecutionId the pipeline execution ID
+   * @param pipelineStages the list of stage entities
+   * @param order the execution order
+   * @param commitHash the commit hash
+   * @param isLocal whether the execution is local
+   */
+  @Transactional
+  private void createStageExecution(UUID pipelineExecutionId, List<StageEntity> pipelineStages, int order, 
+      String commitHash, boolean isLocal) {
+    // Find the matching stage entity for this order
+    int finalOrder = order;
+    StageEntity matchingStage = pipelineStages.stream()
+            .filter(stage -> stage.getExecutionOrder() == finalOrder)
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Stage definition not found for order: " + finalOrder));
+    
+    // Create the stage execution entity
+    StageExecutionEntity stageExecution = StageExecutionEntity.builder()
+            .pipelineExecutionId(pipelineExecutionId)
+            .stageId(matchingStage.getId())  // Use actual stage ID 
+            .executionOrder(order)
+            .commitHash(commitHash)  // Use commit hash from pipeline execution
+            .isLocal(isLocal)        // Use isLocal from pipeline execution
+            .status(ExecutionStatus.PENDING)
+            .startTime(Instant.now())
+            .build();
 
-      try {
-        // Save the stage execution
-        stageExecution = stageExecutionRepository.saveAndFlush(stageExecution);
-        PipelineLogger.info("Saved stage execution with ID: " + stageExecution.getId() + " for stage: " + matchingStage.getId());
+    try {
+      // Save the stage execution
+      stageExecution = stageExecutionRepository.saveAndFlush(stageExecution);
+      PipelineLogger.info("Saved stage execution with ID: " + stageExecution.getId() + " for stage: " + matchingStage.getId());
 
-        // Extract and create job executions
-        List<JobExecutionEntity> jobs = createJobExecutions(matchingStage.getId(), stageExecution);
+      // Extract and create job executions
+      List<JobExecutionEntity> jobs = createJobExecutions(matchingStage.getId(), stageExecution);
 
-        // Save job executions
-        if (!jobs.isEmpty()) {
-          PipelineLogger.info("Saving " + jobs.size() + " jobs for stage: " + stageExecution.getId());
-          jobs = jobExecutionRepository.saveAll(jobs).stream().toList();
-          // No need to flush here, let Spring manage the transaction
+      // Save job executions
+      if (!jobs.isEmpty()) {
+        PipelineLogger.info("Saving " + jobs.size() + " jobs for stage: " + stageExecution.getId());
+        jobs = jobExecutionRepository.saveAll(jobs).stream().toList();
+        // No need to flush here, let Spring manage the transaction
 
-          PipelineLogger.info("✅ Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
-        } else {
-          PipelineLogger.warn("⚠ No jobs defined for stage: " + stageExecution.getId());
-        }
-      } catch (Exception e) {
-        PipelineLogger.error("Error saving stage execution: " + e.getMessage() + " | " + e);
-        throw e;
+        PipelineLogger.info("✅ Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
+      } else {
+        PipelineLogger.warn("⚠ No jobs defined for stage: " + stageExecution.getId());
       }
+    } catch (Exception e) {
+      PipelineLogger.error("Error saving stage execution: " + e.getMessage() + " | " + e);
+      throw e;
     }
   }
 
@@ -584,25 +742,30 @@ public class PipelineExecutionService {
   }
 
   /**
-   * Executes stages sequentially for a pipeline execution.
+   * Verify all entities were saved correctly.
    *
-   * @param pipelineExecutionId ID of the pipeline execution
+   * @param pipelineId the pipeline ID
    */
-  private void executeStagesSequentially(UUID pipelineExecutionId) {
-    PipelineLogger.info("Retrieving stages for execution...");
-    List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionId(pipelineExecutionId);
+  private void verifyEntitiesSaved(UUID pipelineId) {
+    try {
+      // Check pipeline exists
+      if (!pipelineRepository.existsById(pipelineId)) {
+        PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
+      } else {
+        PipelineLogger.info("Successfully verified pipeline entity: " + pipelineId);
+      }
 
-    if (stages.isEmpty()) {
-      PipelineLogger.error("No stages found for pipeline execution: " + pipelineExecutionId);
-      throw new RuntimeException("No stages found for execution");
-    }
+      // Check stages exist
+      List<StageEntity> stages = stageRepository.findByPipelineId(pipelineId);
+      PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
 
-    PipelineLogger.info("Found " + stages.size() + " stages to execute");
-
-    for (StageExecutionEntity stage : stages) {
-      UUID stageExecutionId = stage.getId();
-      PipelineLogger.info("Executing stage: " + stageExecutionId);
-      stageExecutionService.executeStage(stageExecutionId);
+      // Check jobs exist for each stage
+      for (StageEntity stage : stages) {
+        List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
+        PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
+      }
+    } catch (Exception e) {
+      PipelineLogger.error("Error verifying saved entities: " + e.getMessage());
     }
   }
 
@@ -617,15 +780,64 @@ public class PipelineExecutionService {
     UUID pipelineExecutionId = event.getPipelineExecutionId();
     PipelineLogger.info("Stage completed in pipeline: " + pipelineExecutionId + " | Checking if pipeline is done...");
 
+    checkAndFinalizePipeline(pipelineExecutionId);
+  }
+  
+  /**
+   * Check if all stages are complete and finalize the pipeline if necessary.
+   *
+   * @param pipelineExecutionId the pipeline execution ID
+   */
+  @Transactional
+  public void checkAndFinalizePipeline(UUID pipelineExecutionId) {
     List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionId(pipelineExecutionId);
-    boolean allSuccess = stages.stream().allMatch(s -> s.getStatus() == ExecutionStatus.SUCCESS);
-
-    if (allSuccess) {
-      PipelineLogger.info("All stages completed! Marking pipeline as done.");
-      finalizePipelineExecution(pipelineExecutionId);
+    
+    // Check if all stages are complete
+    boolean allComplete = stages.stream().allMatch(s -> 
+        s.getStatus() == ExecutionStatus.SUCCESS || 
+        s.getStatus() == ExecutionStatus.FAILED || 
+        s.getStatus() == ExecutionStatus.CANCELED);
+    
+    if (!allComplete) {
+      PipelineLogger.info("Not all stages are complete yet. Waiting for remaining stages...");
+      return;
+    }
+    
+    // Check if any stage failed and was not allowed to fail
+    boolean anyFailedNotAllowed = stages.stream().anyMatch(s -> 
+        s.getStatus() == ExecutionStatus.FAILED && 
+        !stageAllowsFailure(s.getId()));
+    
+    if (anyFailedNotAllowed) {
+      PipelineLogger.error("At least one stage failed and failure is not allowed. Marking pipeline as FAILED.");
+      updatePipelineStatus(pipelineExecutionId, ExecutionStatus.FAILED);
+    } else {
+      PipelineLogger.info("All stages completed successfully or failures were allowed. Marking pipeline as SUCCESS.");
+      updatePipelineStatus(pipelineExecutionId, ExecutionStatus.SUCCESS);
     }
   }
-
+  
+  /**
+   * Check if a stage allows failure by checking if all jobs in the stage allow failure.
+   *
+   * @param stageExecutionId the stage execution ID
+   * @return true if all jobs in the stage allow failure
+   */
+  private boolean stageAllowsFailure(UUID stageExecutionId) {
+    StageExecutionEntity stageExecution = stageExecutionRepository.findById(stageExecutionId)
+        .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
+    
+    List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecution(stageExecution);
+    
+    // If there are no jobs, then we'll say the stage allows failure
+    if (jobs.isEmpty()) {
+      return true;
+    }
+    
+    // Check if all jobs allow failure
+    return jobs.stream().allMatch(JobExecutionEntity::isAllowFailure);
+  }
+  
   /**
    * Finalizes a pipeline execution.
    *
@@ -634,13 +846,6 @@ public class PipelineExecutionService {
   @Transactional
   public void finalizePipelineExecution(UUID pipelineExecutionId) {
     PipelineLogger.info("Finalizing pipeline execution: " + pipelineExecutionId);
-
-    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
-            .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
-
-    pipelineExecution.updateState(ExecutionStatus.SUCCESS);
-    pipelineExecutionRepository.saveAndFlush(pipelineExecution);
-    PipelineLogger.info("Pipeline execution completed: " + pipelineExecutionId);
+    updatePipelineStatus(pipelineExecutionId, ExecutionStatus.SUCCESS);
   }
-  
 }
