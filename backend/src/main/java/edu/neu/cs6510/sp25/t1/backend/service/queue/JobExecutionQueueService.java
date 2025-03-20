@@ -19,13 +19,13 @@ import jakarta.annotation.PostConstruct;
 public class JobExecutionQueueService {
     
     private final ExecutionQueue<UUID> jobQueue;
-    private final JobExecutionService jobExecutionService;
+    private JobExecutionService jobExecutionService;
+    private final ApplicationContext applicationContext;
     
     @Autowired
-    public JobExecutionQueueService(
-            JobExecutionService jobExecutionService) {
+    public JobExecutionQueueService(ApplicationContext applicationContext) {
         this.jobQueue = new ExecutionQueue<>();
-        this.jobExecutionService = jobExecutionService;
+        this.applicationContext = applicationContext;
     }
     
     /**
