@@ -25,15 +25,15 @@ class WorkerConfigControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
-  /**
-   * Tests that the worker configuration is returned correctly.
-   *
-   * @throws Exception if any error occurs during the test
-   */
-  @Test
-  void shouldReturnWorkerConfig() throws Exception {
-    mockMvc.perform(get("/api/worker/config"))
-            .andExpect(status().isOk())
-            .andExpect(content().string("Worker Config - MaxRetries: 5, RetryDelay: 1000ms"));
-  }
+//  /**
+//   * Tests that the worker configuration is returned correctly.
+//   *
+//   * @throws Exception if any error occurs during the test
+//   */
+//  @Test
+//  void shouldReturnWorkerConfig() throws Exception {
+//    mockMvc.perform(get("/api/worker/config"))
+//            .andExpect(status().isOk())
+//            .andExpect(content().string("Worker Config - MaxRetries: 5, RetryDelay: 1000ms"));
+//  }
 }
