@@ -758,14 +758,22 @@ public class PipelineExecutionService {
    * Verify all entities were saved correctly.
    *
    * @param pipelineId the pipeline ID
+   * @param pipelineExecutionId the pipeline execution ID
    */
-  private void verifyEntitiesSaved(UUID pipelineId) {
+  private void verifyEntitiesSaved(UUID pipelineId, UUID pipelineExecutionId) {
     try {
       // Check pipeline exists
       if (!pipelineRepository.existsById(pipelineId)) {
         PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
       } else {
         PipelineLogger.info("Successfully verified pipeline entity: " + pipelineId);
+      }
+
+      // Check pipeline execution exists
+      if (!pipelineExecutionRepository.existsById(pipelineExecutionId)) {
+        PipelineLogger.error("Pipeline execution entity was not saved correctly: " + pipelineExecutionId);
+      } else {
+        PipelineLogger.info("Successfully verified pipeline execution entity: " + pipelineExecutionId);
       }
 
       // Check stages exist
@@ -777,6 +785,16 @@ public class PipelineExecutionService {
       for (StageEntity stage : stages) {
         List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
         PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
+      }
+      
+      // Check stage executions exist
+      List<StageExecutionEntity> stageExecutions = stageExecutionRepository.findByPipelineExecutionId(pipelineExecutionId);
+      PipelineLogger.info("Found " + stageExecutions.size() + " stage executions for pipeline execution: " + pipelineExecutionId);
+      
+      // Check job executions exist for each stage execution
+      for (StageExecutionEntity stageExecution : stageExecutions) {
+        List<JobExecutionEntity> jobExecutions = jobExecutionRepository.findByStageExecution(stageExecution);
+        PipelineLogger.info("Found " + jobExecutions.size() + " job executions for stage execution: " + stageExecution.getId());
       }
     } catch (Exception e) {
       PipelineLogger.error("Error verifying saved entities: " + e.getMessage());
