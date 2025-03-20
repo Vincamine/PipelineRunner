@@ -129,13 +129,7 @@ public class JobExecutionService {
       jobExecution.setStartTime(Instant.now());
     }
     
-    // Set end time when job reaches a terminal state
-    if ((status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.CANCELED) 
-        && jobExecution.getEndTime() == null) {
-      jobExecution.setEndTime(Instant.now());
-    }
-    
-    // Update the state after setting timestamps to ensure correct order
+    // Update the state which will set completionTime for terminal states
     jobExecution.updateState(status);
     
     jobExecutionRepository.saveAndFlush(jobExecution);
