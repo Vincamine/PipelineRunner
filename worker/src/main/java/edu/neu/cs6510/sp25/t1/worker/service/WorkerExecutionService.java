@@ -35,8 +35,6 @@ public class WorkerExecutionService {
     log.info("Starting execution for job: {}", job.getId());
 
     try {
-      // Update status to RUNNING before execution
-      jobDataService.updateJobStatus(job.getId(), ExecutionStatus.RUNNING, "Job execution started");
 
       // Execute the job in Docker
       ExecutionStatus result = dockerExecutor.execute(job);

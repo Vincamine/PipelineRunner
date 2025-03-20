@@ -15,6 +15,11 @@ import java.util.UUID;
 import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
+import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionService;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,12 +33,15 @@ import lombok.extern.slf4j.Slf4j;
 public class TestController {
 
     private final RabbitTemplate rabbitTemplate;
+    private final JobRepository jobRepository;
+    private final JobExecutionRepository jobExecutionRepository;
 
     @Value("${cicd.rabbitmq.job-queue}")
     private String jobQueueName;
 
     /**
      * Creates and sends a test job to the RabbitMQ queue
+     * Now saves the job to the database first and then sends only the UUID to the queue
      *
      * @param request Request containing working directory and Docker image information
      * @return Response entity
@@ -44,48 +52,57 @@ public class TestController {
                 request.getWorkingDir(), request.getDockerImage());
 
         try {
-            // Create a test job
-            JobExecutionDTO jobExecution = createTestJob(request);
-
-            // Send to RabbitMQ queue
-            rabbitTemplate.convertAndSend(jobQueueName, jobExecution);
+//            // Create and save the test job to the database
+//            UUID jobExecutionId = createAndSaveTestJob(request);
+            UUID jobExecutionId = UUID.fromString("99e1fb05-914e-4200-b27c-278ab076043d");
+            // Send only the UUID to the RabbitMQ queue
+            rabbitTemplate.convertAndSend(jobQueueName, jobExecutionId.toString());
 
             return ResponseEntity.ok()
                     .body(String.format("Test job sent to queue '%s' with ID: %s",
-                            jobQueueName, jobExecution.getId()));
+                            jobQueueName, jobExecutionId));
         } catch (Exception e) {
             log.error("Failed to send test job to queue: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError()
-                    .body("Failed to send test job: " + e.getMessage());
+            throw e;
+//            return ResponseEntity.internalServerError()
+//                    .body("Failed to send test job: " + e.getMessage());
         }
     }
 
     /**
-     * Creates a test job
+     * Creates a test job and saves it to the database
      *
      * @param request Test job request
-     * @return Test job DTO
+     * @return The UUID of the created job execution
      */
-    private JobExecutionDTO createTestJob(TestJobRequest request) {
-        // Create a JobDTO
-        JobDTO jobDto = JobDTO.builder()
-                .id(UUID.randomUUID())
-                .name("test-job")
-                .dockerImage(request.getDockerImage())
-                .script(Arrays.asList("echo 'Hello from test job'", "ls -la", "echo 'Test job complete'"))
-                .workingDir(request.getWorkingDir())
-                .allowFailure(false)
-                .build();
+    private UUID createAndSaveTestJob(TestJobRequest request) {
+        // Create and save the Job entity first
+        JobEntity jobEntity = new JobEntity();
+        jobEntity.setId(UUID.randomUUID());
+        jobEntity.setName("test-job");
+        jobEntity.setDockerImage(request.getDockerImage());
+        jobEntity.setScript(Arrays.asList("echo 'Hello from test job'", "ls -la", "echo 'Test job complete'"));
+        jobEntity.setWorkingDir(request.getWorkingDir());
+        jobEntity.setAllowFailure(false);
+        jobEntity.setCreatedAt(Instant.now());
+        jobEntity.setUpdatedAt(Instant.now());
 
-        // Create a JobExecutionDTO
-        return JobExecutionDTO.builder()
-                .id(UUID.randomUUID())
-                .jobId(jobDto.getId())
-                .status(ExecutionStatus.PENDING)
-                .startTime(Instant.now())
-                .isLocal(true)
-                .job(jobDto)
-                .build();
+        jobRepository.save(jobEntity);
+
+        // Create and save the JobExecution entity
+        JobExecutionEntity jobExecutionEntity = new JobExecutionEntity();
+        jobExecutionEntity.setId(UUID.randomUUID());
+        jobExecutionEntity.setJobId(jobEntity.getId());
+        jobExecutionEntity.setStatus(ExecutionStatus.PENDING);
+        jobExecutionEntity.setStartTime(Instant.now());
+        jobExecutionEntity.setLocal(true);
+        jobExecutionEntity.setAllowFailure(false);
+
+        jobExecutionRepository.save(jobExecutionEntity);
+
+        log.info("Created test job execution with ID: {}", jobExecutionEntity.getId());
+
+        return jobExecutionEntity.getId();
     }
 
     /**

@@ -49,6 +49,7 @@ public class JobExecutionService {
 
   private final RabbitTemplate rabbitTemplate;
 
+
   @Value("${cicd.rabbitmq.job-queue}")
   private String jobQueueName;
 
@@ -80,11 +81,8 @@ public class JobExecutionService {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void sendJobToQueueInNewTransaction(UUID jobExecutionId) {
     try {
-      JobExecutionDTO jobExecutionDTO = getJobExecution(jobExecutionId);
-
-      // Send job to RabbitMQ queue
-      rabbitTemplate.convertAndSend(jobQueueName, jobExecutionDTO);
-      PipelineLogger.info("Job successfully sent to message queue: " + jobExecutionId);
+      rabbitTemplate.convertAndSend(jobQueueName, jobExecutionId.toString());
+      PipelineLogger.info("Job ID successfully sent to message queue: " + jobExecutionId);
     } catch (Exception e) {
       // Update job status to failed but in a new transaction
       updateJobStatusAfterQueueFailure(jobExecutionId, e.getMessage());

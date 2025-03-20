@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.worker.api.controller;
 
+import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.worker.service.JobDataService;
 import edu.neu.cs6510.sp25.t1.worker.service.WorkerJobQueue;
@@ -9,8 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for worker status, monitoring, and control endpoints.
@@ -41,14 +45,23 @@ public class WorkerStatusController {
 
     /**
      * Gets detailed information about all jobs currently being processed.
+     * Fetches job details from the database based on the active job IDs.
      *
      * @return Response with active job details
      */
     @GetMapping("/jobs/active")
     public ResponseEntity<Map<String, Object>> getActiveJobs() {
         Map<String, Object> response = new HashMap<>();
-        response.put("active_job_count", jobQueue.getActiveJobCount());
-        response.put("jobs", jobQueue.getActiveJobs());
+        List<UUID> activeJobIds = jobQueue.getActiveJobIds();
+
+        // Fetch job details from database for all active job IDs
+        List<JobExecutionDTO> activeJobs = activeJobIds.stream()
+                .map(id -> jobDataService.getJobExecutionById(id).orElse(null))
+                .filter(job -> job != null)
+                .collect(Collectors.toList());
+
+        response.put("active_job_count", activeJobIds.size());
+        response.put("jobs", activeJobs);
 
         return ResponseEntity.ok(response);
     }
