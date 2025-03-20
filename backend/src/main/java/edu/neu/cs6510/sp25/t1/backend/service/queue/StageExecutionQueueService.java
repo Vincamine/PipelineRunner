@@ -37,12 +37,28 @@ public class StageExecutionQueueService {
     
     /**
      * Adds a stage execution to the queue.
+     * This is the middle part of the pipeline → stage → job hierarchy.
      *
      * @param stageExecutionId the ID of the stage execution to add to the queue
      */
     public void enqueueStageExecution(UUID stageExecutionId) {
         PipelineLogger.info("Adding stage execution to queue: " + stageExecutionId);
-        stageQueue.enqueue(stageExecutionId);
+        
+        // Verify the stage execution exists in the database before queuing
+        try {
+            boolean exists = ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository.class)
+                .existsById(stageExecutionId);
+            
+            if (!exists) {
+                PipelineLogger.error("Cannot queue stage execution that doesn't exist in database: " + stageExecutionId);
+                return;
+            }
+            
+            // All checks passed, add to queue
+            stageQueue.enqueue(stageExecutionId);
+        } catch (Exception e) {
+            PipelineLogger.error("Error verifying stage execution before queuing: " + e.getMessage());
+        }
     }
     
     /**
