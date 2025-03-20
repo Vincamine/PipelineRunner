@@ -24,6 +24,10 @@ spring:
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
 
+cicd:
+  rabbitmq:
+    job-queue: cicd-job-queue
+
 docker:
   image-pull-policy: "Always"  # Ensures the latest images are pulled
   volume-mounts: "/workspace"  # Mounted directory for Docker volumes
