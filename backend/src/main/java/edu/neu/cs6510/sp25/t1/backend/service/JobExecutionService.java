@@ -72,25 +72,7 @@ public class JobExecutionService {
     sendJobToQueueInNewTransaction(jobExecutionId);
   }
 
-  /**
-   * Send job to message queue in a new transaction
-   *
-   * @param jobExecutionId job execution ID
-   */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void sendJobToQueueInNewTransaction(UUID jobExecutionId) {
-    try {
-      JobExecutionDTO jobExecutionDTO = getJobExecution(jobExecutionId);
-
-      // Send job to RabbitMQ queue
-      rabbitTemplate.convertAndSend(jobQueueName, jobExecutionDTO);
-      PipelineLogger.info("Job successfully sent to message queue: " + jobExecutionId);
-    } catch (Exception e) {
-      // Update job status to failed but in a new transaction
-      updateJobStatusAfterQueueFailure(jobExecutionId, e.getMessage());
-      PipelineLogger.error("Failed to queue job execution: " + e.getMessage());
-    }
-  }
+//Need a new ServiceClass after save and flush //Only send UUID to queue
 
   /**
    * Update job status after queue failure in a new transaction
