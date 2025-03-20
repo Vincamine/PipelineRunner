@@ -89,7 +89,7 @@ public class StageExecutionService {
    */
   private void processStageJobs(UUID stageExecutionId) {
     // Get job executions for this stage
-    List<JobExecutionEntity> jobs = jobExecutionService.getJobExecutionsForStage(stageExecutionId);
+    List<JobExecutionEntity> jobs = jobExecutionService.getJobsByStageExecution(stageExecutionId);
 
     if (jobs.isEmpty()) {
       PipelineLogger.warn("No jobs found for stage execution: " + stageExecutionId);
