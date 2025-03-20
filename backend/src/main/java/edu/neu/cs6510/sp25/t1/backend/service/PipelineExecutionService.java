@@ -652,12 +652,16 @@ public class PipelineExecutionService {
             .orElseThrow(() -> new RuntimeException("Pipeline execution not found: " + pipelineExecutionId));
     
     // Get all stages for this pipeline
-    //WRONG I didn't save the stages yet
+    //WRONG I didn't save the stages yet - Now fixed: stages are created in createPipelineDefinition 
+    // which is called before this method
     List<StageEntity> pipelineStages = stageRepository.findByPipelineId(pipelineExecution.getPipelineId());
     if (pipelineStages.isEmpty()) {
       PipelineLogger.error("No stage definitions found for pipeline: " + pipelineExecution.getPipelineId());
       throw new RuntimeException("Pipeline stage definitions not found");
     }
+    
+    // Ensure all stage entities are flushed to the database
+    stageRepository.flush();
 
     PipelineLogger.info("Creating " + stages.size() + " stage executions for pipeline: " + pipelineExecutionId);
     
