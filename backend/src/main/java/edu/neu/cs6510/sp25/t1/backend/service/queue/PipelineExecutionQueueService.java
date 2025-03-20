@@ -3,6 +3,8 @@ package edu.neu.cs6510.sp25.t1.backend.service.queue;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
