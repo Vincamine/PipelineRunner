@@ -30,9 +30,12 @@ public class StageExecutionQueueService {
     
     /**
      * Initialize the stage queue processor.
+     * Gets the StageExecutionService lazily to break the circular dependency.
      */
     @PostConstruct
     public void init() {
+        // Get the StageExecutionService lazily from the ApplicationContext
+        this.stageExecutionService = applicationContext.getBean(StageExecutionService.class);
         stageQueue.setProcessor(this::processStageExecution);
     }
     
