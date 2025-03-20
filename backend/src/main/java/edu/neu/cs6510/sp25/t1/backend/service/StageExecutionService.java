@@ -126,6 +126,13 @@ public class StageExecutionService {
       PipelineLogger.info("Job " + job.getId() + " has " + dependencies.size() + " dependencies");
     }
 
+    // Detect circular dependencies using graph analysis
+    if (hasCircularDependencies(jobDependencies)) {
+      PipelineLogger.error("Circular dependency detected for stage: " + stageExecutionId);
+      finalizeStageExecutionAsFailed(stageExecutionId);
+      return;
+    }
+
     // Find jobs with no dependencies and queue them
     Set<UUID> queuedJobs = new HashSet<>();
     for (JobExecutionEntity job : jobs) {
@@ -140,11 +147,70 @@ public class StageExecutionService {
     // Save the job dependencies map for the JobExecutionService to use
     jobExecutionService.saveJobDependenciesMap(stageExecutionId, jobDependencies, queuedJobs);
     
-    // If no jobs were queued but we have jobs, there might be a circular dependency
+    // If no jobs were queued but we have jobs, there may be a problem with job configuration
     if (queuedJobs.isEmpty() && !jobs.isEmpty()) {
-      PipelineLogger.error("No jobs could be queued for stage: " + stageExecutionId + ". Possible circular dependency.");
+      PipelineLogger.error("No jobs could be queued for stage: " + stageExecutionId + ". Check job dependencies.");
       finalizeStageExecutionAsFailed(stageExecutionId);
     }
+  }
+  
+  /**
+   * Detects circular dependencies in the job dependency graph.
+   *
+   * @param dependencies Map of job ID to list of dependency job IDs
+   * @return true if circular dependencies are detected
+   */
+  private boolean hasCircularDependencies(Map<UUID, List<UUID>> dependencies) {
+    // For each job, track visited and recursion stack
+    Set<UUID> visited = new HashSet<>();
+    Set<UUID> recursionStack = new HashSet<>();
+    
+    // Check each job for circular dependencies
+    for (UUID jobId : dependencies.keySet()) {
+      if (hasCircularDependenciesDFS(dependencies, jobId, visited, recursionStack)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  /**
+   * DFS helper method for circular dependency detection.
+   *
+   * @param dependencies Map of job ID to list of dependency job IDs
+   * @param jobId Current job being checked
+   * @param visited Set of jobs already visited
+   * @param recursionStack Set of jobs in the current recursion path
+   * @return true if a circular dependency is detected
+   */
+  private boolean hasCircularDependenciesDFS(Map<UUID, List<UUID>> dependencies, UUID jobId, 
+                                           Set<UUID> visited, Set<UUID> recursionStack) {
+    // If job is in recursion stack, we found a cycle
+    if (recursionStack.contains(jobId)) {
+      return true;
+    }
+    
+    // If already visited and not in cycle, skip
+    if (visited.contains(jobId)) {
+      return false;
+    }
+    
+    // Mark job as visited and add to recursion stack
+    visited.add(jobId);
+    recursionStack.add(jobId);
+    
+    // Check all dependencies
+    List<UUID> jobDependencies = dependencies.getOrDefault(jobId, List.of());
+    for (UUID dependencyId : jobDependencies) {
+      if (hasCircularDependenciesDFS(dependencies, dependencyId, visited, recursionStack)) {
+        return true;
+      }
+    }
+    
+    // Remove from recursion stack when done
+    recursionStack.remove(jobId);
+    return false;
   }
 
   /**
