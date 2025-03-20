@@ -63,7 +63,7 @@ public class JobController {
   @PutMapping("/status")
   @Operation(summary = "Update job execution status", description = "Allows workers to update job execution status.")
   public ResponseEntity<String> updateJobStatus(@RequestBody JobStatusUpdate updateRequest) {
-    jobExecutionService.updateJobExecutionStatus(updateRequest.getJobExecutionId(), updateRequest.getStatus());
+    jobExecutionService.updateJobStatus(updateRequest.getJobExecutionId(), updateRequest.getStatus());
     return ResponseEntity.ok("{\"message\": \"Job status updated successfully.\"}");
   }
 
