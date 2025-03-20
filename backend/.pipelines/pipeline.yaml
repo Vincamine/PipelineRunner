@@ -1,33 +1,46 @@
 name: my-cicd-pipeline
 
+
 stages:
   - name: "build"
-    jobs:
-      - name: "compile"
-        dockerImage: "openjdk:21-jdk-slim"
-        script:
-          - "javac -d out src/main/java/**/*.java"
-        allowFailure: true
-
-      - name: "unit-tests"
-        dockerImage: "openjdk:21-jdk-slim"
-        script:
-          - "./gradlew test"
-        allowFailure: true
-
-  - name: "package"
-    jobs:
-      - name: "build-jar"
-        dockerImage: "gradle:8.12-jdk21"
-        script:
-          - "./gradlew bootJar"
-        allowFailure: true
-
+  - name: "test"
   - name: "deploy"
-    jobs:
-      - name: "dockerize"
-        dockerImage: "docker:latest"
-        script:
-          - "docker build -t my-cicd-app ."
-          - "docker run -d -p 8080:8080 my-cicd-app"
-        allowFailure: true
+
+jobs:
+  - name: "dockerize"
+    dockerImage: "docker:latest"
+    script:
+      - "docker build -t my-cicd-app ."
+      - "docker run -d -p 8080:8080 my-cicd-app"
+    allowFailure: true
+    workingDir:
+    stage: "deploy"
+
+  - name: "compile"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "javac -d out src/main/java/**/*.java"
+    allowFailure: true
+    stage : "build"
+    workingDir :
+    depdency:
+
+  - name: "unit-tests"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "./gradlew test"
+    allowFailure: true
+    stage : "test"
+    workingDir : "src/"
+
+  - name: "build-jar"
+    dockerImage: "gradle:8.12-jdk21"
+    script:
+      - "./gradlew bootJar"
+    allowFailure: true
+    workingDir:
+    stage: "deploy"
+
+# parse
+# save to DB - > return Queue<Queue<UUID>> UUID -> jobExectuinID
+# send Queue<Queue<UUID>> -> rabbitMQ
