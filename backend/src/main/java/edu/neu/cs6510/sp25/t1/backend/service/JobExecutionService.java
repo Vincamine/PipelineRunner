@@ -275,22 +275,6 @@ public class JobExecutionService {
     return jobExecutionRepository.findDependenciesByJobId(jobId);
   }
 
-  /**
-   * Retrieves job executions for a given stage execution.
-   *
-   * @param stageExecutionId the stage execution ID
-   * @return list of job executions
-   */
-  public List<JobExecutionEntity> getJobExecutionsForStage(UUID stageExecutionId) {
-    StageExecutionEntity stageExecution = stageExecutionRepository.findById(stageExecutionId)
-            .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
-
-    List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecution(stageExecution);
-
-    PipelineLogger.info("Found " + jobs.size() + " jobs for stage execution ID: " + stageExecutionId);
-
-    return jobs;
-  }
 
   /**
    * Saves a job execution to the database.
