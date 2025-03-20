@@ -114,7 +114,7 @@ public class PipelineExecutionService {
       jobExecutionRepository.flush();
 
       // Verify entities were properly saved (optional but helpful for debugging)
-      verifyEntitiesSaved(pipelineId);
+      verifyEntitiesSaved(pipelineId, pipelineExecution.getId());
 
       // Add pipeline execution to queue instead of executing directly
       // Use ServiceLocator to get PipelineExecutionQueueService to avoid circular dependency
