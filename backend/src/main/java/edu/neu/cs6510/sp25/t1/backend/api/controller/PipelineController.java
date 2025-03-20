@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
-import edu.neu.cs6510.sp25.t1.backend.error.ApiError;
 
+import edu.neu.cs6510.sp25.t1.backend.error.ApiError;
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
+import edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
@@ -21,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controller class for handling pipeline execution related endpoints.
+ * This controller has been updated to work with the queue-based execution system.
  */
 @RestController
 @RequestMapping("/api/pipeline")
@@ -28,14 +32,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class PipelineController {
 
   private final PipelineExecutionService pipelineExecutionService;
+  private final PipelineExecutionQueueService pipelineExecutionQueueService;
 
   /**
    * Constructor for PipelineController.
    *
    * @param pipelineExecutionService PipelineExecutionService instance
+   * @param pipelineExecutionQueueService PipelineExecutionQueueService instance
    */
-  public PipelineController(PipelineExecutionService pipelineExecutionService) {
+  public PipelineController(
+      PipelineExecutionService pipelineExecutionService,
+      PipelineExecutionQueueService pipelineExecutionQueueService) {
     this.pipelineExecutionService = pipelineExecutionService;
+    this.pipelineExecutionQueueService = pipelineExecutionQueueService;
   }
 
   /**
@@ -80,5 +89,21 @@ public class PipelineController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
           new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "Pipeline Execution Failed", e.getMessage()));
     }
+  }
+  
+  /**
+   * Get information about the execution queue.
+   * This is useful for debugging and monitoring the queue.
+   *
+   * @return ResponseEntity with queue information
+   */
+  @GetMapping("/queue/status")
+  @Operation(summary = "Get pipeline queue status", description = "Returns information about the pipeline execution queue.")
+  public ResponseEntity<?> getQueueStatus() {
+    Map<String, Object> response = new HashMap<>();
+    response.put("queueSize", pipelineExecutionQueueService.getQueueSize());
+    response.put("isProcessing", pipelineExecutionQueueService.isProcessing());
+    
+    return ResponseEntity.ok(response);
   }
 }
