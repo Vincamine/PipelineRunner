@@ -19,13 +19,13 @@ import jakarta.annotation.PostConstruct;
 public class StageExecutionQueueService {
     
     private final ExecutionQueue<UUID> stageQueue;
-    private final StageExecutionService stageExecutionService;
+    private StageExecutionService stageExecutionService;
+    private final ApplicationContext applicationContext;
     
     @Autowired
-    public StageExecutionQueueService(
-            StageExecutionService stageExecutionService) {
+    public StageExecutionQueueService(ApplicationContext applicationContext) {
         this.stageQueue = new ExecutionQueue<>();
-        this.stageExecutionService = stageExecutionService;
+        this.applicationContext = applicationContext;
     }
     
     /**
