@@ -30,9 +30,12 @@ public class JobExecutionQueueService {
     
     /**
      * Initialize the job queue processor.
+     * Gets the JobExecutionService lazily to break the circular dependency.
      */
     @PostConstruct
     public void init() {
+        // Get the JobExecutionService lazily from the ApplicationContext
+        this.jobExecutionService = applicationContext.getBean(JobExecutionService.class);
         jobQueue.setProcessor(this::processJobExecution);
     }
     
