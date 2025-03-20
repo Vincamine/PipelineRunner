@@ -257,15 +257,16 @@ public class StageExecutionService {
       return;
     }
     
-    // Check if any job failed (and not allow_failure)
-    boolean anyFailedNotAllowed = jobs.stream().anyMatch(j -> 
-        j.getStatus() == ExecutionStatus.FAILED && !j.isAllowFailure());
+    // Check if any job failed or was canceled (and not allow_failure)
+    boolean anyFailedOrCanceledNotAllowed = jobs.stream().anyMatch(j -> 
+        (j.getStatus() == ExecutionStatus.FAILED || j.getStatus() == ExecutionStatus.CANCELED) 
+        && !j.isAllowFailure());
     
-    if (anyFailedNotAllowed) {
-      PipelineLogger.error("A job in the stage failed and failure is NOT allowed!");
+    if (anyFailedOrCanceledNotAllowed) {
+      PipelineLogger.error("A job in the stage failed or was canceled and failure is NOT allowed!");
       finalizeStageExecutionAsFailed(stageExecutionId);
     } else {
-      PipelineLogger.info("All jobs in stage completed! Finalizing stage.");
+      PipelineLogger.info("All jobs in stage completed successfully or failures/cancellations were allowed. Finalizing stage.");
       finalizeStageExecution(stageExecutionId);
     }
   }
