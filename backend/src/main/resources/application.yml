@@ -27,6 +27,8 @@ logging:
   level:
     root: INFO  # Default logging level
     edu.neu.cs6510.sp25.t1: DEBUG  # Enable debugging for this project
+    org.hibernate.SQL: DEBUG  # Show SQL queries
+    org.hibernate.type.descriptor.sql: TRACE  # Show SQL parameter values
 
 # Worker configuration removed as we've disconnected from worker module
 
