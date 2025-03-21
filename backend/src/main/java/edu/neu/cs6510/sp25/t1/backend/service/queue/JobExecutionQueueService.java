@@ -41,7 +41,28 @@ public class JobExecutionQueueService {
      */
     public void enqueueJobExecution(UUID jobExecutionId) {
         PipelineLogger.info("Adding job execution to queue: " + jobExecutionId);
-        jobQueue.enqueue(jobExecutionId);
+        
+        // Verify the job execution exists in the database before queuing
+        try {
+            // Get repository
+            var jobExecRepo = ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository.class);
+            
+            // Verify job execution exists
+            var jobExecution = jobExecRepo.findById(jobExecutionId)
+                .orElseThrow(() -> {
+                    PipelineLogger.error("Cannot queue job execution that doesn't exist in database: " + jobExecutionId);
+                    return new IllegalArgumentException("Job execution not found: " + jobExecutionId);
+                });
+            
+            PipelineLogger.info("Verification successful. Job execution exists in database.");
+            
+            // All checks passed, add to queue
+            jobQueue.enqueue(jobExecutionId);
+            PipelineLogger.info("Job execution successfully added to queue: " + jobExecutionId);
+        } catch (Exception e) {
+            PipelineLogger.error("Error verifying job execution before queuing: " + e.getMessage());
+            throw new RuntimeException("Failed to add job execution to queue: " + e.getMessage(), e);
+        }
     }
     
     /**
