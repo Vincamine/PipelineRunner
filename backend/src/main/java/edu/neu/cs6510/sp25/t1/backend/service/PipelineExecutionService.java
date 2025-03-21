@@ -1,10 +1,11 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.context.annotation.Lazy;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,7 +58,6 @@ public class PipelineExecutionService {
   private final JobExecutionRepository jobExecutionRepository;
   private final JobRepository jobRepository;
   private final JobScriptRepository jobScriptRepository;
-  private final ApplicationEventPublisher eventPublisher;
   private final StageExecutionQueueService stageExecutionQueueService;
 
   /**
@@ -81,7 +81,7 @@ public class PipelineExecutionService {
    * @return response containing pipeline execution ID and status
    */
   @Transactional(rollbackFor = Exception.class)
-  //WRONG: return 3 queues instead of executing directly. Need make sure all entities are saved in database
+  //NOTICE: return 3 queues instead of executing directly. Need make sure all entities are saved in database
   public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request) {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
@@ -432,7 +432,6 @@ public class PipelineExecutionService {
    * @param pipelineConfig  the pipeline configuration
    */
   @Transactional
-  @SuppressWarnings("unchecked")
   private void createPipelineDefinitionWithTopLevelJobs(UUID pipelineId, Map<String, Object> pipelineConfig) {
     // Extract stages (as simple strings) from config
     List<String> stageNames = extractStageNamesFromConfig(pipelineConfig);
