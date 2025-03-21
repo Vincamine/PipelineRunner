@@ -93,35 +93,70 @@ public class PipelineExecutionService {
 
     try {
       // Create or get pipeline entity first (ensuring it exists in pipelines table)
+      PipelineLogger.info("Step 1: Creating or getting pipeline entity");
       UUID pipelineId = createOrGetPipelineEntity(request, pipelineConfig);
+      PipelineLogger.info("Pipeline entity created/retrieved with ID: " + pipelineId);
+      
+      // Explicitly flush to ensure pipeline is in the database
+      pipelineRepository.flush();
+      
+      // Verify pipeline entity was saved before proceeding
+      if (!pipelineRepository.existsById(pipelineId)) {
+        PipelineLogger.error("Pipeline entity was not saved correctly: " + pipelineId);
+        throw new RuntimeException("Failed to save pipeline entity to database");
+      }
 
       // Create pipeline stages and jobs from the configuration
+      PipelineLogger.info("Step 2: Creating pipeline stages and jobs");
       createPipelineDefinition(pipelineId, pipelineConfig);
+      
+      // Flush stage and job repositories to ensure they're in the database
+      stageRepository.flush();
+      jobRepository.flush();
+      
+      // Verify stages and jobs exist
+      List<StageEntity> stages = stageRepository.findByPipelineId(pipelineId);
+      if (stages.isEmpty()) {
+        PipelineLogger.error("No stages were saved for pipeline: " + pipelineId);
+        throw new RuntimeException("Failed to save stage entities to database");
+      }
+      PipelineLogger.info("Successfully created " + stages.size() + " stages for pipeline");
 
       // Create and save the pipeline execution entity
-      PipelineLogger.info("Preparing to save pipeline execution to DB...");
+      PipelineLogger.info("Step 3: Creating pipeline execution entity");
       PipelineExecutionEntity pipelineExecution = createPipelineExecution(request, pipelineId);
 
       // Save the pipeline execution to the database
       pipelineExecution = savePipelineExecution(pipelineExecution);
+      PipelineLogger.info("Pipeline execution saved with ID: " + pipelineExecution.getId());
+      
+      // Explicitly flush to ensure pipeline execution is in the database
+      pipelineExecutionRepository.flush();
       
       // Create and save stage executions with their jobs
+      PipelineLogger.info("Step 4: Creating stage executions and job executions");
       createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
 
       // Force flush to ensure all entities are written to the database before queuing
+      PipelineLogger.info("Step 5: Flushing all repositories to ensure data is persisted");
       pipelineExecutionRepository.flush();
       stageExecutionRepository.flush();
       jobExecutionRepository.flush();
 
       // Verify entities were properly saved (optional but helpful for debugging)
+      PipelineLogger.info("Step 6: Verifying entities were properly saved");
       verifyEntitiesSaved(pipelineId, pipelineExecution.getId());
 
       // Add pipeline execution to queue instead of executing directly
-      // Use ServiceLocator to get PipelineExecutionQueueService to avoid circular dependency
-      // CHECK: how to use worker to execute the queue? no constructor?
-      ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService.class)
-          .enqueuePipelineExecution(pipelineExecution.getId());
-      //CHECK: ensure all ID (pipeline, stage, job) are put in database and also put in queue
+      PipelineLogger.info("Step 7: Adding pipeline execution to queue");
+      try {
+        ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService.class)
+            .enqueuePipelineExecution(pipelineExecution.getId());
+        PipelineLogger.info("Pipeline execution successfully added to queue: " + pipelineExecution.getId());
+      } catch (Exception e) {
+        PipelineLogger.error("Failed to add pipeline execution to queue: " + e.getMessage());
+        throw new RuntimeException("Failed to add pipeline execution to queue", e);
+      }
 
       return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "PENDING");
     } catch (Exception e) {
