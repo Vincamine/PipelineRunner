@@ -32,7 +32,7 @@ public class Job {
 
   private final List<String> script;
 
-  private final List<String> dependencies;  // 🔧 Store as job names instead of UUIDs
+  private final List<String> dependencies;  // Store as job names instead of UUIDs
 
   private final boolean allowFailure;
   
