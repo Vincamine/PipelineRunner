@@ -36,7 +36,7 @@ import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
  * - Ensures better validation feedback for pipeline configurations.
  */
 public class YamlParser {
-  private static final ObjectMapper yamlMapper = createYamlMapper();
+  private static final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
   private static final Map<String, Mark> fieldLocations = new HashMap<>();
 
   /**
