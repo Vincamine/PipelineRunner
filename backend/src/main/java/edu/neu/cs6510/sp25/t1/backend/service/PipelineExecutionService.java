@@ -412,7 +412,78 @@ public class PipelineExecutionService {
     
     PipelineLogger.info("Found pipeline entity with ID: " + pipelineId + ", name: " + pipeline.getName());
     
-    List<Map<String, Object>> stages = extractStagesFromConfig(pipelineConfig);
+    boolean usingTopLevelJobs = pipelineConfig.containsKey("jobs");
+    
+    if (usingTopLevelJobs) {
+      // Handle top-level jobs format
+      PipelineLogger.info("Using top-level jobs format");
+      createPipelineDefinitionWithTopLevelJobs(pipelineId, pipelineConfig);
+    } else {
+      // Handle nested stage-jobs format
+      PipelineLogger.info("Using nested stage-jobs format");
+      createPipelineDefinitionWithNestedJobs(pipelineId, pipelineConfig);
+    }
+  }
+  
+  /**
+   * Creates pipeline definition using the top-level jobs format.
+   *
+   * @param pipelineId      the pipeline ID
+   * @param pipelineConfig  the pipeline configuration
+   */
+  @Transactional
+  @SuppressWarnings("unchecked")
+  private void createPipelineDefinitionWithTopLevelJobs(UUID pipelineId, Map<String, Object> pipelineConfig) {
+    // Extract stages (as simple strings) from config
+    List<String> stageNames = extractStageNamesFromConfig(pipelineConfig);
+    
+    if (stageNames.isEmpty()) {
+      PipelineLogger.error("No valid stages found in pipeline configuration!");
+      throw new RuntimeException("Pipeline must contain at least one valid stage.");
+    }
+    
+    PipelineLogger.info("Found " + stageNames.size() + " stages in pipeline configuration");
+    
+    // Create stage entities for each stage name
+    Map<String, UUID> stageNameToIdMap = new HashMap<>();
+    for (int order = 0; order < stageNames.size(); order++) {
+      String stageName = stageNames.get(order);
+      UUID stageId = createStageEntity(pipelineId, stageName, order);
+      stageNameToIdMap.put(stageName, stageId);
+    }
+    
+    // Now handle the jobs
+    List<Map<String, Object>> jobs = extractJobsFromConfig(pipelineConfig);
+    
+    if (jobs.isEmpty()) {
+      PipelineLogger.warn("No jobs found in pipeline configuration!");
+      return;
+    }
+    
+    PipelineLogger.info("Found " + jobs.size() + " jobs in pipeline configuration");
+    
+    // Create job entities for each job
+    for (Map<String, Object> jobConfig : jobs) {
+      String stageName = (String) jobConfig.get("stage");
+      if (stageName == null || !stageNameToIdMap.containsKey(stageName)) {
+        PipelineLogger.error("Job references unknown stage: " + stageName);
+        throw new RuntimeException("Job references unknown stage: " + stageName);
+      }
+      
+      UUID stageId = stageNameToIdMap.get(stageName);
+      createJobFromConfig(stageId, jobConfig);
+    }
+  }
+  
+  /**
+   * Creates pipeline definition using the nested stage-jobs format.
+   *
+   * @param pipelineId      the pipeline ID
+   * @param pipelineConfig  the pipeline configuration
+   */
+  @Transactional
+  private void createPipelineDefinitionWithNestedJobs(UUID pipelineId, Map<String, Object> pipelineConfig) {
+    List<Map<String, Object>> stages = extractNestedStagesFromConfig(pipelineConfig);
     
     if (stages.isEmpty()) {
       PipelineLogger.error("No valid stages found in pipeline configuration!");
@@ -428,13 +499,180 @@ public class PipelineExecutionService {
   }
   
   /**
-   * Extract stages from pipeline configuration.
+   * Extract stage names from pipeline configuration (for top-level format).
+   *
+   * @param pipelineConfig the pipeline configuration
+   * @return list of stage names
+   */
+  @SuppressWarnings("unchecked")
+  private List<String> extractStageNamesFromConfig(Map<String, Object> pipelineConfig) {
+    Object stagesObj = pipelineConfig.get("stages");
+    if (!(stagesObj instanceof List<?> rawStages)) {
+      PipelineLogger.error("Invalid pipeline structure: 'stages' must be a list.");
+      throw new RuntimeException("Invalid pipeline configuration: 'stages' key is missing or incorrect.");
+    }
+    
+    List<String> stageNames = new ArrayList<>();
+    
+    for (Object stageObj : rawStages) {
+      if (stageObj instanceof String) {
+        // Direct string stage name
+        stageNames.add((String) stageObj);
+      } else if (stageObj instanceof Map) {
+        // Map with name property
+        Map<String, Object> stageMap = (Map<String, Object>) stageObj;
+        if (stageMap.containsKey("name")) {
+          stageNames.add((String) stageMap.get("name"));
+        }
+      }
+    }
+    
+    return stageNames;
+  }
+  
+  /**
+   * Extract jobs from pipeline configuration (for top-level format).
+   *
+   * @param pipelineConfig the pipeline configuration
+   * @return list of job configurations
+   */
+  @SuppressWarnings("unchecked")
+  private List<Map<String, Object>> extractJobsFromConfig(Map<String, Object> pipelineConfig) {
+    Object jobsObj = pipelineConfig.get("jobs");
+    if (!(jobsObj instanceof List<?> rawJobs)) {
+      PipelineLogger.warn("No jobs found or 'jobs' is not a list.");
+      return List.of();
+    }
+    
+    return rawJobs.stream()
+        .filter(item -> item instanceof Map)
+        .map(item -> (Map<String, Object>) item)
+        .toList();
+  }
+  
+  /**
+   * Create a stage entity.
+   *
+   * @param pipelineId  the pipeline ID
+   * @param stageName   the stage name
+   * @param order       the execution order
+   * @return the stage ID
+   */
+  @Transactional
+  private UUID createStageEntity(UUID pipelineId, String stageName, int order) {
+    PipelineLogger.info("Creating stage with name: " + stageName + ", order: " + order);
+    
+    // Create and save the stage entity
+    StageEntity stage = StageEntity.builder()
+        .pipelineId(pipelineId)
+        .name(stageName)
+        .executionOrder(order)
+        .build();
+    
+    try {
+      stage = stageRepository.save(stage);
+      stageRepository.flush();
+      
+      // Verify the stage was saved
+      if (stageRepository.existsById(stage.getId())) {
+        PipelineLogger.info("Successfully created stage with ID: " + stage.getId());
+      } else {
+        PipelineLogger.error("Failed to verify stage was saved: " + stage.getId());
+      }
+      
+      return stage.getId();
+    } catch (Exception e) {
+      PipelineLogger.error("Error saving stage entity: " + e.getMessage());
+      throw e;
+    }
+  }
+  
+  /**
+   * Creates a job entity from job configuration.
+   *
+   * @param stageId    the stage ID
+   * @param jobConfig  the job configuration
+   * @return the job ID
+   */
+  @Transactional
+  private UUID createJobFromConfig(UUID stageId, Map<String, Object> jobConfig) {
+    String jobName = (String) jobConfig.get("name");
+    PipelineLogger.info("Creating job with name: " + jobName + " for stage: " + stageId);
+    
+    // Get docker image (support both "image" and "dockerImage" properties)
+    String dockerImage = null;
+    if (jobConfig.containsKey("image")) {
+      dockerImage = (String) jobConfig.get("image");
+    } else if (jobConfig.containsKey("dockerImage")) {
+      dockerImage = (String) jobConfig.get("dockerImage");
+    } else {
+      dockerImage = "docker.io/library/alpine:latest"; // Default
+    }
+    
+    // Get allow failure flag (support both "allow_failure" and "allowFailure" properties)
+    boolean allowFailure = false;
+    if (jobConfig.containsKey("allow_failure")) {
+      Object allowFailureObj = jobConfig.get("allow_failure");
+      allowFailure = parseBoolean(allowFailureObj);
+    } else if (jobConfig.containsKey("allowFailure")) {
+      Object allowFailureObj = jobConfig.get("allowFailure");
+      allowFailure = parseBoolean(allowFailureObj);
+    }
+    
+    PipelineLogger.info("Job details - Name: " + jobName + ", Docker image: " + dockerImage + ", Allow failure: " + allowFailure);
+    
+    // Create and save the job entity
+    JobEntity job = JobEntity.builder()
+        .stageId(stageId)
+        .name(jobName)
+        .dockerImage(dockerImage)
+        .allowFailure(allowFailure)
+        .build();
+    
+    try {
+      job = jobRepository.save(job);
+      jobRepository.flush();
+      
+      // Verify the job was saved
+      if (jobRepository.existsById(job.getId())) {
+        PipelineLogger.info("Successfully created job with ID: " + job.getId());
+      } else {
+        PipelineLogger.error("Failed to verify job was saved: " + job.getId());
+      }
+      
+      // Handle job scripts if present
+      saveJobScripts(job.getId(), jobConfig);
+      
+      return job.getId();
+    } catch (Exception e) {
+      PipelineLogger.error("Error saving job entity: " + e.getMessage() + " | " + e);
+      throw e;
+    }
+  }
+  
+  /**
+   * Parse a boolean value from an object.
+   * 
+   * @param value the object to parse
+   * @return the boolean value
+   */
+  private boolean parseBoolean(Object value) {
+    if (value instanceof Boolean) {
+      return (Boolean) value;
+    } else if (value instanceof String) {
+      return Boolean.parseBoolean((String) value);
+    }
+    return false;
+  }
+  
+  /**
+   * Extract stages from pipeline configuration for nested format.
    *
    * @param pipelineConfig the pipeline configuration
    * @return list of stage configurations
    */
   @SuppressWarnings("unchecked")
-  private List<Map<String, Object>> extractStagesFromConfig(Map<String, Object> pipelineConfig) {
+  private List<Map<String, Object>> extractNestedStagesFromConfig(Map<String, Object> pipelineConfig) {
     Object stagesObj = pipelineConfig.get("stages");
     if (!(stagesObj instanceof List<?> rawStages)) {
       PipelineLogger.error("Invalid pipeline structure: 'stages' must be a list.");
