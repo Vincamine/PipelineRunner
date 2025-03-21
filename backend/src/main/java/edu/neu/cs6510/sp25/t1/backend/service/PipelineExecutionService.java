@@ -836,7 +836,6 @@ public class PipelineExecutionService {
    * @param jobId the job ID
    * @param jobConfig the job configuration
    */
-  @SuppressWarnings("unchecked")
   private void saveJobScripts(UUID jobId, Map<String, Object> jobConfig) {
     if (!jobConfig.containsKey("script")) {
       PipelineLogger.warn("No scripts defined for job: " + jobId);
@@ -912,20 +911,12 @@ public class PipelineExecutionService {
    */
   @Transactional
   protected void createAndSaveStageExecutions(UUID pipelineExecutionId, Map<String, Object> pipelineConfig) {
-    List<Map<String, Object>> stages = extractStagesFromConfig(pipelineConfig);
-
-    if (stages.isEmpty()) {
-      PipelineLogger.error("No valid stages found in pipeline configuration!");
-      throw new RuntimeException("Pipeline must contain at least one valid stage.");
-    }
-
+    
     // Get pipeline execution to retrieve pipelineId
     PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
             .orElseThrow(() -> new RuntimeException("Pipeline execution not found: " + pipelineExecutionId));
     
     // Get all stages for this pipeline
-    //WRONG I didn't save the stages yet - Now fixed: stages are created in createPipelineDefinition 
-    // which is called before this method
     List<StageEntity> pipelineStages = stageRepository.findByPipelineId(pipelineExecution.getPipelineId());
     if (pipelineStages.isEmpty()) {
       PipelineLogger.error("No stage definitions found for pipeline: " + pipelineExecution.getPipelineId());
@@ -934,14 +925,16 @@ public class PipelineExecutionService {
     
     // Ensure all stage entities are flushed to the database
     stageRepository.flush();
-
-    PipelineLogger.info("Creating " + stages.size() + " stage executions for pipeline: " + pipelineExecutionId);
+    
+    int stagesCount = pipelineStages.size();
+    PipelineLogger.info("Creating " + stagesCount + " stage executions for pipeline: " + pipelineExecutionId);
     
     String commitHash = pipelineExecution.getCommitHash();
     boolean isLocal = pipelineExecution.isLocal();
     PipelineLogger.info("Using commit hash: " + commitHash + " and isLocal: " + isLocal);
 
-    for (int order = 0; order < stages.size(); order++) {
+    // Create stage executions for all stages
+    for (int order = 0; order < stagesCount; order++) {
       createStageExecution(pipelineExecutionId, pipelineStages, order, commitHash, isLocal);
     }
   }
@@ -959,11 +952,10 @@ public class PipelineExecutionService {
   private void createStageExecution(UUID pipelineExecutionId, List<StageEntity> pipelineStages, int order, 
       String commitHash, boolean isLocal) {
     // Find the matching stage entity for this order
-    int finalOrder = order;
     StageEntity matchingStage = pipelineStages.stream()
-            .filter(stage -> stage.getExecutionOrder() == finalOrder)
+            .filter(stage -> stage.getExecutionOrder() == order)
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Stage definition not found for order: " + finalOrder));
+            .orElseThrow(() -> new RuntimeException("Stage definition not found for order: " + order));
     
     // Create the stage execution entity
     StageExecutionEntity stageExecution = StageExecutionEntity.builder()
@@ -982,7 +974,7 @@ public class PipelineExecutionService {
       PipelineLogger.info("Saved stage execution with ID: " + stageExecution.getId() + " for stage: " + matchingStage.getId());
 
       // Extract and create job executions
-      //WRONG not created jobs yet
+      //WRONG not created jobs yet?
       List<JobExecutionEntity> jobs = createJobExecutions(matchingStage.getId(), stageExecution);
 
       // Save job executions
@@ -1057,7 +1049,6 @@ public class PipelineExecutionService {
       PipelineLogger.info("Found " + stages.size() + " stages for pipeline: " + pipelineId);
 
       // Check jobs exist for each stage
-      // WRONG: jobexecution not created yet. Should use job excuation
       for (StageEntity stage : stages) {
         List<JobEntity> jobs = jobRepository.findByStageId(stage.getId());
         PipelineLogger.info("Found " + jobs.size() + " jobs for stage: " + stage.getId());
