@@ -37,6 +37,7 @@ public class PipelineExecutionService {
   private final PipelineExecutionCreationService pipelineExecutionCreationService;
   private final PipelineStatusService pipelineStatusService;
   private final ExecutionQueueService executionQueueService;
+  private final edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService pipelineExecutionQueueService;
 
   /**
    * Retrieves a pipeline execution by ID.
