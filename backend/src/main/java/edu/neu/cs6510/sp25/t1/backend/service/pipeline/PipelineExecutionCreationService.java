@@ -181,6 +181,7 @@ public class PipelineExecutionCreationService {
    * @param stageExecution stage execution entity
    * @return list of job execution entities
    */
+  @Transactional
   private List<JobExecutionEntity> createJobExecutions(UUID stageId, StageExecutionEntity stageExecution) {
     // Get all jobs for this stage
     List<JobEntity> stageJobs = jobRepository.findByStageId(stageId);
@@ -190,13 +191,24 @@ public class PipelineExecutionCreationService {
       return List.of();
     }
 
+    // Create job executions by ensuring job entities are saved first
     return stageJobs.stream().map(job -> {
+      if (job.getId() == null) {
+        PipelineLogger.info("Saving job entity before creating execution for job: " + job.getName());
+        job = jobRepository.saveAndFlush(job);
+      } else {
+        if (!jobRepository.existsById(job.getId())) {
+          PipelineLogger.warn("Job entity does not exist in database, saving it now: " + job.getId());
+          job = jobRepository.saveAndFlush(job);
+        }
+      }
+
       return JobExecutionEntity.builder()
               .stageExecution(stageExecution)
               .jobId(job.getId())  // Use actual job ID
-              .commitHash(stageExecution.getCommitHash())  // Use commit hash from stage execution
-              .isLocal(stageExecution.isLocal())        // Use isLocal from stage execution
-              .allowFailure(job.isAllowFailure())        // Use allowFailure from job entity
+              .commitHash(stageExecution.getCommitHash())
+              .isLocal(stageExecution.isLocal())
+              .allowFailure(job.isAllowFailure())
               .status(ExecutionStatus.PENDING)
               .startTime(Instant.now())
               .build();
