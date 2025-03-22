@@ -37,12 +37,42 @@ public class StageExecutionQueueService {
     
     /**
      * Adds a stage execution to the queue.
+     * This is the middle part of the pipeline → stage → job hierarchy.
      *
      * @param stageExecutionId the ID of the stage execution to add to the queue
      */
     public void enqueueStageExecution(UUID stageExecutionId) {
         PipelineLogger.info("Adding stage execution to queue: " + stageExecutionId);
-        stageQueue.enqueue(stageExecutionId);
+        
+        // Verify the stage execution exists in the database before queuing
+        try {
+            // Get repositories
+            var stageExecRepo = ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository.class);
+            var jobExecRepo = ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository.class);
+            
+            // Verify stage execution exists
+            var stageExecution = stageExecRepo.findById(stageExecutionId)
+                .orElseThrow(() -> {
+                    PipelineLogger.error("Cannot queue stage execution that doesn't exist in database: " + stageExecutionId);
+                    return new IllegalArgumentException("Stage execution not found: " + stageExecutionId);
+                });
+            
+            // Verify that jobs exist for this stage
+            var jobs = jobExecRepo.findByStageExecution(stageExecution);
+            if (jobs.isEmpty()) {
+                PipelineLogger.error("Cannot queue stage execution with no jobs: " + stageExecutionId);
+                throw new IllegalArgumentException("Stage execution has no jobs: " + stageExecutionId);
+            }
+            
+            PipelineLogger.info("Verification successful. Stage execution has " + jobs.size() + " jobs.");
+            
+            // All checks passed, add to queue
+            stageQueue.enqueue(stageExecutionId);
+            PipelineLogger.info("Stage execution successfully added to queue: " + stageExecutionId);
+        } catch (Exception e) {
+            PipelineLogger.error("Error verifying stage execution before queuing: " + e.getMessage());
+            throw new RuntimeException("Failed to add stage execution to queue: " + e.getMessage(), e);
+        }
     }
     
     /**

@@ -2,6 +2,7 @@ name: my-cicd-pipeline
 repository: https://github.com/CS6510-SEA-SP25/newCICDProject
 branch: main
 
+# Define the stages of the pipeline
 stages:
   - name: build
     jobs:
@@ -11,14 +12,14 @@ stages:
           - "javac -d out src/main/java/**/*.java"
         allow_failure: true
         working_dir: "usr/cs.java"
-      
+
       - name: build-jar
         image: gradle:8.12-jdk21
         script:
           - "./gradlew bootJar"
         allow_failure: false
         working_dir: "."
-  
+
   - name: test
     jobs:
       - name: unit-tests
@@ -27,14 +28,14 @@ stages:
           - "./gradlew test"
         allow_failure: true
         working_dir: "src/"
-      
+
       - name: integration-tests
         image: openjdk:21-jdk-slim
         script:
           - "./gradlew integrationTest"
         allow_failure: true
         working_dir: "src/"
-  
+
   - name: doc
     jobs:
       - name: generate-docs
@@ -43,7 +44,7 @@ stages:
           - "javadoc -d docs/ src/main/java/**/*.java"
         allow_failure: true
         working_dir: "usr/cs.java"
-  
+
   - name: deploy
     jobs:
       - name: dockerize

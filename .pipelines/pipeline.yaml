@@ -1,5 +1,4 @@
 name: my-cicd-pipeline
-
 stages:
   - build
   - test
@@ -24,6 +23,15 @@ jobs:
     workingDir: "src/"
     dependencies: ["compile"]
 
+  - name: "integration-tests"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "./gradlew integrationTest"
+    allowFailure: true
+    stage: "test"
+    workingDir: "src/"
+    dependencies: ["compile"]
+
   - name: "generate-docs"
     dockerImage: "openjdk:21-jdk-slim"
     script:
@@ -37,9 +45,9 @@ jobs:
     dockerImage: "gradle:8.12-jdk21"
     script:
       - "./gradlew bootJar"
-    allowFailure: true
-    workingDir: "."
+    allowFailure: false
     stage: "deploy"
+    workingDir: "."
     dependencies: ["compile", "unit-tests"]
 
   - name: "dockerize"
@@ -48,6 +56,6 @@ jobs:
       - "docker build -t my-cicd-app ."
       - "docker run -d -p 8080:8080 my-cicd-app"
     allowFailure: true
-    workingDir: "."
     stage: "deploy"
+    workingDir: "."
     dependencies: ["build-jar"]

@@ -98,6 +98,7 @@ public class YamlPipelineUtils {
   
   /**
    * Validates the stages section of the pipeline configuration.
+   * Supports both nested format (stages with jobs) and top-level format (separate stages and jobs lists).
    *
    * @param pipelineConfig The parsed pipeline configuration.
    * @throws IllegalArgumentException If validation fails.
@@ -110,32 +111,219 @@ public class YamlPipelineUtils {
       throw new IllegalArgumentException("Invalid pipeline.yaml: 'stages' must be a list.");
     }
     
-    List<Map<String, Object>> stages = new ArrayList<>();
-    for (Object stageObj : (List<?>) stagesObj) {
-      if (!(stageObj instanceof Map)) {
-        PipelineLogger.error("Invalid pipeline.yaml: Each stage must be a map.");
-        throw new IllegalArgumentException("Invalid pipeline.yaml: Each stage must be a map.");
+    List<?> stagesList = (List<?>) stagesObj;
+    
+    // Check if we're using the top-level jobs format
+    boolean usingTopLevelJobs = pipelineConfig.containsKey(JOBS_KEY);
+    
+    if (usingTopLevelJobs) {
+      // If using top-level jobs, validate stages as simple string or map values
+      validateTopLevelStages(stagesList);
+      
+      // Also validate the top-level jobs
+      validateTopLevelJobs(pipelineConfig);
+    } else {
+      // Using nested format - stages must be maps with name and jobs
+      List<Map<String, Object>> stages = new ArrayList<>();
+      for (Object stageObj : stagesList) {
+        if (!(stageObj instanceof Map)) {
+          PipelineLogger.error("Invalid pipeline.yaml: Each stage must be a map when not using top-level jobs.");
+          throw new IllegalArgumentException("Invalid pipeline.yaml: Each stage must be a map when not using top-level jobs.");
+        }
+        stages.add((Map<String, Object>) stageObj);
       }
-      stages.add((Map<String, Object>) stageObj);
+      
+      // Validate each stage in nested format
+      for (int i = 0; i < stages.size(); i++) {
+        validateNestedStage(stages.get(i), i);
+      }
+      
+      // Validate stage names are unique
+      validateUniqueStageNames(stages);
     }
-    
-    // Validate each stage
-    for (int i = 0; i < stages.size(); i++) {
-      validateStage(stages.get(i), i);
-    }
-    
-    // Validate stage names are unique
-    validateUniqueStageNames(stages);
   }
   
   /**
-   * Validates an individual stage in the pipeline.
+   * Validates stages defined in the top-level format.
+   *
+   * @param stagesList The list of stages.
+   * @throws IllegalArgumentException If validation fails.
+   */
+  @SuppressWarnings("unchecked")
+  private static void validateTopLevelStages(List<?> stagesList) {
+    Set<String> stageNames = new HashSet<>();
+    
+    // For top-level format, stages can be strings or maps with name
+    for (int i = 0; i < stagesList.size(); i++) {
+      Object stageObj = stagesList.get(i);
+      String stageName;
+      
+      if (stageObj instanceof String) {
+        // Simple string stage
+        stageName = (String) stageObj;
+      } else if (stageObj instanceof Map) {
+        // Map with name field
+        Map<String, Object> stageMap = (Map<String, Object>) stageObj;
+        if (!stageMap.containsKey(NAME_KEY)) {
+          PipelineLogger.error("Invalid pipeline.yaml: Stage at index " + i + " is missing 'name' field.");
+          throw new IllegalArgumentException("Invalid pipeline.yaml: Stage at index " + i + " is missing 'name' field.");
+        }
+        stageName = (String) stageMap.get(NAME_KEY);
+      } else {
+        PipelineLogger.error("Invalid pipeline.yaml: Stage at index " + i + " must be a string or map.");
+        throw new IllegalArgumentException("Invalid pipeline.yaml: Stage at index " + i + " must be a string or map.");
+      }
+      
+      if (stageName == null || stageName.trim().isEmpty()) {
+        PipelineLogger.error("Invalid pipeline.yaml: Stage at index " + i + " has empty name.");
+        throw new IllegalArgumentException("Invalid pipeline.yaml: Stage at index " + i + " has empty name.");
+      }
+      
+      // Check for duplicate stage names
+      if (stageNames.contains(stageName)) {
+        PipelineLogger.error("Invalid pipeline.yaml: Duplicate stage name '" + stageName + "'.");
+        throw new IllegalArgumentException("Invalid pipeline.yaml: Duplicate stage name '" + stageName + "'.");
+      }
+      
+      stageNames.add(stageName);
+    }
+    
+    PipelineLogger.info("Validated " + stageNames.size() + " stages in top-level format");
+  }
+  
+  /**
+   * Validates top-level jobs section.
+   *
+   * @param pipelineConfig The pipeline configuration.
+   * @throws IllegalArgumentException If validation fails.
+   */
+  @SuppressWarnings("unchecked")
+  private static void validateTopLevelJobs(Map<String, Object> pipelineConfig) {
+    Object jobsObj = pipelineConfig.get(JOBS_KEY);
+    if (!(jobsObj instanceof List<?>)) {
+      PipelineLogger.error("Invalid pipeline.yaml: 'jobs' must be a list.");
+      throw new IllegalArgumentException("Invalid pipeline.yaml: 'jobs' must be a list.");
+    }
+    
+    List<Map<String, Object>> jobs = new ArrayList<>();
+    for (Object jobObj : (List<?>) jobsObj) {
+      if (!(jobObj instanceof Map)) {
+        PipelineLogger.error("Invalid pipeline.yaml: Each job must be a map.");
+        throw new IllegalArgumentException("Invalid pipeline.yaml: Each job must be a map.");
+      }
+      jobs.add((Map<String, Object>) jobObj);
+    }
+    
+    // Extract stage names for validation
+    Set<String> stageNames = extractStageNames(pipelineConfig);
+    
+    // Validate each job
+    for (int i = 0; i < jobs.size(); i++) {
+      validateTopLevelJob(jobs.get(i), i, stageNames);
+    }
+    
+    // Validate job names are unique
+    validateUniqueJobNames(jobs);
+  }
+  
+  /**
+   * Extracts stage names from the pipeline configuration.
+   *
+   * @param pipelineConfig The pipeline configuration.
+   * @return Set of stage names.
+   */
+  @SuppressWarnings("unchecked")
+  private static Set<String> extractStageNames(Map<String, Object> pipelineConfig) {
+    Set<String> stageNames = new HashSet<>();
+    List<?> stagesList = (List<?>) pipelineConfig.get(STAGES_KEY);
+    
+    for (Object stageObj : stagesList) {
+      if (stageObj instanceof String) {
+        stageNames.add((String) stageObj);
+      } else if (stageObj instanceof Map) {
+        Map<String, Object> stageMap = (Map<String, Object>) stageObj;
+        if (stageMap.containsKey(NAME_KEY)) {
+          stageNames.add((String) stageMap.get(NAME_KEY));
+        }
+      }
+    }
+    
+    return stageNames;
+  }
+  
+  /**
+   * Validates a job in the top-level format.
+   *
+   * @param job The job configuration.
+   * @param index The index of the job in the list.
+   * @param stageNames Set of valid stage names.
+   * @throws IllegalArgumentException If validation fails.
+   */
+  private static void validateTopLevelJob(Map<String, Object> job, int index, Set<String> stageNames) {
+    // Check for name
+    if (!job.containsKey(NAME_KEY)) {
+      PipelineLogger.error("Invalid pipeline.yaml: Job at index " + index + " is missing 'name' field.");
+      throw new IllegalArgumentException("Invalid pipeline.yaml: Job at index " + index + " is missing 'name' field.");
+    }
+    
+    String jobName = (String) job.get(NAME_KEY);
+    if (jobName == null || jobName.trim().isEmpty()) {
+      PipelineLogger.error("Invalid pipeline.yaml: Job at index " + index + " has empty name.");
+      throw new IllegalArgumentException("Invalid pipeline.yaml: Job at index " + index + " has empty name.");
+    }
+    
+    // Check for stage reference
+    if (!job.containsKey("stage")) {
+      PipelineLogger.error("Invalid pipeline.yaml: Job '" + jobName + "' is missing 'stage' field.");
+      throw new IllegalArgumentException("Invalid pipeline.yaml: Job '" + jobName + "' is missing 'stage' field.");
+    }
+    
+    String stageName = (String) job.get("stage");
+    if (stageName == null || stageName.trim().isEmpty()) {
+      PipelineLogger.error("Invalid pipeline.yaml: Job '" + jobName + "' has empty stage reference.");
+      throw new IllegalArgumentException("Invalid pipeline.yaml: Job '" + jobName + "' has empty stage reference.");
+    }
+    
+    // Check if stage exists
+    if (!stageNames.contains(stageName)) {
+      PipelineLogger.error("Invalid pipeline.yaml: Job '" + jobName + "' references non-existent stage '" + stageName + "'.");
+      throw new IllegalArgumentException("Invalid pipeline.yaml: Job '" + jobName + "' references non-existent stage '" + stageName + "'.");
+    }
+    
+    // Validate script if present
+    if (job.containsKey(SCRIPT_KEY) || job.containsKey("script")) {
+      Object scriptObj = job.containsKey(SCRIPT_KEY) ? job.get(SCRIPT_KEY) : job.get("script");
+      validateScript(scriptObj, jobName, stageName);
+    }
+    
+    // Validate docker image if present
+    String dockerImage = null;
+    if (job.containsKey(IMAGE_KEY)) {
+      dockerImage = (String) job.get(IMAGE_KEY);
+    } else if (job.containsKey("dockerImage")) {
+      dockerImage = (String) job.get("dockerImage");
+    }
+    
+    if (dockerImage != null) {
+      validateDockerImage(dockerImage, jobName, stageName);
+    }
+    
+    // Validate allow_failure if present
+    if (job.containsKey(ALLOW_FAILURE_KEY) || job.containsKey("allowFailure")) {
+      Object allowFailure = job.containsKey(ALLOW_FAILURE_KEY) ? 
+          job.get(ALLOW_FAILURE_KEY) : job.get("allowFailure");
+      validateAllowFailure(allowFailure, jobName, stageName);
+    }
+  }
+  
+  /**
+   * Validates an individual stage in the nested format.
    *
    * @param stage The stage configuration.
    * @param index The index of the stage in the list.
    * @throws IllegalArgumentException If validation fails.
    */
-  private static void validateStage(Map<String, Object> stage, int index) {
+  private static void validateNestedStage(Map<String, Object> stage, int index) {
     if (!stage.containsKey(NAME_KEY)) {
       PipelineLogger.error("Invalid pipeline.yaml: Stage at index " + index + " is missing 'name' field.");
       throw new IllegalArgumentException("Invalid pipeline.yaml: Stage at index " + index + " is missing 'name' field.");
@@ -153,7 +341,84 @@ public class YamlPipelineUtils {
       throw new IllegalArgumentException("Invalid pipeline.yaml: Stage '" + stageName + "' is missing 'jobs' field.");
     }
     
-    validateJobs(stage, stageName);
+    validateNestedJobs(stage, stageName);
+  }
+  
+  /**
+   * Validates jobs in a nested stage.
+   *
+   * @param stage The stage configuration.
+   * @param stageName The name of the stage.
+   * @throws IllegalArgumentException If validation fails.
+   */
+  @SuppressWarnings("unchecked")
+  private static void validateNestedJobs(Map<String, Object> stage, String stageName) {
+    Object jobsObj = stage.get(JOBS_KEY);
+    if (!(jobsObj instanceof List<?>)) {
+      PipelineLogger.error("Invalid pipeline.yaml: Jobs in stage '" + stageName + "' must be a list.");
+      throw new IllegalArgumentException("Invalid pipeline.yaml: Jobs in stage '" + stageName + "' must be a list.");
+    }
+    
+    List<Map<String, Object>> jobs = new ArrayList<>();
+    for (Object jobObj : (List<?>) jobsObj) {
+      if (!(jobObj instanceof Map)) {
+        PipelineLogger.error("Invalid pipeline.yaml: Each job in stage '" + stageName + "' must be a map.");
+        throw new IllegalArgumentException("Invalid pipeline.yaml: Each job in stage '" + stageName + "' must be a map.");
+      }
+      jobs.add((Map<String, Object>) jobObj);
+    }
+    
+    // Validate each job
+    for (int i = 0; i < jobs.size(); i++) {
+      validateJob(jobs.get(i), stageName, i);
+    }
+    
+    // Validate job names are unique within a stage
+    validateUniqueJobNames(jobs, stageName);
+  }
+  
+  /**
+   * Validates allow_failure is a boolean value or convertible to boolean.
+   *
+   * @param allowFailure The allow_failure value.
+   * @param jobName The name of the job.
+   * @param stageName The name of the stage.
+   * @throws IllegalArgumentException If validation fails.
+   */
+  private static void validateAllowFailure(Object allowFailure, String jobName, String stageName) {
+    if (allowFailure instanceof Boolean) {
+      // Boolean is valid
+      return;
+    } else if (allowFailure instanceof String) {
+      String allowFailureStr = (String) allowFailure;
+      if (!allowFailureStr.equalsIgnoreCase("true") && !allowFailureStr.equalsIgnoreCase("false")) {
+        PipelineLogger.error("Invalid pipeline.yaml: 'allow_failure' for job '" + jobName + "' in stage '" + stageName + "' must be 'true' or 'false'.");
+        throw new IllegalArgumentException("Invalid pipeline.yaml: 'allow_failure' for job '" + jobName + "' in stage '" + stageName + "' must be 'true' or 'false'.");
+      }
+    } else {
+      PipelineLogger.error("Invalid pipeline.yaml: 'allow_failure' for job '" + jobName + "' in stage '" + stageName + "' must be a boolean or string.");
+      throw new IllegalArgumentException("Invalid pipeline.yaml: 'allow_failure' for job '" + jobName + "' in stage '" + stageName + "' must be a boolean or string.");
+    }
+  }
+  
+  /**
+   * Validates that job names are unique across all jobs.
+   *
+   * @param jobs The list of jobs.
+   * @throws IllegalArgumentException If validation fails.
+   */
+  private static void validateUniqueJobNames(List<Map<String, Object>> jobs) {
+    Map<String, Integer> jobNames = new HashMap<>();
+    
+    for (int i = 0; i < jobs.size(); i++) {
+      String name = (String) jobs.get(i).get(NAME_KEY);
+      if (jobNames.containsKey(name)) {
+        PipelineLogger.error("Invalid pipeline.yaml: Duplicate job name '" + name + "' at indices " 
+            + jobNames.get(name) + " and " + i);
+        throw new IllegalArgumentException("Invalid pipeline.yaml: Duplicate job name '" + name + "'.");
+      }
+      jobNames.put(name, i);
+    }
   }
   
   /**

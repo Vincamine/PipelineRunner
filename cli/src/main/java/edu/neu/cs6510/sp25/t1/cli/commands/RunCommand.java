@@ -72,8 +72,14 @@ public class RunCommand implements Callable<Integer> {
 
       // Validate the pipeline configuration file
       PipelineLogger.info("Validating pipeline configuration: " + filePath);
-      YamlPipelineValidator.validatePipeline(filePath);
-      PipelineLogger.info("Pipeline configuration is valid!");
+      try {
+        YamlPipelineValidator.validatePipeline(filePath);
+        PipelineLogger.info("Pipeline configuration is valid!");
+      } catch (Exception e) {
+        PipelineLogger.error("Validation failed: " + e.getMessage());
+        e.printStackTrace();
+        return 1;
+      }
 
       // Run the pipeline (either locally or remotely)
       return triggerPipelineExecution();
