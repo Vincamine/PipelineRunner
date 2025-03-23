@@ -26,7 +26,11 @@ spring:
 
 cicd:
   rabbitmq:
+    host: localhost
     job-queue: cicd-job-queue
+    port: 5672
+    username: guest
+    password: guest
 
 docker:
   image-pull-policy: "Always"  # Ensures the latest images are pulled

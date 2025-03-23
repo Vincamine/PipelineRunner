@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
+import edu.neu.cs6510.sp25.t1.backend.messaging.StageQueuePublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,7 @@ public class PipelineController {
   private final PipelineExecutionService pipelineExecutionService;
   @Lazy
   private final PipelineExecutionQueueService pipelineExecutionQueueService;
+  private final StageQueuePublisher stageQueuePublisher;
 
   /**
    * Constructor for PipelineController.
@@ -44,9 +46,10 @@ public class PipelineController {
    */
   public PipelineController(
       PipelineExecutionService pipelineExecutionService,
-      PipelineExecutionQueueService pipelineExecutionQueueService) {
+      PipelineExecutionQueueService pipelineExecutionQueueService, StageQueuePublisher stageQueuePublisher) {
     this.pipelineExecutionService = pipelineExecutionService;
     this.pipelineExecutionQueueService = pipelineExecutionQueueService;
+    this.stageQueuePublisher = stageQueuePublisher;
   }
 
   /**
@@ -86,7 +89,7 @@ public class PipelineController {
 
       Queue<Queue<UUID>> stageQueue = new LinkedList<>();
       PipelineExecutionResponse response = pipelineExecutionService.startPipelineExecution(request, stageQueue);
-      System.out.println(stageQueue);
+      stageQueuePublisher.dispatchStageQueue(stageQueue);
       return ResponseEntity.ok(response);
     } catch (Exception e) {
       PipelineLogger.error("Failed pipeline execution: " + e.getMessage());
