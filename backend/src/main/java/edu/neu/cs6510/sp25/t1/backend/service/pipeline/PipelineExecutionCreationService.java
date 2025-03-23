@@ -1,9 +1,7 @@
 package edu.neu.cs6510.sp25.t1.backend.service.pipeline;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,7 +84,10 @@ public class PipelineExecutionCreationService {
    * @param pipelineConfig      Parsed pipeline configuration
    */
   @Transactional
-  public void createAndSaveStageExecutions(UUID pipelineExecutionId, Map<String, Object> pipelineConfig) {
+  public void createAndSaveStageExecutions(
+      UUID pipelineExecutionId,
+      Map<String, Object> pipelineConfig,
+      Queue<Queue<UUID>> stageQueue) {
     // Determine if we're using top-level jobs or nested stages format
     boolean usingTopLevelJobs = pipelineConfig.containsKey("jobs");
     
@@ -112,8 +113,12 @@ public class PipelineExecutionCreationService {
     PipelineLogger.info("Using commit hash: " + commitHash + " and isLocal: " + isLocal);
 
     // Create stage executions for all stages
+//    for (int order = 0; order < stagesCount; order++) {
+//      createStageExecution(pipelineExecutionId, pipelineStages, order, commitHash, isLocal);
+//    }
     for (int order = 0; order < stagesCount; order++) {
-      createStageExecution(pipelineExecutionId, pipelineStages, order, commitHash, isLocal);
+      Queue<UUID> jobQueue = createStageExecution(pipelineExecutionId, pipelineStages, order, commitHash, isLocal);
+      stageQueue.add(jobQueue);
     }
   }
   
@@ -127,8 +132,11 @@ public class PipelineExecutionCreationService {
    * @param isLocal whether the execution is local
    */
   @Transactional
-  private void createStageExecution(UUID pipelineExecutionId, List<StageEntity> pipelineStages, int order, 
+  private Queue<UUID> createStageExecution(UUID pipelineExecutionId, List<StageEntity> pipelineStages, int order,
       String commitHash, boolean isLocal) {
+
+    Queue<UUID> jobQueue = new LinkedList<>();
+
     // Find the matching stage entity for this order
     int finalOrder = order;
     StageEntity matchingStage = pipelineStages.stream()
@@ -165,6 +173,10 @@ public class PipelineExecutionCreationService {
         jobExecutionRepository.flush();
 
         PipelineLogger.info("Saved stage execution: " + stageExecution.getId() + " with " + jobs.size() + " jobs.");
+
+        // add to queue
+        jobs.forEach(jobExecution -> jobQueue.add(jobExecution.getId()));
+        PipelineLogger.info("Collected job UUIDs for stage execution " + stageExecution.getId() + ": " + jobQueue);
       } else {
         PipelineLogger.warn("No jobs defined for stage: " + stageExecution.getId());
       }
@@ -172,6 +184,8 @@ public class PipelineExecutionCreationService {
       PipelineLogger.error("Error saving stage execution: " + e.getMessage() + " | " + e);
       throw e;
     }
+
+    return jobQueue;
   }
 
   /**
