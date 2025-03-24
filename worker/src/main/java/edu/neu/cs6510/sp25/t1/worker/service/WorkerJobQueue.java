@@ -7,12 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.UUID;
 import java.util.concurrent.Future;
 
 /**
@@ -29,64 +27,80 @@ public class WorkerJobQueue {
     // Thread pool for executing jobs concurrently
     private final ExecutorService executorService = Executors.newFixedThreadPool(5);
 
-    // Map to track jobs being processed
-    private final ConcurrentHashMap<UUID, JobExecutionDTO> processingJobs = new ConcurrentHashMap<>();
+    // Set to track job IDs being processed - using Collections.synchronizedSet for thread safety
+    private final Set<UUID> processingJobIds = Collections.synchronizedSet(new HashSet<>());
     private final ConcurrentHashMap<UUID, Future<?>> jobFutures = new ConcurrentHashMap<>();
 
     /**
-     * RabbitMQ listener that consumes job messages from the queue.
+     * RabbitMQ listener that consumes job UUID messages from the queue.
+     * This method receives a string representation of a job execution UUID,
+     * converts it to UUID, fetches the complete job data from the database,
+     * and submits the job for execution.
      *
-     * @param job The job received from the queue
+     * @param jobExecutionIdStr String representation of the job execution UUID
      */
     @RabbitListener(queues = "cicd-job-queue", concurrency = "5")
-    public void consumeJob(JobExecutionDTO job) {
-        if (job == null || job.getId() == null) {
-            log.error("Received invalid job from queue");
+    public void consumeJob(String jobExecutionIdStr) {
+        if (jobExecutionIdStr == null || jobExecutionIdStr.isEmpty()) {
+            log.error("Received invalid job ID from queue");
             return;
         }
 
-        log.info("Received job {} from queue", job.getId());
+        try {
+            // Convert string to UUID
+            UUID jobExecutionId = UUID.fromString(jobExecutionIdStr);
+            log.info("Received job ID {} from queue", jobExecutionId);
 
-        // Skip if we're already processing this job
-        if (processingJobs.containsKey(job.getId())) {
-            log.warn("Job {} is already being processed, skipping", job.getId());
-            return;
-        }
-
-        // Check if we're at capacity
-        if (processingJobs.size() >= 5) {
-            log.warn("Worker at maximum capacity, cannot process job {}", job.getId());
-            return;
-        }
-
-        // Add to processing map
-        processingJobs.put(job.getId(), job);
-
-        // Submit for async execution and store the Future
-        Future<?> jobFuture = executorService.submit(() -> {
-            try {
-                log.info("Starting execution of job {}", job.getId());
-
-                // Update status to RUNNING before execution
-                jobDataService.updateJobStatus(job.getId(), ExecutionStatus.RUNNING,
-                        "Job execution started");
-
-                // Execute the job
-                executionService.executeJob(job);
-
-                log.info("Completed execution of job {}", job.getId());
-            } catch (Exception e) {
-                log.error("Error executing job {}: {}", job.getId(), e.getMessage(), e);
-                // Update job status on failure
-                jobDataService.updateJobStatus(job.getId(), ExecutionStatus.FAILED,
-                        "Job execution failed with error: " + e.getMessage());
-            } finally {
-                // Always remove from processing map when done
-                processingJobs.remove(job.getId());
-                jobFutures.remove(job.getId());
+            // Check if job is already being processed
+            if (processingJobIds.contains(jobExecutionId)) {
+                log.warn("Job {} is already being processed, skipping", jobExecutionId);
+                return;
             }
-        });
-        jobFutures.put(job.getId(), jobFuture);
+
+            // Check if worker is at capacity
+            if (processingJobIds.size() >= 5) {
+                log.warn("Worker at maximum capacity, cannot process job {}", jobExecutionId);
+                return;
+            }
+
+            // Fetch complete job data from database
+            jobDataService.getJobExecutionById(jobExecutionId).ifPresentOrElse(
+                    job -> {
+                        // Add to processing set
+                        processingJobIds.add(jobExecutionId);
+
+                        // Submit for async execution
+                        Future<?> jobFuture = executorService.submit(() -> {
+                            try {
+                                log.info("Starting execution of job {}", jobExecutionId);
+
+                                // Update status to RUNNING
+                                jobDataService.updateJobStatus(jobExecutionId, ExecutionStatus.RUNNING,
+                                        "Job execution started");
+
+                                // Execute the job
+                                executionService.executeJob(job);
+
+                                log.info("Completed execution of job {}", jobExecutionId);
+                            } catch (Exception e) {
+                                log.error("Error executing job {}: {}", jobExecutionId, e.getMessage(), e);
+                                // Update status to FAILED on error
+                                jobDataService.updateJobStatus(jobExecutionId, ExecutionStatus.FAILED,
+                                        "Job execution failed with error: " + e.getMessage());
+                            } finally {
+                                // Remove from processing collections when done
+                                processingJobIds.remove(jobExecutionId);
+                                jobFutures.remove(jobExecutionId);
+                            }
+                        });
+
+                        jobFutures.put(jobExecutionId, jobFuture);
+                    },
+                    () -> log.error("Job with ID {} not found in database", jobExecutionId)
+            );
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid UUID format received: {}", jobExecutionIdStr);
+        }
     }
 
     /**
@@ -95,20 +109,24 @@ public class WorkerJobQueue {
      * @return The count of active jobs
      */
     public int getActiveJobCount() {
-        return processingJobs.size();
+        return processingJobIds.size();
     }
 
     /**
-     * Returns the list of currently processing jobs.
+     * Returns the list of currently processing job IDs.
      *
-     * @return List of active job execution DTOs
+     * @return List of active job execution IDs
      */
-    public List<JobExecutionDTO> getActiveJobs() {
-        return new ArrayList<>(processingJobs.values());
+    public List<UUID> getActiveJobIds() {
+        synchronized(processingJobIds) {
+            return new ArrayList<>(processingJobIds);
+        }
     }
 
     /**
      * Attempts to cancel a running job by its execution ID.
+     * If the job is currently being executed, this method will attempt to
+     * cancel its Future and remove it from the tracking collections.
      *
      * @param jobExecutionId The ID of the job to cancel
      * @return true if cancellation was successful, false otherwise
@@ -120,8 +138,8 @@ public class WorkerJobQueue {
             boolean cancelled = jobFuture.cancel(true);
 
             if (cancelled) {
-                // Clean up our tracking maps
-                processingJobs.remove(jobExecutionId);
+                // Clean up our tracking collections
+                processingJobIds.remove(jobExecutionId);
                 jobFutures.remove(jobExecutionId);
                 log.info("Job {} cancelled successfully", jobExecutionId);
             }
