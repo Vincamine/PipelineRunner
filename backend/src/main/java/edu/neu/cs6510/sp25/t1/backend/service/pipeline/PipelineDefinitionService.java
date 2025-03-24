@@ -318,6 +318,8 @@ public class PipelineDefinitionService {
       Object allowFailureObj = jobConfig.get("allowFailure");
       allowFailure = parseBoolean(allowFailureObj);
     }
+
+    String workingDir = (String) jobConfig.get("workingDir");
     
     PipelineLogger.info("Job details - Name: " + jobName + ", Docker image: " + dockerImage + ", Allow failure: " + allowFailure);
     
@@ -327,6 +329,7 @@ public class PipelineDefinitionService {
         .name(jobName)
         .dockerImage(dockerImage)
         .allowFailure(allowFailure)
+        .workingDir(workingDir)
         .build();
     
     try {
@@ -453,6 +456,7 @@ public class PipelineDefinitionService {
     
     String dockerImage = extractDockerImage(jobConfig);
     boolean allowFailure = extractAllowFailure(jobConfig);
+    String workingDir = (String) jobConfig.get("working_dir");
     
     PipelineLogger.info("Job details - Name: " + jobName + ", Docker image: " + dockerImage + ", Allow failure: " + allowFailure);
     
@@ -462,6 +466,7 @@ public class PipelineDefinitionService {
         .name(jobName)
         .dockerImage(dockerImage)
         .allowFailure(allowFailure)
+        .workingDir(workingDir)
         .build();
     
     try {
