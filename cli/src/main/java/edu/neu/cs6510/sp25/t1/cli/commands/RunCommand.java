@@ -72,8 +72,14 @@ public class RunCommand implements Callable<Integer> {
 
       // Validate the pipeline configuration file
       PipelineLogger.info("Validating pipeline configuration: " + filePath);
-      YamlPipelineValidator.validatePipeline(filePath);
-      PipelineLogger.info("Pipeline configuration is valid!");
+      try {
+        YamlPipelineValidator.validatePipeline(filePath);
+        PipelineLogger.info("Pipeline configuration is valid!");
+      } catch (Exception e) {
+        PipelineLogger.error("Validation failed: " + e.getMessage());
+        e.printStackTrace();
+        return 1;
+      }
 
       // Run the pipeline (either locally or remotely)
       return triggerPipelineExecution();
@@ -101,8 +107,8 @@ public class RunCommand implements Callable<Integer> {
               (repo != null ? repo : ""), branch, commit, (pipeline != null ? pipeline : ""), filePath, localRun
       );
 
-      PipelineLogger.debug("📡 Sending request to backend: " + BACKEND_URL);
-      PipelineLogger.debug("📝 Payload: " + jsonPayload);
+      PipelineLogger.debug("Sending request to backend: " + BACKEND_URL);
+      PipelineLogger.debug("Payload: " + jsonPayload);
 
       Request request = createPostRequest(BACKEND_URL, jsonPayload);
       Response response = HTTP_CLIENT.newCall(request).execute();

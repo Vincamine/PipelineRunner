@@ -1,33 +1,53 @@
-name: my-cicd-pipeline
+name: my-cicd-pipeline-2
 
 stages:
-  - name: "build"
-    jobs:
-      - name: "compile"
-        dockerImage: "openjdk:21-jdk-slim"
-        script:
-          - "javac -d out src/main/java/**/*.java"
-        allowFailure: true
+  - build
+  - test
+  - doc
+  - deploy
 
-      - name: "unit-tests"
-        dockerImage: "openjdk:21-jdk-slim"
-        script:
-          - "./gradlew test"
-        allowFailure: true
+jobs:
+  - name: "compile"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "javac -d out src/main/java/**/*.java"
+    allowFailure: true
+    stage: "build"
+    workingDir: "usr/cs.java"
 
-  - name: "package"
-    jobs:
-      - name: "build-jar"
-        dockerImage: "gradle:8.12-jdk21"
-        script:
-          - "./gradlew bootJar"
-        allowFailure: true
+  - name: "unit-tests"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "./gradlew test"
+    allowFailure: true
+    stage: "test"
+    workingDir: "src/"
+    dependencies: ["compile"]
 
-  - name: "deploy"
-    jobs:
-      - name: "dockerize"
-        dockerImage: "docker:latest"
-        script:
-          - "docker build -t my-cicd-app ."
-          - "docker run -d -p 8080:8080 my-cicd-app"
-        allowFailure: true
+  - name: "generate-docs"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "javadoc -d docs/ src/main/java/**/*.java"
+    allowFailure: true
+    stage: "doc"
+    workingDir: "usr/cs.java"
+    dependencies: ["compile"]
+
+  - name: "build-jar"
+    dockerImage: "gradle:8.12-jdk21"
+    script:
+      - "./gradlew bootJar"
+    allowFailure: true
+    workingDir: "."
+    stage: "deploy"
+    dependencies: ["compile", "unit-tests"]
+
+  - name: "dockerize"
+    dockerImage: "docker:latest"
+    script:
+      - "docker build -t my-cicd-app ."
+      - "docker run -d -p 8080:8080 my-cicd-app"
+    allowFailure: true
+    workingDir: "."
+    stage: "deploy"
+    dependencies: ["build-jar"]

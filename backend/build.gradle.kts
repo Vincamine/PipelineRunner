@@ -25,8 +25,8 @@ dependencies {
     //implementation("org.hibernate.orm:hibernate-core:6.6.9.Final")
     runtimeOnly("org.postgresql:postgresql:42.7.5")
 
-    // rabbitMQ
-    implementation("org.springframework.boot:spring-boot-starter-amqp")
+    // REMOVED: rabbitMQ dependency as we now use in-memory queues
+    // implementation("org.springframework.boot:spring-boot-starter-amqp")
 
     // Jakarta Persistence (JPA Annotations)
     //implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
@@ -57,6 +57,9 @@ dependencies {
 
     testImplementation("org.projectlombok:lombok:1.18.36")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
+
+    //rmq
+    implementation ("org.springframework.boot:spring-boot-starter-amqp")
 }
 
 java {
