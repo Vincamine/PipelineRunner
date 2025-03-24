@@ -1,4 +1,4 @@
-name: my-cicd-pipeline
+name: my-cicd-pipeline-2
 
 stages:
   - build

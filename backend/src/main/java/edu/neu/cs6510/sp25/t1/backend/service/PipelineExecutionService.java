@@ -1,6 +1,7 @@
 package edu.neu.cs6510.sp25.t1.backend.service;
 
 import java.util.Map;
+import java.util.Queue;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -60,7 +61,7 @@ public class PipelineExecutionService {
    * @return response containing pipeline execution ID and status
    */
   @Transactional(rollbackFor = Exception.class)
-  public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request) {
+  public PipelineExecutionResponse startPipelineExecution(PipelineExecutionRequest request, Queue<Queue<UUID>> stageQueue) {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
     try {
@@ -87,22 +88,22 @@ public class PipelineExecutionService {
 
       // Step 6: Create and save stage executions with their jobs
       PipelineLogger.info("Step 4: Creating stage executions and job executions");
-      pipelineExecutionCreationService.createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig);
+      pipelineExecutionCreationService.createAndSaveStageExecutions(pipelineExecution.getId(), pipelineConfig, stageQueue);
 
       // Step 7: Verify entities were properly saved
       PipelineLogger.info("Step 5: Verifying entities were properly saved");
       pipelineExecutionCreationService.verifyEntitiesSaved(pipelineId, pipelineExecution.getId());
 
-      // Step 8: Add pipeline execution to queue
-      PipelineLogger.info("Step 6: Adding pipeline execution to queue");
-      try {
-        ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService.class)
-            .enqueuePipelineExecution(pipelineExecution.getId());
-        PipelineLogger.info("Pipeline execution successfully added to queue: " + pipelineExecution.getId());
-      } catch (Exception e) {
-        PipelineLogger.error("Failed to add pipeline execution to queue: " + e.getMessage());
-        throw new RuntimeException("Failed to add pipeline execution to queue", e);
-      }
+//      // Step 8: Add pipeline execution to queue
+//      PipelineLogger.info("Step 6: Adding pipeline execution to queue");
+//      try {
+//        ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService.class)
+//            .enqueuePipelineExecution(pipelineExecution.getId());
+//        PipelineLogger.info("Pipeline execution successfully added to queue: " + pipelineExecution.getId());
+//      } catch (Exception e) {
+//        PipelineLogger.error("Failed to add pipeline execution to queue: " + e.getMessage());
+//        throw new RuntimeException("Failed to add pipeline execution to queue", e);
+//      }
 
       return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "PENDING");
     } catch (Exception e) {

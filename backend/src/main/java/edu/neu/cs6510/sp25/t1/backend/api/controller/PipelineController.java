@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
+import edu.neu.cs6510.sp25.t1.backend.messaging.StageQueuePublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,10 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.context.annotation.Lazy;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import edu.neu.cs6510.sp25.t1.backend.error.ApiError;
 import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
@@ -23,6 +21,8 @@ import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import javax.management.Query;
 
 /**
  * Controller class for handling pipeline execution related endpoints.
@@ -36,6 +36,7 @@ public class PipelineController {
   private final PipelineExecutionService pipelineExecutionService;
   @Lazy
   private final PipelineExecutionQueueService pipelineExecutionQueueService;
+  private final StageQueuePublisher stageQueuePublisher;
 
   /**
    * Constructor for PipelineController.
@@ -45,9 +46,10 @@ public class PipelineController {
    */
   public PipelineController(
       PipelineExecutionService pipelineExecutionService,
-      PipelineExecutionQueueService pipelineExecutionQueueService) {
+      PipelineExecutionQueueService pipelineExecutionQueueService, StageQueuePublisher stageQueuePublisher) {
     this.pipelineExecutionService = pipelineExecutionService;
     this.pipelineExecutionQueueService = pipelineExecutionQueueService;
+    this.stageQueuePublisher = stageQueuePublisher;
   }
 
   /**
@@ -85,7 +87,9 @@ public class PipelineController {
             new ApiError(HttpStatus.BAD_REQUEST, "Invalid Request", "Pipeline file path is required"));
       }
 
-      PipelineExecutionResponse response = pipelineExecutionService.startPipelineExecution(request);
+      Queue<Queue<UUID>> stageQueue = new LinkedList<>();
+      PipelineExecutionResponse response = pipelineExecutionService.startPipelineExecution(request, stageQueue);
+      stageQueuePublisher.dispatchStageQueue(stageQueue);
       return ResponseEntity.ok(response);
     } catch (Exception e) {
       PipelineLogger.error("Failed pipeline execution: " + e.getMessage());

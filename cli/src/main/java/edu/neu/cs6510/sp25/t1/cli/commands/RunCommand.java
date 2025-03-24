@@ -107,8 +107,8 @@ public class RunCommand implements Callable<Integer> {
               (repo != null ? repo : ""), branch, commit, (pipeline != null ? pipeline : ""), filePath, localRun
       );
 
-      PipelineLogger.debug("📡 Sending request to backend: " + BACKEND_URL);
-      PipelineLogger.debug("📝 Payload: " + jsonPayload);
+      PipelineLogger.debug("Sending request to backend: " + BACKEND_URL);
+      PipelineLogger.debug("Payload: " + jsonPayload);
 
       Request request = createPostRequest(BACKEND_URL, jsonPayload);
       Response response = HTTP_CLIENT.newCall(request).execute();

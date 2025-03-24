@@ -57,6 +57,9 @@ dependencies {
 
     testImplementation("org.projectlombok:lombok:1.18.36")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
+
+    //rmq
+    implementation ("org.springframework.boot:spring-boot-starter-amqp")
 }
 
 java {
