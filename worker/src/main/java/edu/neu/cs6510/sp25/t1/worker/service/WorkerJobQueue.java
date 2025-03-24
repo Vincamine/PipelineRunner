@@ -25,7 +25,11 @@ public class WorkerJobQueue {
     private final JobDataService jobDataService;
 
     // Thread pool for executing jobs concurrently
-    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+//    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+
+    // signle job service
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
 
     // Set to track job IDs being processed - using Collections.synchronizedSet for thread safety
     private final Set<UUID> processingJobIds = Collections.synchronizedSet(new HashSet<>());
@@ -39,7 +43,8 @@ public class WorkerJobQueue {
      *
      * @param jobExecutionIdStr String representation of the job execution UUID
      */
-    @RabbitListener(queues = "cicd-job-queue", concurrency = "5")
+    // concurrency set to 1 for only 1 job listen at a time
+    @RabbitListener(queues = "cicd-job-queue", concurrency = "1")
     public void consumeJob(String jobExecutionIdStr) {
         if (jobExecutionIdStr == null || jobExecutionIdStr.isEmpty()) {
             log.error("Received invalid job ID from queue");
@@ -58,10 +63,11 @@ public class WorkerJobQueue {
             }
 
             // Check if worker is at capacity
-            if (processingJobIds.size() >= 5) {
-                log.warn("Worker at maximum capacity, cannot process job {}", jobExecutionId);
-                return;
-            }
+            // move it back when need multi jobs
+//            if (processingJobIds.size() >= 5) {
+//                log.warn("Worker at maximum capacity, cannot process job {}", jobExecutionId);
+//                return;
+//            }
 
             // Fetch complete job data from database
             jobDataService.getJobExecutionById(jobExecutionId).ifPresentOrElse(
