@@ -1,4 +1,4 @@
-name: my-cicd-pipeline-2
+name: my-cicd-pipeline
 
 stages:
   - build
@@ -10,10 +10,10 @@ jobs:
   - name: "compile"
     dockerImage: "openjdk:21-jdk-slim"
     script:
-      - "javac -d out src/main/java/**/*.java"
+      - "find cli/src/main/java -name '*.java' | xargs javac -d out"
     allowFailure: true
     stage: "build"
-    workingDir: "usr/cs.java"
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
 
   - name: "unit-tests"
     dockerImage: "openjdk:21-jdk-slim"
@@ -21,7 +21,7 @@ jobs:
       - "./gradlew test"
     allowFailure: true
     stage: "test"
-    workingDir: "src/"
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
     dependencies: ["compile"]
 
   - name: "generate-docs"
@@ -30,7 +30,7 @@ jobs:
       - "javadoc -d docs/ src/main/java/**/*.java"
     allowFailure: true
     stage: "doc"
-    workingDir: "usr/cs.java"
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
     dependencies: ["compile"]
 
   - name: "build-jar"
@@ -38,7 +38,7 @@ jobs:
     script:
       - "./gradlew bootJar"
     allowFailure: true
-    workingDir: "."
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
     stage: "deploy"
     dependencies: ["compile", "unit-tests"]
 
@@ -48,6 +48,6 @@ jobs:
       - "docker build -t my-cicd-app ."
       - "docker run -d -p 8080:8080 my-cicd-app"
     allowFailure: true
-    workingDir: "."
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
     stage: "deploy"
     dependencies: ["build-jar"]
