@@ -55,8 +55,8 @@ public class RunCommand implements Callable<Integer> {
   @Override
   public Integer call() {
     try {
-      GitUtils.isGitRootDirectory();
-      PipelineLogger.info("Starting pipeline execution...");
+//      GitUtils.isGitRootDirectory();
+//      PipelineLogger.info("Starting pipeline execution...");
 
       // If no explicit commit is provided, fetch latest
       if (commit == null || commit.isEmpty()) {
@@ -71,15 +71,15 @@ public class RunCommand implements Callable<Integer> {
       }
 
       // Validate the pipeline configuration file
-      PipelineLogger.info("Validating pipeline configuration: " + filePath);
-      try {
-        YamlPipelineValidator.validatePipeline(filePath);
-        PipelineLogger.info("Pipeline configuration is valid!");
-      } catch (Exception e) {
-        PipelineLogger.error("Validation failed: " + e.getMessage());
-        e.printStackTrace();
-        return 1;
-      }
+//      PipelineLogger.info("Validating pipeline configuration: " + filePath);
+//      try {
+//        YamlPipelineValidator.validatePipeline(filePath);
+//        PipelineLogger.info("Pipeline configuration is valid!");
+//      } catch (Exception e) {
+//        PipelineLogger.error("Validation failed: " + e.getMessage());
+//        e.printStackTrace();
+//        return 1;
+//      }
 
       // Run the pipeline (either locally or remotely)
       return triggerPipelineExecution();
