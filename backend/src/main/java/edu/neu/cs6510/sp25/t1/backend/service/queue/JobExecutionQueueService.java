@@ -3,11 +3,10 @@ package edu.neu.cs6510.sp25.t1.backend.service.queue;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import edu.neu.cs6510.sp25.t1.backend.config.ServiceLocator;
-import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionService;
+import edu.neu.cs6510.sp25.t1.backend.service.execution.JobExecutionService;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import jakarta.annotation.PostConstruct;
 

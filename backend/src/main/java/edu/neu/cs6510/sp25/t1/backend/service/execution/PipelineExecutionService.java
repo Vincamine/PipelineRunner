@@ -1,21 +1,16 @@
-package edu.neu.cs6510.sp25.t1.backend.service;
+package edu.neu.cs6510.sp25.t1.backend.service.execution;
 
 import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 
+import edu.neu.cs6510.sp25.t1.backend.service.pipeline.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import edu.neu.cs6510.sp25.t1.backend.config.ServiceLocator;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.mapper.PipelineExecutionMapper;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.ExecutionQueueService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineDefinitionService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineExecutionCreationService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineStatusService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.YamlConfigurationService;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 import edu.neu.cs6510.sp25.t1.common.dto.PipelineExecutionDTO;

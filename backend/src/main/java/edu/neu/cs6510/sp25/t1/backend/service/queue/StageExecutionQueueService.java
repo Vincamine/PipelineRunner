@@ -2,6 +2,7 @@ package edu.neu.cs6510.sp25.t1.backend.service.queue;
 
 import java.util.UUID;
 
+import edu.neu.cs6510.sp25.t1.backend.service.execution.StageExecutionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -84,7 +85,7 @@ public class StageExecutionQueueService {
         try {
             PipelineLogger.info("Processing stage execution from queue: " + stageExecutionId);
             // Use ServiceLocator to get StageExecutionService to avoid circular dependency
-            ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.StageExecutionService.class)
+            ServiceLocator.getBean(StageExecutionService.class)
                 .processStageExecution(stageExecutionId);
         } catch (Exception e) {
             PipelineLogger.error("Error processing stage execution: " + stageExecutionId + " - " + e.getMessage());

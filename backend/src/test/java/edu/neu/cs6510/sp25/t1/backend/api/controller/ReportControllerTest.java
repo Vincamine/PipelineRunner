@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import edu.neu.cs6510.sp25.t1.backend.service.ReportService;
+import edu.neu.cs6510.sp25.t1.backend.service.report.ReportService;
 import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.PipelineReportDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.StageReportDTO;
