@@ -1,4 +1,4 @@
-package edu.neu.cs6510.sp25.t1.backend.service;
+package edu.neu.cs6510.sp25.t1.backend.service.log;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

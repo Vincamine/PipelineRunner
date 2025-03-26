@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-import edu.neu.cs6510.sp25.t1.backend.service.JobExecutionService;
+import edu.neu.cs6510.sp25.t1.backend.service.execution.JobExecutionService;
 import edu.neu.cs6510.sp25.t1.common.api.request.JobStatusUpdate;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import io.swagger.v3.oas.annotations.Operation;

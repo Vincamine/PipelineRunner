@@ -14,15 +14,13 @@ import org.springframework.context.annotation.Lazy;
 import java.util.*;
 
 import edu.neu.cs6510.sp25.t1.backend.error.ApiError;
-import edu.neu.cs6510.sp25.t1.backend.service.PipelineExecutionService;
+import edu.neu.cs6510.sp25.t1.backend.service.execution.PipelineExecutionService;
 import edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import javax.management.Query;
 
 /**
  * Controller class for handling pipeline execution related endpoints.
