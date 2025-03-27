@@ -24,7 +24,7 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
    * @param pipelineId the pipeline ID
    * @return a list of pipeline executions associated with the given pipeline
    */
-  List<PipelineExecutionEntity> findByPipelineId(UUID pipelineId);
+  Optional<PipelineExecutionEntity> findByPipelineId(UUID pipelineId);
 
   /**
    * Finds pipeline executions by status.
