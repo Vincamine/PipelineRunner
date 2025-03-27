@@ -185,7 +185,7 @@ public class PipelineController {
       PipelineLogger.info("Fetching status for pipeline: " + pipelineName);
 
       // Trigger status service (implementation to be added)
-      Object status = statusService.getStatusForPipeline(pipelineName);
+      Map<String, Object> status = statusService.getStatusForPipeline(pipelineName);
 
       return ResponseEntity.ok(status);
     } catch (Exception e) {
