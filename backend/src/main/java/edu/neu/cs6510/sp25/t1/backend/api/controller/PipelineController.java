@@ -1,6 +1,7 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
 import edu.neu.cs6510.sp25.t1.backend.messaging.StageQueuePublisher;
+import edu.neu.cs6510.sp25.t1.backend.service.status.StatusService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,7 @@ public class PipelineController {
   @Lazy
   private final PipelineExecutionQueueService pipelineExecutionQueueService;
   private final StageQueuePublisher stageQueuePublisher;
+  private final StatusService statusService;
 
   /**
    * Constructor for PipelineController.
@@ -44,10 +46,14 @@ public class PipelineController {
    */
   public PipelineController(
       PipelineExecutionService pipelineExecutionService,
-      PipelineExecutionQueueService pipelineExecutionQueueService, StageQueuePublisher stageQueuePublisher) {
+      PipelineExecutionQueueService pipelineExecutionQueueService,
+      StageQueuePublisher stageQueuePublisher,
+      StatusService statusService
+  ) {
     this.pipelineExecutionService = pipelineExecutionService;
     this.pipelineExecutionQueueService = pipelineExecutionQueueService;
     this.stageQueuePublisher = stageQueuePublisher;
+    this.statusService = statusService;
   }
 
   /**
@@ -158,6 +164,34 @@ public class PipelineController {
       PipelineLogger.error("Error checking database state: " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "Error checking database state", e.getMessage()));
+    }
+  }
+
+  /**
+   * Gets the pipeline status using the pipeline YAML file name.
+   *
+   * @param pipelineFile The name of the pipeline YAML file (e.g., my-cicd-pipeline.yaml)
+   * @return ResponseEntity with status info
+   */
+  @GetMapping("/{pipelineFile}")
+  @Operation(summary = "Get pipeline status by YAML filename", description = "Extracts pipeline name from file and retrieves current status.")
+  public ResponseEntity<?> getPipelineStatusByFile(@PathVariable String pipelineFile) {
+    try {
+      if (pipelineFile == null || !pipelineFile.endsWith(".yaml")) {
+        return ResponseEntity.badRequest().body("Invalid pipeline filename format. Must end with .yaml");
+      }
+
+      String pipelineName = pipelineFile.replaceFirst("\\.yaml$", "");
+      PipelineLogger.info("Fetching status for pipeline: " + pipelineName);
+
+      // Trigger status service (implementation to be added)
+      Map<String, Object> status = statusService.getStatusForPipeline(pipelineName);
+
+      return ResponseEntity.ok(status);
+    } catch (Exception e) {
+      PipelineLogger.error("Error getting status for pipeline: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "Pipeline status fetch failed", e.getMessage()));
     }
   }
 }

@@ -24,7 +24,7 @@ Executes a CI/CD pipeline based on the provided parameters.
 2. Running a pipeline from a remote repository with a specific pipeline file:
 
    ```sh
-   xx run --repo https://github.com/company/project --file .pipelines/test-pipeline.yaml
+   xx run --repo https://github.com/company/project --file .pipelines/test-my-cicd-pipeline.yaml
    ```
 
 ##### **Local (Own) Repository Pipelines**
@@ -38,7 +38,7 @@ Executes a CI/CD pipeline based on the provided parameters.
 2. Running a pipeline from a local repository with a specific pipeline file:
 
    ```sh
-   xx run --local --repo /home/user/workspace --file pipelines/pipeline.yaml
+   xx run --local --repo /home/user/workspace --file pipelines/my-cicd-pipeline.yaml
    ```
 
 ##### **Other Variations**
@@ -52,7 +52,7 @@ Executes a CI/CD pipeline based on the provided parameters.
 - Running a local pipeline with overridden configurations:
 
   ```sh
-  xx run --local --override "global.docker.image=gradle:jdk8" --file .pipelines/test-pipeline.yaml
+  xx run --local --override "global.docker.image=gradle:jdk8" --file .pipelines/test-my-cicd-pipeline.yaml
   ```
 
 ### 2. **Check Command (`check`)**
@@ -70,7 +70,7 @@ Validates a pipeline configuration file without executing it.
 - Checking a specific configuration file:
 
   ```sh
-  xx check --file .pipelines/test-pipeline.yaml
+  xx check --file .pipelines/test-my-cicd-pipeline.yaml
   ```
 
 ### 3. **Dry Run Command (`dry-run`)**

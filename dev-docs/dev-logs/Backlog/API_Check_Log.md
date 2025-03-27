@@ -8,25 +8,25 @@ These commands were executed successfully and produced expected results:
 
 ### **Check Configuration File**
 ```bash
-cicd check -f .pipelines/pipeline.yaml
+cicd check -f .pipelines/my-cicd-pipeline.yaml
 ```
 **Output:** Passed pipeline validation.
 
 ### **Dry Run (Local)**
 ```bash
-cicd dry-run -f .pipelines/pipeline.yaml
+cicd dry-run -f .pipelines/my-cicd-pipeline.yaml
 ```
 **Output:** Displayed pipeline execution plan in valid YAML.
 
 ### **Check Configuration File (Remote Repo)**
 ```bash
-cicd check --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
+cicd check --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/my-cicd-pipeline.yaml
 ```
 **Output:** Passed pipeline validation.
 
 ### **Dry Run (Remote Repo)**
 ```bash
-cicd dry-run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
+cicd dry-run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/my-cicd-pipeline.yaml
 ```
 **Output:** Displayed pipeline execution plan in valid YAML.
 
@@ -36,7 +36,7 @@ These commands were not present in the logs, and their functionality remains unv
 
 ### **Executing a pipeline with a commit hash**
 ```bash
-cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main --commit 3df7142 -f .pipelines/pipeline.yaml
+cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main --commit 3df7142 -f .pipelines/my-cicd-pipeline.yaml
 ```
 
 ### **Viewing pipeline execution report by run ID (if supported)**
@@ -50,7 +50,7 @@ cicd report --repo https://github.com/YiwenW312/cicdSample.git --pipeline demo-c
 ### **1. Remote Pipeline Execution**
 #### **Command:**
 ```bash
-cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
+cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/my-cicd-pipeline.yaml
 ```
 #### **Error:**
 ```
@@ -77,7 +77,7 @@ API Error: 404 - Not Found
 ### **2. Local Pipeline Execution**
 #### **Command:**
 ```bash
-cicd run --local --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
+cicd run --local --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/my-cicd-pipeline.yaml
 ```
 #### **Error:**
 ```
@@ -136,7 +136,7 @@ Unknown options: '--pipeline', 'test-pipeline'
 2. **Ensure users use `-f` instead**:
     - Update the documentation to specify:
       ```bash
-      cicd run --local --repo ./workspace/project --branch feature1 -f .pipelines/test-pipeline.yaml
+      cicd run --local --repo ./workspace/project --branch feature1 -f .pipelines/test-my-cicd-pipeline.yaml
       ```
 
 ---
@@ -166,7 +166,7 @@ Unmatched arguments from index 0: 'report', '--repo', 'https://github.com/YiwenW
 
 ### **6. Run remotely by file name Command:**
 ```bash
-cicd run -f .pipelines/pipeline.yaml
+cicd run -f .pipelines/my-cicd-pipeline.yaml
 ```
 
 #### **Error:**
@@ -212,8 +212,8 @@ cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main
 #### **Error:**
 ```bash
 Command Started: RunCommand
-[ERROR] Missing required parameter: --file <pipeline.yaml>
-14:43:52.634 [main] ERROR edu.neu.cs6510.sp25.t1.cli.commands.RunCommand -- Missing required parameter: --file <pipeline.yaml>
+[ERROR] Missing required parameter: --file <my-cicd-pipeline.yaml>
+14:43:52.634 [main] ERROR edu.neu.cs6510.sp25.t1.cli.commands.RunCommand -- Missing required parameter: --file <my-cicd-pipeline.yaml>
 ```
 
 #### **Cause:**
@@ -223,7 +223,7 @@ Command Started: RunCommand
 #### **Suggested Fix:**
 - Include the `--file` parameter:
   ```bash
-  cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
+  cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/my-cicd-pipeline.yaml
   ```
 - If using a default pipeline file, ensure the CLI is set up to detect `.pipelines/pipeline.yaml` automatically.
 

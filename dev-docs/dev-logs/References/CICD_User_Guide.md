@@ -41,32 +41,32 @@ java -jar cli/build/libs/ci-tool.jar <command>
 ### **1️⃣ Validate a Pipeline Configuration**
 Check if a pipeline file is valid:
 ```sh
-cicd check -f .pipelines/pipeline.yaml
+cicd check -f .pipelines/my-cicd-pipeline.yaml
 ```
 
 ### **2️⃣ Simulate Execution (Dry-Run)**
 To check the execution order:
 ```sh
-cicd dry-run -f .pipelines/pipeline.yaml
+cicd dry-run -f .pipelines/my-cicd-pipeline.yaml
 ```
 
 ### **3️⃣ Run Pipelines**
 #### **Remote Execution**
 Run a pipeline remotely on a CI/CD server:
 ```sh
-cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
+cicd run --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/my-cicd-pipeline.yaml
 ```
 
 #### **Local Execution (Remote Repository)**
 Run a pipeline on your local machine, pulling from a remote repo:
 ```sh
-cicd run --local --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/pipeline.yaml
+cicd run --local --repo https://github.com/YiwenW312/cicdSample.git --branch main -f .pipelines/my-cicd-pipeline.yaml
 ```
 
 #### **Local Execution (Local Repository)**
 Run a pipeline locally using a cloned Git repository:
 ```sh
-cicd run --local --repo ./workspace/project --branch feature1 -f .pipelines/pipeline.yaml
+cicd run --local --repo ./workspace/project --branch feature1 -f .pipelines/my-cicd-pipeline.yaml
 ```
 
 #### **Run All Pipelines in a Repo**
@@ -82,7 +82,7 @@ cicd run --local --repo ./workspace/project --branch feature1 --pipeline test-pi
 #### **Run with Config Overrides**
 Override a pipeline variable:
 ```sh
-cicd run --local --override "global.docker.image=gradle:jdk8" --file .pipelines/pipeline.yaml
+cicd run --local --override "global.docker.image=gradle:jdk8" --file .pipelines/my-cicd-pipeline.yaml
 ```
 
 ### **4️⃣ Retrieve Pipeline Execution Reports**
