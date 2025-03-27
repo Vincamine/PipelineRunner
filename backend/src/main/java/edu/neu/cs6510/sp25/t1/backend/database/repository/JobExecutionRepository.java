@@ -21,7 +21,7 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
 
   List<JobExecutionEntity> findByStageExecution(StageExecutionEntity stageExecution);
 
-  List<JobExecutionEntity> findByJobId(UUID jobId);
+  Optional<JobExecutionEntity> findByJobId(UUID jobId);
 
 
   List<JobExecutionEntity> findByStatus(ExecutionStatus status);
