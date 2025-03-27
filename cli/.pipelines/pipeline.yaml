@@ -1,37 +1,53 @@
 name: my-cicd-pipeline
 
 stages:
-  - name: "build"
-    jobs:
-      - name: "compile"
-        dockerImage: "openjdk:21-jdk-slim"
-        script:
-          - "javac -d out src/main/java/**/*.java"
-        allowFailure: true
-        dependencies: []  # No dependencies for first job
+  - build
+  - test
+  - doc
+  - deploy
 
-      - name: "unit-tests"
-        dockerImage: "openjdk:21-jdk-slim"
-        script:
-          - "./gradlew test"
-        allowFailure: true
-        dependencies: ["compile"]  # Depends on "compile"
+jobs:
+  - name: "compile"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "./gradlew build"
+    allowFailure: False
+    stage: "build"
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
 
-  - name: "package"
-    jobs:
-      - name: "build-jar"
-        dockerImage: "gradle:8.12-jdk21"
-        script:
-          - "./gradlew bootJar"
-        allowFailure: true
-        dependencies: ["unit-tests"]  # Depends on "unit-tests"
+  - name: "unit-tests"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "./gradlew test"
+    allowFailure: False
+    stage: "test"
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
+    dependencies: ["compile"]
 
-  - name: "deploy"
-    jobs:
-      - name: "dockerize"
-        dockerImage: "docker:latest"
-        script:
-          - "docker build -t my-cicd-app ."
-          - "docker run -d -p 8080:8080 my-cicd-app"
-        allowFailure: true
-        dependencies: ["build-jar"]  # Depends on "build-jar"
+  - name: "generate-docs"
+    dockerImage: "openjdk:21-jdk-slim"
+    script:
+      - "./gradlew javadoc"
+    allowFailure: False
+    stage: "doc"
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
+    dependencies: [ "compile" ]
+
+  - name: "build-jar"
+    dockerImage: "gradle:8.12-jdk21"
+    script:
+      - "./gradlew bootJar"
+    allowFailure: False
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
+    stage: "deploy"
+    dependencies: ["compile", "unit-tests"]
+
+  - name: "dockerize"
+    dockerImage: "docker:latest"
+    script:
+      - "docker build -t my-cicd-app ."
+      - "docker run -d -p 5001:5001 my-cicd-app"
+    allowFailure: False
+    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
+    stage: "deploy"
+    dependencies: ["build-jar"]
