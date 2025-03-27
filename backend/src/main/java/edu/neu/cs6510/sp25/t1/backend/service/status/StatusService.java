@@ -139,6 +139,8 @@ public class StatusService {
     // put all stage result to the map
     result.put("stageResult", stageResults);
 
+    // save to pipeline repo
+    executionOpt.get().setStatus(sumOfPipelineStatus);
     // save and flush the pipeline execution repository
     pipelineExecutionRepository.saveAndFlush(executionOpt.get());
 
