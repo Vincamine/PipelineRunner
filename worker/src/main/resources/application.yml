@@ -50,3 +50,9 @@ worker:
 backend:
   api:
     url: http://localhost:8080/api  # URL for communicating with the backend service
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: admin
+  secret-key: password
+  bucket: job-logs
