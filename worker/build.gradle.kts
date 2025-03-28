@@ -63,6 +63,9 @@ dependencies {
     implementation ("com.github.docker-java:docker-java:3.2.13")
     implementation ("com.github.docker-java:docker-java-transport-okhttp:3.2.13")
 
+    // file DB MinIO
+    implementation("io.minio:minio:8.5.7")
+
 }
 
 java {
