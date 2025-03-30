@@ -17,12 +17,6 @@ public class CliBackendClient {
   private final String baseUrl;
   private final HttpClient httpClient;
 
-  // API endpoint patterns - adjust these to match your backend
-  private static final String PIPELINE_HISTORY_ENDPOINT = "/api/report/pipeline/%s";
-  private static final String PIPELINE_RUN_ENDPOINT = "/api/report/pipeline/%s/run/%d";
-  private static final String STAGE_REPORT_ENDPOINT = "/api/report/pipeline/%s/run/%d/stage/%s";
-  private static final String JOB_REPORT_ENDPOINT = "/api/report/pipeline/%s/run/%d/stage/%s/job/%s";
-
   /**
    * Constructor for CliBackendClient.
    *
@@ -33,6 +27,17 @@ public class CliBackendClient {
     this.httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
             .build();
+  }
+
+  /**
+   * Fetch available pipelines from the backend.
+   *
+   * @return JSON response from the backend
+   * @throws IOException if the API request fails
+   */
+  public String fetchAvailablePipelines() throws IOException {
+    String url = baseUrl + "/api/report/pipelines";
+    return sendGetRequest(url);
   }
 
   /**
@@ -47,27 +52,33 @@ public class CliBackendClient {
    */
   public String fetchPipelineReport(String pipelineName, int runNumber,
                                     String stageName, String jobName) throws IOException {
-    String url;
     String encodedPipeline = URLEncoder.encode(pipelineName, StandardCharsets.UTF_8);
+    StringBuilder urlBuilder = new StringBuilder(baseUrl);
 
     if (runNumber < 0) {
       // Pipeline history report
-      url = String.format(PIPELINE_HISTORY_ENDPOINT, encodedPipeline);
-    } else if (stageName == null) {
-      // Pipeline run report
-      url = String.format(PIPELINE_RUN_ENDPOINT, encodedPipeline, runNumber);
-    } else if (jobName == null) {
-      // Stage report
-      String encodedStage = URLEncoder.encode(stageName, StandardCharsets.UTF_8);
-      url = String.format(STAGE_REPORT_ENDPOINT, encodedPipeline, runNumber, encodedStage);
+      urlBuilder.append("/api/report/pipeline/history/").append(encodedPipeline);
     } else {
-      // Job report
-      String encodedStage = URLEncoder.encode(stageName, StandardCharsets.UTF_8);
-      String encodedJob = URLEncoder.encode(jobName, StandardCharsets.UTF_8);
-      url = String.format(JOB_REPORT_ENDPOINT, encodedPipeline, runNumber, encodedStage, encodedJob);
+      // Start with the pipeline run endpoint
+      urlBuilder.append("/api/report/pipeline/")
+              .append(encodedPipeline)
+              .append("/run/")
+              .append(runNumber);
+
+      // Add stage if provided
+      if (stageName != null && !stageName.isEmpty()) {
+        String encodedStage = URLEncoder.encode(stageName, StandardCharsets.UTF_8);
+        urlBuilder.append("/stage/").append(encodedStage);
+
+        // Add job if provided
+        if (jobName != null && !jobName.isEmpty()) {
+          String encodedJob = URLEncoder.encode(jobName, StandardCharsets.UTF_8);
+          urlBuilder.append("/job/").append(encodedJob);
+        }
+      }
     }
 
-    return sendGetRequest(baseUrl + url);
+    return sendGetRequest(urlBuilder.toString());
   }
 
   /**
