@@ -193,6 +193,87 @@ public class ReportService {
   }
 
   /**
+   * Get all stage reports for a specific stage name across all pipeline runs.
+   *
+   * @param pipelineName pipeline name
+   * @param stageName stage name
+   * @return list of stage reports
+   */
+  @Transactional(readOnly = true)
+  public List<StageReportDTO> getStageReports(String pipelineName, String stageName) {
+    UUID pipelineId = pipelineExecutionRepository.findPipelineIdByName(pipelineName)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
+
+    // 获取所有的pipeline execution
+    List<PipelineExecutionEntity> pipelineExecutions = pipelineExecutionRepository.findByPipelineNameOrderByStartTimeDesc(pipelineName);
+
+    // 为每个pipeline execution查找指定stage的报告
+    return pipelineExecutions.stream()
+            .flatMap(exec -> {
+              try {
+                List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionIdAndStageNameOrderByStartTimeDesc(exec.getId(), stageName);
+                return stages.stream().map(this::createStageReport);
+              } catch (Exception e) {
+                // 如果某个pipeline execution没有这个stage，就跳过
+                return java.util.stream.Stream.empty();
+              }
+            })
+            .collect(Collectors.toList());
+  }
+
+  /**
+   * Get all job reports for a specific job in a specific stage across all pipeline runs.
+   *
+   * @param pipelineName pipeline name
+   * @param stageName stage name
+   * @param jobName job name
+   * @return list of job reports
+   */
+  @Transactional(readOnly = true)
+  public List<JobReportDTO> getJobReportsForStage(String pipelineName, String stageName, String jobName) {
+    UUID pipelineId = pipelineExecutionRepository.findPipelineIdByName(pipelineName)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
+
+    // 获取所有的pipeline execution
+    List<PipelineExecutionEntity> pipelineExecutions = pipelineExecutionRepository.findByPipelineNameOrderByStartTimeDesc(pipelineName);
+
+    // 为每个pipeline execution查找指定stage和job的报告
+    return pipelineExecutions.stream()
+            .flatMap(exec -> {
+              try {
+                List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionIdAndStageNameOrderByStartTimeDesc(exec.getId(), stageName);
+                if (stages.isEmpty()) {
+                  return java.util.stream.Stream.empty();
+                }
+
+                StageExecutionEntity stageExecution = stages.getFirst();
+                List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecutionAndJobNameOrderByStartTimeDesc(stageExecution.getId(), jobName);
+
+                if (jobs.isEmpty()) {
+                  return java.util.stream.Stream.empty();
+                }
+
+                JobExecutionEntity job = jobs.getFirst();
+                JobReportDTO report = new JobReportDTO(
+                        jobExecutionRepository.findJobNameByJobId(job.getJobId()).orElse(jobName),
+                        List.of(new JobReportDTO.ExecutionRecord(
+                                job.getId(),
+                                job.getStatus(),
+                                job.getStartTime(),
+                                job.getCompletionTime(),
+                                job.isAllowFailure()
+                        ))
+                );
+                return java.util.stream.Stream.of(report);
+              } catch (Exception e) {
+                // 如果出现异常，就跳过
+                return java.util.stream.Stream.empty();
+              }
+            })
+            .collect(Collectors.toList());
+  }
+
+  /**
    * Helper method to create a stage report from a stage execution entity.
    *
    * @param stage stage execution entity

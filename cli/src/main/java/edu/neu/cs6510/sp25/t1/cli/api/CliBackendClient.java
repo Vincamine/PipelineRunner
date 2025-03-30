@@ -50,16 +50,28 @@ public class CliBackendClient {
    * @return formatted response from the backend
    * @throws IOException if the API request fails
    */
-  public String fetchPipelineReport(String pipelineName, int runNumber,
+  public String fetchPipelineReport(String pipelineName, Integer runNumber,
                                     String stageName, String jobName) throws IOException {
     String encodedPipeline = URLEncoder.encode(pipelineName, StandardCharsets.UTF_8);
     StringBuilder urlBuilder = new StringBuilder(baseUrl);
 
-    if (runNumber < 0) {
-      // Pipeline history report
+    if (runNumber == null || runNumber == -1) {
+      // Pipeline history endpoint
       urlBuilder.append("/api/report/pipeline/history/").append(encodedPipeline);
+
+      // If stage is provided, add as query parameter
+      if (stageName != null && !stageName.isEmpty()) {
+        String encodedStage = URLEncoder.encode(stageName, StandardCharsets.UTF_8);
+        urlBuilder.append("?stage=").append(encodedStage);
+
+        // If job is also provided, add as query parameter
+        if (jobName != null && !jobName.isEmpty()) {
+          String encodedJob = URLEncoder.encode(jobName, StandardCharsets.UTF_8);
+          urlBuilder.append("&job=").append(encodedJob);
+        }
+      }
     } else {
-      // Start with the pipeline run endpoint
+      // Specific run number
       urlBuilder.append("/api/report/pipeline/")
               .append(encodedPipeline)
               .append("/run/")

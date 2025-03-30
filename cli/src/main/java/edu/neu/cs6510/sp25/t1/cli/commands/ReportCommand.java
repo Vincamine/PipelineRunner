@@ -3,9 +3,6 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import picocli.CommandLine;
@@ -35,8 +32,6 @@ public class ReportCommand implements Callable<Integer> {
   private String format;
 
   private final CliBackendClient backendClient = new CliBackendClient("http://localhost:8080");
-  private final ObjectMapper objectMapper = new ObjectMapper()
-          .configure(SerializationFeature.INDENT_OUTPUT, true);
 
   /**
    * Main entry point for the `report` command.
@@ -46,15 +41,31 @@ public class ReportCommand implements Callable<Integer> {
   @Override
   public Integer call() {
     try {
-      // Based on options, determine report type
-      if (runNumber == null) {
-        return fetchPipelineHistory();
-      } else if (stageName == null) {
-        return fetchPipelineRunSummary();
-      } else if (jobName == null) {
-        return fetchStageSummary();
+      // If job is specified but stage is not, that's an error
+      if (jobName != null && stageName == null) {
+        System.err.println("Error: --stage parameter is required when using --job");
+        return 1;
+      }
+
+      // Now handle various parameter combinations
+      if (runNumber != null) {
+        // We have a run number specified
+        if (stageName != null) {
+          if (jobName != null) {
+            return fetchJobSummary();
+          } else {
+            return fetchStageSummary();
+          }
+        } else {
+          return fetchPipelineRunSummary();
+        }
       } else {
-        return fetchJobSummary();
+        // No run number, but we might have stage or job
+        if (stageName != null) {
+          return fetchStageHistory();  // Need to implement this
+        } else {
+          return fetchPipelineHistory();
+        }
       }
     } catch (IOException e) {
       PipelineLogger.error("API request failed: " + e.getMessage());
@@ -74,8 +85,8 @@ public class ReportCommand implements Callable<Integer> {
     PipelineLogger.info("Fetching past runs for pipeline: " + pipelineName);
     String response = backendClient.fetchPipelineReport(pipelineName, -1, null, null);
 
-    // Print the response
-    displayResponse(response);
+    // Simply print the response
+    System.out.println(response);
     return 0;
   }
 
@@ -89,8 +100,8 @@ public class ReportCommand implements Callable<Integer> {
     PipelineLogger.info("Fetching run summary for pipeline: " + pipelineName + ", Run: " + runNumber);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, null, null);
 
-    // Print the response
-    displayResponse(response);
+    // Simply print the response
+    System.out.println(response);
     return 0;
   }
 
@@ -104,8 +115,8 @@ public class ReportCommand implements Callable<Integer> {
     PipelineLogger.info("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, stageName, null);
 
-    // Print the response
-    displayResponse(response);
+    // Simply print the response
+    System.out.println(response);
     return 0;
   }
 
@@ -119,30 +130,30 @@ public class ReportCommand implements Callable<Integer> {
     PipelineLogger.info("Fetching job summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName + ", Job: " + jobName);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, stageName, jobName);
 
-    // Print the response
-    displayResponse(response);
+    // Simply print the response
+    System.out.println(response);
     return 0;
   }
 
   /**
-   * Display the response based on the requested format.
+   * Fetch history of a specific stage across all pipeline runs.
+   * This method also handles the case when a job name is specified.
    *
-   * @param response the response from the backend
-   * @throws IOException if formatting fails
+   * @return 0 if successful, 1 if API request failed
+   * @throws IOException if API request fails
    */
-  private void displayResponse(String response) throws IOException {
-    if ("json".equals(format.toLowerCase())) {
-      // For JSON format, try to pretty-print the JSON
-      try {
-        Object json = objectMapper.readValue(response, Object.class);
-        System.out.println(objectMapper.writeValueAsString(json));
-      } catch (Exception e) {
-        // If parsing fails, just print the raw response
-        System.out.println(response);
-      }
+  private Integer fetchStageHistory() throws IOException {
+    if (jobName != null) {
+      PipelineLogger.info("Fetching history for job: " + jobName + " in stage: " + stageName + " in pipeline: " + pipelineName);
     } else {
-      // For text format, print the response as is
-      System.out.println(response);
+      PipelineLogger.info("Fetching history for stage: " + stageName + " in pipeline: " + pipelineName);
     }
+
+    // Pass both stageName and jobName to backend client
+    String response = backendClient.fetchPipelineReport(pipelineName, null, stageName, jobName);
+
+    // Print the response
+    System.out.println(response);
+    return 0;
   }
 }

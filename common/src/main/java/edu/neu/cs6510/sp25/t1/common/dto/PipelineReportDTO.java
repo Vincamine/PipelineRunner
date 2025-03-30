@@ -16,6 +16,16 @@ public class PipelineReportDTO {
   private Instant completionTime;
   private List<StageReportDTO> stages;
 
+  private String pipelineName;
+
+  public String getPipelineName() {
+    return pipelineName;
+  }
+
+  public void setPipelineName(String pipelineName) {
+    this.pipelineName = pipelineName;
+    this.name = pipelineName;
+  }
   // Constructors, getters, and setters
 
   public PipelineReportDTO() {}

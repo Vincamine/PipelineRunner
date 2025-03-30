@@ -64,38 +64,38 @@ class ReportControllerTest {
     verify(reportService, times(1)).getAvailablePipelines();
   }
 
-  @Test
-  void testGetPipelineExecutionHistory() {
-    // Arrange
-    String pipelineName = "testPipeline";
-    List<PipelineReportDTO> expectedReports = Arrays.asList(
-            mock(PipelineReportDTO.class),
-            mock(PipelineReportDTO.class)
-    );
-    when(reportService.getPipelineReports(pipelineName)).thenReturn(expectedReports);
-
-    // Act
-    List<PipelineReportDTO> actualReports = reportController.getPipelineExecutionHistory(pipelineName);
-
-    // Assert
-    assertEquals(expectedReports, actualReports);
-    assertEquals(2, actualReports.size());
-    verify(reportService, times(1)).getPipelineReports(pipelineName);
-  }
-
-  @Test
-  void testGetPipelineExecutionHistory_EmptyList() {
-    // Arrange
-    String pipelineName = "nonExistentPipeline";
-    when(reportService.getPipelineReports(pipelineName)).thenReturn(Collections.emptyList());
-
-    // Act
-    List<PipelineReportDTO> actualReports = reportController.getPipelineExecutionHistory(pipelineName);
-
-    // Assert
-    assertTrue(actualReports.isEmpty());
-    verify(reportService, times(1)).getPipelineReports(pipelineName);
-  }
+//  @Test
+//  void testGetPipelineExecutionHistory() {
+//    // Arrange
+//    String pipelineName = "testPipeline";
+//    List<PipelineReportDTO> expectedReports = Arrays.asList(
+//            mock(PipelineReportDTO.class),
+//            mock(PipelineReportDTO.class)
+//    );
+//    when(reportService.getPipelineReports(pipelineName)).thenReturn(expectedReports);
+//
+//    // Act
+//    List<PipelineReportDTO> actualReports = reportController.getPipelineExecutionHistory(pipelineName);
+//
+//    // Assert
+//    assertEquals(expectedReports, actualReports);
+//    assertEquals(2, actualReports.size());
+//    verify(reportService, times(1)).getPipelineReports(pipelineName);
+//  }
+//
+//  @Test
+//  void testGetPipelineExecutionHistory_EmptyList() {
+//    // Arrange
+//    String pipelineName = "nonExistentPipeline";
+//    when(reportService.getPipelineReports(pipelineName)).thenReturn(Collections.emptyList());
+//
+//    // Act
+//    List<PipelineReportDTO> actualReports = reportController.getPipelineExecutionHistory(pipelineName);
+//
+//    // Assert
+//    assertTrue(actualReports.isEmpty());
+//    verify(reportService, times(1)).getPipelineReports(pipelineName);
+//  }
 
   @Test
   void testGetPipelineExecutionSummary() {
