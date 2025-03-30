@@ -31,7 +31,7 @@ jobs:
     allowFailure: False
     stage: "doc"
     workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
-    dependencies: [ "compile" ]
+    dependencies: ["compile"]
 
   - name: "build-jar"
     dockerImage: "gradle:8.12-jdk21"

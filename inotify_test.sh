@@ -23,7 +23,7 @@ echo "Resetting database..."
 docker exec -it cicd-db psql -U postgres -d cicd_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 # docker exec -it cicd-db bash
 
-rm backend/.pipelines/*.yaml
+# rm backend/.pipelines/*.yaml
 
 # Start services
 echo "Starting worker service..."
