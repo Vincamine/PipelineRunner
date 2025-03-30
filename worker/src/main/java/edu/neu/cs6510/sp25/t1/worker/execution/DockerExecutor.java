@@ -83,15 +83,16 @@ public class DockerExecutor {
 
     String containerID = null;
     log.info("Executing job {} in container path {} with working directory {}", jobId, containerPath, workingDirectory);
-
+    boolean debugging = true;
     // using docker client
     try {
       dockerClient.pullImageCmd(dockerImage).start().awaitCompletion();
+      log.info("Pulled Docker image: {}", dockerImage);
       String command = String.join(" && ", script);
 
       Volume volume = new Volume(containerPath);
       Bind bind = new Bind(workingDirectory, volume);
-
+      log.info("creating container with command: {}, volumn {}, containerPath {}, workdir {}", command, volume.toString(),containerPath,workingDirectory);
       var container = dockerClient.createContainerCmd(dockerImage)
           .withCmd("sh", "-c", command)
           .withBinds(bind)
@@ -128,7 +129,12 @@ public class DockerExecutor {
     } finally {
       if (containerID != null) {
         try {
-          dockerClient.removeContainerCmd(containerID).withForce(true).exec();
+          if(debugging) {
+            log.info("Debug mode, skip cleaning up container with ID: {}", containerID);
+          }
+          else {
+            dockerClient.removeContainerCmd(containerID).withForce(true).exec();
+          }
           log.info("Cleaned up container {}", containerID);
         } catch (Exception cleanupEx) {
           log.error("Failed to cleanup container {}", containerID, cleanupEx);
