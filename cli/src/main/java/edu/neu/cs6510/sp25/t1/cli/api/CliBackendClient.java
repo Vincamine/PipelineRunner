@@ -212,6 +212,32 @@ public class CliBackendClient {
     throw lastException != null ? lastException :
         new IOException("Failed after " + maxRetries + " retries");
   }
+  /**
+   * Fetches a list of all available pipelines.
+   *
+   * @return JSON response containing all pipeline names.
+   * @throws IOException If an API error occurs.
+   */
+  public String fetchAllPipelines() throws IOException {
+    String url = String.format("%s/api/report/pipelines", backendUrl);
+    Request request = createGetRequest(url);
+    Response response = executeRequest(request);
 
+    return response.body() != null ? response.body().string() : "Error: Empty response";
+  }
+
+  /**
+   * Fetches a list of all available pipelines.
+   *
+   * @return JSON response containing all pipeline names.
+   * @throws IOException If an API error occurs.
+   */
+  public String fetchAvailablePipelines() throws IOException {
+    String url = String.format("%s/api/report/pipelines", backendUrl);
+    Request request = createGetRequest(url);
+    Response response = executeRequest(request);
+
+    return response.body() != null ? response.body().string() : "Error: Empty response";
+  }
 
 }

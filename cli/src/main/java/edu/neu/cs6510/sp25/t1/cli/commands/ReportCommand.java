@@ -38,15 +38,29 @@ public class ReportCommand implements Callable<Integer> {
    */
   @Override
   public Integer call() {
+    // Verify we're in a Git repository root directory
     GitUtils.isGitRootDirectory();
+
     try {
+      // If no pipeline name is provided, return a list of all pipeline names
+      if (pipelineName == null) {
+        return fetchAvailablePipelines();
+      }
+
+      // If run number is not specified, show all runs for this pipeline
       if (runNumber == null) {
         return fetchPipelineHistory();
-      } else if (stageName == null) {
+      }
+      // If stage name is not specified, show summary for this run
+      else if (stageName == null) {
         return fetchPipelineRunSummary();
-      } else if (jobName == null) {
+      }
+      // If job name is not specified, show stage summary
+      else if (jobName == null) {
         return fetchStageSummary();
-      } else {
+      }
+      // Otherwise, show job summary
+      else {
         return fetchJobSummary();
       }
     } catch (IOException e) {
@@ -56,22 +70,54 @@ public class ReportCommand implements Callable<Integer> {
   }
 
   /**
+   * Fetch available pipelines.
+   * Report content: List of all pipeline names
+   *
+   * @return 0 if successful, 1 if API request failed
+   */
+  private Integer fetchAvailablePipelines() throws IOException {
+    PipelineLogger.info("Fetching available pipelines");
+    String response = backendClient.fetchAvailablePipelines();
+    PipelineLogger.info(response);
+    return 0;
+  }
+
+
+  /**
    * Fetch past runs of a specific pipeline.
+   * Report content:
+   * - Pipeline name
+   * - Run number (for each run)
+   * - Git commit hash
+   * - Status (success, failed, canceled)
+   * - Start time
+   * - Completion time
    *
    * @return 0 if successful, 1 if API request failed
    */
   private Integer fetchPipelineHistory() throws IOException {
     PipelineLogger.info("Fetching past runs for pipeline: " + pipelineName);
-    String response = backendClient.fetchPipelineReport(pipelineName, -1, null, null); // -1 means "fetch all runs"
+    String response = backendClient.fetchPipelineReport(pipelineName, -1, null, null);
     PipelineLogger.info(response);
     return 0;
   }
 
+
+
   /**
    * Fetch summary of a specific pipeline run.
+   * Report content:
+   * - Pipeline name
+   * - Run number
+   * - Git commit hash
+   * - Pipeline status
+   * - For each stage:
+   *   - Stage name
+   *   - Stage status
+   *   - Start time
+   *   - Completion time
    *
    * @return 0 if successful, 1 if API request failed
-   * @throws IOException if API request fails
    */
   private Integer fetchPipelineRunSummary() throws IOException {
     PipelineLogger.info("Fetching run summary for pipeline: " + pipelineName + ", Run: " + runNumber);
@@ -82,9 +128,20 @@ public class ReportCommand implements Callable<Integer> {
 
   /**
    * Fetch summary of a specific stage in a pipeline run.
+   * Report content:
+   * - Pipeline name
+   * - Run number
+   * - Git commit hash
+   * - Stage name
+   * - Stage status
+   * - For each job in the stage:
+   *   - Job name
+   *   - Job status
+   *   - Allows failure flag
+   *   - Start time
+   *   - Completion time
    *
    * @return 0 if successful, 1 if API request failed
-   * @throws IOException if API request fails
    */
   private Integer fetchStageSummary() throws IOException {
     PipelineLogger.info("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName);
@@ -95,9 +152,18 @@ public class ReportCommand implements Callable<Integer> {
 
   /**
    * Fetch summary of a specific job in a pipeline stage.
+   * Report content:
+   * - Pipeline name
+   * - Run number
+   * - Git commit hash
+   * - Stage name
+   * - Job name
+   * - Job status
+   * - Allows failure flag
+   * - Start time
+   * - Completion time
    *
    * @return 0 if successful, 1 if API request failed
-   * @throws IOException if API request fails
    */
   private Integer fetchJobSummary() throws IOException {
     PipelineLogger.info("Fetching job summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName + ", Job: " + jobName);
