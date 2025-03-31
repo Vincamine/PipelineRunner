@@ -299,23 +299,47 @@ public class ReportService {
     StageExecutionEntity stageExecution = stageExecutionRepository.findById(stage.getId())
             .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
 
+    // Find the pipeline execution for this stage
+    UUID pipelineExecutionId = stage.getPipelineExecutionId();
+    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
+
+    // Get pipeline name from pipeline entity
+    String pipelineName = pipelineExecutionRepository.findPipelineNameByPipelineId(pipelineExecution.getPipelineId())
+            .orElse("Unknown Pipeline");
+
+    // Get stage name
+    String stageName = stageExecutionRepository.findStageNameByStageId(stage.getStageId())
+            .orElse("Unknown Stage");
+
     List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecution(stageExecution);
 
     List<JobReportDTO> jobReports = jobs.stream()
-            .map(job -> new JobReportDTO(
-                    jobExecutionRepository.findJobNameByJobId(job.getJobId()).orElse("Unknown Job"),
-                    List.of(new JobReportDTO.ExecutionRecord(
-                            job.getId(),
-                            job.getStatus(),
-                            job.getStartTime(),
-                            job.getCompletionTime(),
-                            job.isAllowFailure()
-                    ))
-            )).toList();
+            .map(job -> {
+              String jobName = jobExecutionRepository.findJobNameByJobId(job.getJobId()).orElse("Unknown Job");
+              JobReportDTO jobReport = new JobReportDTO(
+                      jobName,
+                      List.of(new JobReportDTO.ExecutionRecord(
+                              job.getId(),
+                              job.getStatus(),
+                              job.getStartTime(),
+                              job.getCompletionTime(),
+                              job.isAllowFailure()
+                      ))
+              );
+
+              // Set the additional fields for each job
+              jobReport.setPipelineName(pipelineName);
+              jobReport.setRunNumber(pipelineExecution.getRunNumber());
+              jobReport.setCommitHash(pipelineExecution.getCommitHash());
+              jobReport.setStageName(stageName);
+
+              return jobReport;
+            }).toList();
 
     return new StageReportDTO(
             stage.getId(),
-            stageExecutionRepository.findStageNameByStageId(stage.getStageId()).orElse("Unknown Stage"),
+            stageName,
             stage.getStatus(),
             stage.getStartTime(),
             stage.getCompletionTime(),
