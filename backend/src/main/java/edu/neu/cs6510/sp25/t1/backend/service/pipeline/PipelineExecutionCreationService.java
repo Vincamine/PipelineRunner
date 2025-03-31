@@ -1,7 +1,11 @@
 package edu.neu.cs6510.sp25.t1.backend.service.pipeline;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,6 +86,7 @@ public class PipelineExecutionCreationService {
    *
    * @param pipelineExecutionId ID of the pipeline execution
    * @param pipelineConfig      Parsed pipeline configuration
+   * @param stageQueue          Queue to store job UUIDs for each stage execution
    */
   @Transactional
   public void createAndSaveStageExecutions(
@@ -130,6 +135,8 @@ public class PipelineExecutionCreationService {
    * @param order the execution order
    * @param commitHash the commit hash
    * @param isLocal whether the execution is local
+   * 
+   * @return a queue of job UUIDs associated with the created stage execution
    */
   @Transactional
   private Queue<UUID> createStageExecution(UUID pipelineExecutionId, List<StageEntity> pipelineStages, int order,

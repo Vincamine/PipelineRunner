@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.backend.service.queue;
 
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 

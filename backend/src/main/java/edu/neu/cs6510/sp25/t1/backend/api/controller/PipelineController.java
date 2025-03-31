@@ -12,7 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.context.annotation.Lazy;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.error.ApiError;
 import edu.neu.cs6510.sp25.t1.backend.service.execution.PipelineExecutionService;
@@ -42,8 +47,10 @@ public class PipelineController {
   /**
    * Constructor for PipelineController.
    *
-   * @param pipelineExecutionService      PipelineExecutionService instance
-   * @param pipelineExecutionQueueService PipelineExecutionQueueService instance
+   * @param pipelineExecutionService the service responsible for executing pipelines
+   * @param pipelineExecutionQueueService the service managing the pipeline execution queue
+   * @param stageQueuePublisher the publisher responsible for managing stage queues
+   * @param statusService the service responsible for handling status updates
    */
   public PipelineController(
       PipelineExecutionService pipelineExecutionService,
