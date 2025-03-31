@@ -16,13 +16,6 @@ import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 
 /**
  * Detects cycles in job dependencies using DFS.
- *
- * @param jobName the name of the job being checked for cycles
- * @param pipeline the pipeline object containing stages and jobs
- * @param visited a set of visited job names to avoid reprocessing
- * @param recursionStack a set of job names in the current recursion stack
- * @param currentPath the current path of job names being traversed
- * @param detectedCycles a list to store detected cycles
  */
 public class PipelineValidator {
 
@@ -104,11 +97,14 @@ public class PipelineValidator {
           continue;
         }
    * @param errors a list to which validation error messages will be added
+   * @param jobNames a set of job names to check against
    */
   private static void validateDependenciesExist(Pipeline pipeline, String filename, Set<String> jobNames, List<String> errors) {
     for (Stage stage : pipeline.getStages()) {
       for (Job job : stage.getJobs()) {
-        if (job.getDependencies() == null) continue;
+        if (job.getDependencies() == null) {
+            continue;
+        }
 
         for (String dependency : job.getDependencies()) {
           if (!jobNames.contains(dependency)) {
@@ -125,6 +121,7 @@ public class PipelineValidator {
    * Detects cyclic dependencies in job execution.
    *
    * @param pipeline the pipeline object containing stages and jobs to validate
+   * 
    * @return a list of cycles detected, where each cycle is represented as a list of job names
    */
   public static List<List<String>> detectCycles(Pipeline pipeline) {
@@ -143,6 +140,14 @@ public class PipelineValidator {
 
   /**
    * Detects cycles in job dependencies using DFS.
+   * 
+   * @param jobName the name of the job to start the DFS from
+   * @param pipeline the pipeline object containing stages and jobs
+   * @param visited a set of visited job names to avoid reprocessing
+   * @param recursionStack a set to track the current path in the DFS
+   * @param currentPath the current path of job names being processed
+   * @param detectedCycles a list to store detected cycles
+   * 
    */
   private static void detectCycleDFS(String jobName, Pipeline pipeline, Set<String> visited,
                                      Set<String> recursionStack, List<String> currentPath, List<List<String>> detectedCycles) {
@@ -171,6 +176,10 @@ public class PipelineValidator {
 
   /**
    * Finds dependencies for a given job in the pipeline (by name).
+   * 
+   * @param jobName the name of the job whose dependencies are to be found
+   * @param pipeline the pipeline object containing stages and jobs
+   * @return a list of dependencies for the specified job
    */
   private static List<String> findJobDependencies(String jobName, Pipeline pipeline) {
     for (Stage stage : pipeline.getStages()) {
@@ -185,6 +194,9 @@ public class PipelineValidator {
 
   /**
    * Formats cycle details for better error reporting.
+   * @param cycle the list of job names representing the cycle
+   * 
+   * @return a formatted string representing the cycle
    */
   private static String formatCycle(List<String> cycle) {
     return String.join(" → ", cycle) + " → " + cycle.getFirst(); // Close the loop visually

@@ -11,6 +11,7 @@ import java.util.UUID;
 
 /**
  * Represents a request to update the status of a job execution.
+ *
  */
 @Getter
 @Setter
@@ -23,6 +24,7 @@ public class JobStatusUpdate {
 
   /**
    * JSON mapping for deserialization.
+   * @param jobExecutionId the ID of the job execution
    */
   @JsonProperty("jobExecutionId")
   public void setJobExecutionId(UUID jobExecutionId) {
