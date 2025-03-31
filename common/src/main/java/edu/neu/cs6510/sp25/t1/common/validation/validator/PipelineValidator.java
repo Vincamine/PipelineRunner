@@ -87,6 +87,15 @@ public class PipelineValidator {
   /**
    * Ensures all job dependencies reference existing jobs (by name).
    */
+  /**
+   * Validates that all dependencies specified in the pipeline exist within the set of job names.
+   * If a dependency does not exist, an error message is added to the errors list.
+   *
+   * @param pipeline the pipeline object containing stages and jobs to validate
+   * @param filename the name of the file being validated, used for error reporting
+   * @param jobNames a set of valid job names to check dependencies against
+   * @param errors a list to which validation error messages will be added
+   */
   private static void validateDependenciesExist(Pipeline pipeline, String filename, Set<String> jobNames, List<String> errors) {
     for (Stage stage : pipeline.getStages()) {
       for (Job job : stage.getJobs()) {
@@ -105,6 +114,9 @@ public class PipelineValidator {
 
   /**
    * Detects cyclic dependencies in job execution.
+   *
+   * @param pipeline the pipeline object containing stages and jobs to validate
+   * @return a list of cycles detected, where each cycle is represented as a list of job names
    */
   public static List<List<String>> detectCycles(Pipeline pipeline) {
     List<List<String>> detectedCycles = new ArrayList<>();
