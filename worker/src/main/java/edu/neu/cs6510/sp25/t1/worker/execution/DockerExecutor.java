@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.worker.execution;
 
-
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
@@ -10,16 +9,13 @@ import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
 import edu.neu.cs6510.sp25.t1.worker.error.DockerExecutionException;
 import edu.neu.cs6510.sp25.t1.worker.error.JobExecutionConfigException;
 import org.springframework.stereotype.Component;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.util.List;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 
 /**
  * Executes jobs inside Docker containers.
@@ -29,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DockerExecutor {
 
-  //adding docker client
+  // adding docker client
   private final DockerClient dockerClient = createDockerClient();
 
   private DockerClient createDockerClient() {
@@ -92,7 +88,8 @@ public class DockerExecutor {
 
       Volume volume = new Volume(containerPath);
       Bind bind = new Bind(workingDirectory, volume);
-      log.info("creating container with command: {}, volumn {}, containerPath {}, workdir {}", command, volume.toString(),containerPath,workingDirectory);
+      log.info("creating container with command: {}, volumn {}, containerPath {}, workdir {}", command,
+          volume.toString(), containerPath, workingDirectory);
       var container = dockerClient.createContainerCmd(dockerImage)
           .withCmd("sh", "-c", command)
           .withBinds(bind)
@@ -120,7 +117,7 @@ public class DockerExecutor {
       log.info("Container exited with code: {}", exitCode);
 
       // need ?
-      //dockerClient.removeContainerCmd(containerID).withForce(true).exec();
+      // dockerClient.removeContainerCmd(containerID).withForce(true).exec();
 
       return exitCode == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
@@ -129,10 +126,9 @@ public class DockerExecutor {
     } finally {
       if (containerID != null) {
         try {
-          if(debugging) {
+          if (debugging) {
             log.info("Debug mode, skip cleaning up container with ID: {}", containerID);
-          }
-          else {
+          } else {
             dockerClient.removeContainerCmd(containerID).withForce(true).exec();
           }
           log.info("Cleaned up container {}", containerID);

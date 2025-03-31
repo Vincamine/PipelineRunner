@@ -1,13 +1,17 @@
 package edu.neu.cs6510.sp25.t1.worker.service;
 
-import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,13 +29,14 @@ public class WorkerJobQueue {
     private final JobDataService jobDataService;
 
     // Thread pool for executing jobs concurrently
-//    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+    // private final ExecutorService executorService =
+    // Executors.newFixedThreadPool(5);
 
     // signle job service
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-
-    // Set to track job IDs being processed - using Collections.synchronizedSet for thread safety
+    // Set to track job IDs being processed - using Collections.synchronizedSet for
+    // thread safety
     private final Set<UUID> processingJobIds = Collections.synchronizedSet(new HashSet<>());
     private final ConcurrentHashMap<UUID, Future<?>> jobFutures = new ConcurrentHashMap<>();
 
@@ -64,10 +69,11 @@ public class WorkerJobQueue {
 
             // Check if worker is at capacity
             // move it back when need multi jobs
-//            if (processingJobIds.size() >= 5) {
-//                log.warn("Worker at maximum capacity, cannot process job {}", jobExecutionId);
-//                return;
-//            }
+            // if (processingJobIds.size() >= 5) {
+            // log.warn("Worker at maximum capacity, cannot process job {}",
+            // jobExecutionId);
+            // return;
+            // }
 
             // Fetch complete job data from database
             jobDataService.getJobExecutionById(jobExecutionId).ifPresentOrElse(
@@ -102,8 +108,7 @@ public class WorkerJobQueue {
 
                         jobFutures.put(jobExecutionId, jobFuture);
                     },
-                    () -> log.error("Job with ID {} not found in database", jobExecutionId)
-            );
+                    () -> log.error("Job with ID {} not found in database", jobExecutionId));
         } catch (IllegalArgumentException e) {
             log.error("Invalid UUID format received: {}", jobExecutionIdStr);
         }
@@ -124,7 +129,7 @@ public class WorkerJobQueue {
      * @return List of active job execution IDs
      */
     public List<UUID> getActiveJobIds() {
-        synchronized(processingJobIds) {
+        synchronized (processingJobIds) {
             return new ArrayList<>(processingJobIds);
         }
     }
