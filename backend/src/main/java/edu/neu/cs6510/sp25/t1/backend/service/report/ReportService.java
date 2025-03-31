@@ -356,22 +356,50 @@ public class ReportService {
   private ExecutionStatus calculatePipelineStatus(List<StageExecutionEntity> stages) {
     boolean hasFailed = false;
     boolean hasCanceled = false;
+    boolean hasRunning = false;
+    boolean hasPending = false;
+    boolean hasSuccess = false;
 
     for (StageExecutionEntity stage : stages) {
-      if (stage.getStatus() == ExecutionStatus.FAILED) {
-        hasFailed = true;
-      }
-      if (stage.getStatus() == ExecutionStatus.CANCELED) {
-        hasCanceled = true;
+      ExecutionStatus status = stage.getStatus();
+
+      switch(status) {
+        case FAILED:
+          hasFailed = true;
+          break;
+        case CANCELED:
+          hasCanceled = true;
+          break;
+        case RUNNING:
+          hasRunning = true;
+          break;
+        case PENDING:
+          hasPending = true;
+          break;
+        case SUCCESS:
+          hasSuccess = true;
+          break;
       }
     }
 
+    // Priority order: FAILED > CANCELED > RUNNING > PENDING > SUCCESS
     if (hasFailed) {
       return ExecutionStatus.FAILED;
     }
     if (hasCanceled) {
       return ExecutionStatus.CANCELED;
     }
-    return ExecutionStatus.SUCCESS;
+    if (hasRunning) {
+      return ExecutionStatus.RUNNING;
+    }
+    if (hasPending) {
+      return ExecutionStatus.PENDING;
+    }
+    if (hasSuccess) {
+      return ExecutionStatus.SUCCESS;
+    }
+
+    // Default to PENDING if list is empty
+    return ExecutionStatus.PENDING;
   }
 }
