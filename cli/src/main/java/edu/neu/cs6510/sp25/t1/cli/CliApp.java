@@ -2,10 +2,7 @@ package edu.neu.cs6510.sp25.t1.cli;
 
 import java.util.concurrent.Callable;
 
-import edu.neu.cs6510.sp25.t1.cli.commands.CheckCommand;
-import edu.neu.cs6510.sp25.t1.cli.commands.DryRunCommand;
-import edu.neu.cs6510.sp25.t1.cli.commands.ReportCommand;
-import edu.neu.cs6510.sp25.t1.cli.commands.RunCommand;
+import edu.neu.cs6510.sp25.t1.cli.commands.*;
 import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
 import picocli.CommandLine;
 
@@ -21,7 +18,7 @@ import picocli.CommandLine;
         CheckCommand.class,
         RunCommand.class,
         ReportCommand.class,
-        DryRunCommand.class
+        DryRunCommand.class, StatusCommand.class
     }
 )
 public class CliApp implements Callable<Integer> {

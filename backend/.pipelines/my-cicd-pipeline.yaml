@@ -8,37 +8,37 @@ stages:
 
 jobs:
   - name: "compile"
-    dockerImage: "openjdk:21-jdk-slim"
+    dockerImage: "openjdk:21-jdk"
     script:
-      - "./gradlew build"
+      - "sleep 1h"
     allowFailure: False
     stage: "build"
-    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
+    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
 
   - name: "unit-tests"
-    dockerImage: "openjdk:21-jdk-slim"
+    dockerImage: "openjdk:21-jdk"
     script:
       - "./gradlew test"
     allowFailure: False
     stage: "test"
-    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
+    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
     dependencies: ["compile"]
 
   - name: "generate-docs"
-    dockerImage: "openjdk:21-jdk-slim"
+    dockerImage: "openjdk:21-jdk"
     script:
       - "./gradlew javadoc"
     allowFailure: False
     stage: "doc"
-    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
-    dependencies: [ "compile" ]
+    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
+    dependencies: ["compile"]
 
   - name: "build-jar"
     dockerImage: "gradle:8.12-jdk21"
     script:
       - "./gradlew bootJar"
     allowFailure: False
-    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
+    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
     stage: "deploy"
     dependencies: ["compile", "unit-tests"]
 
@@ -48,6 +48,6 @@ jobs:
       - "docker build -t my-cicd-app ."
       - "docker run -d -p 5001:5001 my-cicd-app"
     allowFailure: False
-    workingDir: "C:/Users/Ree Li/desktop/neu/cs6510/t1-cicd"
+    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
     stage: "deploy"
     dependencies: ["build-jar"]

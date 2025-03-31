@@ -1,11 +1,10 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.neu.cs6510.sp25.t1.backend.service.report.ReportService;
 import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
@@ -52,8 +51,29 @@ public class ReportController {
    */
   @GetMapping("/pipeline/history/{pipelineName}")
   @Operation(summary = "Retrieve pipeline execution history", description = "Fetches past executions of a specified pipeline.")
-  public List<PipelineReportDTO> getPipelineExecutionHistory(@PathVariable String pipelineName) {
-    return reportService.getPipelineReports(pipelineName);
+  public ResponseEntity<?> getPipelineExecutionHistory(
+          @PathVariable String pipelineName,
+          @RequestParam(required = false) String stage,
+          @RequestParam(required = false) String job) {
+    try {
+      if (stage != null) {
+        if (job != null) {
+          // Both stage and job provided
+          return ResponseEntity.ok(reportService.getJobReportsForStage(pipelineName, stage, job));
+        } else {
+          // Only stage provided
+          return ResponseEntity.ok(reportService.getStageReports(pipelineName, stage));
+        }
+      } else {
+        // No filtering, return all pipeline runs
+        List<PipelineReportDTO> reports = reportService.getPipelineReports(pipelineName);
+        return ResponseEntity.ok(reports);
+      }
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(
+              Map.of("error", "Failed to retrieve pipeline reports: " + e.getMessage())
+      );
+    }
   }
 
   /**

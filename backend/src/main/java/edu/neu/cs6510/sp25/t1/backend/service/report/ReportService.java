@@ -72,6 +72,10 @@ public class ReportService {
       String fetchedPipelineName = pipelineExecutionRepository.findPipelineNameByPipelineId(exec.getPipelineId()).orElse(pipelineName);
       List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionId(exec.getId());
 
+      List<StageReportDTO> stageReports = stages.stream()
+              .map(this::createStageReport)
+              .collect(Collectors.toList());
+
       ExecutionStatus pipelineStatus = calculatePipelineStatus(stages);
 
       return new PipelineReportDTO(
@@ -82,7 +86,7 @@ public class ReportService {
               pipelineStatus,
               exec.getStartTime(),
               exec.getCompletionTime(),
-              null // Not including detailed stage reports in summary
+              stageReports
       );
     }).collect(Collectors.toList());
   }
@@ -174,13 +178,12 @@ public class ReportService {
 
     List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecutionAndJobNameOrderByStartTimeDesc(stageExecution.getId(), jobName);
 
-
     if (jobs.isEmpty()) {
       throw new IllegalArgumentException("Job execution not found for job: " + jobName);
     }
 
     JobExecutionEntity job = jobs.getFirst(); // Get the most recent execution
-    return new JobReportDTO(
+    JobReportDTO report = new JobReportDTO(
             jobExecutionRepository.findJobNameByJobId(job.getJobId()).orElse(jobName),
             List.of(new JobReportDTO.ExecutionRecord(
                     job.getId(),
@@ -190,8 +193,102 @@ public class ReportService {
                     job.isAllowFailure()
             ))
     );
+
+
+    report.setPipelineName(pipelineName);
+    report.setRunNumber(runNumber);
+    report.setCommitHash(pipelineExecution.getCommitHash());
+    report.setStageName(stageName);
+
+    return report;
+  }
+  /**
+   * Get all stage reports for a specific stage name across all pipeline runs.
+   *
+   * @param pipelineName pipeline name
+   * @param stageName stage name
+   * @return list of stage reports
+   */
+  @Transactional(readOnly = true)
+  public List<StageReportDTO> getStageReports(String pipelineName, String stageName) {
+    UUID pipelineId = pipelineExecutionRepository.findPipelineIdByName(pipelineName)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
+
+    // 获取所有的pipeline execution
+    List<PipelineExecutionEntity> pipelineExecutions = pipelineExecutionRepository.findByPipelineNameOrderByStartTimeDesc(pipelineName);
+
+    // 为每个pipeline execution查找指定stage的报告
+    return pipelineExecutions.stream()
+            .flatMap(exec -> {
+              try {
+                List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionIdAndStageNameOrderByStartTimeDesc(exec.getId(), stageName);
+                return stages.stream().map(this::createStageReport);
+              } catch (Exception e) {
+                // 如果某个pipeline execution没有这个stage，就跳过
+                return java.util.stream.Stream.empty();
+              }
+            })
+            .collect(Collectors.toList());
   }
 
+  /**
+   * Get all job reports for a specific job in a specific stage across all pipeline runs.
+   *
+   * @param pipelineName pipeline name
+   * @param stageName stage name
+   * @param jobName job name
+   * @return list of job reports
+   */
+  @Transactional(readOnly = true)
+  public List<JobReportDTO> getJobReportsForStage(String pipelineName, String stageName, String jobName) {
+    UUID pipelineId = pipelineExecutionRepository.findPipelineIdByName(pipelineName)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
+
+    // Get all pipeline executions
+    List<PipelineExecutionEntity> pipelineExecutions = pipelineExecutionRepository.findByPipelineNameOrderByStartTimeDesc(pipelineName);
+
+    // For each pipeline execution find the specified stage and job
+    return pipelineExecutions.stream()
+            .flatMap(exec -> {
+              try {
+                List<StageExecutionEntity> stages = stageExecutionRepository.findByPipelineExecutionIdAndStageNameOrderByStartTimeDesc(exec.getId(), stageName);
+                if (stages.isEmpty()) {
+                  return java.util.stream.Stream.empty();
+                }
+
+                StageExecutionEntity stageExecution = stages.getFirst();
+                List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecutionAndJobNameOrderByStartTimeDesc(stageExecution.getId(), jobName);
+
+                if (jobs.isEmpty()) {
+                  return java.util.stream.Stream.empty();
+                }
+
+                JobExecutionEntity job = jobs.getFirst();
+                JobReportDTO report = new JobReportDTO(
+                        jobExecutionRepository.findJobNameByJobId(job.getJobId()).orElse(jobName),
+                        List.of(new JobReportDTO.ExecutionRecord(
+                                job.getId(),
+                                job.getStatus(),
+                                job.getStartTime(),
+                                job.getCompletionTime(),
+                                job.isAllowFailure()
+                        ))
+                );
+
+                // Set the additional fields
+                report.setPipelineName(pipelineName);
+                report.setRunNumber(exec.getRunNumber());
+                report.setCommitHash(exec.getCommitHash());
+                report.setStageName(stageName);
+
+                return java.util.stream.Stream.of(report);
+              } catch (Exception e) {
+                // Skip if any exception occurs
+                return java.util.stream.Stream.empty();
+              }
+            })
+            .collect(Collectors.toList());
+  }
   /**
    * Helper method to create a stage report from a stage execution entity.
    *
@@ -202,23 +299,47 @@ public class ReportService {
     StageExecutionEntity stageExecution = stageExecutionRepository.findById(stage.getId())
             .orElseThrow(() -> new IllegalArgumentException("Stage Execution not found"));
 
+    // Find the pipeline execution for this stage
+    UUID pipelineExecutionId = stage.getPipelineExecutionId();
+    PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)
+            .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
+
+    // Get pipeline name from pipeline entity
+    String pipelineName = pipelineExecutionRepository.findPipelineNameByPipelineId(pipelineExecution.getPipelineId())
+            .orElse("Unknown Pipeline");
+
+    // Get stage name
+    String stageName = stageExecutionRepository.findStageNameByStageId(stage.getStageId())
+            .orElse("Unknown Stage");
+
     List<JobExecutionEntity> jobs = jobExecutionRepository.findByStageExecution(stageExecution);
 
     List<JobReportDTO> jobReports = jobs.stream()
-            .map(job -> new JobReportDTO(
-                    jobExecutionRepository.findJobNameByJobId(job.getJobId()).orElse("Unknown Job"),
-                    List.of(new JobReportDTO.ExecutionRecord(
-                            job.getId(),
-                            job.getStatus(),
-                            job.getStartTime(),
-                            job.getCompletionTime(),
-                            job.isAllowFailure()
-                    ))
-            )).toList();
+            .map(job -> {
+              String jobName = jobExecutionRepository.findJobNameByJobId(job.getJobId()).orElse("Unknown Job");
+              JobReportDTO jobReport = new JobReportDTO(
+                      jobName,
+                      List.of(new JobReportDTO.ExecutionRecord(
+                              job.getId(),
+                              job.getStatus(),
+                              job.getStartTime(),
+                              job.getCompletionTime(),
+                              job.isAllowFailure()
+                      ))
+              );
+
+              // Set the additional fields for each job
+              jobReport.setPipelineName(pipelineName);
+              jobReport.setRunNumber(pipelineExecution.getRunNumber());
+              jobReport.setCommitHash(pipelineExecution.getCommitHash());
+              jobReport.setStageName(stageName);
+
+              return jobReport;
+            }).toList();
 
     return new StageReportDTO(
             stage.getId(),
-            stageExecutionRepository.findStageNameByStageId(stage.getStageId()).orElse("Unknown Stage"),
+            stageName,
             stage.getStatus(),
             stage.getStartTime(),
             stage.getCompletionTime(),
@@ -235,22 +356,50 @@ public class ReportService {
   private ExecutionStatus calculatePipelineStatus(List<StageExecutionEntity> stages) {
     boolean hasFailed = false;
     boolean hasCanceled = false;
+    boolean hasRunning = false;
+    boolean hasPending = false;
+    boolean hasSuccess = false;
 
     for (StageExecutionEntity stage : stages) {
-      if (stage.getStatus() == ExecutionStatus.FAILED) {
-        hasFailed = true;
-      }
-      if (stage.getStatus() == ExecutionStatus.CANCELED) {
-        hasCanceled = true;
+      ExecutionStatus status = stage.getStatus();
+
+      switch(status) {
+        case FAILED:
+          hasFailed = true;
+          break;
+        case CANCELED:
+          hasCanceled = true;
+          break;
+        case RUNNING:
+          hasRunning = true;
+          break;
+        case PENDING:
+          hasPending = true;
+          break;
+        case SUCCESS:
+          hasSuccess = true;
+          break;
       }
     }
 
+    // Priority order: FAILED > CANCELED > RUNNING > PENDING > SUCCESS
     if (hasFailed) {
       return ExecutionStatus.FAILED;
     }
     if (hasCanceled) {
       return ExecutionStatus.CANCELED;
     }
-    return ExecutionStatus.SUCCESS;
+    if (hasRunning) {
+      return ExecutionStatus.RUNNING;
+    }
+    if (hasPending) {
+      return ExecutionStatus.PENDING;
+    }
+    if (hasSuccess) {
+      return ExecutionStatus.SUCCESS;
+    }
+
+    // Default to PENDING if list is empty
+    return ExecutionStatus.PENDING;
   }
 }

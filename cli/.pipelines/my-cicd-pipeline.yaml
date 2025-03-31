@@ -8,15 +8,15 @@ stages:
 
 jobs:
   - name: "compile"
-    dockerImage: "openjdk:21-jdk"
+    dockerImage: "openjdk:21-jdk-slim"
     script:
-      - "sleep 1h"
+      - "./gradlew build"
     allowFailure: False
     stage: "build"
     workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
 
   - name: "unit-tests"
-    dockerImage: "openjdk:21-jdk"
+    dockerImage: "openjdk:21-jdk-slim"
     script:
       - "./gradlew test"
     allowFailure: False
@@ -25,7 +25,7 @@ jobs:
     dependencies: ["compile"]
 
   - name: "generate-docs"
-    dockerImage: "openjdk:21-jdk"
+    dockerImage: "openjdk:21-jdk-slim"
     script:
       - "./gradlew javadoc"
     allowFailure: False
