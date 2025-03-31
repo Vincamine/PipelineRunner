@@ -10,6 +10,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Callable;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import picocli.CommandLine;
@@ -179,11 +181,42 @@ public class ReportCommand implements Callable<Integer> {
   private String formatResponse(String jsonResponse) {
     if (format.equalsIgnoreCase("json")) {
       try {
-        // For JSON format, pretty print the JSON
-        Object jsonObject = objectMapper.readValue(jsonResponse, Object.class);
-        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+        // Parse the JSON
+        JsonNode rootNode = objectMapper.readTree(jsonResponse);
+
+        // For array of objects (likely pipeline reports)
+        if (rootNode.isArray() && rootNode.size() > 0) {
+          ArrayNode modifiedRootNode = objectMapper.createArrayNode();
+
+          for (JsonNode node : rootNode) {
+            ObjectNode modifiedNode = (ObjectNode) node.deepCopy();
+
+            // Remove null pipelineName field
+            if (modifiedNode.has("pipelineName") && modifiedNode.get("pipelineName").isNull()) {
+              modifiedNode.remove("pipelineName");
+            }
+
+            ((ArrayNode) modifiedRootNode).add(modifiedNode);
+          }
+
+          // Use the modified node
+          return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(modifiedRootNode);
+        } else if (rootNode.isObject()) {
+          // For single object
+          ObjectNode modifiedNode = (ObjectNode) rootNode.deepCopy();
+
+          // Remove null pipelineName field
+          if (modifiedNode.has("pipelineName") && modifiedNode.get("pipelineName").isNull()) {
+            modifiedNode.remove("pipelineName");
+          }
+
+          return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(modifiedNode);
+        }
+
+        // If we couldn't modify the JSON, just pretty print it
+        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
       } catch (Exception e) {
-        PipelineLogger.warn("Failed to pretty print JSON: " + e.getMessage());
+        PipelineLogger.warn("Failed to process JSON: " + e.getMessage());
         return jsonResponse; // Return the original JSON if parsing fails
       }
     } else if (format.equalsIgnoreCase("text")) {
