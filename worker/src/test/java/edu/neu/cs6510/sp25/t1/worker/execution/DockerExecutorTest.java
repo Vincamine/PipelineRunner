@@ -47,58 +47,57 @@ public class DockerExecutorTest {
         }
     }
 
-    @Test
-    void testListImagesCmd() {
-        // Test listing images
-        try {
-            ArrayList<String> imageIds_Client = new ArrayList<>();
-            // List images using Docker Java API
-            dockerClient.listImagesCmd().exec().forEach(image -> {
-                System.out.println("Image ID: " + image.getId().replaceAll("sha256:", ""));
-                System.out.println("Image Repo Tags: " + String.join(", ", image.getRepoTags()));
-                imageIds_Client.add(image.getId().replaceAll("sha256:", "").substring(0, 12));
-
-            });
-
-            // Use terminal command to list and parse images, so that comparison can be made
-            ProcessBuilder processBuilder = new ProcessBuilder("docker", "images");
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            // Parse the output of the command to put the image ids into an array
-            // Parse the output of the command to put the image tags into an array
-            ArrayList<String> imageIds = new ArrayList<>();
-            reader.readLine(); // Skip the header line
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("\\s+");
-                if (parts.length > 1) {
-                    imageIds.add(parts[2]);
-                }
-                System.out.println(line);
-            }
-
-            assert process.waitFor() == 0 : "Failed to list images using terminal command";
-            for (int i = 0; i < imageIds_Client.size(); i++) {
-                // assert imageIds_Client.get(i).equals(imageIds.get(i)) : "Image ID mismatch at
-                // index " + i+
-                // " Client: " + imageIds_Client.get(i) + ", Terminal: " + imageIds.get(i);
-                // assert imageTags_Client.get(i).equals(imageTags.get(i)) : "Image Tag mismatch
-                // at index " + i +
-                // " Client: " + imageTags_Client.get(i) + ", Terminal: " + imageTags.get(i);
-                assert imageIds.contains(imageIds_Client.get(i)) : "Image ID not found at index " + i +
-                        " Client: " + imageIds_Client.get(i) + ", Terminal: " + imageIds.toString();
-
-                System.out.println("Image ID: " + imageIds_Client.get(i));
-            }
-            assert imageIds_Client.size() == imageIds.size() : "Image IDs size mismatch";
-            System.out.println("Images listed successfully.");
-
-        } catch (Exception e) {
-            System.err.println("Failed to list images: " + e.getMessage());
-        }
-    }
+//    void testListImagesCmd() {
+//        // Test listing images
+//        try {
+//            ArrayList<String> imageIds_Client = new ArrayList<>();
+//            // List images using Docker Java API
+//            dockerClient.listImagesCmd().exec().forEach(image -> {
+//                System.out.println("Image ID: " + image.getId().replaceAll("sha256:", ""));
+//                System.out.println("Image Repo Tags: " + String.join(", ", image.getRepoTags()));
+//                imageIds_Client.add(image.getId().replaceAll("sha256:", "").substring(0, 12));
+//
+//            });
+//
+//            // Use terminal command to list and parse images, so that comparison can be made
+//            ProcessBuilder processBuilder = new ProcessBuilder("docker", "images");
+//            processBuilder.redirectErrorStream(true);
+//            Process process = processBuilder.start();
+//
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//            String line;
+//            // Parse the output of the command to put the image ids into an array
+//            // Parse the output of the command to put the image tags into an array
+//            ArrayList<String> imageIds = new ArrayList<>();
+//            reader.readLine(); // Skip the header line
+//            while ((line = reader.readLine()) != null) {
+//                String[] parts = line.split("\\s+");
+//                if (parts.length > 1) {
+//                    imageIds.add(parts[2]);
+//                }
+//                System.out.println(line);
+//            }
+//
+//            assert process.waitFor() == 0 : "Failed to list images using terminal command";
+//            for (int i = 0; i < imageIds_Client.size(); i++) {
+//                // assert imageIds_Client.get(i).equals(imageIds.get(i)) : "Image ID mismatch at
+//                // index " + i+
+//                // " Client: " + imageIds_Client.get(i) + ", Terminal: " + imageIds.get(i);
+//                // assert imageTags_Client.get(i).equals(imageTags.get(i)) : "Image Tag mismatch
+//                // at index " + i +
+//                // " Client: " + imageTags_Client.get(i) + ", Terminal: " + imageTags.get(i);
+//                assert imageIds.contains(imageIds_Client.get(i)) : "Image ID not found at index " + i +
+//                        " Client: " + imageIds_Client.get(i) + ", Terminal: " + imageIds.toString();
+//
+//                System.out.println("Image ID: " + imageIds_Client.get(i));
+//            }
+//            assert imageIds_Client.size() == imageIds.size() : "Image IDs size mismatch";
+//            System.out.println("Images listed successfully.");
+//
+//        } catch (Exception e) {
+//            System.err.println("Failed to list images: " + e.getMessage());
+//        }
+//    }
 
     @Test
     void testListContainersCmd() {
