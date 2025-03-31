@@ -15,7 +15,14 @@ import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 
 /**
- * Validates a parsed PipelineConfig to ensure correctness, structural integrity, and job dependency rules.
+ * Detects cycles in job dependencies using DFS.
+ *
+ * @param jobName the name of the job being checked for cycles
+ * @param pipeline the pipeline object containing stages and jobs
+ * @param visited a set of visited job names to avoid reprocessing
+ * @param recursionStack a set of job names in the current recursion stack
+ * @param currentPath the current path of job names being traversed
+ * @param detectedCycles a list to store detected cycles
  */
 public class PipelineValidator {
 
@@ -93,7 +100,9 @@ public class PipelineValidator {
    *
    * @param pipeline the pipeline object containing stages and jobs to validate
    * @param filename the name of the file being validated, used for error reporting
-   * @param jobNames a set of valid job names to check dependencies against
+        if (job.getDependencies() == null) {
+          continue;
+        }
    * @param errors a list to which validation error messages will be added
    */
   private static void validateDependenciesExist(Pipeline pipeline, String filename, Set<String> jobNames, List<String> errors) {

@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.worker.execution;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +12,6 @@ import com.github.dockerjava.api.model.Bind;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class DockerExecutorTest {

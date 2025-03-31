@@ -25,7 +25,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controller class for handling pipeline execution related endpoints.
- * This controller has been updated to work with the queue-based execution system.
+ * This controller has been updated to work with the queue-based execution
+ * system.
  */
 @RestController
 @RequestMapping("/api/pipeline")
@@ -41,15 +42,14 @@ public class PipelineController {
   /**
    * Constructor for PipelineController.
    *
-   * @param pipelineExecutionService PipelineExecutionService instance
+   * @param pipelineExecutionService      PipelineExecutionService instance
    * @param pipelineExecutionQueueService PipelineExecutionQueueService instance
    */
   public PipelineController(
       PipelineExecutionService pipelineExecutionService,
       PipelineExecutionQueueService pipelineExecutionQueueService,
       StageQueuePublisher stageQueuePublisher,
-      StatusService statusService
-  ) {
+      StatusService statusService) {
     this.pipelineExecutionService = pipelineExecutionService;
     this.pipelineExecutionQueueService = pipelineExecutionQueueService;
     this.stageQueuePublisher = stageQueuePublisher;
@@ -91,7 +91,7 @@ public class PipelineController {
             new ApiError(HttpStatus.BAD_REQUEST, "Invalid Request", "Pipeline file path is required"));
       }
 
-      Queue<Queue<UUID>> stageQueue = new LinkedList<>();
+      Queue<Queue<UUID>> stageQueue = new LinkedList<Queue<UUID>>();
       PipelineExecutionResponse response = pipelineExecutionService.startPipelineExecution(request, stageQueue);
       stageQueuePublisher.dispatchStageQueue(stageQueue);
       return ResponseEntity.ok(response);
@@ -101,7 +101,7 @@ public class PipelineController {
           new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "Pipeline Execution Failed", e.getMessage()));
     }
   }
-  
+
   /**
    * Get information about the execution queue.
    * This is useful for debugging and monitoring the queue.
@@ -114,12 +114,13 @@ public class PipelineController {
     Map<String, Object> response = new HashMap<>();
     response.put("queueSize", pipelineExecutionQueueService.getQueueSize());
     response.put("isProcessing", pipelineExecutionQueueService.isProcessing());
-    
+
     return ResponseEntity.ok(response);
   }
-  
+
   /**
-   * Debug endpoint to check the database status for a specific pipeline execution.
+   * Debug endpoint to check the database status for a specific pipeline
+   * execution.
    * This is useful for debugging persistence issues.
    *
    * @param executionId The pipeline execution ID to check
@@ -130,35 +131,41 @@ public class PipelineController {
   public ResponseEntity<?> debugDatabaseState(@PathVariable UUID executionId) {
     try {
       // Get necessary repositories
-      var pipelineExecRepo = pipelineExecutionService.getClass().getDeclaredField("pipelineExecutionRepository").get(pipelineExecutionService);
-      var stageExecRepo = pipelineExecutionService.getClass().getDeclaredField("stageExecutionRepository").get(pipelineExecutionService);
-      var jobExecRepo = pipelineExecutionService.getClass().getDeclaredField("jobExecutionRepository").get(pipelineExecutionService);
-      
+      var pipelineExecRepo = pipelineExecutionService.getClass().getDeclaredField("pipelineExecutionRepository")
+          .get(pipelineExecutionService);
+      var stageExecRepo = pipelineExecutionService.getClass().getDeclaredField("stageExecutionRepository")
+          .get(pipelineExecutionService);
+      var jobExecRepo = pipelineExecutionService.getClass().getDeclaredField("jobExecutionRepository")
+          .get(pipelineExecutionService);
+
       Map<String, Object> response = new HashMap<>();
-      
+
       // Check pipeline execution
-      boolean pipelineExists = ((boolean)pipelineExecRepo.getClass().getMethod("existsById", Object.class).invoke(pipelineExecRepo, executionId));
+      boolean pipelineExists = ((boolean) pipelineExecRepo.getClass().getMethod("existsById", Object.class)
+          .invoke(pipelineExecRepo, executionId));
       response.put("pipelineExecutionExists", pipelineExists);
-      
+
       if (pipelineExists) {
         // Get and check stage executions
-        List<Object> stages = (List<Object>)stageExecRepo.getClass().getMethod("findByPipelineExecutionId", UUID.class).invoke(stageExecRepo, executionId);
+        List<?> stages = (List<?>) stageExecRepo.getClass().getMethod("findByPipelineExecutionId", UUID.class)
+            .invoke(stageExecRepo, executionId);
         response.put("stageExecutionCount", stages.size());
-        
+
         // Check job executions for each stage
         int totalJobs = 0;
         for (Object stage : stages) {
-          List<Object> jobs = (List<Object>)jobExecRepo.getClass().getMethod("findByStageExecution", stage.getClass()).invoke(jobExecRepo, stage);
+          List<?> jobs = (List<?>) jobExecRepo.getClass().getMethod("findByStageExecution", stage.getClass())
+              .invoke(jobExecRepo, stage);
           totalJobs += jobs.size();
         }
         response.put("jobExecutionCount", totalJobs);
-        
+
         // Overall status
         response.put("status", (stages.size() > 0 && totalJobs > 0) ? "COMPLETE" : "INCOMPLETE");
       } else {
         response.put("status", "NOT_FOUND");
       }
-      
+
       return ResponseEntity.ok(response);
     } catch (Exception e) {
       PipelineLogger.error("Error checking database state: " + e.getMessage());
@@ -170,7 +177,8 @@ public class PipelineController {
   /**
    * Gets the pipeline status using the pipeline YAML file name.
    *
-   * @param pipelineFile The name of the pipeline YAML file (e.g., my-cicd-pipeline.yaml)
+   * @param pipelineFile The name of the pipeline YAML file (e.g.,
+   *                     my-cicd-pipeline.yaml)
    * @return ResponseEntity with status info
    */
   @GetMapping("/{pipelineFile}")
