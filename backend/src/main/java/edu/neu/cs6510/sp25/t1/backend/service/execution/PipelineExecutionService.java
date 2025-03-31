@@ -10,7 +10,6 @@ import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineDefinitionService
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineExecutionCreationService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.YamlConfigurationService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineStatusService;
-import edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService;
 
 
 
@@ -62,6 +61,7 @@ public class PipelineExecutionService {
    * This method coordinates between different services to handle the complete execution process.
    *
    * @param request request containing pipeline details and YAML file path
+   * @param stageQueue queue of stages to be executed
    * @return response containing pipeline execution ID and status
    */
   @Transactional(rollbackFor = Exception.class)
