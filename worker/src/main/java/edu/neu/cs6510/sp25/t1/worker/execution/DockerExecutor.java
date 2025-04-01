@@ -2,6 +2,8 @@ package edu.neu.cs6510.sp25.t1.worker.execution;
 
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CreateVolumeResponse;
+import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -9,6 +11,7 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
 import edu.neu.cs6510.sp25.t1.worker.error.DockerExecutionException;
 import edu.neu.cs6510.sp25.t1.worker.error.JobExecutionConfigException;
+import edu.neu.cs6510.sp25.t1.worker.utils.FindPipelineName;
 import org.springframework.stereotype.Component;
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,6 +34,7 @@ public class DockerExecutor {
 
   //adding docker client
   private final DockerClient dockerClient = createDockerClient();
+  private final FindPipelineName findPipelineName;
 
   private DockerClient createDockerClient() {
     DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
@@ -52,9 +56,14 @@ public class DockerExecutor {
       throw new JobExecutionConfigException("Job details are missing");
     }
 
+    // get pipelineName
+    String pipelineName = findPipelineName.getPipelineName(jobExecution);
+
     // 55-56 is about to make container path unique for every job
     String jobId = String.valueOf(job.getId());
-    String containerPath = "/app/" + jobId;
+
+    // create container path
+    String containerPath = "/app/" + pipelineName;
 
     String dockerImage = job.getDockerImage();
     List<String> script = job.getScript();
@@ -82,20 +91,37 @@ public class DockerExecutor {
     }
 
     String containerID = null;
+    String volumeName = "pipeline-volume-" + pipelineName;
+    boolean debugging = false;
+
     log.info("Executing job {} in container path {} with working directory {}", jobId, containerPath, workingDirectory);
-    boolean debugging = true;
     // using docker client
     try {
       dockerClient.pullImageCmd(dockerImage).start().awaitCompletion();
       log.info("Pulled Docker image: {}", dockerImage);
       String command = String.join(" && ", script);
 
-      Volume volume = new Volume(containerPath);
-      Bind bind = new Bind(workingDirectory, volume);
-      log.info("creating container with command: {}, volumn {}, containerPath {}, workdir {}", command, volume.toString(),containerPath,workingDirectory);
+      boolean exists = dockerClient.listVolumesCmd().exec().getVolumes().stream()
+          .anyMatch(v -> volumeName.equals(v.getName()));
+      if (!exists) {
+        dockerClient.createVolumeCmd().withName(volumeName).exec();
+        log.info("Created Docker volume: {}", volumeName);
+      } else {
+        log.info("Using existing Docker volume: {}", volumeName);
+      }
+
+//      Volume volume = new Volume(containerPath);
+//      Bind bind = new Bind(volumeName, volume, AccessMode.rw);
+
+//      Bind bind = new Bind(workingDirectory, volume);
+//      log.info("Creating container with command: {}, volume {}, containerPath {}", command, volume, containerPath);
+
       var container = dockerClient.createContainerCmd(dockerImage)
-          .withCmd("sh", "-c", command)
-          .withBinds(bind)
+          .withCmd("sh", "-c","cp -a /source/. /target/", command)
+          .withBinds(
+              new Bind(workingDirectory, new Volume("/source"), AccessMode.ro),
+              new Bind(volumeName, new Volume("/target"), AccessMode.rw)
+          )
           .withWorkingDir(containerPath)
           .exec();
 
