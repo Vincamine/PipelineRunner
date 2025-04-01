@@ -116,12 +116,35 @@ public class DockerExecutor {
 //      Bind bind = new Bind(workingDirectory, volume);
 //      log.info("Creating container with command: {}, volume {}, containerPath {}", command, volume, containerPath);
 
+      try {
+        log.info("Copying files from host dir to Docker volume using init container");
+        dockerClient.pullImageCmd("busybox:latest").start().awaitCompletion();
+        String initContainerId = dockerClient.createContainerCmd("busybox")
+            .withCmd("sh", "-c", "cp -a /source/. /target/")
+            .withBinds(
+                new Bind(workingDirectory, new Volume("/source"), AccessMode.ro),
+                new Bind(volumeName, new Volume("/target"), AccessMode.rw)
+            )
+            .exec()
+            .getId();
+
+        dockerClient.startContainerCmd(initContainerId).exec();
+        dockerClient.waitContainerCmd(initContainerId).start().awaitStatusCode();
+        dockerClient.removeContainerCmd(initContainerId).withForce(true).exec();
+
+        log.info("Copied files to volume: {}", volumeName);
+      } catch (Exception copyEx) {
+        throw new DockerExecutionException("Failed to copy files into volume: " + volumeName, copyEx);
+      }
+
+      Volume volume = new Volume(containerPath);
+      Bind bind = new Bind(volumeName, volume, AccessMode.rw);
+
+      log.info("Creating job container with command: {}", command);
+
       var container = dockerClient.createContainerCmd(dockerImage)
-          .withCmd("sh", "-c","cp -a /source/. /target/", command)
-          .withBinds(
-              new Bind(workingDirectory, new Volume("/source"), AccessMode.ro),
-              new Bind(volumeName, new Volume("/target"), AccessMode.rw)
-          )
+          .withCmd("sh", "-c", command)
+          .withBinds(bind)
           .withWorkingDir(containerPath)
           .exec();
 
