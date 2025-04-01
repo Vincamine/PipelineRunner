@@ -21,7 +21,8 @@ import picocli.CommandLine;
         CheckCommand.class,
         RunCommand.class,
         ReportCommand.class,
-        DryRunCommand.class, StatusCommand.class
+        DryRunCommand.class,
+        StatusCommand.class
     }
 )
 public class CliApp implements Callable<Integer> {
