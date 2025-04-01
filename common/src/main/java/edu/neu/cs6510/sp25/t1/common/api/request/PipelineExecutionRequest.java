@@ -22,6 +22,17 @@ public class PipelineExecutionRequest {
   /**
    * Constructs a new PipelineExecutionRequest based on its definition.
    */
+  /**
+   * Constructs a new PipelineExecutionRequest.
+   *
+   * @param pipelineId the unique identifier of the pipeline
+   * @param repo the repository associated with the pipeline
+   * @param branch the branch of the repository to execute the pipeline on
+   * @param commitHash the commit hash to execute the pipeline for
+   * @param isLocal a flag indicating whether the pipeline execution is local
+   * @param runNumber the run number of the pipeline execution
+   * @param filePath the file path associated with the pipeline execution
+   */
   @JsonCreator
   public PipelineExecutionRequest(
           @JsonProperty("pipelineId") UUID pipelineId,

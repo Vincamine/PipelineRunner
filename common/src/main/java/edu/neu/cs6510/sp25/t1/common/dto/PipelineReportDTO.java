@@ -28,11 +28,12 @@ public class PipelineReportDTO {
   }
   // Constructors, getters, and setters
 
-  public PipelineReportDTO() {}
+  public PipelineReportDTO() {
+  }
 
   public PipelineReportDTO(UUID id, String name, int runNumber, String commitHash,
-                           ExecutionStatus status, Instant startTime, Instant completionTime,
-                           List<StageReportDTO> stages) {
+      ExecutionStatus status, Instant startTime, Instant completionTime,
+      List<StageReportDTO> stages) {
     this.id = id;
     this.name = name;
     this.runNumber = runNumber;
@@ -44,27 +45,67 @@ public class PipelineReportDTO {
   }
 
   // Getters and setters
-  public UUID getId() { return id; }
-  public void setId(UUID id) { this.id = id; }
+  public UUID getId() {
+    return id;
+  }
 
-  public String getName() { return name; }
-  public void setName(String name) { this.name = name; }
+  public void setId(UUID id) {
+    this.id = id;
+  }
 
-  public int getRunNumber() { return runNumber; }
-  public void setRunNumber(int runNumber) { this.runNumber = runNumber; }
+  public String getName() {
+    return name;
+  }
 
-  public String getCommitHash() { return commitHash; }
-  public void setCommitHash(String commitHash) { this.commitHash = commitHash; }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-  public ExecutionStatus getStatus() { return status; }
-  public void setStatus(ExecutionStatus status) { this.status = status; }
+  public int getRunNumber() {
+    return runNumber;
+  }
 
-  public Instant getStartTime() { return startTime; }
-  public void setStartTime(Instant startTime) { this.startTime = startTime; }
+  public void setRunNumber(int runNumber) {
+    this.runNumber = runNumber;
+  }
 
-  public Instant getCompletionTime() { return completionTime; }
-  public void setCompletionTime(Instant completionTime) { this.completionTime = completionTime; }
+  public String getCommitHash() {
+    return commitHash;
+  }
 
-  public List<StageReportDTO> getStages() { return stages; }
-  public void setStages(List<StageReportDTO> stages) { this.stages = stages; }
+  public void setCommitHash(String commitHash) {
+    this.commitHash = commitHash;
+  }
+
+  public ExecutionStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(ExecutionStatus status) {
+    this.status = status;
+  }
+
+  public Instant getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(Instant startTime) {
+    this.startTime = startTime;
+  }
+
+  public Instant getCompletionTime() {
+    return completionTime;
+  }
+
+  public void setCompletionTime(Instant completionTime) {
+    this.completionTime = completionTime;
+  }
+
+  public List<StageReportDTO> getStages() {
+    return stages;
+  }
+
+  public void setStages(List<StageReportDTO> stages) {
+    this.stages = stages;
+  }
 }

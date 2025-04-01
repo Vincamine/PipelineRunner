@@ -26,7 +26,6 @@ public class WorkerExecutionService {
    */
   public void executeJob(JobExecutionDTO job) {
 
-
     if (job == null || job.getId() == null) {
       log.error("Received invalid job for execution");
       return;
@@ -41,18 +40,18 @@ public class WorkerExecutionService {
 
       // Process the execution result
       handleExecutionResult(job, result);
-    }catch (Exception e) {
+    } catch (Exception e) {
       log.error("Exception during job execution {}: {}", job.getId(), e.getMessage(), e);
       // Update status to FAILED on exception
       jobDataService.updateJobStatus(job.getId(), ExecutionStatus.FAILED,
-              "Job execution failed with error: " + e.getMessage());
+          "Job execution failed with error: " + e.getMessage());
     }
   }
 
   /**
    * Handles the result of job execution and updates the database accordingly.
    *
-   * @param job The job that was executed
+   * @param job    The job that was executed
    * @param result The execution result
    */
   private void handleExecutionResult(JobExecutionDTO job, ExecutionStatus result) {
@@ -60,12 +59,12 @@ public class WorkerExecutionService {
       // Special case: job failed but is configured to allow failure
       log.warn("Job {} failed, but is allowed to fail. Reporting SUCCESS instead.", job.getId());
       jobDataService.updateJobStatus(job.getId(), ExecutionStatus.SUCCESS,
-              "Job failed but allowFailure=true. Execution completed.");
+          "Job failed but allowFailure=true. Execution completed.");
     } else {
       // Standard case: report actual status
       log.info("Job {} completed with status: {}", job.getId(), result);
       jobDataService.updateJobStatus(job.getId(), result,
-              "Job execution completed with status: " + result);
+          "Job execution completed with status: " + result);
     }
 
     // Process artifacts if present

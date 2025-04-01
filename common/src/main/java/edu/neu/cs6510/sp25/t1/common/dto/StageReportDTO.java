@@ -16,10 +16,11 @@ public class StageReportDTO {
 
   // Constructors, getters, and setters
 
-  public StageReportDTO() {}
+  public StageReportDTO() {
+  }
 
   public StageReportDTO(UUID id, String name, ExecutionStatus status,
-                        Instant startTime, Instant completionTime, List<JobReportDTO> jobs) {
+      Instant startTime, Instant completionTime, List<JobReportDTO> jobs) {
     this.id = id;
     this.name = name;
     this.status = status;
@@ -29,21 +30,51 @@ public class StageReportDTO {
   }
 
   // Getters and setters
-  public UUID getId() { return id; }
-  public void setId(UUID id) { this.id = id; }
+  public UUID getId() {
+    return id;
+  }
 
-  public String getName() { return name; }
-  public void setName(String name) { this.name = name; }
+  public void setId(UUID id) {
+    this.id = id;
+  }
 
-  public ExecutionStatus getStatus() { return status; }
-  public void setStatus(ExecutionStatus status) { this.status = status; }
+  public String getName() {
+    return name;
+  }
 
-  public Instant getStartTime() { return startTime; }
-  public void setStartTime(Instant startTime) { this.startTime = startTime; }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-  public Instant getCompletionTime() { return completionTime; }
-  public void setCompletionTime(Instant completionTime) { this.completionTime = completionTime; }
+  public ExecutionStatus getStatus() {
+    return status;
+  }
 
-  public List<JobReportDTO> getJobs() { return jobs; }
-  public void setJobs(List<JobReportDTO> jobs) { this.jobs = jobs; }
+  public void setStatus(ExecutionStatus status) {
+    this.status = status;
+  }
+
+  public Instant getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(Instant startTime) {
+    this.startTime = startTime;
+  }
+
+  public Instant getCompletionTime() {
+    return completionTime;
+  }
+
+  public void setCompletionTime(Instant completionTime) {
+    this.completionTime = completionTime;
+  }
+
+  public List<JobReportDTO> getJobs() {
+    return jobs;
+  }
+
+  public void setJobs(List<JobReportDTO> jobs) {
+    this.jobs = jobs;
+  }
 }

@@ -14,7 +14,8 @@ public class JobReportDTO {
   private String commitHash;
   private String stageName;
 
-  public JobReportDTO() {}
+  public JobReportDTO() {
+  }
 
   public JobReportDTO(String name, List<ExecutionRecord> executions) {
     this.name = name;
@@ -22,8 +23,8 @@ public class JobReportDTO {
   }
 
   public JobReportDTO(String name, List<ExecutionRecord> executions,
-                      String pipelineName, int runNumber,
-                      String commitHash, String stageName) {
+      String pipelineName, int runNumber,
+      String commitHash, String stageName) {
     this.name = name;
     this.executions = executions;
     this.pipelineName = pipelineName;
@@ -32,23 +33,53 @@ public class JobReportDTO {
     this.stageName = stageName;
   }
 
-  public String getName() { return name; }
-  public void setName(String name) { this.name = name; }
+  public String getName() {
+    return name;
+  }
 
-  public List<ExecutionRecord> getExecutions() { return executions; }
-  public void setExecutions(List<ExecutionRecord> executions) { this.executions = executions; }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-  public String getPipelineName() { return pipelineName; }
-  public void setPipelineName(String pipelineName) { this.pipelineName = pipelineName; }
+  public List<ExecutionRecord> getExecutions() {
+    return executions;
+  }
 
-  public int getRunNumber() { return runNumber; }
-  public void setRunNumber(int runNumber) { this.runNumber = runNumber; }
+  public void setExecutions(List<ExecutionRecord> executions) {
+    this.executions = executions;
+  }
 
-  public String getCommitHash() { return commitHash; }
-  public void setCommitHash(String commitHash) { this.commitHash = commitHash; }
+  public String getPipelineName() {
+    return pipelineName;
+  }
 
-  public String getStageName() { return stageName; }
-  public void setStageName(String stageName) { this.stageName = stageName; }
+  public void setPipelineName(String pipelineName) {
+    this.pipelineName = pipelineName;
+  }
+
+  public int getRunNumber() {
+    return runNumber;
+  }
+
+  public void setRunNumber(int runNumber) {
+    this.runNumber = runNumber;
+  }
+
+  public String getCommitHash() {
+    return commitHash;
+  }
+
+  public void setCommitHash(String commitHash) {
+    this.commitHash = commitHash;
+  }
+
+  public String getStageName() {
+    return stageName;
+  }
+
+  public void setStageName(String stageName) {
+    this.stageName = stageName;
+  }
 
   public static class ExecutionRecord {
     private UUID id;
@@ -57,10 +88,11 @@ public class JobReportDTO {
     private Instant completionTime;
     private boolean allowFailure;
 
-    public ExecutionRecord() {}
+    public ExecutionRecord() {
+    }
 
     public ExecutionRecord(UUID id, ExecutionStatus status, Instant startTime,
-                           Instant completionTime, boolean allowFailure) {
+        Instant completionTime, boolean allowFailure) {
       this.id = id;
       this.status = status;
       this.startTime = startTime;
@@ -68,19 +100,44 @@ public class JobReportDTO {
       this.allowFailure = allowFailure;
     }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public UUID getId() {
+      return id;
+    }
 
-    public ExecutionStatus getStatus() { return status; }
-    public void setStatus(ExecutionStatus status) { this.status = status; }
+    public void setId(UUID id) {
+      this.id = id;
+    }
 
-    public Instant getStartTime() { return startTime; }
-    public void setStartTime(Instant startTime) { this.startTime = startTime; }
+    public ExecutionStatus getStatus() {
+      return status;
+    }
 
-    public Instant getCompletionTime() { return completionTime; }
-    public void setCompletionTime(Instant completionTime) { this.completionTime = completionTime; }
+    public void setStatus(ExecutionStatus status) {
+      this.status = status;
+    }
 
-    public boolean isAllowFailure() { return allowFailure; }
-    public void setAllowFailure(boolean allowFailure) { this.allowFailure = allowFailure; }
+    public Instant getStartTime() {
+      return startTime;
+    }
+
+    public void setStartTime(Instant startTime) {
+      this.startTime = startTime;
+    }
+
+    public Instant getCompletionTime() {
+      return completionTime;
+    }
+
+    public void setCompletionTime(Instant completionTime) {
+      this.completionTime = completionTime;
+    }
+
+    public boolean isAllowFailure() {
+      return allowFailure;
+    }
+
+    public void setAllowFailure(boolean allowFailure) {
+      this.allowFailure = allowFailure;
+    }
   }
 }

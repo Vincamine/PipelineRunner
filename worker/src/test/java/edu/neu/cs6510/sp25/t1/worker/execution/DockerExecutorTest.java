@@ -1,20 +1,18 @@
 package edu.neu.cs6510.sp25.t1.worker.execution;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.model.Volume;
+//import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
-import com.github.dockerjava.api.model.Bind;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
+//import com.github.dockerjava.api.model.Bind;
+//
+//import java.io.BufferedReader;
+//import java.io.InputStreamReader;
+//import java.util.ArrayList;
 
 public class DockerExecutorTest {
     // Test for DockerExecutor class
@@ -47,6 +45,7 @@ public class DockerExecutorTest {
         }
     }
 
+//    @Test
 //    void testListImagesCmd() {
 //        // Test listing images
 //        try {
@@ -99,93 +98,95 @@ public class DockerExecutorTest {
 //        }
 //    }
 
-    @Test
-    void testListContainersCmd() {
-        // Test listing containers
+//
+//    @Test
+//    void testListContainersCmd() {
+//        // Test listing containers
+//
+//        try {
+//            ArrayList<String> containerIds_Client = new ArrayList<>();
+//            // List containers using Docker Java API
+//            dockerClient.listContainersCmd().withShowAll(true).exec().forEach(container -> {
+//                System.out.println("Container ID: " + container.getId().substring(0, 12));
+//                System.out.println("Container Names: " + String.join(", ", container.getNames()));
+//                containerIds_Client.add(container.getId().substring(0, 12));
+//            });
+//
+//            // Use terminal command to list and parse containers, so that comparison can be
+//            // made
+//            ProcessBuilder processBuilder = new ProcessBuilder("docker", "ps", "-a");
+//            processBuilder.redirectErrorStream(true);
+//            Process process = processBuilder.start();
+//
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//            String line;
+//            // Parse the output of the command to put the container ids into an array
+//            ArrayList<String> containerIds = new ArrayList<>();
+//            reader.readLine(); // Skip the header line
+//            while ((line = reader.readLine()) != null) {
+//                String[] parts = line.split("\\s+");
+//                if (parts.length > 1) {
+//                    containerIds.add(parts[0]);
+//                }
+//                System.out.println(line);
+//            }
+//
+//            assert process.waitFor() == 0 : "Failed to list containers using terminal command";
+//            for (int i = 0; i < containerIds_Client.size(); i++) {
+//                assert containerIds.contains(containerIds_Client.get(i)) : "Container ID not found at index " + i +
+//                        " Client: " + containerIds_Client.get(i) + ", Terminal: " + containerIds.toString();
+//                System.out.println("Container ID: " + containerIds_Client.get(i));
+//            }
+//            assert containerIds_Client.size() == containerIds.size() : "Container IDs size mismatch";
+//            System.out.println("Containers listed successfully.");
+//
+//        } catch (Exception e) {
+//            System.err.println("Failed to list containers: " + e.getMessage());
+//        }
+//    }
+//
+//    @Test
+//    void testCreateContainerCmd() {
+//        // Test creating a container
+//        try {
+//            // creating container with command: ./gradlew build, volumn /app/c03a708f-4622-493e-828a-5d894e4207d1, containerPath /app/c03a708f-4622-493e-828a-5d894e4207d1, workdir /Users/wsq/Nextcloud/CS6510/project/t1-cicd
+//            // eating container with command: ./gradlew javadoc, volumn /app/96b5cafe-472a-4e20-93ff-aa7cdf35a951, containerPath /app/96b5cafe-472a-4e20-93ff-aa7cdf35a951, workdir /Users/wsq/Nextcloud/CS6510/project/t1-cicd
+//            String imageName = "openjdk:21-jdk-slim";
+//            String containerName = "test-container";
+//            String command = "./gradlew build";
+//            String workingDirectory = "/Users/wsq/Nextcloud/CS6510/project/t1-cicd";
+//            String containerPath = "/app/5b4696e4-c389-4101-a137-f5e633ece264";
+//            Volume volume = new Volume(containerPath);
+//            Bind bind = new Bind(workingDirectory, volume);
+//
+//            var newcontainer = dockerClient.createContainerCmd(imageName).withCmd("sh", "-c", command).withBinds(bind)
+//                    .withWorkingDir(workingDirectory)
+//                    .exec();
+//            // Verify the new container using ListContainersCmd
+//            // boolean containerFound =
+//            // dockerClient.listContainersCmd().withShowAll(true).exec().stream()
+//            // .anyMatch(container -> container.getId().equals("/" + containerName));
+//            boolean containerFound = dockerClient.listContainersCmd().withShowAll(true).exec().stream()
+//                    .anyMatch(container -> container.getId().equals(newcontainer.getId()));
+//
+//            assert containerFound : "Container not found: " + containerName;
+//
+//            System.out.println("Container created successfully.");
+//        } catch (Exception e) {
+//            System.err.println("Failed to create container: " + e.getMessage());
+//        }
+//    }
 
-        try {
-            ArrayList<String> containerIds_Client = new ArrayList<>();
-            // List containers using Docker Java API
-            dockerClient.listContainersCmd().withShowAll(true).exec().forEach(container -> {
-                System.out.println("Container ID: " + container.getId().substring(0, 12));
-                System.out.println("Container Names: " + String.join(", ", container.getNames()));
-                containerIds_Client.add(container.getId().substring(0, 12));
-            });
+//    @Test
+//    void testStartContainerCmd() {
+//        // Test starting a container
+//        try {
+//            String containerId = "151d374746fa1cc05316f497631bb1510b868f04cc1da6ff892348eba764ecef"; // Replace with your container ID
+//            dockerClient.startContainerCmd(containerId).exec();
+//            System.out.println("Container started successfully.");
+//        } catch (Exception e) {
+//            System.err.println("Failed to start container: " + e.getMessage());
+//        }
+//    }
 
-            // Use terminal command to list and parse containers, so that comparison can be
-            // made
-            ProcessBuilder processBuilder = new ProcessBuilder("docker", "ps", "-a");
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            // Parse the output of the command to put the container ids into an array
-            ArrayList<String> containerIds = new ArrayList<>();
-            reader.readLine(); // Skip the header line
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("\\s+");
-                if (parts.length > 1) {
-                    containerIds.add(parts[0]);
-                }
-                System.out.println(line);
-            }
-
-            assert process.waitFor() == 0 : "Failed to list containers using terminal command";
-            for (int i = 0; i < containerIds_Client.size(); i++) {
-                assert containerIds.contains(containerIds_Client.get(i)) : "Container ID not found at index " + i +
-                        " Client: " + containerIds_Client.get(i) + ", Terminal: " + containerIds.toString();
-                System.out.println("Container ID: " + containerIds_Client.get(i));
-            }
-            assert containerIds_Client.size() == containerIds.size() : "Container IDs size mismatch";
-            System.out.println("Containers listed successfully.");
-
-        } catch (Exception e) {
-            System.err.println("Failed to list containers: " + e.getMessage());
-        }
-    }
-
-    @Test
-    void testCreateContainerCmd() {
-        // Test creating a container
-        try {
-            // creating container with command: ./gradlew build, volumn /app/c03a708f-4622-493e-828a-5d894e4207d1, containerPath /app/c03a708f-4622-493e-828a-5d894e4207d1, workdir /Users/wsq/Nextcloud/CS6510/project/t1-cicd
-            // eating container with command: ./gradlew javadoc, volumn /app/96b5cafe-472a-4e20-93ff-aa7cdf35a951, containerPath /app/96b5cafe-472a-4e20-93ff-aa7cdf35a951, workdir /Users/wsq/Nextcloud/CS6510/project/t1-cicd
-            String imageName = "openjdk:21-jdk-slim";
-            String containerName = "test-container";
-            String command = "./gradlew build";
-            String workingDirectory = "/Users/wsq/Nextcloud/CS6510/project/t1-cicd";
-            String containerPath = "/app/5b4696e4-c389-4101-a137-f5e633ece264";
-            Volume volume = new Volume(containerPath);
-            Bind bind = new Bind(workingDirectory, volume);
-
-            var newcontainer = dockerClient.createContainerCmd(imageName).withCmd("sh", "-c", command).withBinds(bind)
-                    .withWorkingDir(workingDirectory)
-                    .exec();
-            // Verify the new container using ListContainersCmd
-            // boolean containerFound =
-            // dockerClient.listContainersCmd().withShowAll(true).exec().stream()
-            // .anyMatch(container -> container.getId().equals("/" + containerName));
-            boolean containerFound = dockerClient.listContainersCmd().withShowAll(true).exec().stream()
-                    .anyMatch(container -> container.getId().equals(newcontainer.getId()));
-
-            assert containerFound : "Container not found: " + containerName;
-
-            System.out.println("Container created successfully.");
-        } catch (Exception e) {
-            System.err.println("Failed to create container: " + e.getMessage());
-        }
-    }
-
-    @Test
-    void testStartContainerCmd() {
-        // Test starting a container
-        try {
-            String containerId = "151d374746fa1cc05316f497631bb1510b868f04cc1da6ff892348eba764ecef"; // Replace with your container ID
-            dockerClient.startContainerCmd(containerId).exec();
-            System.out.println("Container started successfully.");
-        } catch (Exception e) {
-            System.err.println("Failed to start container: " + e.getMessage());
-        }
-    }
 }

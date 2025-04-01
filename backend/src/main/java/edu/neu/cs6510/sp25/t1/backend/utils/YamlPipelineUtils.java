@@ -32,8 +32,7 @@ public class YamlPipelineUtils {
   private static final String IMAGE_KEY = "image";
   private static final String ALLOW_FAILURE_KEY = "allow_failure";
   private static final String DEPENDENCIES_KEY = "dependencies";
-  private static final String REPOSITORY_KEY = "repository";
-  private static final String BRANCH_KEY = "branch";
+
 
   /**
    * Reads and parses a pipeline YAML file.
@@ -742,7 +741,9 @@ public class YamlPipelineUtils {
   }
   
   /**
-   * Set of utility methods for HashSet creation.
+   * A custom implementation of a HashSet that extends the standard Java HashSet.
+   *
+   * @param <T> the type of elements maintained by this set
    */
   private static class HashSet<T> extends java.util.HashSet<T> {
   }
