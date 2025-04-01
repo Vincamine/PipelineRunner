@@ -1,12 +1,28 @@
 package edu.neu.cs6510.sp25.t1.backend.service.status;
 
-import edu.neu.cs6510.sp25.t1.backend.database.repository.*;
-import edu.neu.cs6510.sp25.t1.backend.database.entity.*;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.StageEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.StageRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
+import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 
 @Service
 public class StatusService {
@@ -18,11 +34,11 @@ public class StatusService {
   private final JobExecutionRepository jobExecutionRepository;
 
   public StatusService(PipelineRepository pipelineRepository,
-                       PipelineExecutionRepository pipelineExecutionRepository,
-                       StageRepository stageRepository,
-                       StageExecutionRepository stageExecutionRepository,
-                       JobRepository jobRepository,
-                       JobExecutionRepository jobExecutionRepository) {
+      PipelineExecutionRepository pipelineExecutionRepository,
+      StageRepository stageRepository,
+      StageExecutionRepository stageExecutionRepository,
+      JobRepository jobRepository,
+      JobExecutionRepository jobExecutionRepository) {
     this.pipelineRepository = pipelineRepository;
     this.pipelineExecutionRepository = pipelineExecutionRepository;
     this.stageRepository = stageRepository;
@@ -65,15 +81,14 @@ public class StatusService {
 
     // look for each stage
     for (StageEntity stage : stages) {
-      //Linked hash Map for each stage
+      // Linked hash Map for each stage
       Map<String, Object> stageResult = new LinkedHashMap<>();
 
       UUID stageID = stage.getId();
       Optional<StageExecutionEntity> stageExecution = stageExecutionRepository
           .findByStageIdAndPipelineExecutionId(
               stageID,
-              pipelineExecutionId
-          );
+              pipelineExecutionId);
       // put stage Name
       stageResult.put("stage", stage.getName());
 
@@ -126,7 +141,7 @@ public class StatusService {
         stageExecution.get().updateState(sumOfStatus);
       }
 
-      if (!sumOfStatus.equals(sumOfPipelineStatus)){
+      if (!sumOfStatus.equals(sumOfPipelineStatus)) {
         sumOfPipelineStatus = sumOfStatus;
       }
       stageResults.add(stageResult);

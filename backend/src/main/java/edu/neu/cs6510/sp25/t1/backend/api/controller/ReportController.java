@@ -1,7 +1,11 @@
 package edu.neu.cs6510.sp25.t1.backend.api.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
@@ -46,8 +50,11 @@ public class ReportController {
   /**
    * Fetch pipeline execution history.
    *
-   * @param pipelineName Name of the pipeline
-   * @return List of pipeline execution reports
+   * @param pipelineName The name of the pipeline whose execution history is to be retrieved.
+   * @param stage (Optional) The specific stage within the pipeline to filter the results.
+   * @param job (Optional) The specific job within the stage to filter the results.
+   * @return A ResponseEntity containing the pipeline execution history, filtered by the provided parameters if applicable.
+   *         Returns a 500 status code with an error message if an exception occurs.
    */
   @GetMapping("/pipeline/history/{pipelineName}")
   @Operation(summary = "Retrieve pipeline execution history", description = "Fetches past executions of a specified pipeline.")

@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.backend.service.queue;
 
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
@@ -11,6 +10,8 @@ import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 /**
  * Generic execution queue for pipeline, stage, and job executions.
  * This queue maintains the order of execution tasks and processes them sequentially.
+ * 
+ * @param <T> the type of execution ID (e.g., UUID, String)
  */
 @Component
 public class ExecutionQueue<T> {
