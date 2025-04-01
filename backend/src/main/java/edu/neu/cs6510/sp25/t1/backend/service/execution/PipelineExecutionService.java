@@ -12,7 +12,7 @@ import edu.neu.cs6510.sp25.t1.backend.service.pipeline.YamlConfigurationService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineStatusService;
 
 
-
+import edu.neu.cs6510.sp25.t1.backend.utils.PathUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +71,7 @@ public class PipelineExecutionService {
     try {
       // Step 1: Resolve and validate the pipeline file path
       var resolvedPath = yamlConfigurationService.resolveAndValidatePipelinePath(request.getFilePath());
+      String rootPath = PathUtil.extractPipelineRootDirectoryAsString(resolvedPath);
 
       // Step 2: Parse and validate the pipeline YAML configuration
       Map<String, Object> pipelineConfig = yamlConfigurationService.parseAndValidatePipelineYaml(resolvedPath.toString());
@@ -82,7 +83,7 @@ public class PipelineExecutionService {
 
       // Step 4: Create pipeline stages and jobs
       PipelineLogger.info("Step 2: Creating pipeline stages and jobs");
-      pipelineDefinitionService.createPipelineDefinition(pipelineId, pipelineConfig);
+      pipelineDefinitionService.createPipelineDefinition(pipelineId, pipelineConfig, rootPath);
 
       // Step 5: Create and save the pipeline execution entity
       PipelineLogger.info("Step 3: Creating pipeline execution entity");

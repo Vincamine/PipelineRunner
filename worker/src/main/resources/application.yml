@@ -8,7 +8,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cicd_db}
     username: ${DATABASE_USER:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
+    password: ${DATABASE_PASSWORD:Li930227}
     driver-class-name: org.postgresql.Driver
 
   jpa:
