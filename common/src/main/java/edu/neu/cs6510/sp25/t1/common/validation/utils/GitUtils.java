@@ -201,5 +201,9 @@ public class GitUtils {
     PipelineLogger.info("Running inside the Git repository root: " + gitRoot);
     return true;
   }
+
+  public static void pullLatest(File cloned, String branch) {
+
+  }
 }
 

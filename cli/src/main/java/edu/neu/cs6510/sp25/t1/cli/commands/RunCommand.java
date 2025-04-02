@@ -83,7 +83,25 @@ public class RunCommand implements Callable<Integer> {
           File cloneDir = new File(parentDir, "cloned-repos/" + repoName);
 
           PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
-          File cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
+//          File cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
+
+          File cloned;
+          if (cloneDir.exists() && new File(cloneDir, ".git").exists()) {
+            PipelineLogger.info("Repository already cloned at: " + cloneDir.getAbsolutePath());
+            cloned = cloneDir;
+
+            try {
+              PipelineLogger.info("Pulling latest changes from branch: " + branch);
+              GitCloneUtil.pullLatest(cloned, branch);
+            } catch (Exception e) {
+              PipelineLogger.error("Failed to pull latest changes: " + e.getMessage());
+              return 1;
+            }
+
+          } else {
+            PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
+            cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
+          }
 
           File pipelineDir = new File(cloned, ".pipelines");
           if (!pipelineDir.exists() || !pipelineDir.isDirectory()) {
