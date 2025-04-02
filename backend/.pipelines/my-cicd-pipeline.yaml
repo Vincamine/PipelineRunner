@@ -13,15 +13,12 @@ jobs:
       - "./gradlew build"
     allowFailure: False
     stage: "build"
-    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
-
   - name: "unit-tests"
     dockerImage: "openjdk:21-jdk"
     script:
       - "./gradlew test"
     allowFailure: False
     stage: "test"
-    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
     dependencies: ["compile"]
 
   - name: "generate-docs"
@@ -30,7 +27,6 @@ jobs:
       - "./gradlew javadoc"
     allowFailure: False
     stage: "doc"
-    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
     dependencies: ["compile"]
 
   - name: "build-jar"
@@ -38,7 +34,6 @@ jobs:
     script:
       - "./gradlew bootJar"
     allowFailure: False
-    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
     stage: "deploy"
     dependencies: ["compile", "unit-tests"]
 
@@ -48,6 +43,5 @@ jobs:
       - "docker build -t my-cicd-app ."
       - "docker run -d -p 5001:5001 my-cicd-app"
     allowFailure: False
-    workingDir: "/Users/wsq/Nextcloud/CS6510/project/t1-cicd"
     stage: "deploy"
     dependencies: ["build-jar"]

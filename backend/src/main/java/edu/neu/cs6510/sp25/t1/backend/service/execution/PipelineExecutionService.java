@@ -24,6 +24,8 @@ import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 import edu.neu.cs6510.sp25.t1.common.dto.PipelineExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import lombok.RequiredArgsConstructor;
+import edu.neu.cs6510.sp25.t1.backend.utils.PathUtil;
+
 
 /**
  * Main service for pipeline execution operations.

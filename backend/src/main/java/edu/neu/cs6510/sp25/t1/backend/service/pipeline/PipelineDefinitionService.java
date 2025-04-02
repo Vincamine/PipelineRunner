@@ -101,7 +101,7 @@ public class PipelineDefinitionService {
    * @param pipelineConfig the parsed pipeline configuration
    */
   @Transactional
-  public void createPipelineDefinition(UUID pipelineId, Map<String, Object> pipelineConfig, String rootPath) {
+  public void createPipelineDefinition(UUID pipelineId, Map<String, Object> pipelineConfig, String rootPath){
     PipelineLogger.info("Creating stage and job definitions for pipeline: " + pipelineId);
     
     // Verify the pipeline exists first
@@ -319,8 +319,6 @@ public class PipelineDefinitionService {
       allowFailure = parseBoolean(allowFailureObj);
     }
 
-//    String workingDir = (String) jobConfig.get("workingDir");
-    
     PipelineLogger.info("Job details - Name: " + jobName + ", Docker image: " + dockerImage + ", Allow failure: " + allowFailure);
     
     // Create and save the job entity
