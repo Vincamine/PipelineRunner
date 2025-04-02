@@ -56,10 +56,6 @@ public class RunCommand implements Callable<Integer> {
   @Override
   public Integer call() {
     try {
-      if (localRun && repo != null && !repo.isEmpty()) {
-        PipelineLogger.error("You cannot use both --local and --repo at the same time. Choose one.");
-        return 1;
-      }
 //      GitUtils.isGitRootDirectory();
 //      PipelineLogger.info("Starting pipeline execution...");
 
@@ -71,64 +67,64 @@ public class RunCommand implements Callable<Integer> {
 
       // Ensure a valid file path is provided when running locally
       if (localRun) {
-        if (filePath == null || filePath.isEmpty()){
+        if ((repo == null )&& (filePath == null || filePath.isEmpty())) {
           PipelineLogger.error("Pipeline configuration file must be specified when running locally (-f).");
           return 1;
-        }
-      } else if (repo != null && !repo.isEmpty()) {
-        try {
-          String repoName = repo.substring(repo.lastIndexOf('/') + 1).replace(".git", "");
-          File currentDir = new File(System.getProperty("user.dir"));
-          File parentDir = currentDir.getParentFile();
-          File cloneDir = new File(parentDir, "cloned-repos/" + repoName);
+        } else if (repo != null && !repo.isEmpty()) {
+          try {
+            String repoName = repo.substring(repo.lastIndexOf('/') + 1).replace(".git", "");
+            File currentDir = new File(System.getProperty("user.dir"));
+            File parentDir = currentDir.getParentFile();
+            File cloneDir = new File(parentDir, "cloned-repos/" + repoName);
 
-          PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
+            PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
 //          File cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
 
-          File cloned;
-          if (cloneDir.exists() && new File(cloneDir, ".git").exists()) {
-            PipelineLogger.info("Repository already cloned at: " + cloneDir.getAbsolutePath());
-            cloned = cloneDir;
+            File cloned;
+            if (cloneDir.exists() && new File(cloneDir, ".git").exists()) {
+              PipelineLogger.info("Repository already cloned at: " + cloneDir.getAbsolutePath());
+              cloned = cloneDir;
 
-            try {
-              PipelineLogger.info("Pulling latest changes from branch: " + branch);
-              GitCloneUtil.pullLatest(cloned, branch);
-            } catch (Exception e) {
-              PipelineLogger.error("Failed to pull latest changes: " + e.getMessage());
+              try {
+                PipelineLogger.info("Pulling latest changes from branch: " + branch);
+                GitCloneUtil.pullLatest(cloned, branch);
+              } catch (Exception e) {
+                PipelineLogger.error("Failed to pull latest changes: " + e.getMessage());
+                return 1;
+              }
+
+            } else {
+              PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
+              cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
+            }
+
+            File pipelineDir = new File(cloned, ".pipelines");
+            if (!pipelineDir.exists() || !pipelineDir.isDirectory()) {
+              PipelineLogger.error("'.pipelines' directory not found in cloned repo: " + pipelineDir.getAbsolutePath());
               return 1;
             }
 
-          } else {
-            PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
-            cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
-          }
+            // Look for any .yaml or .yml file
+            File[] yamlFiles = pipelineDir.listFiles((dir, name) ->
+                name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml")
+            );
 
-          File pipelineDir = new File(cloned, ".pipelines");
-          if (!pipelineDir.exists() || !pipelineDir.isDirectory()) {
-            PipelineLogger.error("'.pipelines' directory not found in cloned repo: " + pipelineDir.getAbsolutePath());
+            if (yamlFiles == null || yamlFiles.length == 0) {
+              PipelineLogger.error("No YAML pipeline file found in: " + pipelineDir.getAbsolutePath());
+              return 1;
+            }
+
+            // Use the first YAML file found (or implement selection logic if needed)
+            File pipelineFile = yamlFiles[0];
+            PipelineLogger.info("Using pipeline file: " + pipelineFile.getAbsolutePath());
+
+            this.filePath = pipelineFile.getAbsolutePath();
+            this.filePath = this.filePath.replace("\\", "\\\\");
+            PipelineLogger.info("Using pipeline file at: " + this.filePath);
+          } catch (Exception e) {
+            PipelineLogger.error("Failed to clone Git repo: " + e.getMessage());
             return 1;
           }
-
-          // Look for any .yaml or .yml file
-          File[] yamlFiles = pipelineDir.listFiles((dir, name) ->
-              name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml")
-          );
-
-          if (yamlFiles == null || yamlFiles.length == 0) {
-            PipelineLogger.error("No YAML pipeline file found in: " + pipelineDir.getAbsolutePath());
-            return 1;
-          }
-
-          // Use the first YAML file found (or implement selection logic if needed)
-          File pipelineFile = yamlFiles[0];
-          PipelineLogger.info("Using pipeline file: " + pipelineFile.getAbsolutePath());
-
-          this.filePath = pipelineFile.getAbsolutePath();
-          this.filePath = this.filePath.replace("\\", "\\\\");
-          PipelineLogger.info("Using pipeline file at: " + this.filePath);
-        } catch (Exception e) {
-          PipelineLogger.error("Failed to clone Git repo: " + e.getMessage());
-          return 1;
         }
       }
 
