@@ -78,18 +78,35 @@ public class RunCommand implements Callable<Integer> {
       } else if (repo != null && !repo.isEmpty()) {
         try {
           String repoName = repo.substring(repo.lastIndexOf('/') + 1).replace(".git", "");
-          File cloneDir = new File(System.getProperty("user.dir"), "cloned-repos/" + repoName);
+          File currentDir = new File(System.getProperty("user.dir"));
+          File parentDir = currentDir.getParentFile();
+          File cloneDir = new File(parentDir, "cloned-repos/" + repoName);
 
           PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
           File cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
 
-          File pipelineFile = new File(cloned, ".pipelines/pipeline.yaml");
-          if (!pipelineFile.exists()) {
-            PipelineLogger.error("Pipeline file not found in cloned repo: " + pipelineFile.getAbsolutePath());
+          File pipelineDir = new File(cloned, ".pipelines");
+          if (!pipelineDir.exists() || !pipelineDir.isDirectory()) {
+            PipelineLogger.error("'.pipelines' directory not found in cloned repo: " + pipelineDir.getAbsolutePath());
             return 1;
           }
 
+          // Look for any .yaml or .yml file
+          File[] yamlFiles = pipelineDir.listFiles((dir, name) ->
+              name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml")
+          );
+
+          if (yamlFiles == null || yamlFiles.length == 0) {
+            PipelineLogger.error("No YAML pipeline file found in: " + pipelineDir.getAbsolutePath());
+            return 1;
+          }
+
+          // Use the first YAML file found (or implement selection logic if needed)
+          File pipelineFile = yamlFiles[0];
+          PipelineLogger.info("Using pipeline file: " + pipelineFile.getAbsolutePath());
+
           this.filePath = pipelineFile.getAbsolutePath();
+          this.filePath = this.filePath.replace("\\", "\\\\");
           PipelineLogger.info("Using pipeline file at: " + this.filePath);
         } catch (Exception e) {
           PipelineLogger.error("Failed to clone Git repo: " + e.getMessage());
