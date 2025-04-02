@@ -94,8 +94,14 @@ public class RunCommand implements Callable<Integer> {
               }
 
             } else {
-              PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
-              cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
+              // for branch selection
+              if ( branch!= null && !branch.isEmpty()) {
+                PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
+                cloned = GitCloneUtil.cloneRepository(repo, cloneDir, branch);
+              } else {
+                PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
+                cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
+              }
             }
 
             File pipelineDir = new File(cloned, ".pipelines");

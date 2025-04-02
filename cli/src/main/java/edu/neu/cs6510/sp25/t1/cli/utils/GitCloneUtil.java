@@ -25,6 +25,26 @@ public class GitCloneUtil {
   }
 
   /**
+   * Clone a specific branch of a remote Git repo to a target directory.
+   *
+   * @param repoUrl   The remote Git repo URL
+   * @param targetDir The local directory where it should be cloned
+   * @param branch    The branch name to clone
+   * @return The File pointing to the cloned directory
+   * @throws GitAPIException If cloning fails
+   */
+  public static File cloneRepository(String repoUrl, File targetDir, String branch) throws GitAPIException {
+    return Git.cloneRepository()
+        .setURI(repoUrl)
+        .setDirectory(targetDir)
+        .setBranch("refs/heads/" + branch)
+        .call()
+        .getRepository()
+        .getDirectory()
+        .getParentFile();
+  }
+
+  /**
    * Pulls the latest changes from the given branch in the specified Git repository directory.
    *
    * @param repoDir the local Git repository directory
