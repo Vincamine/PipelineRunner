@@ -1,9 +1,11 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
+import edu.neu.cs6510.sp25.t1.cli.utils.GitCloneUtil;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
 import okhttp3.MediaType;
@@ -54,6 +56,10 @@ public class RunCommand implements Callable<Integer> {
   @Override
   public Integer call() {
     try {
+      if (localRun && repo != null && !repo.isEmpty()) {
+        PipelineLogger.error("You cannot use both --local and --repo at the same time. Choose one.");
+        return 1;
+      }
 //      GitUtils.isGitRootDirectory();
 //      PipelineLogger.info("Starting pipeline execution...");
 
@@ -64,9 +70,31 @@ public class RunCommand implements Callable<Integer> {
       }
 
       // Ensure a valid file path is provided when running locally
-      if (localRun && (filePath == null || filePath.isEmpty())) {
-        PipelineLogger.error("Pipeline configuration file must be specified when running locally (-f).");
-        return 1;
+      if (localRun) {
+        if (filePath == null || filePath.isEmpty()){
+          PipelineLogger.error("Pipeline configuration file must be specified when running locally (-f).");
+          return 1;
+        }
+      } else if (repo != null && !repo.isEmpty()) {
+        try {
+          String repoName = repo.substring(repo.lastIndexOf('/') + 1).replace(".git", "");
+          File cloneDir = new File(System.getProperty("user.dir"), "cloned-repos/" + repoName);
+
+          PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
+          File cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
+
+          File pipelineFile = new File(cloned, ".pipelines/pipeline.yaml");
+          if (!pipelineFile.exists()) {
+            PipelineLogger.error("Pipeline file not found in cloned repo: " + pipelineFile.getAbsolutePath());
+            return 1;
+          }
+
+          this.filePath = pipelineFile.getAbsolutePath();
+          PipelineLogger.info("Using pipeline file at: " + this.filePath);
+        } catch (Exception e) {
+          PipelineLogger.error("Failed to clone Git repo: " + e.getMessage());
+          return 1;
+        }
       }
 
       // Validate the pipeline configuration file
