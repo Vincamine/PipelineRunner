@@ -59,12 +59,6 @@ public class RunCommand implements Callable<Integer> {
 //      GitUtils.isGitRootDirectory();
 //      PipelineLogger.info("Starting pipeline execution...");
 
-      // If no explicit commit is provided, fetch latest
-      if (commit == null || commit.isEmpty()) {
-        commit = GitUtils.getLatestCommitHash();
-        PipelineLogger.debug("Using latest commit: " + commit);
-      }
-
       // Ensure a valid file path is provided when running locally
       if (localRun) {
         if ((repo == null )&& (filePath == null || filePath.isEmpty())) {
@@ -104,6 +98,15 @@ public class RunCommand implements Callable<Integer> {
               }
             }
 
+            // If no explicit commit is provided, fetch latest
+            if (commit == null || commit.isEmpty()) {
+              commit = GitUtils.getLatestCommitHash();
+              PipelineLogger.debug("Using latest commit: " + commit);
+            } else {
+              PipelineLogger.debug("Using select commit: " + commit);
+              GitCloneUtil.checkoutCommit(cloned, commit);
+            }
+
             File pipelineDir = new File(cloned, ".pipelines");
             if (!pipelineDir.exists() || !pipelineDir.isDirectory()) {
               PipelineLogger.error("'.pipelines' directory not found in cloned repo: " + pipelineDir.getAbsolutePath());
@@ -133,6 +136,7 @@ public class RunCommand implements Callable<Integer> {
           }
         }
       }
+
 
       // Validate the pipeline configuration file
 //      PipelineLogger.info("Validating pipeline configuration: " + filePath);
