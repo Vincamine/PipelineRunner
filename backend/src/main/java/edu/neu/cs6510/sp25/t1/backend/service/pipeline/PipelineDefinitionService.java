@@ -101,7 +101,7 @@ public class PipelineDefinitionService {
    * @param pipelineConfig the parsed pipeline configuration
    */
   @Transactional
-  public void createPipelineDefinition(UUID pipelineId, Map<String, Object> pipelineConfig) {
+  public void createPipelineDefinition(UUID pipelineId, Map<String, Object> pipelineConfig, String rootPath){
     PipelineLogger.info("Creating stage and job definitions for pipeline: " + pipelineId);
     
     // Verify the pipeline exists first
@@ -118,7 +118,7 @@ public class PipelineDefinitionService {
     if (usingTopLevelJobs) {
       // Handle top-level jobs format
       PipelineLogger.info("Using top-level jobs format");
-      createPipelineDefinitionWithTopLevelJobs(pipelineId, pipelineConfig);
+      createPipelineDefinitionWithTopLevelJobs(pipelineId, pipelineConfig, rootPath);
     } else {
       // Handle nested stage-jobs format
       PipelineLogger.info("Using nested stage-jobs format");
@@ -133,7 +133,7 @@ public class PipelineDefinitionService {
    * @param pipelineConfig  the pipeline configuration
    */
   @Transactional
-  private void createPipelineDefinitionWithTopLevelJobs(UUID pipelineId, Map<String, Object> pipelineConfig) {
+  private void createPipelineDefinitionWithTopLevelJobs(UUID pipelineId, Map<String, Object> pipelineConfig, String rootPath) {
     // Extract stages (as simple strings) from config
     List<String> stageNames = extractStageNamesFromConfig(pipelineConfig);
     
@@ -171,7 +171,7 @@ public class PipelineDefinitionService {
       }
       
       UUID stageId = stageNameToIdMap.get(stageName);
-      createJobFromConfig(stageId, jobConfig);
+      createJobFromConfig(stageId, jobConfig, rootPath);
     }
   }
   
@@ -295,7 +295,7 @@ public class PipelineDefinitionService {
    * @return the job ID
    */
   @Transactional
-  private UUID createJobFromConfig(UUID stageId, Map<String, Object> jobConfig) {
+  private UUID createJobFromConfig(UUID stageId, Map<String, Object> jobConfig, String rootPath) {
     String jobName = (String) jobConfig.get("name");
     PipelineLogger.info("Creating job with name: " + jobName + " for stage: " + stageId);
     
@@ -319,8 +319,6 @@ public class PipelineDefinitionService {
       allowFailure = parseBoolean(allowFailureObj);
     }
 
-    String workingDir = (String) jobConfig.get("workingDir");
-    
     PipelineLogger.info("Job details - Name: " + jobName + ", Docker image: " + dockerImage + ", Allow failure: " + allowFailure);
     
     // Create and save the job entity
@@ -329,7 +327,7 @@ public class PipelineDefinitionService {
         .name(jobName)
         .dockerImage(dockerImage)
         .allowFailure(allowFailure)
-        .workingDir(workingDir)
+        .workingDir(rootPath)
         .build();
     
     try {
