@@ -42,6 +42,10 @@ dependencies {
 
     // git
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.5.0.202303070854-r")
+
+    // docker
+    implementation ("com.github.docker-java:docker-java:3.2.13")
+    implementation ("com.github.docker-java:docker-java-transport-okhttp:3.2.13")
 }
 
 application {

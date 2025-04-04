@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
+import edu.neu.cs6510.sp25.t1.cli.utils.DockerVolumeUtil;
 import edu.neu.cs6510.sp25.t1.cli.utils.GitCloneUtil;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
@@ -128,8 +129,13 @@ public class RunCommand implements Callable<Integer> {
             PipelineLogger.info("Using pipeline file: " + pipelineFile.getAbsolutePath());
 
             this.filePath = pipelineFile.getAbsolutePath();
-            this.filePath = this.filePath.replace("\\", "\\\\");
+            // this log double checked file Path
             PipelineLogger.info("Using pipeline file at: " + this.filePath);
+            // now lets passed on docker volume address to the backend
+            // Replace filePath with Docker volume mount path
+
+//            this.filePath = this.filePath.replace("\\", "\\\\");
+//            PipelineLogger.info("Using pipeline file at: " + this.filePath);
           } catch (Exception e) {
             PipelineLogger.error("Failed to clone Git repo: " + e.getMessage());
             return 1;
@@ -165,6 +171,13 @@ public class RunCommand implements Callable<Integer> {
    */
   private Integer triggerPipelineExecution() {
     try {
+      String dockerPath = DockerVolumeUtil.createVolumeFromHostDir(this.filePath);
+      if (dockerPath == null) {
+        PipelineLogger.error("Failed to prepare Docker volume for file path.");
+        return 1;
+      }
+      this.filePath = dockerPath;
+
       if (!localRun && (repo == null || repo.isEmpty())) {
         PipelineLogger.error("Repository (--repo) must be specified for remote execution.");
         return 1;

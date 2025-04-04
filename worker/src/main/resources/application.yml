@@ -6,9 +6,12 @@ spring:
     name: cicd-worker  # Name of the worker application
 
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cicd_db}
-    username: ${DATABASE_USER:postgres}
-    password: ${DATABASE_PASSWORD:Li930227}
+#    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cicd_db}
+#    username: ${DATABASE_USER:postgres}
+#    password: ${DATABASE_PASSWORD:Li930227}
+    url: ${DATABASE_URL:jdbc:postgresql://host.docker.internal:5432/cicd_db}
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,7 +22,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
+    host: ${RABBITMQ_HOST:host.docker.internal}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
