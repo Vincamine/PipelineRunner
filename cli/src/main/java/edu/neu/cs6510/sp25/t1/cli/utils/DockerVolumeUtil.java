@@ -10,23 +10,23 @@ import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
+import java.util.UUID;
 
 public class DockerVolumeUtil {
 
   private static final String VOLUME_NAME = "cicd";
-  private static final String CONTAINER_MOUNT_PATH = "/mnt/pipeline";
+  private static final String CONTAINER_BASE_PATH = "/mnt/pipeline";
 
   public static String createVolumeFromHostDir(String hostPath) {
     try {
       File file = new File(hostPath);
-      File hostProjectDir = file.getParentFile().getParentFile(); // full project dir
+      File hostProjectDir = file.getParentFile().getParentFile(); // Full project dir
 
       if (!hostProjectDir.exists() || !hostProjectDir.isDirectory()) {
         throw new IllegalArgumentException("Invalid host directory: " + hostProjectDir.getAbsolutePath());
       }
 
-      // Init docker client
+      // Initialize Docker client
       DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
       DockerHttpClient httpClient = new OkDockerHttpClient.Builder()
           .dockerHost(config.getDockerHost())
@@ -34,31 +34,35 @@ public class DockerVolumeUtil {
           .connectTimeout(30)
           .readTimeout(30)
           .build();
-
       DockerClient dockerClient = DockerClientImpl.getInstance(config, httpClient);
 
       // Create volume if it doesn't exist
       try {
         dockerClient.inspectVolumeCmd(VOLUME_NAME).exec();
-        PipelineLogger.info("Volume 'cicd' already exists.");
+        PipelineLogger.info("Volume '" + VOLUME_NAME + "' already exists.");
       } catch (Exception e) {
-        PipelineLogger.info("Creating Docker volume: cicd");
+        PipelineLogger.info("Creating Docker volume: " + VOLUME_NAME);
         CreateVolumeResponse volume = dockerClient.createVolumeCmd()
             .withName(VOLUME_NAME)
             .withDriver("local")
             .exec();
       }
 
-      String containerName = "temp-copy-container-" + System.currentTimeMillis();
+      // Generate UUID for unique subdirectory
+      String uuid = UUID.randomUUID().toString();
+      String mountSubDir = CONTAINER_BASE_PATH + "/" + uuid;
+
+      // Build and run the Docker copy command
+      String containerName = "temp-copy-container-" + uuid;
       ProcessBuilder copyBuilder = new ProcessBuilder(
           "docker", "run", "--rm",
           "--name", containerName,
           "-v", hostProjectDir.getAbsolutePath() + ":/from:ro",
-          "-v", VOLUME_NAME + ":" + CONTAINER_MOUNT_PATH,
-          "alpine", "sh", "-c", "cp -r /from/. " + CONTAINER_MOUNT_PATH
+          "-v", VOLUME_NAME + ":" + CONTAINER_BASE_PATH,
+          "alpine", "sh", "-c", "mkdir -p " + mountSubDir + " && cp -r /from/. " + mountSubDir
       );
 
-      PipelineLogger.info("Copying project to Docker volume 'cicd'...");
+      PipelineLogger.info("Copying project to Docker volume '" + VOLUME_NAME + "' under " + mountSubDir + "...");
       Process copyProcess = copyBuilder.start();
       int exitCode = copyProcess.waitFor();
 
@@ -67,9 +71,10 @@ public class DockerVolumeUtil {
         return null;
       }
 
-      // Return the path to the .yaml file inside container
+      // Build and return the container file path for the input file
       String relativePathInProject = file.getAbsolutePath().substring(hostProjectDir.getAbsolutePath().length());
-      return CONTAINER_MOUNT_PATH + relativePathInProject.replace("\\", "/");
+      String containerFilePath = mountSubDir + relativePathInProject.replace("\\", "/");
+      return containerFilePath;
 
     } catch (IOException | InterruptedException e) {
       PipelineLogger.error("Docker volume creation or file copy failed: " + e.getMessage());
