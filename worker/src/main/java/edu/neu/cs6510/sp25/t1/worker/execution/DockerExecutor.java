@@ -97,14 +97,14 @@ public class DockerExecutor {
       dockerClient.pullImageCmd(dockerImage).start().awaitCompletion();
       log.info("Pulled Docker image: {}", dockerImage);
 
-      Volume containerVolume = new Volume(workingDirectory);
-      Bind hostBind = new Bind(workingDirectory, containerVolume, AccessMode.rw);
+      Volume temp = new Volume(dir.getParent());
+//      Volume containerVolume = new Volume(workingDirectory);
+//      Bind hostBind = new Bind(workingDirectory, containerVolume, AccessMode.rw);
 
       var container = dockerClient.createContainerCmd(dockerImage)
           .withCmd("sh", "-c", command)
           .withWorkingDir(workingDirectory)  // same path as host bind mount
-          .withBinds(hostBind)
-          .withVolumes(containerVolume)
+          .withVolumes(temp)
           .exec();
 
       containerID = container.getId();
