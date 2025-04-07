@@ -148,7 +148,7 @@ public class DockerExecutor {
           if (debugging) {
             log.info("Debug mode, skip cleaning up container with ID: {}", containerID);
           } else {
-             dockerClient.removeContainerCmd(containerID).withForce(true).exec();
+            dockerClient.removeContainerCmd(containerID).withForce(true).exec();
           }
           log.info("Cleaned up container {}", containerID);
         } catch (Exception cleanupEx) {
