@@ -68,6 +68,10 @@ public class DockerExecutor {
 
     // retrieve working Directory from job database
     String workingDirectory = job.getWorkingDir();
+    // Extract the name section of the working directory
+    String[] pathParts = workingDirectory.split("/");
+    String workingDirectoryName = pathParts[pathParts.length - 1];
+    log.info("Extracted working directory name: {}", workingDirectoryName);
 
     if (script == null || script.isEmpty()) {
       throw new JobExecutionConfigException("Script commands are missing");
@@ -96,14 +100,23 @@ public class DockerExecutor {
     try {
       dockerClient.pullImageCmd(dockerImage).start().awaitCompletion();
       log.info("Pulled Docker image: {}", dockerImage);
-
+      /*
       Volume containerVolume = new Volume(workingDirectory);
       Bind hostBind = new Bind(workingDirectory, containerVolume, AccessMode.rw);
+      */
+      CreateVolumeResponse volumeResponse = dockerClient.createVolumeCmd()
+        .withName("cicd")
+        .withDriver("local")
+        .exec();
+      log.info("Created or retrieved external volume: {}, {}", volumeResponse.getName(), volumeResponse.getMountpoint());
+      ;
+      Volume containerVolume = new Volume("/mnt/pipeline/"+workingDirectoryName);
+      Bind hostBind = new Bind(volumeResponse.getMountpoint()+"/"+workingDirectoryName, containerVolume, AccessMode.rw);
 
       var container = dockerClient.createContainerCmd(dockerImage)
           .withCmd("sh", "-c", command)
           .withWorkingDir(workingDirectory)  // same path as host bind mount
-          .withBinds(hostBind)
+          .withHostConfig(new com.github.dockerjava.api.model.HostConfig().withBinds(hostBind))
           .withVolumes(containerVolume)
           .exec();
 
@@ -135,7 +148,7 @@ public class DockerExecutor {
           if (debugging) {
             log.info("Debug mode, skip cleaning up container with ID: {}", containerID);
           } else {
-            dockerClient.removeContainerCmd(containerID).withForce(true).exec();
+             dockerClient.removeContainerCmd(containerID).withForce(true).exec();
           }
           log.info("Cleaned up container {}", containerID);
         } catch (Exception cleanupEx) {
