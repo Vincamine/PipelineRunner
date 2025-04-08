@@ -2,14 +2,14 @@ package edu.neu.cs6510.sp25.t1.worker.execution;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateVolumeResponse;
-import com.github.dockerjava.api.model.AccessMode;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Volume;
+import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
 import edu.neu.cs6510.sp25.t1.worker.error.DockerExecutionException;
 import edu.neu.cs6510.sp25.t1.worker.error.JobExecutionConfigException;
+import edu.neu.cs6510.sp25.t1.worker.service.GitCloneService;
+import edu.neu.cs6510.sp25.t1.worker.utils.FindPipelineBranch;
 import edu.neu.cs6510.sp25.t1.worker.utils.FindPipelineName;
 import org.springframework.stereotype.Component;
 import java.io.File;
@@ -31,6 +31,8 @@ public class DockerExecutor {
   // adding docker client
   private final DockerClient dockerClient = createDockerClient();
   private final FindPipelineName findPipelineName;
+  private final GitCloneService gitCloneService;
+  private final FindPipelineBranch findPipelineBranch;
 
   private DockerClient createDockerClient() {
     DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -57,6 +59,9 @@ public class DockerExecutor {
     // get pipelineName
     String pipelineName = findPipelineName.getPipelineName(jobExecution);
 
+    //get branch
+    String branch = findPipelineBranch.getBranch(jobExecution);
+
     // 55-56 is about to make container path unique for every job
     String jobId = String.valueOf(job.getId());
 
@@ -67,11 +72,20 @@ public class DockerExecutor {
     List<String> script = job.getScript();
 
     // retrieve working Directory from job database
-    String workingDirectory = job.getWorkingDir();
+    String url = job.getWorkingDir();
     // Extract the name section of the working directory
-    String[] pathParts = workingDirectory.split("/");
-    String workingDirectoryName = pathParts[pathParts.length - 1];
-    log.info("Extracted working directory name: {}", workingDirectoryName);
+//    String[] pathParts = workingDirectory.split("/");
+//    String workingDirectoryName = pathParts[pathParts.length - 1];
+    log.info("Extracted url name: {}", url);
+
+    // clone into workingDir
+    String volumeName;
+    try {
+      volumeName = gitCloneService.cloneRepoToVolume(url, branch, pipelineName);
+    } catch (Exception e) {
+      log.error("Git clone to volume failed: {}", e.getMessage(), e);
+      throw new DockerExecutionException("Git clone failed", e);
+    }
 
     if (script == null || script.isEmpty()) {
       throw new JobExecutionConfigException("Script commands are missing");
@@ -82,15 +96,18 @@ public class DockerExecutor {
     }
 
     // confirm we have workDir
-    if (workingDirectory == null || workingDirectory.trim().isEmpty()) {
+//    if (workingDirectory == null || workingDirectory.trim().isEmpty()) {
+//      throw new JobExecutionConfigException("Working directory is not specified");
+//    }
+    if (volumeName == null || volumeName.trim().isEmpty()) {
       throw new JobExecutionConfigException("Working directory is not specified");
     }
 
     // verified the file exists in the working Dir
-    File dir = new File(workingDirectory);
-    if (!dir.exists() || !dir.isDirectory()) {
-      throw new JobExecutionConfigException("Working directory does not exist or is not a directory");
-    }
+//    File dir = new File(workingDirectory);
+//    if (!dir.exists() || !dir.isDirectory()) {
+//      throw new JobExecutionConfigException("Working directory does not exist or is not a directory");
+//    }
 
 //    printWorkingDirectoryContents(dir);
     String command = String.join(" && ", script);
@@ -104,23 +121,37 @@ public class DockerExecutor {
       Volume containerVolume = new Volume(workingDirectory);
       Bind hostBind = new Bind(workingDirectory, containerVolume, AccessMode.rw);
       */
-      CreateVolumeResponse volumeResponse = dockerClient.createVolumeCmd()
-        .withName("cicd")
-        .withDriver("local")
-        .exec();
-      log.info("Created or retrieved external volume: {}, {}", volumeResponse.getName(), volumeResponse.getMountpoint());
-      ;
-      Volume containerVolume = new Volume("/mnt/pipeline/"+workingDirectoryName);
-      Bind hostBind = new Bind(volumeResponse.getMountpoint()+"/"+workingDirectoryName, containerVolume, AccessMode.rw);
+//      CreateVolumeResponse volumeResponse = dockerClient.createVolumeCmd()
+//        .withName("cicd")
+//        .withDriver("local")
+//        .exec();
+//      log.info("Created or retrieved external volume: {}, {}", volumeResponse.getName(), volumeResponse.getMountpoint());
+//      ;
+//      Volume containerVolume = new Volume("/mnt/pipeline/"+workingDirectoryName);
+//      Bind hostBind = new Bind(volumeResponse.getMountpoint()+"/"+workingDirectoryName, containerVolume, AccessMode.rw);
 
-      var container = dockerClient.createContainerCmd(dockerImage)
+//      var container = dockerClient.createContainerCmd(dockerImage)
+//          .withCmd("sh", "-c", command)
+//          .withWorkingDir(workingDirectory)  // same path as host bind mount
+//          .withHostConfig(new com.github.dockerjava.api.model.HostConfig().withBinds(hostBind))
+//          .withVolumes(containerVolume)
+//          .exec();
+      String targetMountPath = "/app"; // inside container
+
+      var jobContainer = dockerClient.createContainerCmd(dockerImage)
           .withCmd("sh", "-c", command)
-          .withWorkingDir(workingDirectory)  // same path as host bind mount
-          .withHostConfig(new com.github.dockerjava.api.model.HostConfig().withBinds(hostBind))
-          .withVolumes(containerVolume)
+          .withWorkingDir(targetMountPath + "/repo")
+          .withHostConfig(new HostConfig().withMounts(
+              List.of(new Mount()
+                  .withType(MountType.VOLUME)
+                  .withSource(volumeName)
+                  .withTarget(targetMountPath)
+              )
+          ))
           .exec();
 
-      containerID = container.getId();
+
+      containerID = jobContainer.getId();
       dockerClient.startContainerCmd(containerID).exec();
 
       dockerClient.logContainerCmd(containerID)
