@@ -2,9 +2,12 @@ package edu.neu.cs6510.sp25.t1.cli.commands;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
+import edu.neu.cs6510.sp25.t1.cli.service.K8sService;
 import edu.neu.cs6510.sp25.t1.cli.utils.DockerVolumeUtil;
 import edu.neu.cs6510.sp25.t1.cli.utils.GitCloneUtil;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
@@ -171,12 +174,23 @@ public class RunCommand implements Callable<Integer> {
    */
   private Integer triggerPipelineExecution() {
     try {
-      String dockerPath = DockerVolumeUtil.createVolumeFromHostDir(this.filePath);
-      if (dockerPath == null) {
-        PipelineLogger.error("Failed to prepare Docker volume for file path.");
-        return 1;
+//      String dockerPath = DockerVolumeUtil.createVolumeFromHostDir(this.filePath);
+//      if (dockerPath == null) {
+//        PipelineLogger.error("Failed to prepare Docker volume for file path.");
+//        return 1;
+//      }
+//      this.filePath = dockerPath;
+      String minikubePath = K8sService.startCicdEnvironment(this.filePath);
+      if (minikubePath == null) {
+        PipelineLogger.error("Minikube path not found in " + this.filePath + ".");
       }
-      this.filePath = dockerPath;
+      this.filePath = minikubePath;
+      PipelineLogger.info("Waiting 30 seconds for backend service to become ready...");
+      Thread.sleep(60_000);
+
+      K8sService.portForwardBackendService();
+
+      waitForBackendToBeAvailable();
 
       if (!localRun && (repo == null || repo.isEmpty())) {
         PipelineLogger.error("Repository (--repo) must be specified for remote execution.");
@@ -209,6 +223,8 @@ public class RunCommand implements Callable<Integer> {
     } catch (IOException e) {
       PipelineLogger.error("Failed to communicate with backend: " + e.getMessage());
       return 1;
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -228,4 +244,36 @@ public class RunCommand implements Callable<Integer> {
             .addHeader("Accept", "application/json")
             .build();
   }
+
+  private void waitForBackendToBeAvailable() {
+    int maxRetries = 60;
+    int delayMillis = 1000;
+
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        HttpURLConnection connection = (HttpURLConnection) new URL("http://localhost:8080/health").openConnection();
+        connection.setConnectTimeout(1000);
+        connection.setReadTimeout(1000);
+        connection.setRequestMethod("GET");
+
+        int responseCode = connection.getResponseCode();
+        if (responseCode == 200) {
+          PipelineLogger.info("Backend is UP and responding.");
+          return;
+        }
+      } catch (IOException ignored) {}
+
+      PipelineLogger.info("Waiting for backend to become ready... (" + (i + 1) + ")");
+      try {
+        Thread.sleep(delayMillis);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+
+    PipelineLogger.error("Backend did not become ready after timeout.");
+  }
+
+
 }

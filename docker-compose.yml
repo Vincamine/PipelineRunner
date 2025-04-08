@@ -10,7 +10,7 @@ services:
     environment:
       - DATABASE_URL=jdbc:postgresql://postgres:5432/cicd_db
       - DATABASE_USER=postgres
-      - DATABASE_PASSWORD=Li930227
+      - DATABASE_PASSWORD=postgres
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=guest
@@ -28,7 +28,7 @@ services:
     environment:
       - DATABASE_URL=jdbc:postgresql://postgres:5432/cicd_db
       - DATABASE_USER=postgres
-      - DATABASE_PASSWORD=Li930227
+      - DATABASE_PASSWORD=postgres
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=guest
