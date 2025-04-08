@@ -8,10 +8,8 @@ import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
 import edu.neu.cs6510.sp25.t1.cli.service.K8sService;
-import edu.neu.cs6510.sp25.t1.cli.utils.DockerVolumeUtil;
-import edu.neu.cs6510.sp25.t1.cli.utils.GitCloneUtil;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
-import edu.neu.cs6510.sp25.t1.common.validation.utils.GitUtils;
+import edu.neu.cs6510.sp25.t1.common.utils.GitCloneUtil;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -68,97 +66,18 @@ public class RunCommand implements Callable<Integer> {
         if ((repo == null )&& (filePath == null || filePath.isEmpty())) {
           PipelineLogger.error("Pipeline configuration file must be specified when running locally (-f).");
           return 1;
-        } else if (repo != null && !repo.isEmpty()) {
-          try {
-            String repoName = repo.substring(repo.lastIndexOf('/') + 1).replace(".git", "");
-            File currentDir = new File(System.getProperty("user.dir"));
-            File parentDir = currentDir.getParentFile();
-            File cloneDir = new File(parentDir, "cloned-repos/" + repoName);
-
-            PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
-//          File cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
-
-            File cloned;
-            if (cloneDir.exists() && new File(cloneDir, ".git").exists()) {
-              PipelineLogger.info("Repository already cloned at: " + cloneDir.getAbsolutePath());
-              cloned = cloneDir;
-
-              try {
-                PipelineLogger.info("Pulling latest changes from branch: " + branch);
-                GitCloneUtil.pullLatest(cloned, branch);
-              } catch (Exception e) {
-                PipelineLogger.error("Failed to pull latest changes: " + e.getMessage());
-                return 1;
-              }
-
-            } else {
-              // for branch selection
-              if ( branch!= null && !branch.isEmpty()) {
-                PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
-                cloned = GitCloneUtil.cloneRepository(repo, cloneDir, branch);
-              } else {
-                PipelineLogger.info("Cloning repo " + repo + " to " + cloneDir.getAbsolutePath());
-                cloned = GitCloneUtil.cloneRepository(repo, cloneDir);
-              }
-            }
-
-            // If no explicit commit is provided, fetch latest
-            if (commit == null || commit.isEmpty()) {
-              commit = GitUtils.getLatestCommitHash();
-              PipelineLogger.debug("Using latest commit: " + commit);
-            } else {
-              PipelineLogger.debug("Using select commit: " + commit);
-              GitCloneUtil.checkoutCommit(cloned, commit);
-            }
-
-            File pipelineDir = new File(cloned, ".pipelines");
-            if (!pipelineDir.exists() || !pipelineDir.isDirectory()) {
-              PipelineLogger.error("'.pipelines' directory not found in cloned repo: " + pipelineDir.getAbsolutePath());
-              return 1;
-            }
-
-            // Look for any .yaml or .yml file
-            File[] yamlFiles = pipelineDir.listFiles((dir, name) ->
-                name.toLowerCase().endsWith(".yaml") || name.toLowerCase().endsWith(".yml")
-            );
-
-            if (yamlFiles == null || yamlFiles.length == 0) {
-              PipelineLogger.error("No YAML pipeline file found in: " + pipelineDir.getAbsolutePath());
-              return 1;
-            }
-
-            // Use the first YAML file found (or implement selection logic if needed)
-            File pipelineFile = yamlFiles[0];
-            PipelineLogger.info("Using pipeline file: " + pipelineFile.getAbsolutePath());
-
-            this.filePath = pipelineFile.getAbsolutePath();
-            // this log double checked file Path
-            PipelineLogger.info("Using pipeline file at: " + this.filePath);
-            // now lets passed on docker volume address to the backend
-            // Replace filePath with Docker volume mount path
-
-//            this.filePath = this.filePath.replace("\\", "\\\\");
-//            PipelineLogger.info("Using pipeline file at: " + this.filePath);
-          } catch (Exception e) {
-            PipelineLogger.error("Failed to clone Git repo: " + e.getMessage());
-            return 1;
+        } else if (repo == null && filePath != null) {
+          File pipelineFile = new File(filePath);
+          PipelineLogger.info("parse file path to repo");
+          if (GitCloneUtil.isInsideGitRepo(pipelineFile)) {
+            this.repo = GitCloneUtil.getRepoUrlFromFile(pipelineFile);
+            PipelineLogger.info("Git clone repository url: " + this.repo);
+          } else {
+            PipelineLogger.error("Git clone repository url is not inside git repo");
           }
         }
       }
 
-
-      // Validate the pipeline configuration file
-//      PipelineLogger.info("Validating pipeline configuration: " + filePath);
-//      try {
-//        YamlPipelineValidator.validatePipeline(filePath);
-//        PipelineLogger.info("Pipeline configuration is valid!");
-//      } catch (Exception e) {
-//        PipelineLogger.error("Validation failed: " + e.getMessage());
-//        e.printStackTrace();
-//        return 1;
-//      }
-
-      // Run the pipeline (either locally or remotely)
       return triggerPipelineExecution();
 
     } catch (Exception e) {
@@ -174,17 +93,9 @@ public class RunCommand implements Callable<Integer> {
    */
   private Integer triggerPipelineExecution() {
     try {
-//      String dockerPath = DockerVolumeUtil.createVolumeFromHostDir(this.filePath);
-//      if (dockerPath == null) {
-//        PipelineLogger.error("Failed to prepare Docker volume for file path.");
-//        return 1;
-//      }
-//      this.filePath = dockerPath;
-      String minikubePath = K8sService.startCicdEnvironment(this.filePath);
-      if (minikubePath == null) {
-        PipelineLogger.error("Minikube path not found in " + this.filePath + ".");
-      }
-      this.filePath = minikubePath;
+
+      K8sService.startCicdEnvironment();
+
       PipelineLogger.info("Waiting 30 seconds for backend service to become ready...");
       Thread.sleep(60_000);
 
@@ -192,14 +103,9 @@ public class RunCommand implements Callable<Integer> {
 
       waitForBackendToBeAvailable();
 
-      if (!localRun && (repo == null || repo.isEmpty())) {
-        PipelineLogger.error("Repository (--repo) must be specified for remote execution.");
-        return 1;
-      }
-
       String jsonPayload = String.format(
               "{\"repo\": \"%s\", \"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\", \"filePath\": \"%s\", \"local\": %s}",
-              (repo != null ? repo : ""), branch, commit, (pipeline != null ? pipeline : ""), filePath, localRun
+              (repo != null ? repo : ""), branch, commit, (pipeline != null ? pipeline : ""), repo, localRun
       );
 
       PipelineLogger.debug("Sending request to backend: " + BACKEND_URL);

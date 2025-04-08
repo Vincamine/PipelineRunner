@@ -7,11 +7,7 @@ import java.util.UUID;
 
 public class K8sService {
 
-  public static String startCicdEnvironment(String filePathToMount) {
-    String[] baseMountOut = new String[1]; // for getting mount base path
-    String minikubeFullPath = mountHostDirToMinikube(filePathToMount, baseMountOut);
-
-    generatePvYaml(baseMountOut[0]); // use /mnt/pipeline/UUID
+  public static void startCicdEnvironment() {
 
     applyK8sConfig("k8s/pv-cicd.yaml");
     applyK8sConfig("k8s/cicd-pvc.yaml");
@@ -21,52 +17,9 @@ public class K8sService {
     waitForPodsReady("app=backend");
     waitForPodsReady("app=worker");
     waitForPodsReady("app=rabbitmq");
-
-    return minikubeFullPath; // full pipeline path
+    // full pipeline path
   }
 
-
-
-  private static String mountHostDirToMinikube(String hostPath, String[] baseMountPathOut) {
-    try {
-      File inputFile = new File(hostPath).getCanonicalFile();
-      File hostProjectDir = inputFile.getParentFile().getParentFile(); // demo-project dir
-
-      if (!hostProjectDir.exists() || !hostProjectDir.isDirectory()) {
-        throw new IllegalArgumentException("Invalid host directory: " + hostProjectDir.getAbsolutePath());
-      }
-
-      String uuid = UUID.randomUUID().toString();
-      String minikubeMountBase = "/mnt/pipeline/" + uuid;
-
-      // Set output param
-      baseMountPathOut[0] = minikubeMountBase;
-
-      String relativePath = inputFile.getAbsolutePath()
-          .substring(hostProjectDir.getAbsolutePath().length())
-          .replace("\\", "/");
-      if (relativePath.startsWith("/")) {
-        relativePath = relativePath.substring(1);
-      }
-
-      String minikubeFullPath = minikubeMountBase + "/" + relativePath;
-
-      System.out.println("Resolved host path: " + hostProjectDir.getAbsolutePath());
-      System.out.println("Mounting to Minikube at: " + minikubeMountBase);
-
-      String safeHostPath = hostProjectDir.getAbsolutePath().replace("\\", "/");
-      String command = String.format("minikube mount \"%s:%s\"", safeHostPath, minikubeMountBase);
-
-      ProcessBuilder pb = new ProcessBuilder("cmd", "/c", command);
-      pb.inheritIO();
-      pb.start();
-
-      Thread.sleep(3000); // Let it settle
-      return minikubeFullPath;
-    } catch (IOException | InterruptedException e) {
-      throw new RuntimeException("Failed to mount host directory to Minikube: " + hostPath, e);
-    }
-  }
 
   private static void generatePvYaml(String hostPathInMinikube) {
     String yaml = String.format("""
