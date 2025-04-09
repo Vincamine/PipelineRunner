@@ -35,6 +35,9 @@ dependencies {
 
     testImplementation("org.projectlombok:lombok:1.18.36")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
+
+    // git
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.5.0.202303070854-r")
 }
 
 java {

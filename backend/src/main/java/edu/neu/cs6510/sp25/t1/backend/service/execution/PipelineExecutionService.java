@@ -1,18 +1,18 @@
 package edu.neu.cs6510.sp25.t1.backend.service.execution;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 
 
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.ExecutionQueueService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineDefinitionService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineExecutionCreationService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.YamlConfigurationService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineStatusService;
+import edu.neu.cs6510.sp25.t1.backend.info.ClonedPipelineInfo;
+import edu.neu.cs6510.sp25.t1.backend.service.pipeline.*;
 
 
 import edu.neu.cs6510.sp25.t1.backend.utils.PathUtil;
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +43,7 @@ public class PipelineExecutionService {
   private final PipelineExecutionCreationService pipelineExecutionCreationService;
   private final PipelineStatusService pipelineStatusService;
   private final ExecutionQueueService executionQueueService;
+  private final GitPipelineService gitPipelineService;
   private final edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService pipelineExecutionQueueService;
 
   /**
@@ -71,9 +72,15 @@ public class PipelineExecutionService {
     PipelineLogger.info("Received pipeline execution request for: " + request.getFilePath());
 
     try {
+      // step 0: use volume to clone the repo then pass the volume file path to step 1
+      ClonedPipelineInfo info = gitPipelineService.cloneRepoAndLocatePipelineFile(request);
+
       // Step 1: Resolve and validate the pipeline file path
-      var resolvedPath = yamlConfigurationService.resolveAndValidatePipelinePath(request.getFilePath());
-      String rootPath = PathUtil.extractPipelineRootDirectoryAsString(resolvedPath);
+      var resolvedPath = yamlConfigurationService.resolveAndValidatePipelinePath(info.getYamlPath());
+
+      // changing rootPath to repo url, use this working Dir block in db to save url for worker extraction
+      String rootPath = request.getFilePath();
+//      String rootPath = PathUtil.extractPipelineRootDirectoryAsString(resolvedPath);
 
       // Step 2: Parse and validate the pipeline YAML configuration
       Map<String, Object> pipelineConfig = yamlConfigurationService.parseAndValidatePipelineYaml(resolvedPath.toString());
@@ -101,16 +108,14 @@ public class PipelineExecutionService {
       PipelineLogger.info("Step 5: Verifying entities were properly saved");
       pipelineExecutionCreationService.verifyEntitiesSaved(pipelineId, pipelineExecution.getId());
 
-//      // Step 8: Add pipeline execution to queue
-//      PipelineLogger.info("Step 6: Adding pipeline execution to queue");
-//      try {
-//        ServiceLocator.getBean(edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService.class)
-//            .enqueuePipelineExecution(pipelineExecution.getId());
-//        PipelineLogger.info("Pipeline execution successfully added to queue: " + pipelineExecution.getId());
-//      } catch (Exception e) {
-//        PipelineLogger.error("Failed to add pipeline execution to queue: " + e.getMessage());
-//        throw new RuntimeException("Failed to add pipeline execution to queue", e);
-//      }
+      // Step 8: delete the folder
+      File clonedFolder = new File("/mnt/pipeline", info.getUuid().toString());
+      try {
+        FileUtils.deleteDirectory(clonedFolder); // org.apache.commons.io.FileUtils
+        PipelineLogger.info("Cleaned up cloned repo: " + clonedFolder.getAbsolutePath());
+      } catch (IOException e) {
+        PipelineLogger.warn("Failed to clean up cloned repo: " + e.getMessage());
+      }
 
       return new PipelineExecutionResponse(pipelineExecution.getId().toString(), "PENDING");
     } catch (Exception e) {

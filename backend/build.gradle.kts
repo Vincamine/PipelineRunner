@@ -60,6 +60,12 @@ dependencies {
 
     //rmq
     implementation ("org.springframework.boot:spring-boot-starter-amqp")
+
+    //fileutil
+    implementation ("commons-io:commons-io:2.15.1")
+
+    // git
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.5.0.202303070854-r")
 }
 
 java {

@@ -1,9 +1,13 @@
-package edu.neu.cs6510.sp25.t1.cli.utils;
+package edu.neu.cs6510.sp25.t1.common.utils;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import java.io.File;
+import java.io.IOException;
 
 public class GitCloneUtil {
   /**
@@ -105,5 +109,32 @@ public class GitCloneUtil {
           .setName(commitHash)
           .call();
     }
+  }
+
+  /**
+   * Validates whether a given file or directory is inside a Git repository.
+   *
+   * @param filePath The file or directory to validate
+   * @return true if the file is inside a Git repository, false otherwise
+   */
+  public static boolean isInsideGitRepo(File filePath) {
+    FileRepositoryBuilder builder = new FileRepositoryBuilder();
+    builder.findGitDir(filePath);
+    return builder.getGitDir() != null;
+  }
+
+  /**
+   * Given a file path inside a Git repo (e.g., ../demo-project/.pipelines/pipeline.yaml),
+   * this method returns the remote origin URL of that Git repository.
+   *
+   * @param fileInRepoPath A file inside a Git repository
+   * @return The remote origin URL, or null if not found
+   * @throws IOException if the Git repository cannot be read
+   */
+  public static String getRepoUrlFromFile(File fileInRepoPath) throws IOException, IOException {
+    FileRepositoryBuilder builder = new FileRepositoryBuilder();
+    Repository repository = builder.findGitDir(fileInRepoPath).build();
+    Config config = repository.getConfig();
+    return config.getString("remote", "origin", "url");
   }
 }

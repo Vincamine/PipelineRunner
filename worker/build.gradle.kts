@@ -66,6 +66,9 @@ dependencies {
     // file DB MinIO
     implementation("io.minio:minio:8.5.7")
 
+    // git
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.5.0.202303070854-r")
+
 }
 
 java {
