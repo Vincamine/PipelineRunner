@@ -93,15 +93,13 @@ public class RunCommand implements Callable<Integer> {
    */
   private Integer triggerPipelineExecution() {
     try {
+      // Start the full K8s CI/CD environment (using emptyDir)
+      K8sService.startCicdEnvironment();
 
-//      K8sService.startCicdEnvironment();
-//
-//      PipelineLogger.info("Waiting 30 seconds for backend service to become ready...");
-//      Thread.sleep(60_000);
-//
-//      K8sService.portForwardBackendService();
+      // Port-forward backend
+      K8sService.portForwardBackendService();
 
-//      waitForBackendToBeAvailable();
+      waitForBackendToBeAvailable();
 
       String jsonPayload = String.format(
               "{\"repo\": \"%s\", \"branch\": \"%s\", \"commit\": \"%s\", \"pipeline\": \"%s\", \"filePath\": \"%s\", \"local\": %s}",
@@ -124,15 +122,18 @@ public class RunCommand implements Callable<Integer> {
 
       PipelineLogger.info("Pipeline execution started.");
       PipelineLogger.info("Response: " + response.body().string());
+      K8sService.stopPortForward();
       return 0;
 
     } catch (IOException e) {
       PipelineLogger.error("Failed to communicate with backend: " + e.getMessage());
+      K8sService.stopPortForward();
       return 1;
 //    } catch (InterruptedException e) {
 //      throw new RuntimeException(e);
 //    }
     }
+
   }
 
   /**

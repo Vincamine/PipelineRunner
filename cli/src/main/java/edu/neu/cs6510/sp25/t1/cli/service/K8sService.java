@@ -1,5 +1,6 @@
 package edu.neu.cs6510.sp25.t1.cli.service;
 
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.util.Config;
@@ -8,12 +9,17 @@ import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.List;
 
 public class K8sService {
 
   private static final String NAMESPACE = "default";
+  private static Process portForwardProcess;
 
   public static void startCicdEnvironment() {
     try {
@@ -30,7 +36,7 @@ public class K8sService {
 
   private static void applyYaml(String filePath, CoreV1Api api) throws Exception {
     try (InputStream is = new FileInputStream(filePath)) {
-      Object obj = Yaml.load(is.toString());
+      Object obj = Yaml.load(new java.io.InputStreamReader(is));
 
       if (obj instanceof V1Pod pod) {
         api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
@@ -63,14 +69,56 @@ public class K8sService {
   }
 
   public static void portForwardBackendService() {
+    waitForBackendStartupInsidePod();
     try {
       System.out.println("Port forwarding backend service on port 8080...");
       ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", "pod/cicd-pod", "8080:8080");
       pb.inheritIO();
-      pb.start();
-      Thread.sleep(3000);
+      portForwardProcess = pb.start();
+      Thread.sleep(3000); // Give it time to establish
     } catch (Exception e) {
       throw new RuntimeException("Failed to port-forward backend service", e);
     }
   }
+
+  public static void stopPortForward() {
+    if (portForwardProcess != null && portForwardProcess.isAlive()) {
+      System.out.println("🔌 Closing port-forward on 8080...");
+      portForwardProcess.destroy();
+    }
+  }
+
+  public static void waitForBackendStartupInsidePod() {
+    String internalUrl = "http://localhost:8080/health";
+    int maxRetries = 60;
+    int delayMillis = 1000;
+
+    PipelineLogger.info("🔎 Checking if backend is responding on port 8080...");
+
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        HttpURLConnection connection = (HttpURLConnection) new URL(internalUrl).openConnection();
+        connection.setConnectTimeout(1000);
+        connection.setReadTimeout(1000);
+        connection.setRequestMethod("GET");
+
+        int responseCode = connection.getResponseCode();
+        if (responseCode == 200) {
+          PipelineLogger.info("✅ Backend is UP and responding.");
+          return;
+        }
+      } catch (IOException ignored) {}
+
+      PipelineLogger.info("⏳ Waiting for backend to become ready... (" + (i + 1) + ")");
+      try {
+        Thread.sleep(delayMillis);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+
+    throw new RuntimeException("Backend failed to become ready after timeout.");
+  }
+
 }
