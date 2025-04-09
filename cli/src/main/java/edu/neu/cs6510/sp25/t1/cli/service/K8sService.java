@@ -49,7 +49,7 @@ public class K8sService {
   }
 
   private static void waitForPod(String podName, CoreV1Api api) throws Exception {
-    System.out.println("⏳ Waiting for pod to be ready: " + podName);
+    System.out.println("Waiting for pod to be ready: " + podName);
     int retries = 60;
 
     for (int i = 0; i < retries; i++) {
@@ -58,7 +58,7 @@ public class K8sService {
 
       if (status != null && status.stream().anyMatch(
           c -> "Ready".equals(c.getType()) && "True".equals(c.getStatus()))) {
-        System.out.println("✅ Pod ready: " + podName);
+        System.out.println("Pod ready: " + podName);
         return;
       }
 
@@ -69,8 +69,12 @@ public class K8sService {
   }
 
   public static void portForwardBackendService() {
-    waitForBackendStartupInsidePod();
+//    waitForBackendStartupInsidePod();
+
     try {
+      System.out.println("Sleeping 50 seconds before port-forwarding to allow backend to fully start...");
+      Thread.sleep(50000); // Sleep 50 seconds before port-forward
+
       System.out.println("Port forwarding backend service on port 8080...");
       ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", "pod/cicd-pod", "8080:8080");
       pb.inheritIO();
@@ -90,10 +94,10 @@ public class K8sService {
 
   public static void waitForBackendStartupInsidePod() {
     String internalUrl = "http://localhost:8080/health";
-    int maxRetries = 60;
+    int maxRetries = 100;
     int delayMillis = 1000;
 
-    PipelineLogger.info("🔎 Checking if backend is responding on port 8080...");
+    PipelineLogger.info("Checking if backend is responding on port 8080...");
 
     for (int i = 0; i < maxRetries; i++) {
       try {
@@ -104,12 +108,14 @@ public class K8sService {
 
         int responseCode = connection.getResponseCode();
         if (responseCode == 200) {
-          PipelineLogger.info("✅ Backend is UP and responding.");
+          PipelineLogger.info("Backend is UP and responding.");
           return;
         }
       } catch (IOException ignored) {}
 
-      PipelineLogger.info("⏳ Waiting for backend to become ready... (" + (i + 1) + ")");
+      if (i % 10 == 0) {
+        PipelineLogger.info("Waiting for backend to become ready... (" + (i + 1) + ")");
+      }
       try {
         Thread.sleep(delayMillis);
       } catch (InterruptedException e) {

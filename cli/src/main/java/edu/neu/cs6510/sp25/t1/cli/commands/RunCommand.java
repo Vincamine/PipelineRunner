@@ -94,7 +94,10 @@ public class RunCommand implements Callable<Integer> {
   private Integer triggerPipelineExecution() {
     try {
       // Start the full K8s CI/CD environment (using emptyDir)
+      PipelineLogger.info("start k8s environment");
       K8sService.startCicdEnvironment();
+
+      PipelineLogger.info("starts forwarding 8080");
 
       // Port-forward backend
       K8sService.portForwardBackendService();
