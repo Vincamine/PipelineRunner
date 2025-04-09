@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
 import edu.neu.cs6510.sp25.t1.cli.service.K8sService;
@@ -93,9 +95,11 @@ public class RunCommand implements Callable<Integer> {
    */
   private Integer triggerPipelineExecution() {
     try {
+
+      String pipelineName = extractRepoName(filePath);
       // Start the full K8s CI/CD environment (using emptyDir)
       PipelineLogger.info("start k8s environment");
-      K8sService.startCicdEnvironment();
+      K8sService.startCicdEnvironment(pipelineName);
 
       PipelineLogger.info("starts forwarding 8080");
 
@@ -184,6 +188,19 @@ public class RunCommand implements Callable<Integer> {
     }
 
     PipelineLogger.error("Backend did not become ready after timeout.");
+  }
+
+  private String extractRepoName(String repoUrl) {
+    // Regular expression to match GitHub repository URLs
+    String regex = "^(?:https://github\\.com/|git@github\\.com:)([^/]+)/([^/]+?)(?:\\.git)?$";
+    Pattern pattern = Pattern.compile(regex);
+    Matcher matcher = pattern.matcher(repoUrl);
+
+    if (matcher.matches()) {
+      return matcher.group(2); // The repository name
+    } else {
+      throw new IllegalArgumentException("Invalid GitHub repository URL: " + repoUrl);
+    }
   }
 
 

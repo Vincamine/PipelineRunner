@@ -15,30 +15,33 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.List;
+import java.util.UUID;
 
 public class K8sService {
 
   private static final String NAMESPACE = "default";
   private static Process portForwardProcess;
 
-  public static void startCicdEnvironment() {
+  public static void startCicdEnvironment(String pipelineName) {
     try {
       ApiClient client = Config.defaultClient();
       Configuration.setDefaultApiClient(client);
       CoreV1Api api = new CoreV1Api();
 
-      applyYaml("k8s/cicd-pod.yaml", api);
+      applyYaml("k8s/cicd-pod.yaml", api, pipelineName);
       waitForPod("cicd-pod", api);
     } catch (Exception e) {
       throw new RuntimeException("Failed to start CI/CD environment", e);
     }
   }
 
-  private static void applyYaml(String filePath, CoreV1Api api) throws Exception {
+  private static void applyYaml(String filePath, CoreV1Api api, String pipelineName) throws Exception {
     try (InputStream is = new FileInputStream(filePath)) {
       Object obj = Yaml.load(new java.io.InputStreamReader(is));
+      String podName = "cicd-pod-" + pipelineName;
 
       if (obj instanceof V1Pod pod) {
+        pod.getMetadata().setName(podName);
         api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
         System.out.println("✅ Applied Pod: " + pod.getMetadata().getName());
       } else if (obj instanceof V1Service svc) {
