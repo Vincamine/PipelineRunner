@@ -1,76 +1,65 @@
 package edu.neu.cs6510.sp25.t1.cli.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.UUID;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.util.Config;
+import io.kubernetes.client.util.Yaml;
+import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.List;
 
 public class K8sService {
 
+  private static final String NAMESPACE = "default";
+
   public static void startCicdEnvironment() {
-
-    applyK8sConfig("k8s/pv-cicd.yaml");
-    applyK8sConfig("k8s/cicd-pvc.yaml");
-    applyK8sConfig("k8s/cicd-pod.yaml");
-    applyK8sConfig("k8s/backend-service.yaml");
-
-    waitForPodsReady("app=backend");
-    waitForPodsReady("app=worker");
-    waitForPodsReady("app=rabbitmq");
-    // full pipeline path
-  }
-
-
-  private static void generatePvYaml(String hostPathInMinikube) {
-    String yaml = String.format("""
-      apiVersion: v1
-      kind: PersistentVolume
-      metadata:
-        name: cicd
-      spec:
-        capacity:
-          storage: 1Gi
-        accessModes:
-          - ReadWriteMany
-        hostPath:
-          path: "%s"
-      """, hostPathInMinikube);
-
     try {
-      File pvFile = new File("k8s/pv-cicd.yaml");
-      pvFile.getParentFile().mkdirs();
-      java.nio.file.Files.writeString(pvFile.toPath(), yaml);
-      System.out.println("✅ Generated dynamic pv-cicd.yaml at " + pvFile.getAbsolutePath());
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to write pv-cicd.yaml", e);
-    }
-  }
+      ApiClient client = Config.defaultClient();
+      Configuration.setDefaultApiClient(client);
+      CoreV1Api api = new CoreV1Api();
 
-
-
-
-  private static void applyK8sConfig(String yamlPath) {
-    try {
-      ProcessBuilder pb = new ProcessBuilder("kubectl", "apply", "-f", yamlPath);
-      pb.inheritIO();
-      Process process = pb.start();
-      process.waitFor();
+      applyYaml("k8s/cicd-pod.yaml", api);
+      waitForPod("cicd-pod", api);
     } catch (Exception e) {
-      throw new RuntimeException("Failed to apply K8s config: " + yamlPath, e);
+      throw new RuntimeException("Failed to start CI/CD environment", e);
     }
   }
 
-  private static void waitForPodsReady(String labelSelector) {
-    try {
-      ProcessBuilder pb = new ProcessBuilder(
-          "kubectl", "wait", "--for=condition=Ready", "pods", "-l", labelSelector, "--timeout=60s"
-      );
-      pb.inheritIO();
-      Process process = pb.start();
-      process.waitFor();
-    } catch (Exception e) {
-      throw new RuntimeException("Pod readiness check failed for label: " + labelSelector, e);
+  private static void applyYaml(String filePath, CoreV1Api api) throws Exception {
+    try (InputStream is = new FileInputStream(filePath)) {
+      Object obj = Yaml.load(is.toString());
+
+      if (obj instanceof V1Pod pod) {
+        api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
+        System.out.println("✅ Applied Pod: " + pod.getMetadata().getName());
+      } else if (obj instanceof V1Service svc) {
+        api.createNamespacedService(NAMESPACE, svc, null, null, null, null);
+        System.out.println("✅ Applied Service: " + svc.getMetadata().getName());
+      }
     }
+  }
+
+  private static void waitForPod(String podName, CoreV1Api api) throws Exception {
+    System.out.println("⏳ Waiting for pod to be ready: " + podName);
+    int retries = 60;
+
+    for (int i = 0; i < retries; i++) {
+      V1Pod pod = api.readNamespacedPod(podName, NAMESPACE, null);
+      var status = pod.getStatus().getConditions();
+
+      if (status != null && status.stream().anyMatch(
+          c -> "Ready".equals(c.getType()) && "True".equals(c.getStatus()))) {
+        System.out.println("✅ Pod ready: " + podName);
+        return;
+      }
+
+      Thread.sleep(1000);
+    }
+
+    throw new RuntimeException("Pod " + podName + " did not become ready in time.");
   }
 
   public static void portForwardBackendService() {
@@ -79,11 +68,9 @@ public class K8sService {
       ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", "pod/cicd-pod", "8080:8080");
       pb.inheritIO();
       pb.start();
-      Thread.sleep(3000); // Give it a few seconds to forward
+      Thread.sleep(3000);
     } catch (Exception e) {
       throw new RuntimeException("Failed to port-forward backend service", e);
     }
   }
-
-
 }

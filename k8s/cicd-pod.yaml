@@ -67,8 +67,7 @@ spec:
 
   volumes:
     - name: cicd-volume
-      persistentVolumeClaim:
-        claimName: cicd
+      emptyDir: {}  # ✅ Replaced PVC with ephemeral volume
     - name: docker-sock
       hostPath:
         path: /var/run/docker.sock
