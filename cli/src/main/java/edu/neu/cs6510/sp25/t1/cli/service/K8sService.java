@@ -21,6 +21,7 @@ public class K8sService {
 
   private static final String NAMESPACE = "default";
   private static Process portForwardProcess;
+  private static String podName;
 
   public static void startCicdEnvironment(String pipelineName) {
     try {
@@ -29,7 +30,7 @@ public class K8sService {
       CoreV1Api api = new CoreV1Api();
 
       applyYaml("k8s/cicd-pod.yaml", api, pipelineName);
-      waitForPod("cicd-pod", api);
+      waitForPod(podName, api);
     } catch (Exception e) {
       throw new RuntimeException("Failed to start CI/CD environment", e);
     }
@@ -38,7 +39,7 @@ public class K8sService {
   private static void applyYaml(String filePath, CoreV1Api api, String pipelineName) throws Exception {
     try (InputStream is = new FileInputStream(filePath)) {
       Object obj = Yaml.load(new java.io.InputStreamReader(is));
-      String podName = "cicd-pod-" + pipelineName;
+      podName = "cicd-pod-" + pipelineName;
 
       if (obj instanceof V1Pod pod) {
         pod.getMetadata().setName(podName);

@@ -96,7 +96,7 @@ public class RunCommand implements Callable<Integer> {
   private Integer triggerPipelineExecution() {
     try {
 
-      String pipelineName = extractRepoName(filePath);
+      String pipelineName = extractRepoName(repo);
       // Start the full K8s CI/CD environment (using emptyDir)
       PipelineLogger.info("start k8s environment");
       K8sService.startCicdEnvironment(pipelineName);
