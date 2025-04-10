@@ -2,6 +2,7 @@ package edu.neu.cs6510.sp25.t1.cli.service;
 
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.util.Config;
 import io.kubernetes.client.util.Yaml;
@@ -30,8 +31,9 @@ public class K8sService {
       CoreV1Api api = new CoreV1Api();
 
       applyYaml("k8s/cicd-pod.yaml", api, pipelineName);
-      waitForPod(podName, api);
+      waitForPod(podName.toLowerCase(), api);
     } catch (Exception e) {
+      e.printStackTrace();
       throw new RuntimeException("Failed to start CI/CD environment", e);
     }
   }
@@ -42,13 +44,26 @@ public class K8sService {
       podName = "cicd-pod-" + pipelineName;
 
       if (obj instanceof V1Pod pod) {
-        pod.getMetadata().setName(podName);
-        api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
-        System.out.println("✅ Applied Pod: " + pod.getMetadata().getName());
+        pod.getMetadata().setName(podName.toLowerCase());
+        try {
+          api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
+        } catch (ApiException e) {
+          System.err.println("🔥 Kubernetes API Exception:");
+          System.err.println("Status code: " + e.getCode());
+          System.err.println("Response body: " + e.getResponseBody());
+          System.err.println("Response headers: " + e.getResponseHeaders());
+          e.printStackTrace();
+
+          throw new RuntimeException("Failed to apply pod " + podName.toLowerCase(), e);
+        }
+//        api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
+        System.out.println("Applied Pod: " + pod.getMetadata().getName());
       } else if (obj instanceof V1Service svc) {
         api.createNamespacedService(NAMESPACE, svc, null, null, null, null);
-        System.out.println("✅ Applied Service: " + svc.getMetadata().getName());
+        System.out.println("Applied Service: " + svc.getMetadata().getName());
       }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to apply pod " + podName.toLowerCase(), e);
     }
   }
 
@@ -80,7 +95,7 @@ public class K8sService {
       Thread.sleep(50000); // Sleep 50 seconds before port-forward
 
       System.out.println("Port forwarding backend service on port 8080...");
-      final String podCommand = "pod/" + podName;
+      final String podCommand = "pod/" + podName.toLowerCase();
       ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", podCommand, "8080:8080");
       pb.inheritIO();
       portForwardProcess = pb.start();
