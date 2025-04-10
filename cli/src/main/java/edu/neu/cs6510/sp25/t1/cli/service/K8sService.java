@@ -80,7 +80,8 @@ public class K8sService {
       Thread.sleep(50000); // Sleep 50 seconds before port-forward
 
       System.out.println("Port forwarding backend service on port 8080...");
-      ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", "pod/cicd-pod", "8080:8080");
+      final String podCommand = "pod/" + podName;
+      ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", podCommand, "8080:8080");
       pb.inheritIO();
       portForwardProcess = pb.start();
       Thread.sleep(3000); // Give it time to establish
