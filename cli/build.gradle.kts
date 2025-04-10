@@ -46,6 +46,9 @@ dependencies {
     // docker
     implementation ("com.github.docker-java:docker-java:3.2.13")
     implementation ("com.github.docker-java:docker-java-transport-okhttp:3.2.13")
+
+    // k8s
+    implementation ("io.kubernetes:client-java:18.0.0")
 }
 
 application {

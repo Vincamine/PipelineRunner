@@ -1,89 +1,150 @@
 package edu.neu.cs6510.sp25.t1.cli.service;
 
-import java.io.File;
+import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.util.Config;
+import io.kubernetes.client.util.Yaml;
+import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 
 public class K8sService {
 
-  public static void startCicdEnvironment() {
+  private static final String NAMESPACE = "default";
+  private static Process portForwardProcess;
+  private static String podName;
 
-    applyK8sConfig("k8s/pv-cicd.yaml");
-    applyK8sConfig("k8s/cicd-pvc.yaml");
-    applyK8sConfig("k8s/cicd-pod.yaml");
-    applyK8sConfig("k8s/backend-service.yaml");
-
-    waitForPodsReady("app=backend");
-    waitForPodsReady("app=worker");
-    waitForPodsReady("app=rabbitmq");
-    // full pipeline path
-  }
-
-
-  private static void generatePvYaml(String hostPathInMinikube) {
-    String yaml = String.format("""
-      apiVersion: v1
-      kind: PersistentVolume
-      metadata:
-        name: cicd
-      spec:
-        capacity:
-          storage: 1Gi
-        accessModes:
-          - ReadWriteMany
-        hostPath:
-          path: "%s"
-      """, hostPathInMinikube);
-
+  public static void startCicdEnvironment(String pipelineName) {
     try {
-      File pvFile = new File("k8s/pv-cicd.yaml");
-      pvFile.getParentFile().mkdirs();
-      java.nio.file.Files.writeString(pvFile.toPath(), yaml);
-      System.out.println("✅ Generated dynamic pv-cicd.yaml at " + pvFile.getAbsolutePath());
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to write pv-cicd.yaml", e);
-    }
-  }
+      ApiClient client = Config.defaultClient();
+      Configuration.setDefaultApiClient(client);
+      CoreV1Api api = new CoreV1Api();
 
-
-
-
-  private static void applyK8sConfig(String yamlPath) {
-    try {
-      ProcessBuilder pb = new ProcessBuilder("kubectl", "apply", "-f", yamlPath);
-      pb.inheritIO();
-      Process process = pb.start();
-      process.waitFor();
+      applyYaml("k8s/cicd-pod.yaml", api, pipelineName);
+      waitForPod(podName.toLowerCase(), api);
     } catch (Exception e) {
-      throw new RuntimeException("Failed to apply K8s config: " + yamlPath, e);
+      e.printStackTrace();
+      throw new RuntimeException("Failed to start CI/CD environment", e);
     }
   }
 
-  private static void waitForPodsReady(String labelSelector) {
-    try {
-      ProcessBuilder pb = new ProcessBuilder(
-          "kubectl", "wait", "--for=condition=Ready", "pods", "-l", labelSelector, "--timeout=60s"
-      );
-      pb.inheritIO();
-      Process process = pb.start();
-      process.waitFor();
+  private static void applyYaml(String filePath, CoreV1Api api, String pipelineName) throws Exception {
+    try (InputStream is = new FileInputStream(filePath)) {
+      Object obj = Yaml.load(new java.io.InputStreamReader(is));
+      podName = "cicd-pod-" + pipelineName;
+
+      if (obj instanceof V1Pod pod) {
+        pod.getMetadata().setName(podName.toLowerCase());
+        try {
+          api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
+        } catch (ApiException e) {
+          System.err.println("🔥 Kubernetes API Exception:");
+          System.err.println("Status code: " + e.getCode());
+          System.err.println("Response body: " + e.getResponseBody());
+          System.err.println("Response headers: " + e.getResponseHeaders());
+          e.printStackTrace();
+
+          throw new RuntimeException("Failed to apply pod " + podName.toLowerCase(), e);
+        }
+//        api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
+        System.out.println("Applied Pod: " + pod.getMetadata().getName());
+      } else if (obj instanceof V1Service svc) {
+        api.createNamespacedService(NAMESPACE, svc, null, null, null, null);
+        System.out.println("Applied Service: " + svc.getMetadata().getName());
+      }
     } catch (Exception e) {
-      throw new RuntimeException("Pod readiness check failed for label: " + labelSelector, e);
+      throw new RuntimeException("Failed to apply pod " + podName.toLowerCase(), e);
     }
+  }
+
+  private static void waitForPod(String podName, CoreV1Api api) throws Exception {
+    System.out.println("Waiting for pod to be ready: " + podName);
+    int retries = 60;
+
+    for (int i = 0; i < retries; i++) {
+      V1Pod pod = api.readNamespacedPod(podName, NAMESPACE, null);
+      var status = pod.getStatus().getConditions();
+
+      if (status != null && status.stream().anyMatch(
+          c -> "Ready".equals(c.getType()) && "True".equals(c.getStatus()))) {
+        System.out.println("Pod ready: " + podName);
+        return;
+      }
+
+      Thread.sleep(1000);
+    }
+
+    throw new RuntimeException("Pod " + podName + " did not become ready in time.");
   }
 
   public static void portForwardBackendService() {
+//    waitForBackendStartupInsidePod();
+
     try {
+      System.out.println("Sleeping 50 seconds before port-forwarding to allow backend to fully start...");
+      Thread.sleep(50000); // Sleep 50 seconds before port-forward
+
       System.out.println("Port forwarding backend service on port 8080...");
-      ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", "pod/cicd-pod", "8080:8080");
+      final String podCommand = "pod/" + podName.toLowerCase();
+      ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", podCommand, "8080:8080");
       pb.inheritIO();
-      pb.start();
-      Thread.sleep(3000); // Give it a few seconds to forward
+      portForwardProcess = pb.start();
+      Thread.sleep(3000); // Give it time to establish
     } catch (Exception e) {
       throw new RuntimeException("Failed to port-forward backend service", e);
     }
   }
 
+  public static void stopPortForward() {
+    if (portForwardProcess != null && portForwardProcess.isAlive()) {
+      System.out.println("🔌 Closing port-forward on 8080...");
+      portForwardProcess.destroy();
+    }
+  }
+
+  public static void waitForBackendStartupInsidePod() {
+    String internalUrl = "http://localhost:8080/health";
+    int maxRetries = 100;
+    int delayMillis = 1000;
+
+    PipelineLogger.info("Checking if backend is responding on port 8080...");
+
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        HttpURLConnection connection = (HttpURLConnection) new URL(internalUrl).openConnection();
+        connection.setConnectTimeout(1000);
+        connection.setReadTimeout(1000);
+        connection.setRequestMethod("GET");
+
+        int responseCode = connection.getResponseCode();
+        if (responseCode == 200) {
+          PipelineLogger.info("Backend is UP and responding.");
+          return;
+        }
+      } catch (IOException ignored) {}
+
+      if (i % 10 == 0) {
+        PipelineLogger.info("Waiting for backend to become ready... (" + (i + 1) + ")");
+      }
+      try {
+        Thread.sleep(delayMillis);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+
+    throw new RuntimeException("Backend failed to become ready after timeout.");
+  }
 
 }
