@@ -44,11 +44,11 @@ public class GitCloneService {
     String cloneTarget = containerMountPath + "/repo";
     String gitDirPath = cloneTarget + "/.git";
 
-    // Step 1: Create volume
-    CreateVolumeResponse volume = dockerClient.createVolumeCmd()
-        .withName(volumeName)
-        .withDriver("local")
-        .exec();
+//    // Step 1: Create volume
+//    CreateVolumeResponse volume = dockerClient.createVolumeCmd()
+//        .withName(volumeName)
+//        .withDriver("local")
+//        .exec();
 
     log.info("Created Docker volume: {}", volumeName);
 

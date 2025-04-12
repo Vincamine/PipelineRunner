@@ -62,11 +62,11 @@ public class DockerExecutor {
     //get branch
     String branch = findPipelineBranch.getBranch(jobExecution);
 
-    // 55-56 is about to make container path unique for every job
-    String jobId = String.valueOf(job.getId());
+//    // 55-56 is about to make container path unique for every job
+//    String jobId = String.valueOf(job.getId());
 
-    // create container path
-    String containerPath = "/app/" + pipelineName;
+//    // create container path
+//    String containerPath = "/app/" + pipelineName;
 
     String dockerImage = job.getDockerImage();
     List<String> script = job.getScript();
@@ -188,10 +188,10 @@ public class DockerExecutor {
       }
     }
   }
-  private void printWorkingDirectoryContents(File dir) {
-    log.info("Contents of working directory: {}", dir.getAbsolutePath());
-    printDirectoryContentsRecursive(dir, "");
-  }
+//  private void printWorkingDirectoryContents(File dir) {
+//    log.info("Contents of working directory: {}", dir.getAbsolutePath());
+//    printDirectoryContentsRecursive(dir, "");
+//  }
 
   private void printDirectoryContentsRecursive(File file, String indent) {
     if (!file.exists()) {
