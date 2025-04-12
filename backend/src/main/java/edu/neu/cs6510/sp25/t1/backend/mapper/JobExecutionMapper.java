@@ -14,8 +14,6 @@ import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 @Component
 public class JobExecutionMapper {
 
-  private StageExecutionEntity stageExecutionEntity;
-
   /**
    * Converts a JobExecutionEntity to JobExecutionDTO.
    *
@@ -40,29 +38,6 @@ public class JobExecutionMapper {
             .build();
   }
 
-  /**
-   * Converts a JobExecutionDTO to JobExecutionEntity.
-   *
-   * @param dto the DTO to convert
-   * @return the corresponding entity, or null if dto is null
-   */
-  public JobExecutionEntity toEntity(JobExecutionDTO dto) {
-    if (dto == null) {
-      return null;
-    }
-
-    return JobExecutionEntity.builder()
-            .id(dto.getId())
-            .stageExecution(StageExecutionEntity.builder().id(dto.getStageExecutionId()).build())
-            .jobId(dto.getJobId())
-            .commitHash(dto.getCommitHash())
-            .isLocal(dto.isLocal())
-            .status(dto.getStatus())
-            .startTime(dto.getStartTime())
-            .completionTime(dto.getCompletionTime())
-            .allowFailure(dto.isAllowFailure())
-            .build();
-  }
   /**
    * Converts a JobExecutionEntity and JobEntity to a JobExecutionDTO.
    * This method creates a DTO that includes both execution data and job details.

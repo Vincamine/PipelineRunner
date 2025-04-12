@@ -23,13 +23,4 @@ public interface StageRepository extends JpaRepository<StageEntity, UUID> {
    * @return a list of stages belonging to the specified pipeline
    */
   List<StageEntity> findByPipelineId(UUID pipelineId);
-
-  /**
-   * Finds a stage by name within a specific pipeline.
-   *
-   * @param name       the name of the stage
-   * @param pipelineId the pipeline ID
-   * @return an optional stage matching the criteria
-   */
-  Optional<StageEntity> findByNameAndPipelineId(String name, UUID pipelineId);
 }

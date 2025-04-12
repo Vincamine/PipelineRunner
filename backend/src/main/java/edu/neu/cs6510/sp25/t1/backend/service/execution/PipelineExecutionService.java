@@ -11,7 +11,6 @@ import edu.neu.cs6510.sp25.t1.backend.info.ClonedPipelineInfo;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.*;
 
 
-import edu.neu.cs6510.sp25.t1.backend.utils.PathUtil;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +23,6 @@ import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 import edu.neu.cs6510.sp25.t1.common.dto.PipelineExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import lombok.RequiredArgsConstructor;
-import edu.neu.cs6510.sp25.t1.backend.utils.PathUtil;
 
 
 /**
@@ -133,28 +131,5 @@ public class PipelineExecutionService {
   @Transactional
   public void processPipelineExecution(UUID pipelineExecutionId) {
     executionQueueService.processPipelineExecution(pipelineExecutionId);
-  }
-  
-  /**
-   * Updates the status of a pipeline execution.
-   * Delegates to PipelineStatusService.
-   *
-   * @param pipelineExecutionId ID of the pipeline execution
-   * @param status the new status
-   */
-  @Transactional
-  public void updatePipelineStatus(UUID pipelineExecutionId, edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus status) {
-    pipelineStatusService.updatePipelineStatus(pipelineExecutionId, status);
-  }
-  
-  /**
-   * Finalizes a pipeline execution.
-   * Delegates to PipelineStatusService.
-   *
-   * @param pipelineExecutionId ID of the pipeline execution
-   */
-  @Transactional
-  public void finalizePipelineExecution(UUID pipelineExecutionId) {
-    pipelineStatusService.finalizePipelineExecution(pipelineExecutionId);
   }
 }

@@ -93,7 +93,6 @@ public class StatusService {
       stageResult.put("stage", stage.getName());
 
       List<JobEntity> jobs = jobRepository.findByStageId(stageID);
-      ExecutionStatus stageStatus;
       if (stageExecution.isPresent()) {
         // put stage Execution ID
         stageResult.put("stageExecution", stageExecution.get().getId());

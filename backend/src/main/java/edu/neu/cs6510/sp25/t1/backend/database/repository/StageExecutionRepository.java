@@ -26,15 +26,6 @@ public interface StageExecutionRepository extends JpaRepository<StageExecutionEn
    */
   List<StageExecutionEntity> findByPipelineExecutionId(UUID pipelineExecutionId);
 
-
-  /**
-   * Finds stage executions by status.
-   *
-   * @param status the execution status
-   * @return a list of stage executions with the specified status
-   */
-  List<StageExecutionEntity> findByStatus(ExecutionStatus status);
-
   /**
    * Finds a specific stage execution by stage ID and pipeline execution ID.
    *
@@ -45,17 +36,6 @@ public interface StageExecutionRepository extends JpaRepository<StageExecutionEn
   Optional<StageExecutionEntity> findByStageIdAndPipelineExecutionId(UUID stageId, UUID pipelineExecutionId);
 
   /**
-   * dynamically fetches the stage name associated with a stage execution
-   * and return the entity
-   *
-   * @param pipelineExecutionId the ID of the pipeline execution
-   * @param stageName           the name of the stage
-   * @return a list of stage executions with the stage name
-   */
-  @Query("SELECT se FROM StageExecutionEntity se JOIN StageEntity s ON se.stageId = s.id WHERE s.name = :stageName AND se.pipelineExecutionId = :pipelineExecutionId ORDER BY se.startTime DESC")
-  List<StageExecutionEntity> findByPipelineExecutionIdAndFetchStageName(@Param("pipelineExecutionId") UUID pipelineExecutionId, @Param("stageName") String stageName);
-
-  /**
    * Finds a specific stage execution by pipeline execution ID and stage ID.
    *
    * @param pipelineExecutionId the pipeline execution ID
@@ -63,15 +43,6 @@ public interface StageExecutionRepository extends JpaRepository<StageExecutionEn
    * @return an optional stage execution matching the criteria
    */
   Optional<StageExecutionEntity> findByPipelineExecutionIdAndStageId(UUID pipelineExecutionId, UUID stageId);
-
-  /**
-   * Join stageExecution and stage to get the stage names by pipeline execution ID
-   *
-   * @param pipelineExecutionId the pipeline execution ID
-   * @return a list of stage names
-   */
-  @Query("SELECT s.name FROM StageExecutionEntity se JOIN StageEntity s ON se.stageId = s.id WHERE se.pipelineExecutionId = :pipelineExecutionId")
-  List<String> findStageNamesByPipelineExecutionId(@Param("pipelineExecutionId") UUID pipelineExecutionId);
 
   /**
    * Join stageExecution and stage to fetch the stage name by stageId

@@ -107,14 +107,5 @@ public class ExecutionQueue<T> {
     public int size() {
         return queue.size();
     }
-    
-    /**
-     * Clears all items from the queue.
-     */
-    public void clear() {
-        synchronized (lock) {
-            queue.clear();
-            isProcessing = false;
-        }
-    }
+
 }

@@ -26,14 +26,6 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
 
   List<JobExecutionEntity> findByStatus(ExecutionStatus status);
 
-  Optional<JobExecutionEntity> findByCommitHash(String commitHash);
-
-  @Query("SELECT je FROM JobExecutionEntity je JOIN JobEntity j ON je.jobId = j.id WHERE je.stageExecution.id = :stageExecutionId ORDER BY je.startTime DESC")
-  List<JobExecutionEntity> findByStageExecutionAndFetchJobName(@Param("stageExecutionId") UUID stageExecutionId);
-
-  @Query("SELECT j.name FROM JobExecutionEntity je JOIN JobEntity j ON je.jobId = j.id WHERE je.stageExecution.id = :stageExecutionId")
-  List<String> findJobNamesByStageExecution(@Param("stageExecutionId") UUID stageExecutionId);
-
   @Query("SELECT j.name FROM JobExecutionEntity je JOIN JobEntity j ON je.jobId = j.id WHERE je.jobId = :jobId")
   Optional<String> findJobNameByJobId(@Param("jobId") UUID jobId);
 
@@ -42,7 +34,4 @@ public interface JobExecutionRepository extends JpaRepository<JobExecutionEntity
 
   @Query("SELECT jd.dependency.id FROM JobDependencyEntity jd WHERE jd.job.id = :jobId")
   List<UUID> findDependenciesByJobId(@Param("jobId") UUID jobId);
-
-  @Query("SELECT je FROM JobExecutionEntity je WHERE je.stageExecution.id = :stageExecutionId")
-  List<JobExecutionEntity> findJobExecutionsByStageExecution(@Param("stageExecutionId") UUID stageExecutionId);
 }
