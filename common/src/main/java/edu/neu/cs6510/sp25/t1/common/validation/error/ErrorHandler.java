@@ -13,8 +13,6 @@ import lombok.Getter;
  */
 public class ErrorHandler {
 
-  private static final String VALIDATION_ERROR = "Validation Error";
-
   /**
    * Represents a specific location in a YAML file.
    */
@@ -40,13 +38,6 @@ public class ErrorHandler {
       this.column = column;
       this.path = path;
     }
-
-    /**
-     * @return A formatted string representation as `filename:line:column`
-     */
-    public String format() {
-      return String.format("%s:%d:%d", filename, line, column);
-    }
   }
 
   /**
@@ -71,12 +62,4 @@ public class ErrorHandler {
     return formatError(location, message);
   }
 
-  /**
-   * Logs an error message and its location.
-   *
-   * @param message The error message.
-   */
-  public static void logError(String message) {
-    PipelineLogger.error(message);
-  }
 }

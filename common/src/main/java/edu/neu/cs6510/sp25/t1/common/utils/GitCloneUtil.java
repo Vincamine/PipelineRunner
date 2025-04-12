@@ -48,19 +48,6 @@ public class GitCloneUtil {
         .getParentFile();
   }
 
-  /**
-   * Pulls the latest changes from the given branch in the specified Git repository directory.
-   *
-   * @param repoDir the local Git repository directory
-   * @param branch the branch name to pull from
-   * @throws Exception if an error occurs during the pull
-   */
-  public static void pullLatest(File repoDir, String branch) throws Exception {
-    Git git = Git.open(repoDir);
-    git.pull()
-        .setRemoteBranchName(branch)
-        .call();
-  }
 
   /**
    * Fetches and checks out a specific commit in the given Git repo.

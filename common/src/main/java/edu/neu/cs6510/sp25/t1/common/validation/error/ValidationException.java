@@ -55,25 +55,4 @@ public class ValidationException extends Exception {
   public ValidationException(ErrorHandler.Location location, String message) {
     super(ErrorHandler.formatValidationError(location, message));
   }
-
-  /**
-   * Constructs a ValidationException with an error message, location, and cause.
-   *
-   * @param location The location where the validation error occurred.
-   * @param message  The error message.
-   * @param cause    The root cause of the exception.
-   */
-  public ValidationException(ErrorHandler.Location location, String message, Throwable cause) {
-    super(ErrorHandler.formatValidationError(location, message), cause);
-  }
-
-  /**
-   * Constructs a ValidationException with an error message and cause.
-   *
-   * @param message The detail message.
-   * @param cause   The root cause of the exception.
-   */
-  public ValidationException(String message, Throwable cause) {
-    super(message, cause);
-  }
 }

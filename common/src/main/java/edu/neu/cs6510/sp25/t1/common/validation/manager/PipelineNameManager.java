@@ -62,26 +62,4 @@ public class PipelineNameManager {
     PipelineLogger.debug("Checking uniqueness for '" + fileName + "': " + (isUnique ? "Unique" : "Duplicate"));
     return isUnique;
   }
-
-  /**
-   * Suggests a unique YAML file name if a duplicate exists.
-   *
-   * @param baseFileName The base name of the YAML file.
-   * @return A unique file name suggestion.
-   */
-  public String suggestUniquePipelineName(String baseFileName) {
-    String fileName = baseFileName.replaceAll("(\\.ya?ml)$", "");
-    String extension = baseFileName.endsWith(".yml") ? ".yml" : ".yaml";
-
-    int counter = 1;
-    String suggestedName = fileName + extension;
-
-    while (existingFileNames.contains(suggestedName.toLowerCase())) {
-      suggestedName = fileName + "_" + counter + extension;
-      counter++;
-    }
-
-    PipelineLogger.info("Suggested unique pipeline name: " + suggestedName);
-    return suggestedName;
-  }
 }
