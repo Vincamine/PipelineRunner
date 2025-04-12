@@ -1,6 +1,5 @@
 package edu.neu.cs6510.sp25.t1.common.validation.error;
 
-import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import lombok.Getter;
 
 /**

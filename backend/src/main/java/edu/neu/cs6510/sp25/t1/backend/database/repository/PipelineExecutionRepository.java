@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 /**
  * Repository for managing PipelineExecution entities.

@@ -4,19 +4,17 @@ import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Config;
 import io.kubernetes.client.util.Yaml;
-import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
-import java.util.List;
-import java.util.UUID;
 
 public class K8sService {
 
@@ -56,7 +54,7 @@ public class K8sService {
 
           throw new RuntimeException("Failed to apply pod " + podName.toLowerCase(), e);
         }
-//        api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
+        // api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
         System.out.println("Applied Pod: " + pod.getMetadata().getName());
       } else if (obj instanceof V1Service svc) {
         api.createNamespacedService(NAMESPACE, svc, null, null, null, null);
@@ -88,7 +86,7 @@ public class K8sService {
   }
 
   public static void portForwardBackendService() {
-//    waitForBackendStartupInsidePod();
+    // waitForBackendStartupInsidePod();
 
     try {
       System.out.println("Sleeping 50 seconds before port-forwarding to allow backend to fully start...");
@@ -131,7 +129,8 @@ public class K8sService {
           PipelineLogger.info("Backend is UP and responding.");
           return;
         }
-      } catch (IOException ignored) {}
+      } catch (IOException ignored) {
+      }
 
       if (i % 10 == 0) {
         PipelineLogger.info("Waiting for backend to become ready... (" + (i + 1) + ")");
