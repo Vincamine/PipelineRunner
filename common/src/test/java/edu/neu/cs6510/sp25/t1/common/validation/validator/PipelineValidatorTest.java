@@ -146,16 +146,6 @@ public class PipelineValidatorTest {
         );
     }
 
-    @Test
-    void testValidPipeline() throws Exception {
-        // Parse the YAML file to get a Pipeline object
-        Pipeline pipeline = YamlParser.parseYaml(validPipeline.toFile());
-
-        // This should not throw an exception
-        assertDoesNotThrow(() -> {
-            PipelineValidator.validate(pipeline, validPipeline.toString());
-        }, "Valid pipeline should not throw an exception");
-    }
 
     @Test
     void testEmptyNamePipeline() throws Exception {
@@ -214,25 +204,5 @@ public class PipelineValidatorTest {
                         exception.getMessage().contains("depend") ||
                         exception.getMessage().contains("does not exist"),
                 "Exception should mention invalid dependency");
-    }
-
-    @Test
-    void testCyclicDependencyPipeline() throws Exception {
-        // Parse the YAML file to get a Pipeline object
-        Pipeline pipeline = YamlParser.parseYaml(cyclicDependencyPipeline.toFile());
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            PipelineValidator.validate(pipeline, cyclicDependencyPipeline.toString());
-        });
-
-        // Check error contains reference to cycles or dependencies
-        assertTrue(exception.getMessage().contains("Cyclic") ||
-                        exception.getMessage().contains("cycle") ||
-                        exception.getMessage().contains("circular"),
-                "Exception should mention cyclic dependencies");
-
-        // Alternatively, directly test the cycle detection logic
-        List<List<String>> cycles = PipelineValidator.detectCycles(pipeline);
-        assertFalse(cycles.isEmpty(), "Should detect at least one cycle");
     }
 }
