@@ -28,38 +28,6 @@ public class JobDataService {
     private final JobRepository jobRepository;
     private final JobExecutionMapper mapper;
 
-//    /**
-//     * Retrieves the next pending job from the database and updates its status to RUNNING.
-//     *
-//     * @return Optional containing the next job to execute, or empty if none found
-//     */
-//    @Transactional
-//    public Optional<JobExecutionDTO> getNextPendingJob() {
-//        // Get all pending jobs
-//        List<JobExecutionEntity> pendingJobs = jobExecutionRepository.findByStatus(ExecutionStatus.PENDING);
-//
-//        if (pendingJobs.isEmpty()) {
-//            return Optional.empty();
-//        }
-//
-//        // Get the first pending job (oldest by default)
-//        JobExecutionEntity nextJob = pendingJobs.get(0);
-//
-//        // Update status to RUNNING to prevent other workers from picking it up
-//        nextJob.setStatus(ExecutionStatus.RUNNING);
-//        nextJob = jobExecutionRepository.save(nextJob);
-//
-//        // Get the associated job details
-//        Optional<JobEntity> jobEntity = jobRepository.findById(nextJob.getJobId());
-//
-//        if (jobEntity.isEmpty()) {
-//            log.error("Could not find job details for execution {}", nextJob.getId());
-//            return Optional.empty();
-//        }
-//
-//        // Convert to DTO and return
-//        return Optional.of(mapper.toJobExecutionDto(nextJob, jobEntity.get()));
-//    }
 
     /**
      * Updates the job execution status and logs in the database.
@@ -115,14 +83,4 @@ public class JobDataService {
         return Optional.of(mapper.toJobExecutionDto(entity, jobEntity.orElse(null)));
     }
 
-//    /**
-//     * Retrieves job details by ID.
-//     *
-//     * @param jobId The job ID
-//     * @return Optional containing the job details, or empty if not found
-//     */
-//    public Optional<JobDTO> getJobById(UUID jobId) {
-//        return jobRepository.findById(jobId)
-//                .map(mapper::toJobDto);
-//    }
 }
