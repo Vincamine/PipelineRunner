@@ -48,6 +48,9 @@ public class RunCommand implements Callable<Integer> {
 
   @CommandLine.Option(names = { "--local" }, description = "Run the pipeline locally.")
   private boolean localRun;
+  
+  @CommandLine.Option(names = { "--dry-run" }, description = "Validate the pipeline and print execution order without running.")
+  private boolean dryRun;
 
   /**
    * Validates the pipeline configuration file and runs the pipeline.
