@@ -14,7 +14,6 @@ import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineDefinitionService
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineExecutionCreationService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineStatusService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.YamlConfigurationService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.ExecutionQueueService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.GitPipelineService;
 import edu.neu.cs6510.sp25.t1.common.dto.PipelineExecutionDTO;
 import org.apache.commons.io.FileUtils;
@@ -46,9 +45,7 @@ public class PipelineExecutionService {
   private final YamlConfigurationService yamlConfigurationService;
   private final PipelineExecutionCreationService pipelineExecutionCreationService;
   private final PipelineStatusService pipelineStatusService;
-  private final ExecutionQueueService executionQueueService;
   private final GitPipelineService gitPipelineService;
-  private final edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService pipelineExecutionQueueService;
 
   /**
    * Retrieves a pipeline execution by ID.
@@ -128,14 +125,4 @@ public class PipelineExecutionService {
     }
   }
 
-  /**
-   * Process a pipeline execution from the queue.
-   * Delegates to ExecutionQueueService.
-   *
-   * @param pipelineExecutionId ID of the pipeline execution to process
-   */
-  @Transactional
-  public void processPipelineExecution(UUID pipelineExecutionId) {
-    executionQueueService.processPipelineExecution(pipelineExecutionId);
-  }
 }

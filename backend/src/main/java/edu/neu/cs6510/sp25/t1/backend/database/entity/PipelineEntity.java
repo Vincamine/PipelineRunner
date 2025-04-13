@@ -35,7 +35,7 @@ public class PipelineEntity {
   @GeneratedValue
   private UUID id;
 
-  @Column(name = "name", unique = true)
+  @Column(name = "name")
   private String name;
 
   @Column(name = "repository_url")
