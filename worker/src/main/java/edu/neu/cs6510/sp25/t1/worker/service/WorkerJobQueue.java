@@ -67,14 +67,6 @@ public class WorkerJobQueue {
                 return;
             }
 
-            // Check if worker is at capacity
-            // move it back when need multi jobs
-            // if (processingJobIds.size() >= 5) {
-            // log.warn("Worker at maximum capacity, cannot process job {}",
-            // jobExecutionId);
-            // return;
-            // }
-
             // Fetch complete job data from database
             jobDataService.getJobExecutionById(jobExecutionId).ifPresentOrElse(
                     job -> {
