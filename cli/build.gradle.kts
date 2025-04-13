@@ -37,8 +37,10 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.17")
     implementation("ch.qos.logback:logback-classic:1.5.17")
 
-    // ShadowJar dependencies
     implementation(project(":common"))
+    implementation(project(":backend"))
+
+    implementation("org.springframework.boot:spring-boot-starter-amqp:2.7.14")
 
     // git
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.5.0.202303070854-r")
@@ -67,6 +69,8 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     archiveBaseName.set("ci-tool")
     archiveClassifier.set("")
     archiveVersion.set("")
+
+    isZip64 = true
 
     manifest {
         attributes("Main-Class" to "edu.neu.cs6510.sp25.t1.cli.CliApp")
