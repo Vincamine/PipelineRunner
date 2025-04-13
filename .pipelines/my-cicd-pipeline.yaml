@@ -42,7 +42,7 @@ jobs:
     dockerImage: "docker:latest"
     script:
       - "docker build -t my-cicd-app ."
-      - "docker run -d -p 5001:5001 my-cicd-app"
+      - "docker run -d -p 5000:5000 my-cicd-app"
     allowFailure: False
     stage: "deploy"
     dependencies: ["build-jar"]
