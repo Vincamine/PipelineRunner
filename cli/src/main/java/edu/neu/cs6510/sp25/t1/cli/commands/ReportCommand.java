@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
+import edu.neu.cs6510.sp25.t1.cli.service.K8sService;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import picocli.CommandLine;
 
@@ -93,10 +94,14 @@ public class ReportCommand implements Callable<Integer> {
    */
   private Integer fetchPipelineHistory() throws IOException {
     PipelineLogger.info("Fetching past runs for pipeline: " + pipelineName);
+    String podName = K8sService.startBackendEnvironment(pipelineName);
     String response = backendClient.fetchPipelineReport(pipelineName, -1, null, null);
 
     // Format and print the response
     String formattedResponse = formatResponse(response);
+
+    K8sService.stopPortForward();
+    K8sService.stopPod(podName);
     System.out.println(formattedResponse);
     return 0;
   }
@@ -109,8 +114,11 @@ public class ReportCommand implements Callable<Integer> {
    */
   private Integer fetchPipelineRunSummary() throws IOException {
     PipelineLogger.info("Fetching run summary for pipeline: " + pipelineName + ", Run: " + runNumber);
+    String podName = K8sService.startBackendEnvironment(pipelineName);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, null, null);
 
+    K8sService.stopPortForward();
+    K8sService.stopPod(podName);
     // Format and print the response
     String formattedResponse = formatResponse(response);
     System.out.println(formattedResponse);
@@ -125,8 +133,11 @@ public class ReportCommand implements Callable<Integer> {
    */
   private Integer fetchStageSummary() throws IOException {
     PipelineLogger.info("Fetching stage summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName);
+    String podName = K8sService.startBackendEnvironment(pipelineName);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, stageName, null);
 
+    K8sService.stopPortForward();
+    K8sService.stopPod(podName);
     // Format and print the response
     String formattedResponse = formatResponse(response);
     System.out.println(formattedResponse);
@@ -141,8 +152,11 @@ public class ReportCommand implements Callable<Integer> {
    */
   private Integer fetchJobSummary() throws IOException {
     PipelineLogger.info("Fetching job summary for pipeline: " + pipelineName + ", Run: " + runNumber + ", Stage: " + stageName + ", Job: " + jobName);
+    String podName = K8sService.startBackendEnvironment(pipelineName);
     String response = backendClient.fetchPipelineReport(pipelineName, runNumber, stageName, jobName);
 
+    K8sService.stopPortForward();
+    K8sService.stopPod(podName);
     // Format and print the response
     String formattedResponse = formatResponse(response);
     System.out.println(formattedResponse);
@@ -163,9 +177,12 @@ public class ReportCommand implements Callable<Integer> {
       PipelineLogger.info("Fetching history for stage: " + stageName + " in pipeline: " + pipelineName);
     }
 
+    String podName = K8sService.startBackendEnvironment(pipelineName);
     // Pass both stageName and jobName to backend client
     String response = backendClient.fetchPipelineReport(pipelineName, null, stageName, jobName);
 
+    K8sService.stopPortForward();
+    K8sService.stopPod(podName);
     // Format and print the response
     String formattedResponse = formatResponse(response);
     System.out.println(formattedResponse);
