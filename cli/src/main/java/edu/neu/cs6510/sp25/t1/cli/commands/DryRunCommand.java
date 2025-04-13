@@ -206,41 +206,4 @@ public class DryRunCommand implements Callable<Integer> {
     return orderedStages;
   }
 
-  private boolean visitStage(
-      Stage stage, 
-      Map<String, Stage> stageMap, 
-      Set<String> visited, 
-      Set<String> recursionStack, 
-      List<Stage> orderedStages,
-      Pipeline pipeline) {
-      
-    if (recursionStack.contains(stage.getName())) {
-      return false;
-    }
-    
-    if (visited.contains(stage.getName())) {
-      return true;
-    }
-
-    visited.add(stage.getName());
-    recursionStack.add(stage.getName());
-
-    // Find all stages that this stage depends on through its jobs
-    for (Job job : stage.getJobs()) {
-      for (String dependency : job.getDependencies()) {
-        Stage dependentStage = findStageContainingJob(dependency, stageMap);
-        
-        // If the dependency is in another stage (cross-stage dependency)
-        if (dependentStage != null && !dependentStage.getName().equals(stage.getName())) {
-          if (!visitStage(dependentStage, stageMap, visited, recursionStack, orderedStages, pipeline)) {
-            return false;
-          }
-        }
-      }
-    }
-
-    recursionStack.remove(stage.getName());
-    orderedStages.add(stage);
-    return true;
-  }
 
