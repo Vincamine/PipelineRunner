@@ -88,18 +88,53 @@ public class DryRunCommand implements Callable<Integer> {
   private Map<String, List<Map<String, Object>>> createExecutionPlan(Map<String, Object> pipelineConfig) throws Exception {
     Map<String, List<Map<String, Object>>> executionPlan = new LinkedHashMap<>();
     
-    // Extract stages and jobs
+    // Extract stages
     List<?> stages = (List<?>) pipelineConfig.get("stages");
-    List<Map<String, Object>> jobs = (List<Map<String, Object>>) pipelineConfig.get("jobs");
+    if (stages == null) {
+      throw new Exception("Pipeline must have 'stages' defined");
+    }
     
-    // Build a map of stage names for easy reference
+    // Build a map of stage names and extract jobs
     List<String> stageNames = new ArrayList<>();
+    List<Map<String, Object>> allJobs = new ArrayList<>();
+    Map<String, Map<String, Object>> stageMap = new HashMap<>();
+    
+    // Process stages and their jobs
     for (Object stageObj : stages) {
-      if (stageObj instanceof String) {
+      if (stageObj instanceof Map) {
+        Map<String, Object> stageMap2 = (Map<String, Object>) stageObj;
+        String stageName = (String) stageMap2.get("name");
+        stageNames.add(stageName);
+        stageMap.put(stageName, stageMap2);
+        
+        // Check if this stage has jobs
+        if (stageMap2.containsKey("jobs")) {
+          List<Map<String, Object>> stageJobs = (List<Map<String, Object>>) stageMap2.get("jobs");
+          for (Map<String, Object> job : stageJobs) {
+            // Set the stage field on each job if not present
+            if (!job.containsKey("stage")) {
+              job.put("stage", stageName);
+            }
+            allJobs.add(job);
+          }
+        }
+      } else if (stageObj instanceof String) {
         stageNames.add((String) stageObj);
-      } else if (stageObj instanceof Map) {
-        stageNames.add((String) ((Map<?, ?>) stageObj).get("name"));
       }
+    }
+    
+    // Handle top-level jobs list if present
+    List<Map<String, Object>> topLevelJobs = (List<Map<String, Object>>) pipelineConfig.get("jobs");
+    if (topLevelJobs != null) {
+      allJobs.addAll(topLevelJobs);
+    }
+    
+    // If we have no jobs at all, return empty execution plan
+    if (allJobs.isEmpty()) {
+      for (String stageName : stageNames) {
+        executionPlan.put(stageName, new ArrayList<>());
+      }
+      return executionPlan;
     }
     
     // Initialize the execution plan with empty lists for each stage
@@ -109,13 +144,13 @@ public class DryRunCommand implements Callable<Integer> {
     
     // Create a map of job name to job for easy reference
     Map<String, Map<String, Object>> jobMap = new HashMap<>();
-    for (Map<String, Object> job : jobs) {
+    for (Map<String, Object> job : allJobs) {
       jobMap.put((String) job.get("name"), job);
     }
     
     // Group jobs by stage
     Map<String, List<Map<String, Object>>> jobsByStage = new HashMap<>();
-    for (Map<String, Object> job : jobs) {
+    for (Map<String, Object> job : allJobs) {
       String stageName = (String) job.get("stage");
       if (!jobsByStage.containsKey(stageName)) {
         jobsByStage.put(stageName, new ArrayList<>());
@@ -123,20 +158,24 @@ public class DryRunCommand implements Callable<Integer> {
       jobsByStage.get(stageName).add(job);
     }
     
-    // Perform topological sort on stages based on job dependencies
-    List<String> sortedStages = topologicalSortStages(stageNames, jobs, jobMap);
+    // Perform topological sort on stages based on job dependencies (if we have dependencies)
+    List<String> sortedStages = topologicalSortStages(stageNames, allJobs, jobMap);
     
     // For each stage, perform topological sort on jobs
     for (String stageName : sortedStages) {
       List<Map<String, Object>> stageJobs = jobsByStage.getOrDefault(stageName, new ArrayList<>());
-      List<Map<String, Object>> sortedJobs = topologicalSortJobs(stageJobs, jobMap);
-      executionPlan.put(stageName, sortedJobs);
+      if (!stageJobs.isEmpty()) {
+        List<Map<String, Object>> sortedJobs = topologicalSortJobs(stageJobs, jobMap);
+        executionPlan.put(stageName, sortedJobs);
+      }
     }
     
     // Create final ordered execution plan
     Map<String, List<Map<String, Object>>> orderedPlan = new LinkedHashMap<>();
     for (String stageName : sortedStages) {
-      orderedPlan.put(stageName, executionPlan.get(stageName));
+      if (executionPlan.containsKey(stageName)) {
+        orderedPlan.put(stageName, executionPlan.get(stageName));
+      }
     }
     
     return orderedPlan;
