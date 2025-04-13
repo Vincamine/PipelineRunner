@@ -199,16 +199,4 @@ public class JobExecutionService {
 
     return jobExecutionRepository.findByStageExecution(stageExecution);
   }
-
-  /**
-   * Get job dependencies.
-   *
-   * @param jobId job ID
-   * @return list of job dependencies
-   */
-  @Transactional(readOnly = true)
-  public List<UUID> getJobDependencies(UUID jobId) {
-    return jobExecutionRepository.findDependenciesByJobId(jobId);
-  }
-
 }
