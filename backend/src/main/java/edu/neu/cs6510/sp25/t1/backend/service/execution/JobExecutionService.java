@@ -14,15 +14,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import edu.neu.cs6510.sp25.t1.backend.database.entity.JobEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.JobExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.JobRepository;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.service.event.JobCompletedEvent;
-import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;
-import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import lombok.RequiredArgsConstructor;

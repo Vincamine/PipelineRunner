@@ -38,27 +38,10 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PipelineExecutionService {
-  private final PipelineExecutionRepository pipelineExecutionRepository;
-  private final PipelineExecutionMapper pipelineExecutionMapper;
-  
   private final PipelineDefinitionService pipelineDefinitionService;
   private final YamlConfigurationService yamlConfigurationService;
   private final PipelineExecutionCreationService pipelineExecutionCreationService;
-  private final PipelineStatusService pipelineStatusService;
   private final GitPipelineService gitPipelineService;
-
-  /**
-   * Retrieves a pipeline execution by ID.
-   *
-   * @param pipelineExecutionId ID of the pipeline execution
-   * @return response containing pipeline execution ID and status
-   */
-  public PipelineExecutionResponse getPipelineExecution(UUID pipelineExecutionId) {
-    PipelineExecutionDTO dto = pipelineExecutionRepository.findById(pipelineExecutionId)
-            .map(pipelineExecutionMapper::toDTO)
-            .orElseThrow(() -> new IllegalArgumentException("Pipeline Execution not found"));
-    return new PipelineExecutionResponse(dto.getId().toString(), dto.getStatus().toString());
-  }
 
   /**
    * Starts a new pipeline execution by parsing YAML, saving entities, and queuing execution.
