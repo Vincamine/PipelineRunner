@@ -8,8 +8,8 @@ A containerized CI/CD pipeline system with CLI interface for executing and monit
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/cicd-project.git
-cd cicd-project
+git clone https://github.com/yourusername/pipr-project.git
+cd pipr-project
 
 # Build the project
 ./gradlew clean build
@@ -50,41 +50,41 @@ stages:
 
 #### Check a Pipeline Configuration
 ```bash
-cicd check --file path/to/pipeline.yaml
+pipr check --file path/to/pipeline.yaml
 ```
 
 #### Run a Pipeline
 ```bash
 # From a YAML file
-cicd run --file path/to/pipeline.yaml
+pipr run --file path/to/pipeline.yaml
 
 # From a Git repository
-cicd run --repo https://github.com/user/repo.git --branch develop
+pipr run --repo https://github.com/user/repo.git --branch develop
 ```
 
 #### Check Pipeline Status
 ```bash
-cicd status --pipeline my-pipeline
+pipr status --pipeline my-pipeline
 ```
 
 #### Get Execution Reports
 ```bash
 # Get summary of all pipeline runs
-cicd report --pipeline my-pipeline
+pipr report --pipeline my-pipeline
 
 # Get details for a specific run
-cicd report --pipeline my-pipeline --run 5
+pipr report --pipeline my-pipeline --run 5
 
 # Get details for a specific stage
-cicd report --pipeline my-pipeline --run 5 --stage build
+pipr report --pipeline my-pipeline --run 5 --stage build
 
 # Get details for a specific job
-cicd report --pipeline my-pipeline --run 5 --stage build --job compile
+pipr report --pipeline my-pipeline --run 5 --stage build --job compile
 ```
 
 #### View Execution Plan (Dry Run)
 ```bash
-cicd dry-run --file path/to/pipeline.yaml
+pipr dry-run --file path/to/pipeline.yaml
 ```
 
 ### Global Options
@@ -123,7 +123,7 @@ This is a Gradle multi-module project:
 
 2. **Create a Docker volume**
    ```bash
-   docker volume create cicd
+   docker volume create pipr
    ```
 
 3. **Start services with Docker Compose**
@@ -170,7 +170,7 @@ Run individual components as Java applications with shared services.
 
 #### Docker Compose
 ```bash
-docker volume create cicd  # Create this first
+docker volume create pipr  # Create this first
 docker-compose up -d
 ```
 
