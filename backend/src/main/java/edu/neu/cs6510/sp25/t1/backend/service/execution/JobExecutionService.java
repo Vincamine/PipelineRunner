@@ -70,7 +70,6 @@ public class JobExecutionService {
     jobExecutionRepository.saveAndFlush(jobExecution);
     PipelineLogger.info("Updated job execution status to " + status + ": " + jobExecutionId);
   }
-
   
   /**
    * Cleans up dependency maps for a stage after it's completed.
@@ -109,23 +108,6 @@ public class JobExecutionService {
     }
   }
 
-  /**
-   * Saves job dependencies map for a stage.
-   * This is used to track job dependencies and determine when jobs can be executed.
-   *
-   * @param stageExecutionId ID of the stage execution
-   * @param jobDependencies map of job execution ID to list of job dependency IDs
-   * @param queuedJobs set of job IDs that have been queued
-   */
-  @Transactional
-  public void saveJobDependenciesMap(UUID stageExecutionId, Map<UUID, List<UUID>> jobDependencies, Set<UUID> queuedJobs) {
-    stageDependenciesMap.put(stageExecutionId, new HashMap<>(jobDependencies));
-    stageQueuedJobsMap.put(stageExecutionId, ConcurrentHashMap.newKeySet());
-    stageQueuedJobsMap.get(stageExecutionId).addAll(queuedJobs);
-    
-    PipelineLogger.info("Saved job dependencies map for stage: " + stageExecutionId);
-    PipelineLogger.info("Initial queued jobs: " + queuedJobs);
-  }
   
   /**
    * Finds jobs that are ready for execution after a job has completed.
