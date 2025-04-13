@@ -46,7 +46,7 @@ public class K8sService {
         pipelineName = pipelineName.replaceFirst("\\.yaml$", "");
       }
 
-      applyYaml("k8s/backend-service.yaml", api, pipelineName);
+      applyYaml("k8s/backend-pod.yaml", api, pipelineName);
       waitForPod(podName.toLowerCase(), api);
       portForwardBackendService();
     } catch (Exception e) {
@@ -184,7 +184,7 @@ public class K8sService {
 
       V1DeleteOptions deleteOptions = new V1DeleteOptions(); // default deletion policy
 
-      System.out.println("🛑 Deleting pod: " + podName);
+      System.out.println("Deleting pod: " + podName);
       api.deleteNamespacedPod(
           podName,
           NAMESPACE,
@@ -195,9 +195,9 @@ public class K8sService {
           null, // propagationPolicy
           deleteOptions
       );
-      System.out.println("✅ Pod deletion requested: " + podName);
+      System.out.println("Pod deletion requested: " + podName);
     } catch (ApiException e) {
-      System.err.println("🔥 Failed to delete pod via Kubernetes API");
+      System.err.println("Failed to delete pod via Kubernetes API");
       System.err.println("Status code: " + e.getCode());
       System.err.println("Response body: " + e.getResponseBody());
     } catch (IOException e) {
