@@ -36,28 +36,6 @@ public class StageExecutionService {
   private final JobExecutionService jobExecutionService;
   private final ApplicationEventPublisher eventPublisher;
 
-  /**
-   * Processes a stage execution from the queue or when triggered directly.
-   * This method is called by the queue service to process a stage execution
-   * or when manually triggered via the API.
-   *
-   * @param stageExecutionId ID of the stage execution to process
-   */
-  @Transactional
-  public void processStageExecution(UUID stageExecutionId) {
-    PipelineLogger.info("Processing stage execution: " + stageExecutionId);
-    
-    try {
-      // Update stage status to RUNNING
-      updateStageStatus(stageExecutionId, ExecutionStatus.RUNNING);
-      
-      // Process jobs for this stage
-      processStageJobs(stageExecutionId);
-    } catch (Exception e) {
-      PipelineLogger.error("Failed to process stage execution: " + e.getMessage());
-      updateStageStatus(stageExecutionId, ExecutionStatus.FAILED);
-    }
-  }
   
   /**
    * Updates the status of a stage execution.
@@ -82,98 +60,6 @@ public class StageExecutionService {
     PipelineLogger.info("Updated stage execution status to " + status + ": " + stageExecutionId);
   }
 
-  /**
-   * Process jobs for a stage based on dependencies.
-   *
-   * @param stageExecutionId ID of the stage execution
-   */
-  private void processStageJobs(UUID stageExecutionId) {
-    // Get job executions for this stage
-    List<JobExecutionEntity> jobs = jobExecutionService.getJobsByStageExecution(stageExecutionId);
-
-    if (jobs.isEmpty()) {
-      PipelineLogger.warn("No jobs found for stage execution: " + stageExecutionId);
-      // If no jobs, mark the stage as successful
-      finalizeStageExecution(stageExecutionId);
-      return;
-    }
-
-    PipelineLogger.info("Found " + jobs.size() + " jobs to execute for stage: " + stageExecutionId);
-
-    // Execute jobs with dependency handling
-    queueJobsByDependencies(stageExecutionId);
-  }
-
-  /**
-   * Queue jobs for execution based on their dependencies.
-   *
-   * @param stageExecutionId ID of the stage execution
-   */
-  private void queueJobsByDependencies(UUID stageExecutionId) {
-    List<JobExecutionEntity> jobs = jobExecutionService.getJobsByStageExecution(stageExecutionId);
-
-    if (jobs.isEmpty()) {
-      PipelineLogger.warn("No jobs to execute for stage: " + stageExecutionId);
-      return;
-    }
-
-    Map<UUID, List<UUID>> jobDependencies = new HashMap<>();
-
-    // Load dependencies for each job
-    for (JobExecutionEntity job : jobs) {
-      List<UUID> dependencies = jobExecutionService.getJobDependencies(job.getId());
-      jobDependencies.put(job.getId(), dependencies);
-      PipelineLogger.info("Job " + job.getId() + " has " + dependencies.size() + " dependencies");
-    }
-
-    // Detect circular dependencies using graph analysis
-    if (hasCircularDependencies(jobDependencies)) {
-      PipelineLogger.error("Circular dependency detected for stage: " + stageExecutionId);
-      finalizeStageExecutionAsFailed(stageExecutionId);
-      return;
-    }
-
-    // Find jobs with no dependencies and queue them
-    Set<UUID> queuedJobs = new HashSet<>();
-    for (JobExecutionEntity job : jobs) {
-      List<UUID> dependencies = jobDependencies.getOrDefault(job.getId(), List.of());
-      if (dependencies.isEmpty()) {
-        PipelineLogger.info("Queueing job with no dependencies: " + job.getId());
-        queuedJobs.add(job.getId());
-      }
-    }
-    
-    // Save the job dependencies map for the JobExecutionService to use
-    jobExecutionService.saveJobDependenciesMap(stageExecutionId, jobDependencies, queuedJobs);
-    
-    // If no jobs were queued but we have jobs, there may be a problem with job configuration
-    if (queuedJobs.isEmpty() && !jobs.isEmpty()) {
-      PipelineLogger.error("No jobs could be queued for stage: " + stageExecutionId + ". Check job dependencies.");
-      finalizeStageExecutionAsFailed(stageExecutionId);
-    }
-  }
-  
-  /**
-   * Detects circular dependencies in the job dependency graph.
-   *
-   * @param dependencies Map of job ID to list of dependency job IDs
-   * @return true if circular dependencies are detected
-   */
-  private boolean hasCircularDependencies(Map<UUID, List<UUID>> dependencies) {
-    // For each job, track visited and recursion stack
-    Set<UUID> visited = new HashSet<>();
-    Set<UUID> recursionStack = new HashSet<>();
-    
-    // Check each job for circular dependencies
-    for (UUID jobId : dependencies.keySet()) {
-      if (hasCircularDependenciesDFS(dependencies, jobId, visited, recursionStack)) {
-        return true;
-      }
-    }
-    
-    return false;
-  }
-  
   /**
    * DFS helper method for circular dependency detection.
    *
@@ -349,16 +235,4 @@ public class StageExecutionService {
     PipelineLogger.info("Published stage completed event for stage: " + stageExecutionId);
   }
 
-  /**
-   * Retrieves the status of a stage execution.
-   *
-   * @param pipelineExecutionId pipeline execution id
-   * @param stageId             stage id
-   * @return the status of the stage
-   */
-  public String getStageStatus(UUID pipelineExecutionId, UUID stageId) {
-    return stageExecutionRepository.findByPipelineExecutionIdAndStageId(pipelineExecutionId, stageId)
-            .map(stageExecution -> stageExecution.getStatus().toString())
-            .orElse("Stage not found");
-  }
 }
