@@ -18,7 +18,6 @@ import edu.neu.cs6510.sp25.t1.backend.database.entity.StageExecutionEntity;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.StageExecutionRepository;
 import edu.neu.cs6510.sp25.t1.backend.service.event.JobCompletedEvent;
 import edu.neu.cs6510.sp25.t1.backend.service.event.StageCompletedEvent;
-import edu.neu.cs6510.sp25.t1.backend.service.queue.JobExecutionQueueService;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,6 @@ import lombok.RequiredArgsConstructor;
 public class StageExecutionService {
   private final StageExecutionRepository stageExecutionRepository;
   private final JobExecutionService jobExecutionService;
-  private final JobExecutionQueueService jobExecutionQueueService;
   private final ApplicationEventPublisher eventPublisher;
 
   /**
@@ -141,7 +139,6 @@ public class StageExecutionService {
       List<UUID> dependencies = jobDependencies.getOrDefault(job.getId(), List.of());
       if (dependencies.isEmpty()) {
         PipelineLogger.info("Queueing job with no dependencies: " + job.getId());
-        jobExecutionQueueService.enqueueJobExecution(job.getId());
         queuedJobs.add(job.getId());
       }
     }
@@ -233,7 +230,6 @@ public class StageExecutionService {
     // Queue the newly executable jobs
     for (UUID jobId : newlyQueueableJobs) {
       PipelineLogger.info("Queueing job that was waiting on dependencies: " + jobId);
-      jobExecutionQueueService.enqueueJobExecution(jobId);
     }
     
     // Check if all jobs are complete

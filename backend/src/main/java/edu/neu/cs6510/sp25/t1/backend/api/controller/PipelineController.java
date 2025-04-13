@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.error.ApiError;
 import edu.neu.cs6510.sp25.t1.backend.service.execution.PipelineExecutionService;
-import edu.neu.cs6510.sp25.t1.backend.service.queue.PipelineExecutionQueueService;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
@@ -40,7 +39,6 @@ public class PipelineController {
 
   private final PipelineExecutionService pipelineExecutionService;
   @Lazy
-  private final PipelineExecutionQueueService pipelineExecutionQueueService;
   private final StageQueuePublisher stageQueuePublisher;
   private final StatusService statusService;
 
@@ -48,17 +46,14 @@ public class PipelineController {
    * Constructor for PipelineController.
    *
    * @param pipelineExecutionService the service responsible for executing pipelines
-   * @param pipelineExecutionQueueService the service managing the pipeline execution queue
    * @param stageQueuePublisher the publisher responsible for managing stage queues
    * @param statusService the service responsible for handling status updates
    */
   public PipelineController(
       PipelineExecutionService pipelineExecutionService,
-      PipelineExecutionQueueService pipelineExecutionQueueService,
       StageQueuePublisher stageQueuePublisher,
       StatusService statusService) {
     this.pipelineExecutionService = pipelineExecutionService;
-    this.pipelineExecutionQueueService = pipelineExecutionQueueService;
     this.stageQueuePublisher = stageQueuePublisher;
     this.statusService = statusService;
   }
@@ -109,21 +104,6 @@ public class PipelineController {
     }
   }
 
-  /**
-   * Get information about the execution queue.
-   * This is useful for debugging and monitoring the queue.
-   *
-   * @return ResponseEntity with queue information
-   */
-  @GetMapping("/queue/status")
-  @Operation(summary = "Get pipeline queue status", description = "Returns information about the pipeline execution queue.")
-  public ResponseEntity<?> getQueueStatus() {
-    Map<String, Object> response = new HashMap<>();
-    response.put("queueSize", pipelineExecutionQueueService.getQueueSize());
-    response.put("isProcessing", pipelineExecutionQueueService.isProcessing());
-
-    return ResponseEntity.ok(response);
-  }
 
   /**
    * Debug endpoint to check the database status for a specific pipeline
