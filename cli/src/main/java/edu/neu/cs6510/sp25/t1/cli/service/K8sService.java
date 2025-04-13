@@ -4,6 +4,7 @@ import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.util.Config;
@@ -35,14 +36,43 @@ public class K8sService {
       throw new RuntimeException("Failed to start CI/CD environment", e);
     }
   }
+  public static String startBackendEnvironment(String pipelineName) {
+    try {
+      ApiClient client = Config.defaultClient();
+      Configuration.setDefaultApiClient(client);
+      CoreV1Api api = new CoreV1Api();
+
+      if (pipelineName.endsWith(".yaml")){
+        pipelineName = pipelineName.replaceFirst("\\.yaml$", "");
+      }
+
+      applyYaml("k8s/backend-service.yaml", api, pipelineName);
+      waitForPod(podName.toLowerCase(), api);
+      portForwardBackendService();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return podName;
+  }
 
   private static void applyYaml(String filePath, CoreV1Api api, String pipelineName) throws Exception {
     try (InputStream is = new FileInputStream(filePath)) {
       Object obj = Yaml.load(new java.io.InputStreamReader(is));
-      podName = "cicd-pod-" + pipelineName;
+
+      // Sanitize pipelineName to comply with Kubernetes naming rules
+      String safePipelineName = pipelineName.toLowerCase().replaceAll("[^a-z0-9.-]", "");
+
+      // Determine pod name based on file path
+      if (filePath.contains("cicd")) {
+        podName = "cicd-pod-" + safePipelineName;
+      } else if (filePath.contains("backend")) {
+        podName = "backend-pod-" + safePipelineName;
+      } else {
+        podName = "generic-pod-" + safePipelineName;
+      }
 
       if (obj instanceof V1Pod pod) {
-        pod.getMetadata().setName(podName.toLowerCase());
+        pod.getMetadata().setName(podName);
         try {
           api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
         } catch (ApiException e) {
@@ -52,7 +82,7 @@ public class K8sService {
           System.err.println("Response headers: " + e.getResponseHeaders());
           e.printStackTrace();
 
-          throw new RuntimeException("Failed to apply pod " + podName.toLowerCase(), e);
+          throw new RuntimeException("Failed to apply pod " + podName, e);
         }
         // api.createNamespacedPod(NAMESPACE, pod, null, null, null, null);
         System.out.println("Applied Pod: " + pod.getMetadata().getName());
@@ -61,7 +91,7 @@ public class K8sService {
         System.out.println("Applied Service: " + svc.getMetadata().getName());
       }
     } catch (Exception e) {
-      throw new RuntimeException("Failed to apply pod " + podName.toLowerCase(), e);
+      throw new RuntimeException("Failed to apply pod " + podName, e);
     }
   }
 
@@ -93,7 +123,7 @@ public class K8sService {
       Thread.sleep(50000); // Sleep 50 seconds before port-forward
 
       System.out.println("Port forwarding backend service on port 8080...");
-      final String podCommand = "pod/" + podName.toLowerCase();
+      final String podCommand = "pod/" + podName;
       ProcessBuilder pb = new ProcessBuilder("kubectl", "port-forward", podCommand, "8080:8080");
       pb.inheritIO();
       portForwardProcess = pb.start();
@@ -145,5 +175,35 @@ public class K8sService {
 
     throw new RuntimeException("Backend failed to become ready after timeout.");
   }
+
+  public static void stopPod(String podName) {
+    try {
+      ApiClient client = Config.defaultClient();
+      Configuration.setDefaultApiClient(client);
+      CoreV1Api api = new CoreV1Api();
+
+      V1DeleteOptions deleteOptions = new V1DeleteOptions(); // default deletion policy
+
+      System.out.println("🛑 Deleting pod: " + podName);
+      api.deleteNamespacedPod(
+          podName,
+          NAMESPACE,
+          null, // pretty
+          null, // dryRun
+          null, // gracePeriodSeconds
+          null, // orphanDependents (deprecated)
+          null, // propagationPolicy
+          deleteOptions
+      );
+      System.out.println("✅ Pod deletion requested: " + podName);
+    } catch (ApiException e) {
+      System.err.println("🔥 Failed to delete pod via Kubernetes API");
+      System.err.println("Status code: " + e.getCode());
+      System.err.println("Response body: " + e.getResponseBody());
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to initialize Kubernetes API client", e);
+    }
+  }
+
 
 }

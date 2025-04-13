@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
+import edu.neu.cs6510.sp25.t1.cli.service.K8sService;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -35,6 +36,8 @@ public class StatusCommand implements Callable<Integer> {
       return 1;
     }
 
+    String podName = K8sService.startBackendEnvironment(pipelineName);
+
     String url = BASE_URL + pipelineName;
     PipelineLogger.info("Fetching pipeline status for: " + pipelineName);
     PipelineLogger.debug("GET " + url);
@@ -51,17 +54,24 @@ public class StatusCommand implements Callable<Integer> {
         PipelineLogger.error("Failed to fetch pipeline status.");
         PipelineLogger.error("HTTP Status: " + response.code());
         PipelineLogger.error("Response: " + errorBody);
+        K8sService.stopPortForward();
+        K8sService.stopPod(podName);
         return 1;
       }
 
       String responseBody = response.body() != null ? response.body().string() : "No content";
       PipelineLogger.info("Pipeline Status:");
       PipelineLogger.info(responseBody);
+      K8sService.stopPortForward();
+      K8sService.stopPod(podName);
       return 0;
 
     } catch (IOException e) {
       PipelineLogger.error("Error while contacting backend: " + e.getMessage());
+      K8sService.stopPortForward();
+      K8sService.stopPod(podName);
       return 1;
     }
+
   }
 }

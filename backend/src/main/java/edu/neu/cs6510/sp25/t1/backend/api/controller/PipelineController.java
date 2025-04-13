@@ -192,11 +192,15 @@ public class PipelineController {
   @Operation(summary = "Get pipeline status by YAML filename", description = "Extracts pipeline name from file and retrieves current status.")
   public ResponseEntity<?> getPipelineStatusByFile(@PathVariable String pipelineFile) {
     try {
-      if (pipelineFile == null || !pipelineFile.endsWith(".yaml")) {
-        return ResponseEntity.badRequest().body("Invalid pipeline filename format. Must end with .yaml");
+      if (pipelineFile == null) {
+        return ResponseEntity.badRequest().body("Invalid pipeline ");
+      }
+      String pipelineName;
+      if (pipelineFile.endsWith(".yaml")){
+        pipelineName = pipelineFile.replaceFirst("\\.yaml$", "");
       }
 
-      String pipelineName = pipelineFile.replaceFirst("\\.yaml$", "");
+      pipelineName = pipelineFile;
       PipelineLogger.info("Fetching status for pipeline: " + pipelineName);
 
       // Trigger status service (implementation to be added)
