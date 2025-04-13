@@ -23,7 +23,29 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-
+/**
+ * Service class responsible for retrieving the execution status of a pipeline,
+ * including its stages and jobs. This class aggregates the status hierarchy
+ * from jobs to stages to the overall pipeline level.
+ * <p>
+ * It interacts with repositories to query the latest execution states and updates
+ * them if any discrepancies are found between computed and persisted values.
+ * <p>
+ * Pipeline status resolution logic:
+ * - If all jobs in a stage are successful, the stage is marked as SUCCESS.
+ * - If any job fails, the stage and pipeline are marked accordingly.
+ * - The most severe status among jobs determines the stage's and pipeline's status.
+ * <p>
+ * Dependencies:
+ * - {@link PipelineRepository}
+ * - {@link PipelineExecutionRepository}
+ * - {@link StageRepository}
+ * - {@link StageExecutionRepository}
+ * - {@link JobRepository}
+ * - {@link JobExecutionRepository}
+ *
+ * Author: Mingtianfang Li
+ */
 @Service
 public class StatusService {
   private final PipelineRepository pipelineRepository;
@@ -47,6 +69,35 @@ public class StatusService {
     this.jobExecutionRepository = jobExecutionRepository;
   }
 
+
+  /**
+   * Retrieves the most recent execution status of the given pipeline.
+   * <p>
+   * The method performs the following:
+   * 1. Finds the pipeline by name.
+   * 2. Retrieves the most recent pipeline execution.
+   * 3. Iterates through each stage:
+   *    - Retrieves its execution entity.
+   *    - Aggregates the job execution statuses.
+   *    - Determines and updates the stage execution status.
+   * 4. Aggregates all stage statuses to determine the pipeline status.
+   * 5. Updates and persists the pipeline execution status if necessary.
+   *
+   * @param pipelineName the name of the pipeline whose status should be retrieved
+   * @return a map containing:
+   *         - "pipeline": String - pipeline name
+   *         - "pipelineStatus": ExecutionStatus - overall pipeline status
+   *         - "stageResult": List of maps containing:
+   *              - "stage": String - stage name
+   *              - "stageExecution": UUID - stage execution ID
+   *              - "stageExecutionStatus": ExecutionStatus
+   *              - "jobs": List of maps containing:
+   *                   - "job": String - job name
+   *                   - "jobExecution": UUID
+   *                   - "jobExecutionStatus": ExecutionStatus
+   *
+   * @throws IllegalArgumentException if pipeline, stage, or job execution data is not found
+   */
   public Map<String, Object> getStatusForPipeline(String pipelineName) {
     Map<String, Object> result = new LinkedHashMap<>();
 
