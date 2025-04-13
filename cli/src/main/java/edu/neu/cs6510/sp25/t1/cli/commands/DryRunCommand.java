@@ -195,6 +195,11 @@ public class DryRunCommand implements Callable<Integer> {
       List<Map<String, Object>> allJobs,
       Map<String, Map<String, Object>> jobMap) {
     
+    // If there are no jobs or no stage names, return an empty list
+    if (allJobs == null || allJobs.isEmpty() || stageNames == null || stageNames.isEmpty()) {
+      return new ArrayList<>(stageNames);
+    }
+    
     // Create a map of stage dependencies
     Map<String, List<String>> stageDependencies = new HashMap<>();
     for (String stageName : stageNames) {
@@ -202,6 +207,7 @@ public class DryRunCommand implements Callable<Integer> {
     }
     
     // Determine stage dependencies based on job dependencies
+    boolean hasDependencies = false;
     for (Map<String, Object> job : allJobs) {
       String jobStage = (String) job.get("stage");
       if (job.containsKey("dependencies")) {
@@ -210,8 +216,10 @@ public class DryRunCommand implements Callable<Integer> {
         
         if (depsObj instanceof String) {
           dependencies.add((String) depsObj);
-        } else if (depsObj instanceof List) {
+          hasDependencies = true;
+        } else if (depsObj instanceof List && !((List<?>) depsObj).isEmpty()) {
           dependencies.addAll((List<String>) depsObj);
+          hasDependencies = true;
         }
         
         for (String depName : dependencies) {
@@ -224,6 +232,11 @@ public class DryRunCommand implements Callable<Integer> {
           }
         }
       }
+    }
+    
+    // If no dependencies, just return stages in original order
+    if (!hasDependencies) {
+      return new ArrayList<>(stageNames);
     }
     
     // Perform topological sort on stages
@@ -282,6 +295,28 @@ public class DryRunCommand implements Callable<Integer> {
       List<Map<String, Object>> jobs,
       Map<String, Map<String, Object>> jobMap) {
     
+    // If there are no jobs, return an empty list
+    if (jobs == null || jobs.isEmpty()) {
+      return new ArrayList<>();
+    }
+    
+    // Check if any job in this stage has dependencies
+    boolean hasDependencies = false;
+    for (Map<String, Object> job : jobs) {
+      if (job.containsKey("dependencies")) {
+        Object deps = job.get("dependencies");
+        if (deps instanceof String || (deps instanceof List && !((List<?>) deps).isEmpty())) {
+          hasDependencies = true;
+          break;
+        }
+      }
+    }
+    
+    // If no dependencies, just return jobs in original order
+    if (!hasDependencies) {
+      return new ArrayList<>(jobs);
+    }
+    
     List<Map<String, Object>> result = new ArrayList<>();
     Set<String> visited = new HashSet<>();
     Set<String> processing = new HashSet<>();
@@ -307,8 +342,19 @@ public class DryRunCommand implements Callable<Integer> {
       Set<String> processing,
       List<Map<String, Object>> result) {
     
+    if (job == null) {
+      return;
+    }
+    
     String jobName = (String) job.get("name");
+    if (jobName == null) {
+      return;
+    }
+    
     String stageName = (String) job.get("stage");
+    if (stageName == null) {
+      stageName = ""; // Default to empty string to avoid NPE
+    }
     
     if (processing.contains(jobName)) {
       throw new RuntimeException("Cyclic dependency detected for job: " + jobName);
@@ -328,7 +374,11 @@ public class DryRunCommand implements Callable<Integer> {
       if (depsObj instanceof String) {
         dependencies.add((String) depsObj);
       } else if (depsObj instanceof List) {
-        dependencies.addAll((List<String>) depsObj);
+        for (Object dep : (List<?>) depsObj) {
+          if (dep instanceof String) {
+            dependencies.add((String) dep);
+          }
+        }
       }
       
       for (String depName : dependencies) {
@@ -337,7 +387,7 @@ public class DryRunCommand implements Callable<Integer> {
           String depStage = (String) depJob.get("stage");
           
           // Only process dependencies within the same stage here
-          if (depStage.equals(stageName)) {
+          if (depStage != null && depStage.equals(stageName)) {
             dfsJobSort(depJob, jobMap, visited, processing, result);
           }
         }
