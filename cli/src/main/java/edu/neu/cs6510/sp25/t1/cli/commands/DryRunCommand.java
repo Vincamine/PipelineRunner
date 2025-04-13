@@ -87,13 +87,24 @@ public class DryRunCommand implements Callable<Integer> {
       executionPlan.put(stage.getName(), new ArrayList<>());
     }
     
+    // Get the list of jobs for each stage from the pipeline
+    Map<String, List<Job>> stageJobsMap = new HashMap<>();
+    for (Job job : pipeline.getJobs()) {
+      String stageName = job.getStage();
+      if (!stageJobsMap.containsKey(stageName)) {
+        stageJobsMap.put(stageName, new ArrayList<>());
+      }
+      stageJobsMap.get(stageName).add(job);
+    }
+    
     // Sort jobs within each stage based on dependencies
     for (Stage stage : orderedStages) {
+      List<Job> stageJobs = stageJobsMap.getOrDefault(stage.getName(), new ArrayList<>());
       List<Job> topSortedJobs = new ArrayList<>();
       Set<String> visitedJobs = new HashSet<>();
       Set<String> processingJobs = new HashSet<>();
       
-      for (Job job : stage.getJobs()) {
+      for (Job job : stageJobs) {
         if (!visitedJobs.contains(job.getName())) {
           topologicalSortJobs(job, jobMap, jobToStageMap, visitedJobs, processingJobs, topSortedJobs);
         }
@@ -149,10 +160,8 @@ public class DryRunCommand implements Callable<Integer> {
   private Map<String, String> createJobToStageMap(Pipeline pipeline) {
     Map<String, String> jobToStageMap = new HashMap<>();
     
-    for (Stage stage : pipeline.getStages()) {
-      for (Job job : stage.getJobs()) {
-        jobToStageMap.put(job.getName(), stage.getName());
-      }
+    for (Job job : pipeline.getJobs()) {
+      jobToStageMap.put(job.getName(), job.getStage());
     }
     
     return jobToStageMap;
@@ -164,10 +173,8 @@ public class DryRunCommand implements Callable<Integer> {
   private Map<String, Job> createJobMap(Pipeline pipeline) {
     Map<String, Job> jobMap = new HashMap<>();
     
-    for (Stage stage : pipeline.getStages()) {
-      for (Job job : stage.getJobs()) {
-        jobMap.put(job.getName(), job);
-      }
+    for (Job job : pipeline.getJobs()) {
+      jobMap.put(job.getName(), job);
     }
     
     return jobMap;
@@ -248,29 +255,3 @@ public class DryRunCommand implements Callable<Integer> {
     return null;
   }
 
-  /**
-   * Prints the execution plan in YAML format.
-   */
-  private void printExecutionPlan(Map<String, List<Job>> executionPlan) {
-    StringBuilder yamlOutput = new StringBuilder();
-
-    // Output plan as YAML with stage names as keys and job names as subkeys
-    for (Map.Entry<String, List<Job>> stageEntry : executionPlan.entrySet()) {
-      String stageName = stageEntry.getKey();
-      List<Job> jobs = stageEntry.getValue();
-      
-      yamlOutput.append(stageName).append(":\n");
-      
-      for (Job job : jobs) {
-        yamlOutput.append("  ").append(job.getName()).append(":\n");
-        yamlOutput.append("    image: ").append(job.getDockerImage()).append("\n");
-        yamlOutput.append("    script:\n");
-        for (String scriptLine : job.getScript()) {
-          yamlOutput.append("      - ").append(scriptLine).append("\n");
-        }
-      }
-    }
-
-    System.out.println(yamlOutput);
-  }
-}
