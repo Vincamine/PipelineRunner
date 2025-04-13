@@ -60,13 +60,10 @@ public class RunCommand implements Callable<Integer> {
   @Override
   public Integer call() {
     try {
-      // GitUtils.isGitRootDirectory();
-      // PipelineLogger.info("Starting pipeline execution...");
-
       // Ensure a valid file path is provided when running locally
-      if (localRun) {
+      if (localRun || dryRun) {
         if ((repo == null) && (filePath == null || filePath.isEmpty())) {
-          PipelineLogger.error("Pipeline configuration file must be specified when running locally (-f).");
+          PipelineLogger.error("Pipeline configuration file must be specified when running locally or using dry-run (-f).");
           return 1;
         } else if (repo == null && filePath != null) {
           File pipelineFile = new File(filePath);
@@ -78,6 +75,13 @@ public class RunCommand implements Callable<Integer> {
             PipelineLogger.error("Git clone repository url is not inside git repo");
           }
         }
+      }
+      
+      // If dry-run is requested, delegate to the DryRunCommand
+      if (dryRun) {
+        DryRunCommand dryRunCmd = new DryRunCommand();
+        dryRunCmd.setFilePath(filePath);
+        return dryRunCmd.call();
       }
 
       return triggerPipelineExecution();
