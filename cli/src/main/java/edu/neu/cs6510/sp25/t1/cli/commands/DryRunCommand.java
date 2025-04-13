@@ -244,14 +244,3 @@ public class DryRunCommand implements Callable<Integer> {
     return true;
   }
 
-  private Stage findStageContainingJob(String jobName, Map<String, Stage> stageMap) {
-    for (Stage stage : stageMap.values()) {
-      for (Job job : stage.getJobs()) {
-        if (job.getName().equals(jobName)) {
-          return stage;
-        }
-      }
-    }
-    return null;
-  }
-
