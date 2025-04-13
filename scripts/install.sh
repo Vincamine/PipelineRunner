@@ -11,9 +11,10 @@ if [ ! -f "$CLI_JAR_PATH" ]; then
 fi
 
 # Create the wrapper script in /usr/local/bin
-echo '#!/bin/bash' | sudo tee /usr/local/bin/cicd > /dev/null
-echo "java -jar $CLI_JAR_PATH \"\$@\"" | sudo tee -a /usr/local/bin/cicd > /dev/null
-sudo chmod +x /usr/local/bin/cicd
+# Install as 'pipr' for pipeline runner
+echo '#!/bin/bash' | sudo tee /usr/local/bin/pipr > /dev/null
+echo "java -jar $CLI_JAR_PATH \"\$@\"" | sudo tee -a /usr/local/bin/pipr > /dev/null
+sudo chmod +x /usr/local/bin/pipr
 
-echo "[SUCCESS] Installation complete! You can now use 'cicd' as a command."
-echo "==>> Try running: cicd --help <<=="
+echo "[SUCCESS] Installation complete! You can now use 'pipr' as a command."
+echo "==>> Try running: pipr --help <<=="
