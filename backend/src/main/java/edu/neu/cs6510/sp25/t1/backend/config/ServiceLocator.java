@@ -29,15 +29,4 @@ public class ServiceLocator implements ApplicationContextAware {
         return applicationContext.getBean(beanClass);
     }
 
-    /**
-     * Get a bean by name and type.
-     *
-     * @param name The name of the bean
-     * @param beanClass The class of the bean to retrieve
-     * @param <T> The type of the bean
-     * @return The bean instance
-     */
-    public static <T> T getBean(String name, Class<T> beanClass) {
-        return applicationContext.getBean(name, beanClass);
-    }
 }

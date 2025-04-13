@@ -91,29 +91,5 @@ public class StageExecutionQueueService {
             PipelineLogger.error("Error processing stage execution: " + stageExecutionId + " - " + e.getMessage());
         }
     }
-    
-    /**
-     * Returns the current size of the stage execution queue.
-     *
-     * @return the number of stage executions in the queue
-     */
-    public int getQueueSize() {
-        return stageQueue.size();
-    }
-    
-    /**
-     * Checks if the stage queue is currently processing.
-     *
-     * @return true if the stage queue is processing, false otherwise
-     */
-    public boolean isProcessing() {
-        return stageQueue.isProcessing();
-    }
-    
-    /**
-     * Clears the stage execution queue.
-     */
-    public void clearQueue() {
-        stageQueue.clear();
-    }
+
 }

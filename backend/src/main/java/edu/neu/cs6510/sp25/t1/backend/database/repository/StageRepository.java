@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.StageEntity;
@@ -23,13 +22,4 @@ public interface StageRepository extends JpaRepository<StageEntity, UUID> {
    * @return a list of stages belonging to the specified pipeline
    */
   List<StageEntity> findByPipelineId(UUID pipelineId);
-
-  /**
-   * Finds a stage by name within a specific pipeline.
-   *
-   * @param name       the name of the stage
-   * @param pipelineId the pipeline ID
-   * @return an optional stage matching the criteria
-   */
-  Optional<StageEntity> findByNameAndPipelineId(String name, UUID pipelineId);
 }

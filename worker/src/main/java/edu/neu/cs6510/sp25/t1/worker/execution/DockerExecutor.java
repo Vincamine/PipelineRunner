@@ -1,8 +1,10 @@
 package edu.neu.cs6510.sp25.t1.worker.execution;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateVolumeResponse;
-import com.github.dockerjava.api.model.*;
+
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.Mount;
+import com.github.dockerjava.api.model.MountType;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.okhttp.OkHttpDockerCmdExecFactory;
@@ -62,11 +64,11 @@ public class DockerExecutor {
     //get branch
     String branch = findPipelineBranch.getBranch(jobExecution);
 
-    // 55-56 is about to make container path unique for every job
-    String jobId = String.valueOf(job.getId());
+//    // 55-56 is about to make container path unique for every job
+//    String jobId = String.valueOf(job.getId());
 
-    // create container path
-    String containerPath = "/app/" + pipelineName;
+//    // create container path
+//    String containerPath = "/app/" + pipelineName;
 
     String dockerImage = job.getDockerImage();
     List<String> script = job.getScript();
@@ -188,10 +190,10 @@ public class DockerExecutor {
       }
     }
   }
-  private void printWorkingDirectoryContents(File dir) {
-    log.info("Contents of working directory: {}", dir.getAbsolutePath());
-    printDirectoryContentsRecursive(dir, "");
-  }
+//  private void printWorkingDirectoryContents(File dir) {
+//    log.info("Contents of working directory: {}", dir.getAbsolutePath());
+//    printDirectoryContentsRecursive(dir, "");
+//  }
 
   private void printDirectoryContentsRecursive(File file, String indent) {
     if (!file.exists()) {

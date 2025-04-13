@@ -93,8 +93,8 @@ public class PipelineExecutionCreationService {
       UUID pipelineExecutionId,
       Map<String, Object> pipelineConfig,
       Queue<Queue<UUID>> stageQueue) {
-    // Determine if we're using top-level jobs or nested stages format
-    boolean usingTopLevelJobs = pipelineConfig.containsKey("jobs");
+//    // Determine if we're using top-level jobs or nested stages format
+//    boolean usingTopLevelJobs = pipelineConfig.containsKey("jobs");
     
     // Get pipeline execution to retrieve pipelineId
     PipelineExecutionEntity pipelineExecution = pipelineExecutionRepository.findById(pipelineExecutionId)

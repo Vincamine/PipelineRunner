@@ -297,16 +297,16 @@ public class JobExecutionService {
   }
 
 
-  /**
-   * Saves a job execution to the database.
-   *
-   * @param jobExecution Job execution entity
-   */
-  @Transactional
-  public void saveJobExecution(JobExecutionEntity jobExecution) {
-    jobExecutionRepository.saveAndFlush(jobExecution);
-    PipelineLogger.info("Job execution saved: " + jobExecution.getId());
-  }
+//  /**
+//   * Saves a job execution to the database.
+//   *
+//   * @param jobExecution Job execution entity
+//   */
+//  @Transactional
+//  public void saveJobExecution(JobExecutionEntity jobExecution) {
+//    jobExecutionRepository.saveAndFlush(jobExecution);
+//    PipelineLogger.info("Job execution saved: " + jobExecution.getId());
+//  }
 
   /**
    * Get a job execution by ID.

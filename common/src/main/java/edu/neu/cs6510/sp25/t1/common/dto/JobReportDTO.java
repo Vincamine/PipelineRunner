@@ -14,23 +14,9 @@ public class JobReportDTO {
   private String commitHash;
   private String stageName;
 
-  public JobReportDTO() {
-  }
-
   public JobReportDTO(String name, List<ExecutionRecord> executions) {
     this.name = name;
     this.executions = executions;
-  }
-
-  public JobReportDTO(String name, List<ExecutionRecord> executions,
-      String pipelineName, int runNumber,
-      String commitHash, String stageName) {
-    this.name = name;
-    this.executions = executions;
-    this.pipelineName = pipelineName;
-    this.runNumber = runNumber;
-    this.commitHash = commitHash;
-    this.stageName = stageName;
   }
 
   public String getName() {

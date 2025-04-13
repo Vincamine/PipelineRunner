@@ -30,17 +30,6 @@ public class CliBackendClient {
   }
 
   /**
-   * Fetch available pipelines from the backend.
-   *
-   * @return JSON response from the backend
-   * @throws IOException if the API request fails
-   */
-  public String fetchAvailablePipelines() throws IOException {
-    String url = baseUrl + "/api/report/pipelines";
-    return sendGetRequest(url);
-  }
-
-  /**
    * Fetch pipeline reports from the backend.
    *
    * @param pipelineName the pipeline name

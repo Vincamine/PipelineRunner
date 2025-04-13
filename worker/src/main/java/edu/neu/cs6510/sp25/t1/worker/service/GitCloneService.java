@@ -1,7 +1,6 @@
 package edu.neu.cs6510.sp25.t1.worker.service;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateVolumeResponse;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.HostConfig;
@@ -44,11 +43,11 @@ public class GitCloneService {
     String cloneTarget = containerMountPath + "/repo";
     String gitDirPath = cloneTarget + "/.git";
 
-    // Step 1: Create volume
-    CreateVolumeResponse volume = dockerClient.createVolumeCmd()
-        .withName(volumeName)
-        .withDriver("local")
-        .exec();
+//    // Step 1: Create volume
+//    CreateVolumeResponse volume = dockerClient.createVolumeCmd()
+//        .withName(volumeName)
+//        .withDriver("local")
+//        .exec();
 
     log.info("Created Docker volume: {}", volumeName);
 

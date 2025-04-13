@@ -79,29 +79,5 @@ public class JobExecutionQueueService {
             PipelineLogger.error("Error processing job execution: " + jobExecutionId + " - " + e.getMessage());
         }
     }
-    
-    /**
-     * Returns the current size of the job execution queue.
-     *
-     * @return the number of job executions in the queue
-     */
-    public int getQueueSize() {
-        return jobQueue.size();
-    }
-    
-    /**
-     * Checks if the job queue is currently processing.
-     *
-     * @return true if the job queue is processing, false otherwise
-     */
-    public boolean isProcessing() {
-        return jobQueue.isProcessing();
-    }
-    
-    /**
-     * Clears the job execution queue.
-     */
-    public void clearQueue() {
-        jobQueue.clear();
-    }
+
 }

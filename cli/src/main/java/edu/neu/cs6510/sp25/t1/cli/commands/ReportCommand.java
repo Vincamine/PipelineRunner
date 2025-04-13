@@ -427,20 +427,6 @@ public class ReportCommand implements Callable<Integer> {
     }
   }
 
-
-  /**
-   * Format a job node into text representation.
-   * Overloaded method for compatibility with existing calls.
-   *
-   * @param sb The StringBuilder to append to
-   * @param jobNode The job JsonNode
-   * @param isDetailed Whether to include detailed information
-   * @param indent The indentation to use
-   */
-  private void formatJobNode(StringBuilder sb, JsonNode jobNode, boolean isDetailed, String indent) {
-    formatJobNode(sb, jobNode, isDetailed, indent, false);
-  }
-
   /**
    * Format a job node into text representation.
    * Overloaded method for compatibility with existing calls.

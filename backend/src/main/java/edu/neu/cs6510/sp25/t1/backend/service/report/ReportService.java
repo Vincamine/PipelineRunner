@@ -217,14 +217,12 @@ public class ReportService {
    */
   @Transactional(readOnly = true)
   public List<StageReportDTO> getStageReports(String pipelineName, String stageName) {
-    UUID pipelineId = pipelineExecutionRepository.findPipelineIdByName(pipelineName)
-        .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
+//    UUID pipelineId = pipelineExecutionRepository.findPipelineIdByName(pipelineName)
+//        .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
 
-    // 获取所有的pipeline execution
     List<PipelineExecutionEntity> pipelineExecutions = pipelineExecutionRepository
         .findByPipelineNameOrderByStartTimeDesc(pipelineName);
 
-    // 为每个pipeline execution查找指定stage的报告
     return pipelineExecutions.stream()
         .flatMap(exec -> {
           try {
@@ -232,7 +230,6 @@ public class ReportService {
                 .findByPipelineExecutionIdAndStageNameOrderByStartTimeDesc(exec.getId(), stageName);
             return stages.stream().map(this::createStageReport);
           } catch (Exception e) {
-            // 如果某个pipeline execution没有这个stage，就跳过
             return java.util.stream.Stream.empty();
           }
         })
@@ -250,8 +247,8 @@ public class ReportService {
    */
   @Transactional(readOnly = true)
   public List<JobReportDTO> getJobReportsForStage(String pipelineName, String stageName, String jobName) {
-    UUID pipelineId = pipelineExecutionRepository.findPipelineIdByName(pipelineName)
-        .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
+//    UUID pipelineId = pipelineExecutionRepository.findPipelineIdByName(pipelineName)
+//        .orElseThrow(() -> new IllegalArgumentException("Pipeline not found: " + pipelineName));
 
     // Get all pipeline executions
     List<PipelineExecutionEntity> pipelineExecutions = pipelineExecutionRepository

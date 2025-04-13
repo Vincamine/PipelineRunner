@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 /**
  * Repository for managing PipelineExecution entities.
@@ -25,14 +24,6 @@ public interface PipelineExecutionRepository extends JpaRepository<PipelineExecu
    * @return a list of pipeline executions associated with the given pipeline
    */
   Optional<PipelineExecutionEntity> findByPipelineId(UUID pipelineId);
-
-  /**
-   * Finds pipeline executions by status.
-   *
-   * @param status the execution status
-   * @return a list of pipeline executions with the specified status
-   */
-  List<PipelineExecutionEntity> findByStatus(ExecutionStatus status);
 
   /**
    * Finds a specific pipeline execution by pipeline ID and run number.

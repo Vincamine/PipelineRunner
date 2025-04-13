@@ -122,14 +122,14 @@ public class PipelineStatusService {
     return jobs.stream().allMatch(JobExecutionEntity::isAllowFailure);
   }
   
-  /**
-   * Finalizes a pipeline execution.
-   *
-   * @param pipelineExecutionId ID of the pipeline execution
-   */
-  @Transactional
-  public void finalizePipelineExecution(UUID pipelineExecutionId) {
-    PipelineLogger.info("Finalizing pipeline execution: " + pipelineExecutionId);
-    updatePipelineStatus(pipelineExecutionId, ExecutionStatus.SUCCESS);
-  }
+//  /**
+//   * Finalizes a pipeline execution.
+//   *
+//   * @param pipelineExecutionId ID of the pipeline execution
+//   */
+//  @Transactional
+//  public void finalizePipelineExecution(UUID pipelineExecutionId) {
+//    PipelineLogger.info("Finalizing pipeline execution: " + pipelineExecutionId);
+//    updatePipelineStatus(pipelineExecutionId, ExecutionStatus.SUCCESS);
+//  }
 }
