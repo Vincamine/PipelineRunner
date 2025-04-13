@@ -29,12 +29,12 @@ import picocli.CommandLine;
 public class DryRunCommand implements Callable<Integer> {
 
   @CommandLine.Option(
-          names = {"--file", "-f"},
-          description = "Path to the pipeline YAML configuration file.",
-          required = true
+      names = {"--file", "-f"},
+      description = "Path to the pipeline YAML configuration file.",
+      required = true
   )
   private String filePath;
-  
+
   public void setFilePath(String filePath) {
     this.filePath = filePath;
   }
@@ -66,27 +66,27 @@ public class DryRunCommand implements Callable<Integer> {
   }
 
   /**
-   * Creates a topologically-sorted execution plan of stages and jobs.
-   * Each stage contains a list of jobs sorted by dependencies.
+   * Creates a topologically-sorted execution plan of stages and jobs. Each stage contains a list
+   * of jobs sorted by dependencies.
    */
   private Map<String, List<Job>> orderJobsByExecution(Pipeline pipeline) {
     // This will maintain the stage execution order
     List<Stage> orderedStages = getOrderedStages(pipeline);
-    
+
     // Map from job name to the stage it belongs to
     Map<String, String> jobToStageMap = createJobToStageMap(pipeline);
-    
+
     // Map from job name to Job object
     Map<String, Job> jobMap = createJobMap(pipeline);
-    
+
     // Create ordered execution plan (stage -> ordered jobs)
     Map<String, List<Job>> executionPlan = new LinkedHashMap<>();
-    
+
     // Prepare the execution plan with empty job lists for each stage
     for (Stage stage : orderedStages) {
       executionPlan.put(stage.getName(), new ArrayList<>());
     }
-    
+
     // Get the list of jobs for each stage from the pipeline
     Map<String, List<Job>> stageJobsMap = new HashMap<>();
     for (Job job : pipeline.getJobs()) {
@@ -96,87 +96,88 @@ public class DryRunCommand implements Callable<Integer> {
       }
       stageJobsMap.get(stageName).add(job);
     }
-    
+
     // Sort jobs within each stage based on dependencies
     for (Stage stage : orderedStages) {
       List<Job> stageJobs = stageJobsMap.getOrDefault(stage.getName(), new ArrayList<>());
       List<Job> topSortedJobs = new ArrayList<>();
       Set<String> visitedJobs = new HashSet<>();
       Set<String> processingJobs = new HashSet<>();
-      
+
       for (Job job : stageJobs) {
         if (!visitedJobs.contains(job.getName())) {
-          topologicalSortJobs(job, jobMap, jobToStageMap, visitedJobs, processingJobs, topSortedJobs);
+          topologicalSortJobs(job, jobMap, jobToStageMap, visitedJobs, processingJobs,
+              topSortedJobs);
         }
       }
-      
+
       executionPlan.put(stage.getName(), topSortedJobs);
     }
-    
+
     return executionPlan;
   }
-  
+
   /**
    * Performs topological sort on jobs inside a stage, respecting dependencies.
    */
   private void topologicalSortJobs(
-      Job job, 
-      Map<String, Job> jobMap, 
+      Job job,
+      Map<String, Job> jobMap,
       Map<String, String> jobToStageMap,
-      Set<String> visitedJobs, 
-      Set<String> processingJobs, 
+      Set<String> visitedJobs,
+      Set<String> processingJobs,
       List<Job> result) {
-      
+
     if (processingJobs.contains(job.getName())) {
       throw new RuntimeException("Cyclic dependency detected for job: " + job.getName());
     }
-    
+
     if (visitedJobs.contains(job.getName())) {
       return;
     }
-    
+
     processingJobs.add(job.getName());
-    
+
     // Process dependencies
     for (String dependencyName : job.getDependencies()) {
       Job dependency = jobMap.get(dependencyName);
       String dependencyStage = jobToStageMap.get(dependencyName);
-      
+
       // Only process dependencies within the same stage here
       // Cross-stage dependencies are handled by stage ordering
       if (dependency != null && jobToStageMap.get(job.getName()).equals(dependencyStage)) {
         topologicalSortJobs(dependency, jobMap, jobToStageMap, visitedJobs, processingJobs, result);
       }
     }
-    
+
     processingJobs.remove(job.getName());
     visitedJobs.add(job.getName());
     result.add(job);
   }
-  
+
   /**
    * Creates a mapping from job name to stage name.
    */
   private Map<String, String> createJobToStageMap(Pipeline pipeline) {
     Map<String, String> jobToStageMap = new HashMap<>();
-    
+
     for (Job job : pipeline.getJobs()) {
       jobToStageMap.put(job.getName(), job.getStage());
     }
-    
+
     return jobToStageMap;
   }
-  
+
   /**
    * Creates a mapping from job name to Job object.
    */
   private Map<String, Job> createJobMap(Pipeline pipeline) {
     Map<String, Job> jobMap = new HashMap<>();
-    
+
     for (Job job : pipeline.getJobs()) {
       jobMap.put(job.getName(), job);
     }
-    
+
     return jobMap;
   }
 
@@ -202,8 +203,79 @@ public class DryRunCommand implements Callable<Integer> {
         }
       }
     }
-    
+
     return orderedStages;
   }
+  
+  private boolean visitStage(
+      Stage stage, 
+      Map<String, Stage> stageMap, 
+      Set<String> visited, 
+      Set<String> recursionStack, 
+      List<Stage> orderedStages,
+      Pipeline pipeline) {
+      
+    if (recursionStack.contains(stage.getName())) {
+      return false;
+    }
+    
+    if (visited.contains(stage.getName())) {
+      return true;
+    }
 
+    visited.add(stage.getName());
+    recursionStack.add(stage.getName());
+
+    // Find all stages that this stage depends on through its jobs
+    Map<String, String> jobToStageMap = createJobToStageMap(pipeline);
+    
+    // For each job in this stage
+    for (Job job : pipeline.getJobs()) {
+      if (job.getStage().equals(stage.getName())) {
+        // Check each of its dependencies
+        for (String dependency : job.getDependencies()) {
+          String dependentStageName = jobToStageMap.get(dependency);
+          
+          // If the dependency is in another stage (cross-stage dependency)
+          if (dependentStageName != null && !dependentStageName.equals(stage.getName())) {
+            Stage dependentStage = stageMap.get(dependentStageName);
+            if (dependentStage != null && !visitStage(dependentStage, stageMap, visited, recursionStack, orderedStages, pipeline)) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+
+    recursionStack.remove(stage.getName());
+    orderedStages.add(stage);
+    return true;
+  }
+  
+  /**
+   * Prints the execution plan in YAML format.
+   */
+  private void printExecutionPlan(Map<String, List<Job>> executionPlan) {
+    StringBuilder yamlOutput = new StringBuilder();
+
+    // Output plan as YAML with stage names as keys and job names as subkeys
+    for (Map.Entry<String, List<Job>> stageEntry : executionPlan.entrySet()) {
+      String stageName = stageEntry.getKey();
+      List<Job> jobs = stageEntry.getValue();
+      
+      yamlOutput.append(stageName).append(":\n");
+      
+      for (Job job : jobs) {
+        yamlOutput.append("  ").append(job.getName()).append(":\n");
+        yamlOutput.append("    image: ").append(job.getDockerImage()).append("\n");
+        yamlOutput.append("    script:\n");
+        for (String scriptLine : job.getScript()) {
+          yamlOutput.append("      - ").append(scriptLine).append("\n");
+        }
+      }
+    }
+
+    System.out.println(yamlOutput);
+  }
+}
 
