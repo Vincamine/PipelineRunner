@@ -413,10 +413,29 @@ public class DryRunCommand implements Callable<Integer> {
       
       yamlOutput.append(stageName).append(":\n");
       
+      if (jobs == null || jobs.isEmpty()) {
+        continue; // Skip empty stages
+      }
+      
       for (Map<String, Object> job : jobs) {
+        if (job == null) {
+          continue; // Skip null jobs
+        }
+        
         String jobName = (String) job.get("name");
-        Object imageObj = job.containsKey("dockerImage") ? job.get("dockerImage") : job.get("image");
-        String image = imageObj != null ? imageObj.toString() : "undefined";
+        if (jobName == null) {
+          continue; // Skip jobs without names
+        }
+        
+        // Find image (supporting multiple field names)
+        Object imageObj = null;
+        for (String fieldName : new String[]{"dockerImage", "image", "docker-image", "docker_image"}) {
+          if (job.containsKey(fieldName)) {
+            imageObj = job.get(fieldName);
+            break;
+          }
+        }
+        String image = imageObj != null ? imageObj.toString() : "alpine:latest"; // Default to alpine if not specified
         
         yamlOutput.append("  ").append(jobName).append(":\n");
         yamlOutput.append("    image: ").append(image).append("\n");
@@ -424,14 +443,31 @@ public class DryRunCommand implements Callable<Integer> {
         
         // Handle script which might be a string or a list
         Object scriptObj = job.get("script");
-        if (scriptObj instanceof String) {
-          String[] lines = ((String) scriptObj).split("\n");
-          for (String line : lines) {
-            yamlOutput.append("      - ").append(line).append("\n");
+        if (scriptObj == null) {
+          // If no script, add an echo command as placeholder
+          yamlOutput.append("      - echo \"No script specified\"\n");
+        } else if (scriptObj instanceof String) {
+          String scriptStr = (String) scriptObj;
+          if (scriptStr.contains("\n")) {
+            // Multiline string - split on newlines
+            String[] lines = scriptStr.split("\n");
+            for (String line : lines) {
+              yamlOutput.append("      - ").append(line.trim()).append("\n");
+            }
+          } else {
+            // Single line
+            yamlOutput.append("      - ").append(scriptStr).append("\n");
           }
         } else if (scriptObj instanceof List) {
-          for (Object scriptLine : (List<?>) scriptObj) {
-            yamlOutput.append("      - ").append(scriptLine).append("\n");
+          List<?> scriptLines = (List<?>) scriptObj;
+          if (scriptLines.isEmpty()) {
+            yamlOutput.append("      - echo \"Empty script\"\n");
+          } else {
+            for (Object scriptLine : scriptLines) {
+              if (scriptLine != null) {
+                yamlOutput.append("      - ").append(scriptLine).append("\n");
+              }
+            }
           }
         }
       }
