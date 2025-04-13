@@ -12,17 +12,13 @@ import edu.neu.cs6510.sp25.t1.backend.info.ClonedPipelineInfo;
 
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineDefinitionService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineExecutionCreationService;
-import edu.neu.cs6510.sp25.t1.backend.service.pipeline.PipelineStatusService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.YamlConfigurationService;
 import edu.neu.cs6510.sp25.t1.backend.service.pipeline.GitPipelineService;
-import edu.neu.cs6510.sp25.t1.common.dto.PipelineExecutionDTO;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import edu.neu.cs6510.sp25.t1.backend.database.entity.PipelineExecutionEntity;
-import edu.neu.cs6510.sp25.t1.backend.database.repository.PipelineExecutionRepository;
-import edu.neu.cs6510.sp25.t1.backend.mapper.PipelineExecutionMapper;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.api.response.PipelineExecutionResponse;
 
