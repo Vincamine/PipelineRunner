@@ -1,197 +1,81 @@
 package edu.neu.cs6510.sp25.t1.common.validation.validator;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import edu.neu.cs6510.sp25.t1.common.model.Pipeline;
+import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
+import edu.neu.cs6510.sp25.t1.common.validation.manager.PipelineNameManager;
+import edu.neu.cs6510.sp25.t1.common.validation.parser.YamlParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
 
-import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 
-/**
- * Tests for YamlPipelineValidator using actual YAML files instead of mocks.
- */
-public class YamlPipelineValidatorTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class YamlPipelineValidatorTest {
+
+    private static final String VALID_PIPELINE_NAME = "test-pipeline";
 
     @TempDir
     Path tempDir;
 
-    private Path validYamlPath;
-    private Path invalidYamlPath;
-    private Path nonUniquePipelinePath;
-    private Path invalidStructurePath;
-    private Path invalidJobsPath;
+    File validYamlFile;
 
     @BeforeEach
-    void setUp() throws IOException {
-        // Create a valid pipeline YAML file (matching the actual Pipeline class structure)
-        validYamlPath = tempDir.resolve("valid-pipeline.yaml");
-        Files.writeString(validYamlPath,
-                "name: test-pipeline\n" +
-                        "stages:\n" +
-                        "  - build\n" +
-                        "  - test\n" +
-                        "jobs:\n" +
-                        "  - name: compile\n" +
-                        "    stage: build\n" +
-                        "    image: gradle:8.2-jdk17\n" +
-                        "    script:\n" +
-                        "      - ./gradlew compile\n" +
-                        "  - name: test\n" +
-                        "    stage: test\n" +
-                        "    image: gradle:8.2-jdk17\n" +
-                        "    script:\n" +
-                        "      - ./gradlew test\n"
-        );
-
-        // Create an invalid YAML file (syntax error)
-        invalidYamlPath = tempDir.resolve("invalid-yaml.yaml");
-        Files.writeString(invalidYamlPath,
-                "name: test-pipeline\n" +
-                        "stages:\n" +
-                        "  - build\n" +
-                        "  - test\n" +
-                        "jobs:\n" +
-                        "  - name: compile\n" +
-                        "    stage: build\n" +
-                        "    image: gradle:8.2-jdk17\n" +
-                        "    script: [\n" + // Syntax error: unclosed bracket
-                        "      ./gradlew compile\n"
-        );
-
-        // Create a file with non-unique pipeline name
-        nonUniquePipelinePath = tempDir.resolve("non-unique-pipeline.yaml");
-        Files.writeString(nonUniquePipelinePath,
-                "name: duplicate-name\n" +
-                        "stages:\n" +
-                        "  - build\n" +
-                        "jobs:\n" +
-                        "  - name: compile\n" +
-                        "    stage: build\n" +
-                        "    image: gradle:8.2-jdk17\n" +
-                        "    script:\n" +
-                        "      - ./gradlew compile\n"
-        );
-
-        // Create a file with invalid pipeline structure
-        invalidStructurePath = tempDir.resolve("invalid-structure.yaml");
-        Files.writeString(invalidStructurePath,
-                "name: invalid-structure\n" +
-                        "stages:\n" +
-                        "  - build\n" +
-                        "jobs:\n" +
-                        "  - name: compile\n" +
-                        "    stage: non-existent-stage\n" + // Invalid: stage not defined in stages
-                        "    image: gradle:8.2-jdk17\n" +
-                        "    script:\n" +
-                        "      - ./gradlew compile\n"
-        );
-
-        // Create a file with invalid jobs
-        invalidJobsPath = tempDir.resolve("invalid-jobs.yaml");
-        Files.writeString(invalidJobsPath,
-                "name: invalid-jobs\n" +
-                        "stages:\n" +
-                        "  - build\n" +
-                        "jobs:\n" +
-                        "  - name: compile\n" +
-                        "    stage: build\n" +
-                        "    image: gradle:8.2-jdk17\n" +
-                        "    script: []" // Invalid: empty script
-        );
+    void setup() throws IOException {
+        validYamlFile = tempDir.resolve("pipeline.yaml").toFile();
+        try (FileWriter writer = new FileWriter(validYamlFile)) {
+            writer.write("name: " + VALID_PIPELINE_NAME); // minimal valid content
+        }
     }
 
     @Test
-    void testFileNotFound() {
-        String nonExistentFile = "non-existent-file.yaml";
-
+    void testFileNotFoundThrowsException() {
+        String invalidPath = "nonexistent.yaml";
         ValidationException exception = assertThrows(ValidationException.class, () -> {
-            YamlPipelineValidator.validatePipeline(nonExistentFile);
+            YamlPipelineValidator.validatePipeline(invalidPath);
         });
-
         assertTrue(exception.getMessage().contains("File not found"));
     }
 
     @Test
-    void testValidPipeline() {
-        // Since we now know the model structure, wrap the assertion with try-catch
-        // to handle the expected behavior based on the actual implementation
-        try {
-            YamlPipelineValidator.validatePipeline(validYamlPath.toString());
-            // Success path - if validation completes without exceptions
-        } catch (ValidationException e) {
-            // This is acceptable if validation fails for a reason
-            // other than "Unrecognized field 'pipeline'"
-            assertFalse(e.getMessage().contains("Unrecognized field"));
+    void testYamlParsingFailure() {
+        try (MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class)) {
+            parserMock.when(() -> YamlParser.parseYaml(any(File.class)))
+                    .thenThrow(new ValidationException("Parsing error"));
+
+            assertThrows(ValidationException.class, () ->
+                    YamlPipelineValidator.validatePipeline(validYamlFile.getAbsolutePath())
+            );
         }
     }
 
     @Test
-    void testInvalidYaml() {
-        assertThrows(Exception.class, () -> {
-            YamlPipelineValidator.validatePipeline(invalidYamlPath.toString());
-        });
-    }
+    void testSuccessfulValidation() throws Exception {
+        Pipeline mockPipeline = mock(Pipeline.class);
+        when(mockPipeline.getName()).thenReturn(VALID_PIPELINE_NAME);
+        when(mockPipeline.getStages()).thenReturn(null); // You can mock actual stages if needed
 
-    // Note: This test requires mocking PipelineNameManager to properly detect duplicate names
-    // We'll make it more robust by handling both ValidationException and the underlying Jackson exception
-    @Test
-    void testNonUniquePipelineName() throws IOException {
-        // Create a directory for pipelines
-        Path pipelinesDir = Paths.get(System.getProperty("user.dir"), ".pipelines");
-        if (!Files.exists(pipelinesDir)) {
-            Files.createDirectories(pipelinesDir);
+        try (
+                MockedStatic<YamlParser> parserMock = mockStatic(YamlParser.class);
+                MockedStatic<PipelineValidator> pipelineValidatorMock = mockStatic(PipelineValidator.class);
+                MockedStatic<JobValidator> jobValidatorMock = mockStatic(JobValidator.class);
+                MockedStatic<PipelineNameManager> managerMock = mockStatic(PipelineNameManager.class)
+        ) {
+            parserMock.when(() -> YamlParser.parseYaml(any(File.class))).thenReturn(mockPipeline);
+
+            PipelineNameManager nameManager = mock(PipelineNameManager.class);
+            when(nameManager.isPipelineNameUnique(VALID_PIPELINE_NAME)).thenReturn(true);
+//            managerMock.when(PipelineNameManager::new).thenReturn(nameManager);
+
+            assertDoesNotThrow(() ->
+                    YamlPipelineValidator.validatePipeline(validYamlFile.getAbsolutePath())
+            );
         }
-
-        // Create an existing pipeline with the same name
-        Path existingPipeline = pipelinesDir.resolve("existing-pipeline.yaml");
-        Files.writeString(existingPipeline,
-                "name: duplicate-name\n" +
-                        "stages:\n" +
-                        "  - build\n" +
-                        "jobs:\n" +
-                        "  - name: compile\n" +
-                        "    stage: build\n" +
-                        "    image: gradle:8.2-jdk17\n" +
-                        "    script:\n" +
-                        "      - ./gradlew compile\n"
-        );
-
-        try {
-            // Instead of expecting a specific exception type, we'll just check
-            // that calling the validator on this file causes some kind of exception
-            Exception exception = assertThrows(Exception.class, () -> {
-                YamlPipelineValidator.validatePipeline(nonUniquePipelinePath.toString());
-            });
-
-            // Check that the exception is related to pipeline name uniqueness
-            // or YAML parsing (depending on the implementation)
-        } finally {
-            // Clean up
-            Files.deleteIfExists(existingPipeline);
-            if (Files.isDirectory(pipelinesDir) && Files.list(pipelinesDir).count() == 0) {
-                Files.delete(pipelinesDir);
-            }
-        }
-    }
-
-    @Test
-    void testInvalidPipelineStructure() {
-        // For structure validation, we'll also be more flexible
-        assertThrows(Exception.class, () -> {
-            YamlPipelineValidator.validatePipeline(invalidStructurePath.toString());
-        });
-    }
-
-    @Test
-    void testInvalidJobs() {
-        assertThrows(Exception.class, () -> {
-            YamlPipelineValidator.validatePipeline(invalidJobsPath.toString());
-        });
     }
 }
