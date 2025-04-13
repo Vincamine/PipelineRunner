@@ -7,6 +7,10 @@ import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
+/**
+ * Represents a standard error response body for APIs.
+ * Used to return consistent error structure when exceptions occur.
+ */
 @Getter
 public class ApiError {
 

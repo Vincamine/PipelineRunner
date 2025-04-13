@@ -15,6 +15,11 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Component responsible for dispatching stages of jobs to RabbitMQ.
+ * Each stage is represented as a queue of job UUIDs, and stages are dispatched sequentially.
+ * This component waits for the RabbitMQ job queue to be empty before dispatching the next stage.
+ */
 @Component
 @RequiredArgsConstructor
 public class StageQueuePublisher {
@@ -59,12 +64,21 @@ public class StageQueuePublisher {
     PipelineLogger.info("All stages processed and dispatched.");
   }
 
+  /**
+   * Sends a job UUID to the configured RabbitMQ job queue.
+   *
+   * @param jobId UUID of the job to dispatch
+   */
   private void sendJobToRabbitMq(UUID jobId) {
     String message = jobId.toString();
     rabbitTemplate.convertAndSend(jobQueueName, message);
     PipelineLogger.info("Sent job UUID to RabbitMQ: " + message);
   }
 
+  /**
+   * Polls RabbitMQ until the job queue becomes empty.
+   * Throws an exception if the queue is not found or the thread is interrupted.
+   */
   private void waitForRabbitQueueEmpty() {
     while (true) {
       QueueInformation queueInfo = rabbitAdmin.getQueueInfo(jobQueueName);
