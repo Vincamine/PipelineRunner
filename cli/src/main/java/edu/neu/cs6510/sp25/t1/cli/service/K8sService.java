@@ -17,12 +17,23 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+/**
+ * Utility service for managing Kubernetes operations related to the CI/CD pipeline.
+ * Includes functionality to start pods, apply configurations, port-forward services,
+ * and monitor pod readiness for local or remote execution environments.
+ */
 public class K8sService {
 
   private static final String NAMESPACE = "default";
   private static Process portForwardProcess;
   private static String podName;
 
+  /**
+   * Starts the full CI/CD environment by applying the cicd-pod YAML configuration
+   * and waiting for the pod to become ready.
+   *
+   * @param pipelineName the name of the pipeline, used to generate a unique pod name
+   */
   public static void startCicdEnvironment(String pipelineName) {
     try {
       ApiClient client = Config.defaultClient();
@@ -37,6 +48,13 @@ public class K8sService {
     }
   }
 
+  /**
+   * Starts only the backend pod defined in the Kubernetes YAML configuration and
+   * port-forwards it to localhost on port 8080.
+   *
+   * @param pipelineName the name of the pipeline, used to generate a unique pod name
+   * @return the generated pod name
+   */
   public static String startBackendEnvironment(String pipelineName) {
     try {
       ApiClient client = Config.defaultClient();
@@ -56,6 +74,15 @@ public class K8sService {
     return podName;
   }
 
+  /**
+   * Applies a Kubernetes YAML configuration file (either Pod or Service).
+   * Sets the pod name dynamically based on the pipeline name and the type of resource (cicd, backend, or generic).
+   *
+   * @param filePath the path to the Kubernetes YAML file (e.g., pod or service definition)
+   * @param api the CoreV1Api client used to apply the resource
+   * @param pipelineName the name of the pipeline, used to generate a unique pod name
+   * @throws Exception if the YAML file cannot be applied or parsed
+   */
   private static void applyYaml(String filePath, CoreV1Api api, String pipelineName) throws Exception {
     try (InputStream is = new FileInputStream(filePath)) {
       Object obj = Yaml.load(new java.io.InputStreamReader(is));
@@ -96,6 +123,14 @@ public class K8sService {
     }
   }
 
+  /**
+   * Waits for the specified Kubernetes pod to reach the "Ready" state.
+   * Polls the pod status for up to 60 seconds before timing out.
+   *
+   * @param podName the name of the pod to wait for
+   * @param api the CoreV1Api client used to query pod status
+   * @throws Exception if the pod does not become ready within the timeout period
+   */
   private static void waitForPod(String podName, CoreV1Api api) throws Exception {
     System.out.println("Waiting for pod to be ready: " + podName);
     int retries = 60;
@@ -116,6 +151,10 @@ public class K8sService {
     throw new RuntimeException("Pod " + podName + " did not become ready in time.");
   }
 
+  /**
+   * Sets up port-forwarding from the backend pod to localhost:8080.
+   * Sleeps for a short period before executing to allow backend startup.
+   */
   public static void portForwardBackendService() {
     // waitForBackendStartupInsidePod();
 
@@ -134,6 +173,9 @@ public class K8sService {
     }
   }
 
+  /**
+   * Stops the current port-forward process if it is running.
+   */
   public static void stopPortForward() {
     if (portForwardProcess != null && portForwardProcess.isAlive()) {
       System.out.println("🔌 Closing port-forward on 8080...");
@@ -141,6 +183,10 @@ public class K8sService {
     }
   }
 
+  /**
+   * Repeatedly checks whether the backend service is reachable via localhost:8080.
+   * Waits until the `/health` endpoint returns a 200 OK response or times out.
+   */
   public static void waitForBackendStartupInsidePod() {
     String internalUrl = "http://localhost:8080/health";
     int maxRetries = 100;
@@ -177,6 +223,11 @@ public class K8sService {
     throw new RuntimeException("Backend failed to become ready after timeout.");
   }
 
+  /**
+   * Deletes the specified pod in the default Kubernetes namespace.
+   *
+   * @param podName the name of the pod to delete
+   */
   public static void stopPod(String podName) {
     try {
       ApiClient client = Config.defaultClient();

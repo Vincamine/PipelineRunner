@@ -19,8 +19,12 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import picocli.CommandLine;
 
-/**
- * Handles the `run` command for executing a CI/CD pipeline.
+/*
+ * CLI command that validates and runs a CI/CD pipeline.
+ * Supports local or Kubernetes-based execution, and can optionally perform a dry-run.
+ * Uses backend APIs to trigger the pipeline execution and forwards the results to the user.
+ *
+ * Used with the `run` subcommand in the CLI.
  */
 @CommandLine.Command(name = "run", description = "Runs a CI/CD pipeline after validating its configuration.")
 public class RunCommand implements Callable<Integer> {

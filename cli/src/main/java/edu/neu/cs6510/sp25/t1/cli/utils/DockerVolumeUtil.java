@@ -12,11 +12,23 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
+/**
+ * Utility class for creating Docker volumes from a host directory.
+ * Copies the contents of a host project directory into a Docker volume
+ * under a unique subdirectory.
+ */
 public class DockerVolumeUtil {
 
   private static final String VOLUME_NAME = "cicd";
   private static final String CONTAINER_BASE_PATH = "/mnt/pipeline";
 
+  /**
+   * Creates a Docker volume if not exists and copies the project directory
+   * containing the given file into a unique subdirectory of the volume.
+   *
+   * @param hostPath Absolute path to a file within the project directory.
+   * @return The container path to the file inside the Docker volume, or null if failed.
+   */
   public static String createVolumeFromHostDir(String hostPath) {
     try {
       File file = new File(hostPath);

@@ -24,6 +24,14 @@ import picocli.CommandLine;
         name = "report",
         description = "Retrieves pipeline execution reports from the CI/CD backend."
 )
+
+/*
+ * CLI command that retrieves and displays pipeline execution reports from the backend service.
+ * Supports fetching full pipeline histories, stage/job summaries, and formatting the results
+ * in either JSON or human-readable text.
+ *
+ * Used with the `report` subcommand in the CLI.
+ */
 public class ReportCommand implements Callable<Integer> {
 
   @CommandLine.Option(names = {"--pipeline", "-p"}, description = "Specify the pipeline name.", required = true)

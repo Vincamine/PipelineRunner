@@ -27,10 +27,23 @@ public class DryRunCommand implements Callable<Integer> {
       "-f" }, description = "Path to the pipeline YAML configuration file.", required = true)
   private String filePath;
 
+  /**
+   * Sets the file path for the pipeline YAML configuration.
+   * Primarily used for testing or programmatic invocation.
+   *
+   * @param filePath the path to the pipeline YAML file
+   */
   public void setFilePath(String filePath) {
     this.filePath = filePath;
   }
 
+  /**
+   * Executes the dry-run command.
+   * Validates the pipeline YAML file specified by the user,
+   * and prints a topologically sorted execution plan grouped by stages in YAML format.
+   *
+   * @return 0 if validation and formatting are successful, 1 otherwise.
+   */
   @Override
   public Integer call() {
     if (filePath == null) {

@@ -13,8 +13,12 @@ import picocli.CommandLine;
 
 
 
-/**
- * Handles the `status` command to fetch pipeline execution status.
+/*
+ * CLI command that fetches the current status of a CI/CD pipeline by querying the backend service.
+ * This command automatically starts a Kubernetes backend pod for the specified pipeline,
+ * performs an HTTP GET request to the backend, and prints the pipeline status in the terminal.
+ *
+ * Used with the `status` subcommand in the CLI.
  */
 @CommandLine.Command(
     name = "status",
