@@ -11,11 +11,9 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import edu.neu.cs6510.sp25.t1.cli.service.K8sService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +23,6 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.mockito.stubbing.Answer;
 
 import edu.neu.cs6510.sp25.t1.cli.CliApp;
 import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
@@ -37,7 +34,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import picocli.CommandLine;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -49,13 +45,13 @@ public class RunCommandTest {
     // Create a testable version that doesn't try to override methods
     static class TestableRunCommand extends RunCommand {
         // Fields to store arguments
-        public String repoValue;
-        public String branchValue;
-        public String commitValue;
-        public String pipelineValue;
-        public String filePathValue;
-        public boolean localRunValue;
-        public boolean dryRunValue;
+        private String repoValue;
+        private  String branchValue;
+        private  String commitValue;
+        private  String pipelineValue;
+        private  String filePathValue;
+        private  boolean localRunValue;
+        private  boolean dryRunValue;
 
         public TestableRunCommand(CliApp parent) {
             super();

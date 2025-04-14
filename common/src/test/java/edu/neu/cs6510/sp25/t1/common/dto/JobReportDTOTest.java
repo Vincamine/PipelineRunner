@@ -3,15 +3,14 @@ package edu.neu.cs6510.sp25.t1.common.dto;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
-import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO.ExecutionRecord;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JobReportDTOTest {
 

@@ -36,13 +36,14 @@ public class K8sService {
       throw new RuntimeException("Failed to start CI/CD environment", e);
     }
   }
+
   public static String startBackendEnvironment(String pipelineName) {
     try {
       ApiClient client = Config.defaultClient();
       Configuration.setDefaultApiClient(client);
       CoreV1Api api = new CoreV1Api();
 
-      if (pipelineName.endsWith(".yaml")){
+      if (pipelineName.endsWith(".yaml")) {
         pipelineName = pipelineName.replaceFirst("\\.yaml$", "");
       }
 
@@ -193,8 +194,7 @@ public class K8sService {
           null, // gracePeriodSeconds
           null, // orphanDependents (deprecated)
           null, // propagationPolicy
-          deleteOptions
-      );
+          deleteOptions);
       System.out.println("Pod deletion requested: " + podName);
     } catch (ApiException e) {
       System.err.println("Failed to delete pod via Kubernetes API");
@@ -204,6 +204,5 @@ public class K8sService {
       throw new RuntimeException("Failed to initialize Kubernetes API client", e);
     }
   }
-
 
 }

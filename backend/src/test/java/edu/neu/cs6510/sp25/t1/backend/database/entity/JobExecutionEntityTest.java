@@ -3,11 +3,15 @@ package edu.neu.cs6510.sp25.t1.backend.database.entity;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+
 
 class JobExecutionEntityTest {
 

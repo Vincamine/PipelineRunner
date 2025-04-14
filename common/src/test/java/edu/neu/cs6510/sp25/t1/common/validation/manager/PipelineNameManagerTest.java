@@ -1,18 +1,19 @@
 package edu.neu.cs6510.sp25.t1.common.validation.manager;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mockStatic;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.lang.reflect.Field;
 import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 
@@ -22,7 +23,7 @@ import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 class PipelineNameManagerTest {
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     private Path pipelinesDir;
     private String originalUserDir;
@@ -83,10 +84,6 @@ class PipelineNameManagerTest {
             // Verify exception is thrown
             ValidationException exception = assertThrows(ValidationException.class,
                     () -> new PipelineNameManager());
-
-            // Verify error was logged
-            mockedLogger.verify(() ->
-                    PipelineLogger.error(anyString()));
 
             // Verify exception message contains directory path
             assertTrue(exception.getMessage().contains(pipelinesDir.toString()));

@@ -12,9 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.context.annotation.Lazy;
 
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
@@ -45,9 +43,12 @@ public class PipelineController {
   /**
    * Constructor for PipelineController.
    *
-   * @param pipelineExecutionService the service responsible for executing pipelines
-   * @param stageQueuePublisher the publisher responsible for managing stage queues
-   * @param statusService the service responsible for handling status updates
+   * @param pipelineExecutionService the service responsible for executing
+   *                                 pipelines
+   * @param stageQueuePublisher      the publisher responsible for managing stage
+   *                                 queues
+   * @param statusService            the service responsible for handling status
+   *                                 updates
    */
   public PipelineController(
       PipelineExecutionService pipelineExecutionService,
@@ -88,62 +89,70 @@ public class PipelineController {
     }
   }
 
-
-//  /**
-//   * Debug endpoint to check the database status for a specific pipeline
-//   * execution.
-//   * This is useful for debugging persistence issues.
-//   *
-//   * @param executionId The pipeline execution ID to check
-//   * @return ResponseEntity with detailed database status
-//   */
-//  @GetMapping("/debug/{executionId}")
-//  @Operation(summary = "Debug pipeline database state", description = "Checks if all entities for a pipeline execution exist in the database.")
-//  public ResponseEntity<?> debugDatabaseState(@PathVariable UUID executionId) {
-//    try {
-//      // Get necessary repositories
-//      var pipelineExecRepo = pipelineExecutionService.getClass().getDeclaredField("pipelineExecutionRepository")
-//          .get(pipelineExecutionService);
-//      var stageExecRepo = pipelineExecutionService.getClass().getDeclaredField("stageExecutionRepository")
-//          .get(pipelineExecutionService);
-//      var jobExecRepo = pipelineExecutionService.getClass().getDeclaredField("jobExecutionRepository")
-//          .get(pipelineExecutionService);
-//
-//      Map<String, Object> response = new HashMap<>();
-//
-//      // Check pipeline execution
-//      boolean pipelineExists = ((boolean) pipelineExecRepo.getClass().getMethod("existsById", Object.class)
-//          .invoke(pipelineExecRepo, executionId));
-//      response.put("pipelineExecutionExists", pipelineExists);
-//
-//      if (pipelineExists) {
-//        // Get and check stage executions
-//        List<?> stages = (List<?>) stageExecRepo.getClass().getMethod("findByPipelineExecutionId", UUID.class)
-//            .invoke(stageExecRepo, executionId);
-//        response.put("stageExecutionCount", stages.size());
-//
-//        // Check job executions for each stage
-//        int totalJobs = 0;
-//        for (Object stage : stages) {
-//          List<?> jobs = (List<?>) jobExecRepo.getClass().getMethod("findByStageExecution", stage.getClass())
-//              .invoke(jobExecRepo, stage);
-//          totalJobs += jobs.size();
-//        }
-//        response.put("jobExecutionCount", totalJobs);
-//
-//        // Overall status
-//        response.put("status", (stages.size() > 0 && totalJobs > 0) ? "COMPLETE" : "INCOMPLETE");
-//      } else {
-//        response.put("status", "NOT_FOUND");
-//      }
-//
-//      return ResponseEntity.ok(response);
-//    } catch (Exception e) {
-//      PipelineLogger.error("Error checking database state: " + e.getMessage());
-//      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//          .body(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "Error checking database state", e.getMessage()));
-//    }
-//  }
+  // /**
+  // * Debug endpoint to check the database status for a specific pipeline
+  // * execution.
+  // * This is useful for debugging persistence issues.
+  // *
+  // * @param executionId The pipeline execution ID to check
+  // * @return ResponseEntity with detailed database status
+  // */
+  // @GetMapping("/debug/{executionId}")
+  // @Operation(summary = "Debug pipeline database state", description = "Checks
+  // if all entities for a pipeline execution exist in the database.")
+  // public ResponseEntity<?> debugDatabaseState(@PathVariable UUID executionId) {
+  // try {
+  // // Get necessary repositories
+  // var pipelineExecRepo =
+  // pipelineExecutionService.getClass().getDeclaredField("pipelineExecutionRepository")
+  // .get(pipelineExecutionService);
+  // var stageExecRepo =
+  // pipelineExecutionService.getClass().getDeclaredField("stageExecutionRepository")
+  // .get(pipelineExecutionService);
+  // var jobExecRepo =
+  // pipelineExecutionService.getClass().getDeclaredField("jobExecutionRepository")
+  // .get(pipelineExecutionService);
+  //
+  // Map<String, Object> response = new HashMap<>();
+  //
+  // // Check pipeline execution
+  // boolean pipelineExists = ((boolean)
+  // pipelineExecRepo.getClass().getMethod("existsById", Object.class)
+  // .invoke(pipelineExecRepo, executionId));
+  // response.put("pipelineExecutionExists", pipelineExists);
+  //
+  // if (pipelineExists) {
+  // // Get and check stage executions
+  // List<?> stages = (List<?>)
+  // stageExecRepo.getClass().getMethod("findByPipelineExecutionId", UUID.class)
+  // .invoke(stageExecRepo, executionId);
+  // response.put("stageExecutionCount", stages.size());
+  //
+  // // Check job executions for each stage
+  // int totalJobs = 0;
+  // for (Object stage : stages) {
+  // List<?> jobs = (List<?>)
+  // jobExecRepo.getClass().getMethod("findByStageExecution", stage.getClass())
+  // .invoke(jobExecRepo, stage);
+  // totalJobs += jobs.size();
+  // }
+  // response.put("jobExecutionCount", totalJobs);
+  //
+  // // Overall status
+  // response.put("status", (stages.size() > 0 && totalJobs > 0) ? "COMPLETE" :
+  // "INCOMPLETE");
+  // } else {
+  // response.put("status", "NOT_FOUND");
+  // }
+  //
+  // return ResponseEntity.ok(response);
+  // } catch (Exception e) {
+  // PipelineLogger.error("Error checking database state: " + e.getMessage());
+  // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+  // .body(new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "Error checking database
+  // state", e.getMessage()));
+  // }
+  // }
 
   /**
    * Gets the pipeline status using the pipeline YAML file name.
@@ -160,7 +169,7 @@ public class PipelineController {
         return ResponseEntity.badRequest().body("Invalid pipeline ");
       }
       String pipelineName;
-      if (pipelineFile.endsWith(".yaml")){
+      if (pipelineFile.endsWith(".yaml")) {
         pipelineName = pipelineFile.replaceFirst("\\.yaml$", "");
       }
 

@@ -14,7 +14,6 @@ import edu.neu.cs6510.sp25.t1.worker.service.GitCloneService;
 import edu.neu.cs6510.sp25.t1.worker.utils.FindPipelineBranch;
 import edu.neu.cs6510.sp25.t1.worker.utils.FindPipelineName;
 import org.springframework.stereotype.Component;
-import java.io.File;
 import java.util.List;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;
@@ -190,27 +189,4 @@ public class DockerExecutor {
       }
     }
   }
-//  private void printWorkingDirectoryContents(File dir) {
-//    log.info("Contents of working directory: {}", dir.getAbsolutePath());
-//    printDirectoryContentsRecursive(dir, "");
-//  }
-
-//  private void printDirectoryContentsRecursive(File file, String indent) {
-//    if (!file.exists()) {
-//      log.warn("{}[MISSING] {}", indent, file.getAbsolutePath());
-//      return;
-//    }
-//
-//    if (file.isFile()) {
-//      log.info("{}- File: {}", indent, file.getName());
-//    } else if (file.isDirectory()) {
-//      log.info("{}+ Dir: {}", indent, file.getName());
-//      File[] files = file.listFiles();
-//      if (files != null) {
-//        for (File child : files) {
-//          printDirectoryContentsRecursive(child, indent + "  ");
-//        }
-//      }
-//    }
-//  }
 }

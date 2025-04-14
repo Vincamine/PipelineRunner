@@ -26,8 +26,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import edu.neu.cs6510.sp25.t1.cli.api.CliBackendClient;
-import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
-
 /**
  * Unit tests for ReportCommand class
  */

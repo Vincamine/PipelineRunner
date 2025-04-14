@@ -2,9 +2,11 @@ package edu.neu.cs6510.sp25.t1.backend.info;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+
 
 class ClonedPipelineInfoTest {
 

@@ -2,9 +2,7 @@ package edu.neu.cs6510.sp25.t1.worker.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Queue;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
