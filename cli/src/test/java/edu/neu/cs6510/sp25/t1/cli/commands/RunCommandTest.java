@@ -45,13 +45,13 @@ public class RunCommandTest {
     // Create a testable version that doesn't try to override methods
     static class TestableRunCommand extends RunCommand {
         // Fields to store arguments
-        public String repoValue;
-        public String branchValue;
-        public String commitValue;
-        public String pipelineValue;
-        public String filePathValue;
-        public boolean localRunValue;
-        public boolean dryRunValue;
+        private String repoValue;
+        private  String branchValue;
+        private  String commitValue;
+        private  String pipelineValue;
+        private  String filePathValue;
+        private  boolean localRunValue;
+        private  boolean dryRunValue;
 
         public TestableRunCommand(CliApp parent) {
             super();
