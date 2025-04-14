@@ -41,6 +41,9 @@ public class CliApp implements Callable<Integer> {
 
   @CommandLine.Option(names = {"--local"}, description = "Run the pipeline locally.")
   public boolean localRun;
+  
+  @CommandLine.Option(names = {"--dry-run"}, description = "Validate pipeline and show execution order without running.")
+  public boolean dryRun;
 
   @CommandLine.Option(names = {"--vv", "--verbose"}, description = "Enable verbose output (detailed logs).")
   private boolean verbose;
