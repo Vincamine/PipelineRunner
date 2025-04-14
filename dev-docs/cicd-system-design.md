@@ -28,7 +28,7 @@
     - WorkerJobQueue: Processes jobs from message queue
     - LogStorageService: Captures and stores execution logs
 - **External Dependencies**:
-    - Docker API, RabbitMQ, MinIO (artifacts)
+    - Docker API, RabbitMQ, kubernetes
 - **Resource Requirements**:
     - Docker socket access, shared volume mount
 
@@ -39,6 +39,7 @@
     - CheckCommand: Validates configurations
     - ReportCommand: Retrieves execution reports
     - StatusCommand: Checks execution status
+    - DryRunCommand: Displays execution order
 - **Services**:
     - CliBackendClient: API communication
     - K8sService: Kubernetes deployment support
