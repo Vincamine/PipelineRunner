@@ -4,7 +4,6 @@ package edu.neu.cs6510.sp25.t1.backend.service.report;
 import edu.neu.cs6510.sp25.t1.backend.database.entity.*;
 import edu.neu.cs6510.sp25.t1.backend.database.repository.*;
 import edu.neu.cs6510.sp25.t1.common.dto.JobReportDTO;
-import edu.neu.cs6510.sp25.t1.common.dto.PipelineExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.PipelineReportDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.StageReportDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;

@@ -14,7 +14,6 @@ import edu.neu.cs6510.sp25.t1.worker.service.GitCloneService;
 import edu.neu.cs6510.sp25.t1.worker.utils.FindPipelineBranch;
 import edu.neu.cs6510.sp25.t1.worker.utils.FindPipelineName;
 import org.springframework.stereotype.Component;
-import java.io.File;
 import java.util.List;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;

@@ -5,8 +5,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
 
-import edu.neu.cs6510.sp25.t1.common.dto.PipelineReportDTO;
-import edu.neu.cs6510.sp25.t1.common.dto.StageReportDTO;
 import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 
 import static org.junit.jupiter.api.Assertions.*;
