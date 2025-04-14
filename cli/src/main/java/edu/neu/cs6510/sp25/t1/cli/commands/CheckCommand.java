@@ -7,8 +7,6 @@ import java.util.concurrent.Callable;
 
 import edu.neu.cs6510.sp25.t1.common.utils.GitCloneUtil;
 import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
-import edu.neu.cs6510.sp25.t1.common.logging.PipelineLogger;
-import edu.neu.cs6510.sp25.t1.common.validation.validator.YamlPipelineValidator;
 import edu.neu.cs6510.sp25.t1.backend.utils.YamlPipelineUtils;
 
 import picocli.CommandLine;
