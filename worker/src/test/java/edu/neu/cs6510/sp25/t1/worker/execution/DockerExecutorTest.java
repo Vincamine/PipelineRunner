@@ -3,7 +3,6 @@ package edu.neu.cs6510.sp25.t1.worker.execution;
 import com.github.dockerjava.api.DockerClient;
 import edu.neu.cs6510.sp25.t1.common.dto.JobDTO;
 import edu.neu.cs6510.sp25.t1.common.dto.JobExecutionDTO;
-import edu.neu.cs6510.sp25.t1.common.enums.ExecutionStatus;
 import edu.neu.cs6510.sp25.t1.worker.error.DockerExecutionException;
 import edu.neu.cs6510.sp25.t1.worker.error.JobExecutionConfigException;
 import edu.neu.cs6510.sp25.t1.worker.service.GitCloneService;
@@ -18,13 +17,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 /**
  * Test class for DockerExecutor focusing on input validation and error handling

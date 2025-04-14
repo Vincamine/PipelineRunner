@@ -1,7 +1,13 @@
 package edu.neu.cs6510.sp25.t1.common.validation.parser;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.Mockito.mockStatic;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +27,7 @@ import edu.neu.cs6510.sp25.t1.common.validation.error.ValidationException;
 class YamlParserTest {
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     private File validYamlFile;
     private File emptyYamlFile;

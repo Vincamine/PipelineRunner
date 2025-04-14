@@ -189,27 +189,4 @@ public class DockerExecutor {
       }
     }
   }
-//  private void printWorkingDirectoryContents(File dir) {
-//    log.info("Contents of working directory: {}", dir.getAbsolutePath());
-//    printDirectoryContentsRecursive(dir, "");
-//  }
-
-//  private void printDirectoryContentsRecursive(File file, String indent) {
-//    if (!file.exists()) {
-//      log.warn("{}[MISSING] {}", indent, file.getAbsolutePath());
-//      return;
-//    }
-//
-//    if (file.isFile()) {
-//      log.info("{}- File: {}", indent, file.getName());
-//    } else if (file.isDirectory()) {
-//      log.info("{}+ Dir: {}", indent, file.getName());
-//      File[] files = file.listFiles();
-//      if (files != null) {
-//        for (File child : files) {
-//          printDirectoryContentsRecursive(child, indent + "  ");
-//        }
-//      }
-//    }
-//  }
 }

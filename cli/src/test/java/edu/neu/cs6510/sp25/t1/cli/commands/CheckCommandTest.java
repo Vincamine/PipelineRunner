@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 class CheckCommandTest {
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     private File createTempYamlFile(String content) throws IOException {
         File tempFile = tempDir.resolve("pipeline.yaml").toFile();

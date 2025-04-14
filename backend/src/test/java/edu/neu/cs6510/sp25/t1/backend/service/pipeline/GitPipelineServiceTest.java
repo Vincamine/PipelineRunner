@@ -3,11 +3,16 @@ package edu.neu.cs6510.sp25.t1.backend.service.pipeline;
 import edu.neu.cs6510.sp25.t1.backend.info.ClonedPipelineInfo;
 import edu.neu.cs6510.sp25.t1.common.api.request.PipelineExecutionRequest;
 import edu.neu.cs6510.sp25.t1.common.utils.GitCloneUtil;
-import org.junit.jupiter.api.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 
 import java.io.File;
@@ -15,7 +20,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 
-import static org.junit.jupiter.api.Assertions.*;
 
 class GitPipelineServiceTest {
 

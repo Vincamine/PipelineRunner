@@ -14,14 +14,25 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 
 class GitCloneUtilTest {
 
     @TempDir
-    Path tempDir;
+    private Path tempDir;
 
     @Test
     void cloneRepository() throws GitAPIException {
@@ -96,14 +107,12 @@ class GitCloneUtilTest {
             gitMock.when(Git::cloneRepository).thenReturn(mockCloneCmd);
             when(mockCloneCmd.setURI(anyString())).thenReturn(mockCloneCmd);
             when(mockCloneCmd.setDirectory(any(File.class))).thenReturn(mockCloneCmd);
-            when(mockCloneCmd.call()).thenThrow(new GitAPIException("Mock Git clone failure") {});  // ✅ 正确
+            when(mockCloneCmd.call()).thenThrow(new GitAPIException("Mock Git clone failure") {
+            }); 
 
             assertThrows(GitAPIException.class, () -> GitCloneUtil.cloneRepository("url", tempDir.toFile()));
         }
     }
-
-
-
 
     @Test
     void checkoutCommit() throws Exception {
@@ -152,7 +161,6 @@ class GitCloneUtilTest {
             });
         }
     }
-
 
     @Test
     void checkoutCommitInBranchThrowsException() {
@@ -247,11 +255,11 @@ class GitCloneUtilTest {
             when(mockCloneCmd.setURI(anyString())).thenReturn(mockCloneCmd);
             when(mockCloneCmd.setDirectory(any(File.class))).thenReturn(mockCloneCmd);
             when(mockCloneCmd.setBranch(anyString())).thenReturn(mockCloneCmd);
-            when(mockCloneCmd.call()).thenThrow(new GitAPIException("Invalid branch") {});
+            when(mockCloneCmd.call()).thenThrow(new GitAPIException("Invalid branch") {
+            });
 
-            assertThrows(GitAPIException.class, () ->
-                    GitCloneUtil.cloneRepository("url", tempDir.toFile(), "nonexistent-branch")
-            );
+            assertThrows(GitAPIException.class,
+                    () -> GitCloneUtil.cloneRepository("url", tempDir.toFile(), "nonexistent-branch"));
         }
     }
 
@@ -273,7 +281,7 @@ class GitCloneUtilTest {
 
             // First checkout (branch)
             when(mockGit.checkout())
-                    .thenReturn(mockCheckoutCmd1)  // first checkout call
+                    .thenReturn(mockCheckoutCmd1) // first checkout call
                     .thenReturn(mockCheckoutCmd2); // second checkout call
 
             when(mockCheckoutCmd1.setName(anyString())).thenReturn(mockCheckoutCmd1);
@@ -364,6 +372,7 @@ class GitCloneUtilTest {
             });
         }
     }
+
     @Test
     void checkoutCommitInBranchFailsOnFirstCheckout() throws Exception {
         try (MockedStatic<Git> gitMock = mockStatic(Git.class)) {

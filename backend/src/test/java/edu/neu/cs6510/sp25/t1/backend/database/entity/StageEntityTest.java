@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StageEntityTest {
 
@@ -30,18 +32,6 @@ class StageEntityTest {
     assertNull(stage.getUpdatedAt());
   }
 
-//  @Test
-//  void testOnCreateInitializesTimestamps() {
-//    StageEntity stage = new StageEntity();
-//    assertNull(stage.getCreatedAt());
-//    assertNull(stage.getUpdatedAt());
-//
-//    stage.onCreate();
-//
-//    assertNotNull(stage.getCreatedAt());
-//    assertNotNull(stage.getUpdatedAt());
-//    assertEquals(stage.getCreatedAt(), stage.getUpdatedAt());
-//  }
 
   @Test
   void testOnUpdateChangesOnlyUpdatedAt() throws InterruptedException {
