@@ -457,4 +457,284 @@ public class PipelineDefinitionServiceTest {
             throw new RuntimeException("Failed to invoke extractRepositoryUrl", e);
         }
     }
+
+    @Test
+    void testExtractJobsFromConfig_NotList() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("stages", List.of("build"));
+        config.put("jobs", "string-instead-of-list");
+
+        PipelineEntity pipeline = new PipelineEntity();
+        pipeline.setId(pipelineId);
+        pipeline.setName("test");
+
+        when(pipelineRepository.findById(pipelineId)).thenReturn(Optional.of(pipeline));
+
+        StageEntity mockStage = new StageEntity();
+        mockStage.setId(UUID.randomUUID());
+        when(stageRepository.save(any())).thenReturn(mockStage);
+        when(stageRepository.existsById(any())).thenReturn(true);
+
+        // Act (no exception expected)
+        assertDoesNotThrow(() -> {
+            pipelineDefinitionService.createPipelineDefinition(pipelineId, config, "/root/path");
+        });
+
+        // Verify no jobs were saved
+        verify(jobRepository, never()).save(any());
+    }
+
+    @Test
+    void testCreateOrGetPipelineEntity_SaveThrowsException() {
+        request = spy(request);
+        when(request.getPipelineId()).thenReturn(null);
+
+        when(pipelineRepository.saveAndFlush(any())).thenThrow(new RuntimeException("DB error"));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+            pipelineDefinitionService.createOrGetPipelineEntity(request, pipelineConfig);
+        });
+
+        assertTrue(ex.getMessage().contains("DB error"));
+    }
+
+    @Test
+    void testCreatePipelineDefinition_InvalidStagesNotList() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("stages", "not-a-list");
+
+        PipelineEntity pipeline = new PipelineEntity();
+        pipeline.setId(pipelineId);
+        pipeline.setName("bad-pipeline");
+
+        when(pipelineRepository.findById(pipelineId)).thenReturn(Optional.of(pipeline));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+            pipelineDefinitionService.createPipelineDefinition(pipelineId, config, "/root/path");
+        });
+
+        assertTrue(ex.getMessage().contains("stages"));
+    }
+
+    @Test
+    void testCreatePipelineDefinition_DuplicateStageNames() {
+        // Arrange
+        Map<String, Object> config = new HashMap<>();
+        config.put("name", "duplicate-stage");
+        config.put("stages", List.of("build", "build")); // Duplicate stage names
+
+        // One job that uses the duplicate stage
+        Map<String, Object> job = new HashMap<>();
+        job.put("name", "compile");
+        job.put("stage", "build");
+        job.put("script", "./gradlew build");
+        config.put("jobs", List.of(job));
+
+        PipelineEntity pipeline = new PipelineEntity();
+        pipeline.setId(pipelineId);
+        pipeline.setName("dupe");
+
+        when(pipelineRepository.findById(pipelineId)).thenReturn(Optional.of(pipeline));
+
+        // Mock stage saving (2 times even with duplicates, since current code doesn't block it)
+        StageEntity stage = new StageEntity();
+        stage.setId(UUID.randomUUID());
+        when(stageRepository.save(any())).thenReturn(stage);
+        when(stageRepository.existsById(any())).thenReturn(true);
+
+        // Mock job saving
+        JobEntity jobEntity = new JobEntity();
+        jobEntity.setId(UUID.randomUUID());
+        when(jobRepository.save(any())).thenReturn(jobEntity);
+        when(jobRepository.existsById(any())).thenReturn(true);
+
+        // Act
+        pipelineDefinitionService.createPipelineDefinition(pipelineId, config, "/root/path");
+
+        // Assert
+        // Even though the stages are duplicate, current implementation does NOT throw.
+        // So just verify job creation and log behavior
+        verify(stageRepository, times(2)).save(any());
+        verify(jobRepository).save(any());
+    }
+
+
+
+    @Test
+    void testCreatePipelineDefinition_MissingScriptField() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("stages", List.of("build"));
+
+        Map<String, Object> job = new HashMap<>();
+        job.put("name", "compile");
+        job.put("stage", "build");
+        job.put("image", "gradle:latest");
+
+        config.put("jobs", List.of(job));
+
+        PipelineEntity pipeline = new PipelineEntity();
+        pipeline.setId(pipelineId);
+        when(pipelineRepository.findById(pipelineId)).thenReturn(Optional.of(pipeline));
+
+        StageEntity stage = new StageEntity();
+        stage.setId(UUID.randomUUID());
+
+        when(stageRepository.save(any())).thenReturn(stage);
+        when(stageRepository.existsById(any())).thenReturn(true);
+
+        when(jobRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jobRepository.existsById(any())).thenReturn(true);
+
+        assertDoesNotThrow(() -> {
+            pipelineDefinitionService.createPipelineDefinition(pipelineId, config, "/root/path");
+        });
+
+        verify(jobScriptRepository, never()).saveScript(any(), any());
+    }
+
+    @Test
+    void testCreatePipelineDefinition_InvalidScriptType() {
+        Map<String, Object> config = new HashMap<>();
+        config.put("stages", List.of("build"));
+
+        Map<String, Object> job = new HashMap<>();
+        job.put("name", "compile");
+        job.put("stage", "build");
+        job.put("script", Map.of("cmd", "./gradlew build")); // Invalid type
+
+        config.put("jobs", List.of(job));
+
+        PipelineEntity pipeline = new PipelineEntity();
+        pipeline.setId(pipelineId);
+        when(pipelineRepository.findById(pipelineId)).thenReturn(Optional.of(pipeline));
+
+        StageEntity stage = new StageEntity();
+        stage.setId(UUID.randomUUID());
+
+        when(stageRepository.save(any())).thenReturn(stage);
+        when(stageRepository.existsById(any())).thenReturn(true);
+
+        when(jobRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jobRepository.existsById(any())).thenReturn(true);
+
+        assertDoesNotThrow(() -> {
+            pipelineDefinitionService.createPipelineDefinition(pipelineId, config, "/root/path");
+        });
+
+        verify(jobScriptRepository, never()).saveScript(any(), any());
+    }
+
+    @Test
+    void testExtractAllowFailure_InvalidType() throws Exception {
+        Map<String, Object> jobConfig = new HashMap<>();
+        jobConfig.put("allow_failure", 123); // Invalid type
+
+        java.lang.reflect.Method method = PipelineDefinitionService.class
+                .getDeclaredMethod("extractAllowFailure", Map.class);
+        method.setAccessible(true);
+        boolean result = (boolean) method.invoke(pipelineDefinitionService, jobConfig);
+
+        assertFalse(result); // 默认 false
+    }
+
+    @Test
+    void testExtractBranch_FromConfig() throws Exception {
+        PipelineExecutionRequest mockedRequest = mock(PipelineExecutionRequest.class);
+        when(mockedRequest.getBranch()).thenReturn(null);
+
+        Map<String, Object> config = new HashMap<>();
+        config.put("branch", "dev");
+
+        String result = invokeExtractBranch(mockedRequest, config);
+        assertEquals("dev", result);
+    }
+
+    @Test
+    void testExtractBranch_FromRequest() throws Exception {
+        PipelineExecutionRequest mockedRequest = mock(PipelineExecutionRequest.class);
+        when(mockedRequest.getBranch()).thenReturn("feature/xyz");
+
+        Map<String, Object> config = new HashMap<>();
+        config.put("branch", "should-not-use-this");
+
+        String result = invokeExtractBranch(mockedRequest, config);
+        assertEquals("feature/xyz", result);
+    }
+
+    @Test
+    void testExtractBranch_DefaultMain() throws Exception {
+        PipelineExecutionRequest mockedRequest = mock(PipelineExecutionRequest.class);
+        when(mockedRequest.getBranch()).thenReturn(null);
+
+        Map<String, Object> config = new HashMap<>();
+
+        String result = invokeExtractBranch(mockedRequest, config);
+        assertEquals("main", result);
+    }
+
+    @Test
+    void testCreatePipelineDefinition_ScriptListWithMixedTypes() {
+        // Arrange
+        Map<String, Object> config = new HashMap<>();
+        config.put("stages", List.of("build"));
+
+        List<Object> mixedScripts = new ArrayList<>();
+        mixedScripts.add("echo hello");
+        mixedScripts.add(123);
+        mixedScripts.add("echo done");
+        mixedScripts.add(null);
+        mixedScripts.add(true);
+
+        Map<String, Object> job = new HashMap<>();
+        job.put("name", "compile");
+        job.put("stage", "build");
+        job.put("image", "alpine");
+        job.put("script", mixedScripts);
+
+        config.put("jobs", List.of(job));
+
+        PipelineEntity pipeline = new PipelineEntity();
+        pipeline.setId(pipelineId);
+        pipeline.setName("test");
+
+        when(pipelineRepository.findById(pipelineId)).thenReturn(Optional.of(pipeline));
+
+        StageEntity stage = new StageEntity();
+        stage.setId(UUID.randomUUID());
+        when(stageRepository.save(any())).thenReturn(stage);
+        when(stageRepository.existsById(any())).thenReturn(true);
+
+        JobEntity jobEntity = new JobEntity();
+        jobEntity.setId(UUID.randomUUID());
+        when(jobRepository.save(any())).thenReturn(jobEntity);
+        when(jobRepository.existsById(any())).thenReturn(true);
+
+        // Act
+        pipelineDefinitionService.createPipelineDefinition(pipelineId, config, "/root/path");
+
+        // Assert
+        // 应该只调用了两次 saveScript (因为只有两个字符串)
+        verify(jobScriptRepository, times(2)).saveScript(eq(jobEntity.getId()), anyString());
+
+        // 可选：验证具体脚本内容
+        verify(jobScriptRepository).saveScript(eq(jobEntity.getId()), eq("echo hello"));
+        verify(jobScriptRepository).saveScript(eq(jobEntity.getId()), eq("echo done"));
+    }
+
+
+    // Helper to invoke private extractBranch method
+    private String invokeExtractBranch(PipelineExecutionRequest request, Map<String, Object> config) {
+        try {
+            java.lang.reflect.Method method = PipelineDefinitionService.class
+                    .getDeclaredMethod("extractBranch", PipelineExecutionRequest.class, Map.class);
+            method.setAccessible(true);
+            return (String) method.invoke(pipelineDefinitionService, request, config);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to invoke extractBranch", e);
+        }
+    }
+
+
+
+
 }

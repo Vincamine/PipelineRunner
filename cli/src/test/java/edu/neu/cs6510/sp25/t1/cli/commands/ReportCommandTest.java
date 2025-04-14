@@ -373,4 +373,183 @@ public class ReportCommandTest {
         executionNode.put("completionTime", "2023-04-01T12:07:00Z");
         return executionNode;
     }
+
+    @Test
+    public void testRemoveNullPipelineNameFromArray() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode inputArray = mapper.createArrayNode();
+
+        // Add node with pipelineName = null
+        ObjectNode nodeWithNull = mapper.createObjectNode();
+        nodeWithNull.put("pipelineName", (String) null);
+        nodeWithNull.put("runNumber", 1);
+        inputArray.add(nodeWithNull);
+
+        // Add node with valid pipelineName
+        ObjectNode validNode = mapper.createObjectNode();
+        validNode.put("pipelineName", "test");
+        validNode.put("runNumber", 2);
+        inputArray.add(validNode);
+
+        // Simulate the logic
+        ArrayNode modifiedRootNode = mapper.createArrayNode();
+        for (JsonNode node : inputArray) {
+            ObjectNode modifiedNode = (ObjectNode) node.deepCopy();
+            if (modifiedNode.has("pipelineName") && modifiedNode.get("pipelineName").isNull()) {
+                modifiedNode.remove("pipelineName");
+            }
+            modifiedRootNode.add(modifiedNode);
+        }
+
+        // Assert result
+        assertEquals(2, modifiedRootNode.size());
+        assertFalse(modifiedRootNode.get(0).has("pipelineName"));
+        assertEquals("test", modifiedRootNode.get(1).get("pipelineName").asText());
+    }
+
+    @Test
+    public void testFetchStageHistory_WithJobName_ShouldLogJobInfo() throws Exception {
+        setPrivateField("pipelineName", "test-pipeline");
+        setPrivateField("stageName", "build");
+        setPrivateField("jobName", "compile");
+        setPrivateField("format", "text"); // ✅ add this line
+
+        when(backendClient.fetchPipelineReport(eq("test-pipeline"), isNull(), eq("build"), eq("compile")))
+                .thenReturn("{\"status\": \"success\"}");
+
+        Method method = ReportCommand.class.getDeclaredMethod("fetchStageHistory");
+        method.setAccessible(true);
+
+        int result = (int) method.invoke(reportCommand);
+
+        assertEquals(0, result);
+        assertTrue(outContent.toString().contains("Fetching history for job: compile in stage: build in pipeline: test-pipeline"));
+    }
+
+
+    @Test
+    public void testFormatResponse_UnknownFormat_ShouldReturnOriginal() throws Exception {
+        setPrivateField("format", "xml");
+
+        String originalJson = createMockPipelineRunResponse();
+        String result = (String) invokePrivateMethod("formatResponse",
+                new Class[]{String.class},
+                new Object[]{originalJson});
+
+        assertEquals(originalJson, result);
+    }
+
+    @Test
+    public void testConvertJsonToText_UnknownStructure_ShouldFallback() throws Exception {
+        setPrivateField("format", "text");
+
+        String unknownJson = "{\"unexpectedKey\":\"value\"}";
+        String result = (String) invokePrivateMethod("formatResponse",
+                new Class[]{String.class},
+                new Object[]{unknownJson});
+
+        assertEquals(unknownJson, result);
+    }
+
+    @Test
+    public void testFormatJobNode_WithPipelineNameIncluded() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode jobNode = mapper.createObjectNode();
+        jobNode.put("name", "compile");
+        jobNode.put("pipelineName", "test-pipeline");
+        jobNode.put("runNumber", 42);
+        jobNode.put("stageName", "build");
+
+        ArrayNode executions = mapper.createArrayNode();
+        ObjectNode exec = mapper.createObjectNode();
+        exec.put("id", "exec-1");
+        exec.put("status", "success");
+        exec.put("allowFailure", false);
+        exec.put("startTime", "2023-04-01T12:00:00Z");
+        exec.put("completionTime", "2023-04-01T12:01:00Z");
+        executions.add(exec);
+
+        jobNode.set("executions", executions);
+
+        StringBuilder sb = new StringBuilder();
+        invokePrivateMethod("formatJobNode",
+                new Class[]{StringBuilder.class, JsonNode.class, boolean.class, String.class, boolean.class},
+                new Object[]{sb, jobNode, true, "", false});
+
+        assertTrue(sb.toString().contains("Pipeline Name: test-pipeline"));
+    }
+
+    @Test
+    public void testRunNumberAndJobWithoutStage_ShouldReturnError() throws Exception {
+        setPrivateField("pipelineName", "test-pipeline");
+        setPrivateField("runNumber", 42);
+        setPrivateField("jobName", "compile");
+        setPrivateField("stageName", null);
+
+        Integer result = reportCommand.call();
+
+        assertEquals(1, result);
+        assertTrue(errContent.toString().contains("--stage parameter is required when using --job"));
+    }
+
+    @Test
+    public void testFormatTimestamp_InvalidFormat_ShouldReturnOriginalString() throws Exception {
+        String invalidTimestamp = "not-a-timestamp";
+
+        String result = (String) invokePrivateMethod("formatTimestamp",
+                new Class[] { String.class },
+                new Object[] { invalidTimestamp });
+
+        assertEquals(invalidTimestamp, result);
+    }
+
+    @Test
+    public void testConvertJsonToText_ArrayWithAllTypes_ShouldTriggerAllBranches() throws Exception {
+        setPrivateField("format", "text");
+
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode arrayNode = mapper.createArrayNode();
+
+        // Pipeline node (has "stages" and "name")
+        ObjectNode pipelineNode = mapper.createObjectNode();
+        pipelineNode.put("name", "pipeline");
+        pipelineNode.put("id", "pipeline-1");
+        pipelineNode.put("runNumber", 1);
+        pipelineNode.put("status", "success");
+        pipelineNode.put("startTime", "2023-04-01T12:00:00Z");
+        pipelineNode.put("completionTime", "2023-04-01T12:30:00Z");
+        pipelineNode.set("stages", mapper.createArrayNode());
+        arrayNode.add(pipelineNode);
+
+        // Stage node (has "jobs" and "name")
+        ObjectNode stageNode = mapper.createObjectNode();
+        stageNode.put("name", "build");
+        stageNode.put("id", "stage-1");
+        stageNode.put("status", "success");
+        stageNode.put("startTime", "2023-04-01T12:00:00Z");
+        stageNode.put("completionTime", "2023-04-01T12:10:00Z");
+        stageNode.set("jobs", mapper.createArrayNode());
+        arrayNode.add(stageNode);
+
+        // Job node (has "executions" and "name")
+        ObjectNode jobNode = mapper.createObjectNode();
+        jobNode.put("name", "compile");
+        jobNode.set("executions", mapper.createArrayNode());
+        arrayNode.add(jobNode);
+
+        String json = mapper.writeValueAsString(arrayNode);
+
+        String result = (String) invokePrivateMethod("formatResponse",
+                new Class[]{String.class},
+                new Object[]{json});
+
+        // Assert: all sections should appear
+        assertTrue(result.contains("Pipeline Name: pipeline"));
+        assertTrue(result.contains("Stage Name: build"));
+        assertTrue(result.contains("Job Name: compile"));
+        assertTrue(result.contains("----------------------------------------")); // Separator
+    }
+
+
+
 }

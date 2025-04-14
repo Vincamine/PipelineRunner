@@ -860,4 +860,204 @@ class YamlPipelineUtilsTest {
             YamlPipelineUtils.validatePipelineConfig(config);
         });
     }
+
+    @Test
+    void testValidateTopLevelJob_scriptLegacyKey() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("legacy-script-key.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - build\n" +
+                        "jobs:\n" +
+                        "  - name: legacy-job\n" +
+                        "    stage: build\n" +
+                        "    image: alpine\n" +
+                        "    script: echo 'hello from legacy script key'\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        assertDoesNotThrow(() -> YamlPipelineUtils.validatePipelineConfig(config));
+    }
+
+    @Test
+    void testValidateDockerImage_warnOnInvalidPattern() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("invalid-docker-image.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - build\n" +
+                        "jobs:\n" +
+                        "  - name: compile\n" +
+                        "    stage: build\n" +
+                        "    image: gradle@jdk17\n" +  // Invalid format, triggers warning
+                        "    script: ./gradlew build\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        assertDoesNotThrow(() -> YamlPipelineUtils.validatePipelineConfig(config));
+    }
+
+    @Test
+    void testValidateNestedJobWithStageField() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("nested-job-with-stage.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - name: build\n" +
+                        "    jobs:\n" +
+                        "      - name: compile\n" +
+                        "        image: gradle:jdk17\n" +
+                        "        stage: build\n" +  // Unexpected but should be ignored
+                        "        script: ./gradlew build\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        assertDoesNotThrow(() -> YamlPipelineUtils.validatePipelineConfig(config));
+    }
+
+    @Test
+    void testValidateAllowFailure_MixedCaseString() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("allow-failure-mixed-case.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - name: build\n" +
+                        "    jobs:\n" +
+                        "      - name: compile\n" +
+                        "        image: gradle:jdk17\n" +
+                        "        allow_failure: \"True\"\n" +
+                        "        script: ./gradlew build\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        assertDoesNotThrow(() -> YamlPipelineUtils.validatePipelineConfig(config));
+    }
+
+    @Test
+    void testValidateDependencies_EmptyArray() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("empty-dependencies.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - build\n" +
+                        "jobs:\n" +
+                        "  - name: compile\n" +
+                        "    stage: build\n" +
+                        "    image: gradle:jdk17\n" +
+                        "    dependencies: []\n" +
+                        "    script: ./gradlew build\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        assertDoesNotThrow(() -> YamlPipelineUtils.validatePipelineConfig(config));
+    }
+
+    @Test
+    void testValidateDependencies_ListWithNonString() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("non-string-dependency.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - build\n" +
+                        "jobs:\n" +
+                        "  - name: compile\n" +
+                        "    stage: build\n" +
+                        "    image: gradle:jdk17\n" +
+                        "    dependencies: [123]\n" +  // Invalid
+                        "    script: ./gradlew build\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        assertThrows(ClassCastException.class, () -> YamlPipelineUtils.validatePipelineConfig(config));
+    }
+
+    @Test
+    void testValidateTopLevelStages_MissingNameFieldInMap() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("missing-name-in-stage-map.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - build\n" +
+                        "  - {}\n" +  // Invalid: empty map
+                        "jobs:\n" +
+                        "  - name: compile\n" +
+                        "    stage: build\n" +
+                        "    image: gradle:jdk17\n" +
+                        "    script: ./gradlew build\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            YamlPipelineUtils.validatePipelineConfig(config);
+        });
+
+        assertTrue(exception.getMessage().contains("is missing 'name' field"));
+    }
+
+    @Test
+    void testValidateTopLevelStages_EmptyStageName() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("empty-stage-name.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - \"\"\n" +  // Empty name
+                        "jobs:\n" +
+                        "  - name: compile\n" +
+                        "    stage: \"\"\n" +
+                        "    image: gradle:jdk17\n" +
+                        "    script: ./gradlew build\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            YamlPipelineUtils.validatePipelineConfig(config);
+        });
+
+        assertTrue(exception.getMessage().contains("has empty name"));
+    }
+
+    @Test
+    void testValidateTopLevelStages_DuplicateStageNames() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("duplicate-stage-names.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - build\n" +
+                        "  - build\n" +  // Duplicate
+                        "jobs:\n" +
+                        "  - name: compile\n" +
+                        "    stage: build\n" +
+                        "    image: gradle:jdk17\n" +
+                        "    script: ./gradlew build\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            YamlPipelineUtils.validatePipelineConfig(config);
+        });
+
+        assertTrue(exception.getMessage().contains("Duplicate stage name"));
+    }
+
+    @Test
+    void testExtractStageNames_MapWithNameField() throws IOException, ValidationException {
+        Path yaml = tempDir.resolve("map-style-stages.yaml");
+        Files.writeString(yaml,
+                "stages:\n" +
+                        "  - name: build\n" +
+                        "  - name: test\n" +
+                        "jobs:\n" +
+                        "  - name: compile\n" +
+                        "    stage: build\n" +
+                        "    image: gradle:jdk17\n" +
+                        "    script: ./gradlew build\n" +
+                        "  - name: test-job\n" +
+                        "    stage: test\n" +
+                        "    image: gradle:jdk17\n" +
+                        "    script: ./gradlew test\n"
+        );
+
+        Map<String, Object> config = YamlPipelineUtils.readPipelineYaml(yaml.toString());
+
+        // The validation logic should extract names from stage maps
+        assertDoesNotThrow(() -> YamlPipelineUtils.validatePipelineConfig(config));
+    }
+
+
+
+
+
+
+
 }

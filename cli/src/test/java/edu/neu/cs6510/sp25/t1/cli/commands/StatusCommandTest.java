@@ -12,7 +12,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.function.Consumer;
 
+import edu.neu.cs6510.sp25.t1.cli.service.K8sService;
 import okhttp3.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -182,4 +184,141 @@ public class StatusCommandTest {
         assertTrue(errorOutput.contains("Missing required option"),
                 "Error output should mention missing option");
     }
+
+    @Test
+    public void testSuccessfulStatusFetch() throws Exception {
+        OkHttpClient mockClient = mock(OkHttpClient.class); // 1. Mock client
+        Call mockCall = mock(Call.class); // 2. Mock call
+
+        // 3. Mock response
+        Response response = new Response.Builder()
+                .request(new Request.Builder().url("http://localhost:8080/api/pipeline/test-pipeline").build())
+                .protocol(Protocol.HTTP_1_1)
+                .code(200)
+                .message("OK")
+                .body(ResponseBody.create("{\"status\":\"ok\"}", MediaType.parse("application/json")))
+                .build();
+
+        // 4. Set up mock behavior
+        when(mockClient.newCall(any())).thenReturn(mockCall);
+        when(mockCall.execute()).thenReturn(response);
+
+        StatusCommand command = new StatusCommand(mockClient);
+
+        Field pipelineNameField = StatusCommand.class.getDeclaredField("pipelineName");
+        pipelineNameField.setAccessible(true);
+        pipelineNameField.set(command, "test-pipeline");
+
+        Field parentField = StatusCommand.class.getDeclaredField("parent");
+        parentField.setAccessible(true);
+        parentField.set(command, cliApp);
+
+        try (MockedStatic<PipelineLogger> logger = mockStatic(PipelineLogger.class);
+             MockedStatic<K8sService> k8s = mockStatic(K8sService.class)) {
+
+            k8s.when(() -> K8sService.startBackendEnvironment(any())).thenReturn("fake-pod");
+            k8s.when(K8sService::stopPortForward).thenAnswer(i -> null);
+            k8s.when(() -> K8sService.stopPod(any())).thenAnswer(i -> null);
+
+            int result = command.call();
+
+            assertEquals(0, result, "Expected success return code");
+
+            logger.verify(() -> PipelineLogger.info(contains("Pipeline Status")));
+            logger.verify(() -> PipelineLogger.info(contains("{\"status\":\"ok\"}")));
+        }
+    }
+
+    @Test
+    public void testSuccessWithResponseBody() throws Exception {
+        Response response = createMockResponse(200, "{\"status\":\"ok\"}", true);
+        runWithResponse(response, 0, logger -> {
+            logger.verify(() -> PipelineLogger.info(contains("Pipeline Status")));
+            logger.verify(() -> PipelineLogger.info(contains("{\"status\":\"ok\"}")));
+        });
+    }
+
+    @Test
+    public void testSuccessWithNullBody() throws Exception {
+        Response response = createMockResponse(200, "", true);
+        runWithResponse(response, 0, logger -> {
+            logger.verify(() -> PipelineLogger.info(contains("Pipeline Status:")));
+            logger.verify(() -> PipelineLogger.info(eq(""))); // ✅ 匹配空内容
+        });
+    }
+
+
+    @Test
+    public void testFailureWithErrorBody() throws Exception {
+        Response response = createMockResponse(500, "{\"error\":\"bad request\"}", true);
+        runWithResponse(response, 1, logger -> {
+            logger.verify(() -> PipelineLogger.error("Failed to fetch pipeline status."));
+            logger.verify(() -> PipelineLogger.error("HTTP Status: 500"));
+            logger.verify(() -> PipelineLogger.error("Response: {\"error\":\"bad request\"}"));
+        });
+    }
+
+    @Test
+    public void testFailureWithNullBody() throws Exception {
+        Response response = createMockResponse(500, "", true);
+        runWithResponse(response, 1, logger -> {
+            logger.verify(() -> PipelineLogger.error("Failed to fetch pipeline status."));
+            logger.verify(() -> PipelineLogger.error("HTTP Status: 500"));
+            logger.verify(() -> PipelineLogger.error(eq("Response: ")));
+        });
+    }
+
+
+
+
+
+    // Helpers
+    private Response createMockResponse(int code, String body, boolean hasBody) {
+        ResponseBody responseBody = hasBody
+                ? ResponseBody.create(body != null ? body : "", MediaType.parse("application/json"))
+                : ResponseBody.create(new byte[0], MediaType.parse("application/json"));
+
+        return new Response.Builder()
+                .request(new Request.Builder().url("http://localhost:8080/api/pipeline/test-pipeline").build())
+                .protocol(Protocol.HTTP_1_1)
+                .code(code)
+                .message("Mocked")
+                .body(responseBody)
+                .build();
+    }
+
+
+    private void runWithResponse(Response response, int expectedCode, Consumer<MockedStatic<PipelineLogger>> verifier) throws Exception {
+        OkHttpClient mockClient = mock(OkHttpClient.class);
+        Call mockCall = mock(Call.class);
+
+        when(mockClient.newCall(any())).thenReturn(mockCall);
+        when(mockCall.execute()).thenReturn(response);
+
+        StatusCommand cmd = new StatusCommand(mockClient);
+
+        Field pipelineField = StatusCommand.class.getDeclaredField("pipelineName");
+        pipelineField.setAccessible(true);
+        pipelineField.set(cmd, "test-pipeline");
+
+        Field parentField = StatusCommand.class.getDeclaredField("parent");
+        parentField.setAccessible(true);
+        parentField.set(cmd, cliApp);
+
+        try (
+                MockedStatic<PipelineLogger> logger = mockStatic(PipelineLogger.class);
+                MockedStatic<K8sService> k8s = mockStatic(K8sService.class)
+        ) {
+            k8s.when(() -> K8sService.startBackendEnvironment(any())).thenReturn("fake-pod");
+            k8s.when(K8sService::stopPortForward).thenAnswer(i -> null);
+            k8s.when(() -> K8sService.stopPod(any())).thenAnswer(i -> null);
+
+            int result = cmd.call();
+            assertEquals(expectedCode, result);
+            verifier.accept(logger);
+        }
+    }
+
+
+
 }
