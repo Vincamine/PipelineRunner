@@ -15,8 +15,8 @@ A containerized CI/CD pipeline system with CLI interface for executing and monit
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/pipr-project.git
-cd pipr-project
+git clone https://github.com/CS6510-SEA-SP25/t1-cicd
+cd t1-cicd
 
 # Build the project
 ./gradlew clean build
