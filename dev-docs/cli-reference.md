@@ -1,5 +1,8 @@
 # CI/CD CLI Reference
 
+**Author**: Wenxue Fang, Team 1, CS6510 Spring 2025
+**Date**: April 13, 2025
+
 ## Overview
 
 The CI/CD CLI tool provides a command-line interface for running and managing CI/CD pipelines. It supports validating pipeline configurations, running pipelines, checking execution status, and generating reports.
