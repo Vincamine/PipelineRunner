@@ -13,6 +13,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.3")
 
+    // ✅ Java 8 Time support for Jackson
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
+
     // ✅ SLF4J + Logback (Logging)
     implementation("org.slf4j:slf4j-api:2.0.17")
     implementation("ch.qos.logback:logback-classic:1.5.17")
