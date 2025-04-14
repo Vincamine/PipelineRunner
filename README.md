@@ -4,7 +4,6 @@ A containerized CI/CD pipeline system with CLI interface for executing and monit
 
 **Team Project for CS6510 - Software Engineering, Spring 2025**  
 **Team 1 | Date**: April 12, 2025
-
 **Authors**:
 - Wenxue Fang
 - Shenqian Wen
