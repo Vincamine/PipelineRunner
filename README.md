@@ -60,13 +60,18 @@ stages:
 pipr check --file path/to/pipeline.yaml
 ```
 
+#### View Execution Plan (Dry Run)
+```bash
+pipr dry-run --file path/to/pipeline.yaml
+```
+
 #### Run a Pipeline
 ```bash
 # From a YAML file
-pipr run --file path/to/pipeline.yaml
+pipr run --local --file path/to/pipeline.yaml
 
 # From a Git repository
-pipr run --repo https://github.com/user/repo.git --branch develop
+pipr run --local --repo https://github.com/user/repo.git 
 ```
 
 #### Check Pipeline Status
@@ -80,19 +85,15 @@ pipr status --pipeline my-pipeline
 pipr report --pipeline my-pipeline
 
 # Get details for a specific run
-pipr report --pipeline my-pipeline --run 5
+pipr report --pipeline my-pipeline --run 0
 
 # Get details for a specific stage
-pipr report --pipeline my-pipeline --run 5 --stage build
+pipr report --pipeline my-pipeline --run 0 --stage build
 
 # Get details for a specific job
-pipr report --pipeline my-pipeline --run 5 --stage build --job compile
+pipr report --pipeline my-pipeline --run 0 --stage build --job compile
 ```
 
-#### View Execution Plan (Dry Run)
-```bash
-pipr dry-run --file path/to/pipeline.yaml
-```
 
 ### Global Options
 

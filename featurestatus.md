@@ -16,9 +16,9 @@ U2. Local Repo → Local Run
 
 ✅ C1. Config files in a folder
 ✅ C2. Each file is independent
-❌ C3. Global section supported
-❌ C3.1. Jobs can override global keys
-⚠️️️ C3.2. Pipeline names are unique
+✅ C3. Global section supported
+✅ C3.1. Jobs can override global keys
+⚠️️ C3.2. Pipeline names are unique
 
 ## **Stages and Jobs**
 
@@ -33,7 +33,7 @@ U2. Local Repo → Local Run
 
 ✅ C5.6. Job dependencies supported
 ✅ C5.6.1. Cycles checked and prevented
-❌ C5.7. Artifacts can be specified
+⚠️️️ C5.7. Artifacts can be specified
 ✅ C5.7.1. Files/folders listed
 ⚠️️️ C5.7.2. Uploads only on success
 
