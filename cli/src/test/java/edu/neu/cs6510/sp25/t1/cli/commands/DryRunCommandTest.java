@@ -1,14 +1,12 @@
 package edu.neu.cs6510.sp25.t1.cli.commands;
 
-import edu.neu.cs6510.sp25.t1.cli.commands.DryRunCommand;
 import edu.neu.cs6510.sp25.t1.backend.utils.YamlPipelineUtils;
 import edu.neu.cs6510.sp25.t1.common.utils.GitCloneUtil;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-
-import java.io.*;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,7 +14,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mockStatic;
 
-
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintStream;
 import java.util.Map;
 
 class DryRunCommandTest {

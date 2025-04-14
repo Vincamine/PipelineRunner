@@ -28,7 +28,7 @@ import java.util.List;
 class K8sServiceTest {
 
     @Mock
-    CoreV1Api mockApi;
+    private CoreV1Api mockApi;
 
     @BeforeEach
     void setup() {
