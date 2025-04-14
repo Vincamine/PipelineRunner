@@ -86,6 +86,8 @@ CREATE TABLE jobs (
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
+
+CREATE INDEX idx_stage_jobs ON jobs(stage_id);
 ```
 
 #### Job Dependencies
@@ -95,6 +97,9 @@ CREATE TABLE job_dependencies (
     depends_on_job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
     PRIMARY KEY (job_id, depends_on_job_id)
 );
+
+CREATE INDEX idx_job_dependencies_job ON job_dependencies(job_id);
+CREATE INDEX idx_job_dependencies_depends_on ON job_dependencies(depends_on_job_id);
 ```
 
 #### Job Scripts
@@ -105,6 +110,8 @@ CREATE TABLE job_scripts (
     script_order INT NOT NULL,
     PRIMARY KEY (job_id, script_order)
 );
+
+CREATE INDEX idx_job_scripts_job_id ON job_scripts(job_id);
 ```
 
 #### Job Artifacts
@@ -114,6 +121,8 @@ CREATE TABLE job_artifacts (
     job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
     artifact_path VARCHAR(1024) NOT NULL
 );
+
+CREATE INDEX idx_job_artifacts_job_id ON job_artifacts(job_id);
 ```
 
 ### Execution Tracking
@@ -131,6 +140,10 @@ CREATE TABLE pipeline_executions (
     is_local BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP
 );
+
+CREATE UNIQUE INDEX unique_pipeline_run ON pipeline_executions(pipeline_id, run_number);
+CREATE INDEX idx_pipeline_executions ON pipeline_executions(pipeline_id, run_number, commit_hash, is_local);
+CREATE INDEX idx_pipeline_executions_status ON pipeline_executions(status);
 ```
 
 #### Stage Execution
@@ -146,6 +159,9 @@ CREATE TABLE stage_executions (
     is_local BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP
 );
+
+CREATE INDEX idx_stage_executions ON stage_executions(pipeline_execution_id, stage_id, is_local);
+CREATE INDEX idx_stage_executions_status ON stage_executions(status);
 ```
 
 #### Job Execution
@@ -161,6 +177,10 @@ CREATE TABLE job_executions (
     is_local BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP
 );
+
+CREATE INDEX idx_job_executions ON job_executions(stage_execution_id, job_id, is_local);
+CREATE INDEX idx_job_executions_status ON job_executions(status);
+CREATE INDEX idx_job_executions_start_time ON job_executions(start_time);
 ```
 
 #### Execution Logs
@@ -173,6 +193,9 @@ CREATE TABLE execution_logs (
     log_text TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_execution_logs ON execution_logs(pipeline_execution_id, stage_execution_id, job_execution_id);
+CREATE INDEX idx_execution_logs_timestamp ON execution_logs(timestamp);
 ```
 
 ## JPA Entities
@@ -285,20 +308,58 @@ CREATE TABLE execution_logs (
    - Critical migrations include rollback scripts
    - Enables recovery from failed migrations
 
+## Database Indexing Strategy
+
+The database schema includes a comprehensive indexing strategy to optimize query performance:
+
+1. **Name-Based Lookup Indexes**:
+   - `idx_pipeline_name` on `pipelines(name)` for pipeline name searches
+   - `idx_pipeline_repo` on `pipelines(repository_url)` for repository lookups
+
+2. **Relationship Indexes**:
+   - `idx_pipeline_stages` on `stages(pipeline_id)` for finding stages in a pipeline
+   - `idx_stage_jobs` on `jobs(stage_id)` for finding jobs in a stage
+   - `idx_job_dependencies_job` and `idx_job_dependencies_depends_on` for efficient traversal of job dependencies
+
+3. **Compound Indexes for Execution Queries**:
+   - `idx_pipeline_executions` on `pipeline_executions(pipeline_id, run_number, commit_hash, is_local)` 
+   - `idx_stage_executions` on `stage_executions(pipeline_execution_id, stage_id, is_local)`
+   - `idx_job_executions` on `job_executions(stage_execution_id, job_id, is_local)`
+
+4. **Status Indexes for Filtering**:
+   - `idx_pipeline_executions_status` on `pipeline_executions(status)`
+   - `idx_stage_executions_status` on `stage_executions(status)`
+   - `idx_job_executions_status` on `job_executions(status)`
+
+5. **Temporal Indexes for Sorting**:
+   - `idx_job_executions_start_time` on `job_executions(start_time)`
+   - `idx_execution_logs_timestamp` on `execution_logs(timestamp)`
+
+6. **Composite Indexes for Log Retrieval**:
+   - `idx_execution_logs` on `execution_logs(pipeline_execution_id, stage_execution_id, job_execution_id)`
+
+7. **Unique Constraints**:
+   - `unique_pipeline_run` on `pipeline_executions(pipeline_id, run_number)` to ensure run numbers are unique per pipeline
+
+These indexes are defined at the database level and reflected in JPA entity annotations, ensuring consistent application across all environments.
+
 ## Scaling Considerations
 
-1. **Index Optimization**:
-   - Primary keys and foreign keys are indexed
-   - Additional indexes on frequently queried columns
-
-2. **Query Performance**:
-   - Uses pagination for large result sets
+1. **Query Performance Optimization**:
+   - Uses pagination for large result sets (e.g., execution logs, historical records)
    - Optimized JPQL queries for complex operations
+   - Strategic use of join fetching to reduce N+1 query problems
 
-3. **Connection Pooling**:
+2. **Connection Pooling**:
    - HikariCP for efficient connection management
    - Configurable pool size based on deployment environment
+   - Connection timeout and maximum lifetime settings to prevent connection leaks
+
+3. **Data Partitioning**:
+   - Execution logs table can be partitioned by timestamp for efficient storage
+   - Pipeline executions could be partitioned by pipeline or date range
 
 4. **Data Archiving**:
-   - Long-term strategy includes archiving old execution records
-   - Maintains performance as system usage grows
+   - Long-term strategy includes archiving old execution records to maintain performance
+   - Archive tables with the same structure but separate indexing strategy
+   - Retention policies based on pipeline importance and regulatory requirements
