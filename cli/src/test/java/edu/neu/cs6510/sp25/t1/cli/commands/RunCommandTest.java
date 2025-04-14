@@ -11,9 +11,11 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import edu.neu.cs6510.sp25.t1.cli.service.K8sService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,6 +55,7 @@ public class RunCommandTest {
         public String pipelineValue;
         public String filePathValue;
         public boolean localRunValue;
+        public boolean dryRunValue;
 
         public TestableRunCommand(CliApp parent) {
             super();
@@ -63,6 +66,8 @@ public class RunCommandTest {
             } catch (Exception e) {
                 throw new RuntimeException("Failed to set parent", e);
             }
+
+
         }
 
         // Helper method to set up the object for testing
@@ -74,6 +79,8 @@ public class RunCommandTest {
             setPrivateField(this, "pipeline", pipelineValue);
             setPrivateField(this, "filePath", filePathValue);
             setPrivateField(this, "localRun", localRunValue);
+            setPrivateField(this, "dryRun", dryRunValue);
+
         }
 
         private void setPrivateField(Object object, String fieldName, Object value) throws Exception {
@@ -113,26 +120,6 @@ public class RunCommandTest {
         testableRunCommand = new TestableRunCommand(parentMock);
     }
 
-//    @Test
-//    public void testMissingFilePathForLocalRun() throws Exception {
-//        // Arrange
-//        testableRunCommand.localRunValue = true;
-//        testableRunCommand.filePathValue = null;
-//        testableRunCommand.repoValue = null;
-//        testableRunCommand.setupForTest();
-//
-//        try (MockedStatic<PipelineLogger> loggerMock = mockStatic(PipelineLogger.class)) {
-//            // Execute - call method directly
-//            int result = testableRunCommand.call();
-//
-//            // Assert
-//            assertEquals(1, result);
-//
-//            // Verify
-//            loggerMock.verify(() ->
-//                    PipelineLogger.error("Pipeline configuration file must be specified when running locally (-f)."));
-//        }
-//    }
 
     @Test
     public void testExtractRepoName_ValidGithubUrl() throws Exception {
@@ -180,7 +167,7 @@ public class RunCommandTest {
 
         // Assert
         assertNotNull(request);
-        assertEquals(testUrl+"/", request.url().toString());
+        assertEquals(testUrl + "/", request.url().toString());
         assertEquals("POST", request.method());
         assertTrue(request.header("Content-Type").contains("application/json"));
         assertTrue(request.header("Accept").contains("application/json"));
@@ -250,4 +237,126 @@ public class RunCommandTest {
             loggerMock.verify(() -> PipelineLogger.error(contains("Execution Error:")));
         }
     }
+
+    @Test
+    public void testMissingRepoAndFilePath_shouldError() throws Exception {
+        testableRunCommand.localRunValue = true;
+        testableRunCommand.repoValue = null;
+        testableRunCommand.filePathValue = null;
+        testableRunCommand.setupForTest();
+
+        try (MockedStatic<PipelineLogger> loggerMock = mockStatic(PipelineLogger.class)) {
+            int result = testableRunCommand.call();
+            assertEquals(1, result);
+            loggerMock.verify(() -> PipelineLogger.error(contains("Pipeline configuration file must be specified")));
+        }
+    }
+
+    @Test
+    public void testFilePathInsideGitRepo_shouldSetRepo() throws Exception {
+        testableRunCommand.localRunValue = true;
+        testableRunCommand.repoValue = null;
+        testableRunCommand.filePathValue = "/mock/path";
+        testableRunCommand.setupForTest();
+
+        try (
+                MockedStatic<PipelineLogger> loggerMock = mockStatic(PipelineLogger.class);
+                MockedStatic<GitCloneUtil> gitMock = mockStatic(GitCloneUtil.class)
+        ) {
+            gitMock.when(() -> GitCloneUtil.isInsideGitRepo(any(File.class))).thenReturn(true);
+            gitMock.when(() -> GitCloneUtil.getRepoUrlFromFile(any(File.class))).thenReturn("https://github.com/mock/repo");
+
+            testableRunCommand.call();
+
+            gitMock.verify(() -> GitCloneUtil.getRepoUrlFromFile(any(File.class)));
+            loggerMock.verify(() -> PipelineLogger.info(contains("Git clone repository url")));
+        }
+    }
+
+    @Test
+    public void testFilePathNotInsideGitRepo_shouldLogError() throws Exception {
+        testableRunCommand.dryRunValue = true;
+        testableRunCommand.repoValue = null;
+        testableRunCommand.filePathValue = "/mock/path";
+        testableRunCommand.setupForTest();
+
+        try (
+                MockedStatic<PipelineLogger> loggerMock = mockStatic(PipelineLogger.class);
+                MockedStatic<GitCloneUtil> gitMock = mockStatic(GitCloneUtil.class)
+        ) {
+            gitMock.when(() -> GitCloneUtil.isInsideGitRepo(any(File.class))).thenReturn(false);
+
+            testableRunCommand.call();
+
+            gitMock.verify(() -> GitCloneUtil.isInsideGitRepo(any(File.class)));
+            loggerMock.verify(() -> PipelineLogger.error(contains("not inside git repo")));
+        }
+    }
+
+
+    @Test
+    public void testWaitForBackend_backendRespondsImmediately() throws Exception {
+        // Spy HttpURLConnection to return 200
+        HttpURLConnection mockConnection = mock(HttpURLConnection.class);
+        when(mockConnection.getResponseCode()).thenReturn(200);
+
+        // Mock URL.openConnection to return mockConnection
+        URL mockUrl = mock(URL.class);
+        when(mockUrl.openConnection()).thenReturn(mockConnection);
+
+        try (
+                MockedStatic<PipelineLogger> loggerMock = mockStatic(PipelineLogger.class);
+                MockedConstruction<URL> urlMock = mockConstruction(URL.class, (mock, context) ->
+                        when(mock.openConnection()).thenReturn(mockConnection))
+        ) {
+            Method method = RunCommand.class.getDeclaredMethod("waitForBackendToBeAvailable");
+            method.setAccessible(true);
+            method.invoke(testableRunCommand);
+
+            loggerMock.verify(() -> PipelineLogger.info(contains("Backend is UP and responding.")), times(1));
+        }
+    }
+
+    @Test
+    public void testDryRunDelegatesToDryRunCommand() throws Exception {
+        testableRunCommand.dryRunValue = true;
+        testableRunCommand.filePathValue = "/mock/path";
+        testableRunCommand.setupForTest();
+
+        try (
+                MockedStatic<PipelineLogger> loggerMock = mockStatic(PipelineLogger.class);
+                MockedConstruction<DryRunCommand> dryRunMock = mockConstruction(DryRunCommand.class,
+                        (mock, context) -> {
+                            doNothing().when(mock).setFilePath(anyString());
+                            when(mock.call()).thenReturn(0);
+                        })
+        ) {
+            int result = testableRunCommand.call();
+            assertEquals(0, result);
+        }
+    }
+
+    @Test
+    public void testWaitForBackendInterrupted() throws Exception {
+        Method method = RunCommand.class.getDeclaredMethod("waitForBackendToBeAvailable");
+        method.setAccessible(true);
+
+        HttpURLConnection mockConn = mock(HttpURLConnection.class);
+        when(mockConn.getResponseCode()).thenThrow(new IOException("Simulate IO Error"));
+
+        Thread.currentThread().interrupt();
+
+        try (
+                MockedStatic<PipelineLogger> loggerMock = mockStatic(PipelineLogger.class);
+                MockedConstruction<URL> urlMock = mockConstruction(URL.class, (mock, context) -> {
+                    when(mock.openConnection()).thenReturn(mockConn);
+                })
+        ) {
+            method.invoke(testableRunCommand);
+            assertTrue(Thread.interrupted());
+        }
+    }
+
+
+
 }

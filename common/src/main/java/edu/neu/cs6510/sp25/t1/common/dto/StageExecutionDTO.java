@@ -30,4 +30,72 @@ public class StageExecutionDTO {
   private ExecutionStatus status;
   private Instant startTime;
   private Instant completionTime;
+
+  public Instant getCompletionTime() {
+    return completionTime;
+  }
+
+  public void setCompletionTime(Instant completionTime) {
+    this.completionTime = completionTime;
+  }
+
+  public UUID getId() {
+    return id;
+  }
+
+  public UUID getStageId() {
+    return stageId;
+  }
+
+  public void setStageId(UUID stageId) {
+    this.stageId = stageId;
+  }
+
+  public UUID getPipelineExecutionId() {
+    return pipelineExecutionId;
+  }
+
+  public void setPipelineExecutionId(UUID pipelineExecutionId) {
+    this.pipelineExecutionId = pipelineExecutionId;
+  }
+
+  public int getExecutionOrder() {
+    return executionOrder;
+  }
+
+  public void setExecutionOrder(int executionOrder) {
+    this.executionOrder = executionOrder;
+  }
+
+  public String getCommitHash() {
+    return commitHash;
+  }
+
+  public void setCommitHash(String commitHash) {
+    this.commitHash = commitHash;
+  }
+
+  public boolean isLocal() {
+    return isLocal;
+  }
+
+  public void setLocal(boolean local) {
+    isLocal = local;
+  }
+
+  public ExecutionStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(ExecutionStatus status) {
+    this.status = status;
+  }
+
+  public Instant getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(Instant startTime) {
+    this.startTime = startTime;
+  }
 }

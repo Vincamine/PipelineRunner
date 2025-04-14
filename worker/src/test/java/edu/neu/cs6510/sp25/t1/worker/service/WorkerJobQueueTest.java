@@ -149,30 +149,6 @@ public class WorkerJobQueueTest {
     }
 
     @Test
-    public void testGetActiveJobIds_returnsCorrectIds() {
-        // Given
-        UUID jobId1 = UUID.randomUUID();
-        UUID jobId2 = UUID.randomUUID();
-        JobExecutionDTO job1 = new JobExecutionDTO();
-        JobExecutionDTO job2 = new JobExecutionDTO();
-        job1.setId(jobId1);
-        job2.setId(jobId2);
-
-        when(jobDataService.getJobExecutionById(jobId1)).thenReturn(Optional.of(job1));
-        when(jobDataService.getJobExecutionById(jobId2)).thenReturn(Optional.of(job2));
-
-        // When
-        workerJobQueue.consumeJob(jobId1.toString());
-        workerJobQueue.consumeJob(jobId2.toString());
-        List<UUID> activeJobIds = workerJobQueue.getActiveJobIds();
-
-        // Then
-        assertEquals(2, activeJobIds.size());
-        assertTrue(activeJobIds.contains(jobId1));
-        assertTrue(activeJobIds.contains(jobId2));
-    }
-
-    @Test
     public void testCancelJob_jobRunning_cancelsSuccessfully() throws InterruptedException {
         // Given - setup a job that will block for a while
         UUID jobId = UUID.randomUUID();

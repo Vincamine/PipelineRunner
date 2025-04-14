@@ -11,6 +11,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 import picocli.CommandLine;
 
+
+
 /**
  * Handles the `status` command to fetch pipeline execution status.
  */
@@ -20,7 +22,16 @@ import picocli.CommandLine;
 )
 public class StatusCommand implements Callable<Integer> {
 
-  private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+//  private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+private final OkHttpClient httpClient;
+
+  public StatusCommand() {
+    this(new OkHttpClient());
+  }
+
+  public StatusCommand(OkHttpClient client) {
+    this.httpClient = client;
+  }
   private static final String BASE_URL = "http://localhost:8080/api/pipeline/";
 
   @CommandLine.ParentCommand
@@ -48,7 +59,7 @@ public class StatusCommand implements Callable<Integer> {
         .addHeader("Accept", "application/json")
         .build();
 
-    try (Response response = HTTP_CLIENT.newCall(request).execute()) {
+    try (Response response = httpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
         String errorBody = response.body() != null ? response.body().string() : "Empty response";
         PipelineLogger.error("Failed to fetch pipeline status.");

@@ -26,6 +26,8 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.16.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.16.0")
 
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+
     // OkHttp for HTTP client operations
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 

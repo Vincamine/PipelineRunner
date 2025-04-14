@@ -94,7 +94,7 @@ public class YamlPipelineUtils {
 
     PipelineLogger.info("Pipeline YAML validation successful: Structure is valid.");
   }
-  
+
   /**
    * Validates the stages section of the pipeline configuration.
    * Supports both nested format (stages with jobs) and top-level format (separate stages and jobs lists).
@@ -109,16 +109,16 @@ public class YamlPipelineUtils {
       PipelineLogger.error("Invalid pipeline.yaml: 'stages' must be a list.");
       throw new IllegalArgumentException("Invalid pipeline.yaml: 'stages' must be a list.");
     }
-    
+
     List<?> stagesList = (List<?>) stagesObj;
-    
+
     // Check if we're using the top-level jobs format
     boolean usingTopLevelJobs = pipelineConfig.containsKey(JOBS_KEY);
-    
+
     if (usingTopLevelJobs) {
       // If using top-level jobs, validate stages as simple string or map values
       validateTopLevelStages(stagesList);
-      
+
       // Also validate the top-level jobs
       validateTopLevelJobs(pipelineConfig);
     } else {
@@ -131,12 +131,12 @@ public class YamlPipelineUtils {
         }
         stages.add((Map<String, Object>) stageObj);
       }
-      
+
       // Validate each stage in nested format
       for (int i = 0; i < stages.size(); i++) {
         validateNestedStage(stages.get(i), i);
       }
-      
+
       // Validate stage names are unique
       validateUniqueStageNames(stages);
     }
@@ -223,6 +223,7 @@ public class YamlPipelineUtils {
     
     // Validate job names are unique
     validateUniqueJobNames(jobs);
+    validateJobDependencies(jobs);
   }
   
   /**
@@ -592,12 +593,12 @@ public class YamlPipelineUtils {
       jobNames.put(name, i);
     }
   }
-  
+
   /**
    * Validates job dependencies to ensure they reference existing jobs and don't create circular dependencies.
    *
    * @param jobs The list of jobs.
-   * @param stageName The name of the stage.
+   * @param stageName The name of the stage (optional for top-level format).
    * @throws IllegalArgumentException If validation fails.
    */
   @SuppressWarnings("unchecked")
@@ -607,15 +608,21 @@ public class YamlPipelineUtils {
     for (int i = 0; i < jobs.size(); i++) {
       jobNameMap.put((String) jobs.get(i).get(NAME_KEY), i);
     }
-    
+
     // Then check dependencies
     for (Map<String, Object> job : jobs) {
       String jobName = (String) job.get(NAME_KEY);
-      
+      String currentStageName = stageName;
+
+      // If stageName is null, this is a top-level job, so get the stage from the job
+      if (currentStageName == null && job.containsKey("stage")) {
+        currentStageName = (String) job.get("stage");
+      }
+
       if (job.containsKey(DEPENDENCIES_KEY)) {
         Object dependencies = job.get(DEPENDENCIES_KEY);
         List<String> dependencyList = new ArrayList<>();
-        
+
         // Convert dependencies to a list
         if (dependencies instanceof String) {
           // Single dependency
@@ -626,36 +633,49 @@ public class YamlPipelineUtils {
             if (dep instanceof String) {
               dependencyList.add((String) dep);
             } else {
-              PipelineLogger.error("Invalid pipeline.yaml: Dependencies for job '" + jobName + "' in stage '" + stageName + "' must be a string or list of strings.");
-              throw new IllegalArgumentException("Invalid pipeline.yaml: Dependencies for job '" + jobName + "' in stage '" + stageName + "' must be a string or list of strings.");
+              PipelineLogger.error("Invalid pipeline.yaml: Dependencies for job '" + jobName + "' in stage '" + currentStageName + "' must be a string or list of strings.");
+              throw new ClassCastException("Invalid pipeline.yaml: Dependencies for job '" + jobName + "' in stage '" + currentStageName + "' must be a string or list of strings.");
             }
           }
         } else {
-          PipelineLogger.error("Invalid pipeline.yaml: Dependencies for job '" + jobName + "' in stage '" + stageName + "' must be a string or list of strings.");
-          throw new IllegalArgumentException("Invalid pipeline.yaml: Dependencies for job '" + jobName + "' in stage '" + stageName + "' must be a string or list of strings.");
+          PipelineLogger.error("Invalid pipeline.yaml: Dependencies for job '" + jobName + "' in stage '" + currentStageName + "' must be a string or list of strings.");
+          throw new ClassCastException("Invalid pipeline.yaml: Dependencies for job '" + jobName + "' in stage '" + currentStageName + "' must be a string or list of strings.");
         }
-        
+
         // Validate each dependency references an existing job
         for (String dependency : dependencyList) {
           if (!jobNameMap.containsKey(dependency)) {
-            PipelineLogger.error("Invalid pipeline.yaml: Job '" + jobName + "' in stage '" + stageName + "' depends on non-existent job '" + dependency + "'.");
-            throw new IllegalArgumentException("Invalid pipeline.yaml: Job '" + jobName + "' in stage '" + stageName + "' depends on non-existent job '" + dependency + "'.");
+            PipelineLogger.error("Invalid pipeline.yaml: Job '" + jobName + "' in stage '" + currentStageName + "' depends on non-existent job '" + dependency + "'.");
+            throw new IllegalArgumentException("Invalid pipeline.yaml: Job '" + jobName + "' in stage '" + currentStageName + "' depends on non-existent job '" + dependency + "'.");
           }
-          
+
           if (dependency.equals(jobName)) {
-            PipelineLogger.error("Invalid pipeline.yaml: Job '" + jobName + "' in stage '" + stageName + "' cannot depend on itself.");
-            throw new IllegalArgumentException("Invalid pipeline.yaml: Job '" + jobName + "' in stage '" + stageName + "' cannot depend on itself.");
+            PipelineLogger.error("Invalid pipeline.yaml: Job '" + jobName + "' in stage '" + currentStageName + "' cannot depend on itself.");
+            throw new IllegalArgumentException("Invalid pipeline.yaml: Job '" + jobName + "' in stage '" + currentStageName + "' cannot depend on itself.");
           }
         }
       }
     }
-    
+
     // Check for circular dependencies
     Map<String, List<String>> dependencyGraph = buildDependencyGraph(jobs);
     if (hasCycle(dependencyGraph)) {
-      PipelineLogger.error("Invalid pipeline.yaml: Circular dependency detected in stage '" + stageName + "'.");
-      throw new IllegalArgumentException("Invalid pipeline.yaml: Circular dependency detected in stage '" + stageName + "'.");
+      String errorMessage = stageName != null ?
+              "Invalid pipeline.yaml: Circular dependency detected in stage '" + stageName + "'." :
+              "Invalid pipeline.yaml: Circular dependency detected between jobs.";
+      PipelineLogger.error(errorMessage);
+      throw new IllegalArgumentException(errorMessage);
     }
+  }
+
+  /**
+   * Overloaded method for top-level jobs without a specific stage name.
+   *
+   * @param jobs The list of top-level jobs.
+   * @throws IllegalArgumentException If validation fails.
+   */
+  private static void validateJobDependencies(List<Map<String, Object>> jobs) {
+    validateJobDependencies(jobs, null);
   }
   
   /**
@@ -729,7 +749,7 @@ public class YamlPipelineUtils {
     
     visited.add(node);
     recStack.add(node);
-    
+
     for (String neighbor : graph.get(node)) {
       if (hasCycleDFS(graph, neighbor, visited, recStack)) {
         return true;
