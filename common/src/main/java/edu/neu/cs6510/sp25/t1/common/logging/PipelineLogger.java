@@ -10,6 +10,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.FileAppender;
 
+
 /**
  * Centralized logger for pipeline-related logging.
  * Uses SLF4J with Logback and ensures logs print to the console and a log file.

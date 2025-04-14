@@ -143,5 +143,87 @@ class PipelineTest {
         assertEquals(List.of(job1), jobsByStage.get("Build"));
         assertEquals(List.of(job2), jobsByStage.get("Test"));
     }
+    @Test
+    void testGetAllJobsReturnsEmptyWhenNoJobsAnywhere() {
+        Stage emptyStage = new Stage(
+                UUID.randomUUID(),
+                "EmptyStage",
+                pipelineId,
+                1,
+                null, // stage.getJobs() = null
+                createdAt,
+                updatedAt
+        );
 
+        Pipeline pipeline = new Pipeline(
+                pipelineId,
+                "Pipeline Empty",
+                "https://github.com/example/repo",
+                "main",
+                null,
+                List.of(emptyStage),
+                null,  // top-level jobs = null
+                createdAt,
+                updatedAt
+        );
+
+        List<Job> allJobs = pipeline.getAllJobs();
+        assertTrue(allJobs.isEmpty());
+    }
+
+    @Test
+    void testGetJobsByStageStageNameEmptyFilteredOut() {
+        Stage unnamedStage = new Stage(
+                UUID.randomUUID(),
+                "",  // empty name
+                pipelineId,
+                1,
+                List.of(job1),
+                createdAt,
+                updatedAt
+        );
+
+        Pipeline pipeline = new Pipeline(
+                pipelineId,
+                "Pipeline With Empty Stage Name",
+                "https://github.com/example/repo",
+                "main",
+                null,
+                List.of(unnamedStage),
+                null,
+                createdAt,
+                updatedAt
+        );
+
+        Map<String, List<Job>> result = pipeline.getJobsByStage();
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testGetJobsByStageStageJobsEmptyFilteredOut() {
+        Stage noJobsStage = new Stage(
+                UUID.randomUUID(),
+                "NoJobsStage",
+                pipelineId,
+                1,
+                List.of(),  // empty jobs
+                createdAt,
+                updatedAt
+        );
+
+        Pipeline pipeline = new Pipeline(
+                pipelineId,
+                "Pipeline With Empty Jobs",
+                "https://github.com/example/repo",
+                "main",
+                null,
+                List.of(noJobsStage),
+                null,
+                createdAt,
+                updatedAt
+        );
+
+        Map<String, List<Job>> result = pipeline.getJobsByStage();
+        assertTrue(result.isEmpty());
+    }
 }
