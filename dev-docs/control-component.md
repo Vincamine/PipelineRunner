@@ -234,3 +234,45 @@ The control components implement a comprehensive error handling strategy:
    - `allow_failure` flag for non-critical jobs
    - Failed dependency tracking
    - Stage failure propagation
+
+
+
+
++------------------------------------+
+|              Worker                |
+|------------------------------------|
+| - DockerExecutor                   |
+| - GitClone                         |
+| - LogStorage                       |
+| (Runs Jobs in Docker)              |
++------------------------------------+ 
+                  |
+    Shared Volume (/mnt/pipeline)
+
++----------------------------------------+
+|                Backend                 |
+|----------------------------------------|
+| REST Controllers  | Services           |
+| - /pipeline/run   | - PipelineService  |
+| - /status/{id}    | - ExecutionQueue   |
+| - /report         | - YamlConfig       |
++---------+---------+---------+----------+
+          |                   |
+          | REST API (HTTP)   |
+          |                   |
+   +-------------+    +---------------+
+   | PostgreSQL  |    |   RabbitMQ    |
+   | Definitions |    |   Job Queue   |
+   +-------------+    +---------------+
+
+
+
++-----------+
+|   User    |
++-----------+
+      |
+ CLI Commands
+      v
++-----------+
+|   CLI     |
++-----------+

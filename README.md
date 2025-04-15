@@ -2,7 +2,7 @@
 
 A containerized CI/CD pipeline system with CLI interface for executing and monitoring pipelines.
 
-**Team Project for CS6510 - Software Engineering, Spring 2025**  
+**Team Project for CS6510 - Advanced Software Development, Spring 2025**  
 **Team 1 | Date**: April 12, 2025
 **Authors**:
 - Wenxue Fang
@@ -71,11 +71,13 @@ pipr dry-run --file path/to/pipeline.yaml
 pipr run --local --file path/to/pipeline.yaml
 
 # From a Git repository
+# For our demo: https://github.com/Mingtianfang-Li/demoProject2
 pipr run --local --repo https://github.com/user/repo.git 
 ```
 
-#### Check Pipeline Status
+#### Check Pipeline Status 
 ```bash
+# Only use the name of the pipeline
 pipr status --pipeline my-pipeline
 ```
 

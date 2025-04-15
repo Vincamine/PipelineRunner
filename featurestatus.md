@@ -8,8 +8,8 @@ List all implemented features and partly implemented features
 
 
 # **Use Cases**
-U1. Remote Repo → Local Run
-U2. Local Repo → Local Run
+✅ U1. Remote Repo → Local Run
+✅ U2. Local Repo → Local Run
 
 # **Configuration Support**
 ## **Structure (C1–C5)**

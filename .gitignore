@@ -90,3 +90,7 @@ Thumbs.db
 /dist/
 /demo_plan_updated.md
 .postgres/
+
+scripts/
+dev-docs/
+featurestatus.md
