@@ -2,7 +2,7 @@
 
 A containerized CI/CD pipeline system with CLI interface for executing and monitoring pipelines.
 
-**Team Project for CS6510 - Software Engineering, Spring 2025**  
+**Team Project for CS6510 - Advanced Software Development, Spring 2025**  
 **Team 1 | Date**: April 12, 2025
 **Authors**:
 - Wenxue Fang
@@ -15,8 +15,8 @@ A containerized CI/CD pipeline system with CLI interface for executing and monit
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/pipr-project.git
-cd pipr-project
+git clone https://github.com/CS6510-SEA-SP25/t1-cicd
+cd t1-cicd
 
 # Build the project
 ./gradlew clean build
@@ -60,17 +60,24 @@ stages:
 pipr check --file path/to/pipeline.yaml
 ```
 
+#### View Execution Plan (Dry Run)
+```bash
+pipr dry-run --file path/to/pipeline.yaml
+```
+
 #### Run a Pipeline
 ```bash
 # From a YAML file
-pipr run --file path/to/pipeline.yaml
+pipr run --local --file path/to/pipeline.yaml
 
 # From a Git repository
-pipr run --repo https://github.com/user/repo.git --branch develop
+# For our demo: https://github.com/Mingtianfang-Li/demoProject2
+pipr run --local --repo https://github.com/user/repo.git 
 ```
 
-#### Check Pipeline Status
+#### Check Pipeline Status 
 ```bash
+# Only use the name of the pipeline
 pipr status --pipeline my-pipeline
 ```
 
@@ -80,19 +87,15 @@ pipr status --pipeline my-pipeline
 pipr report --pipeline my-pipeline
 
 # Get details for a specific run
-pipr report --pipeline my-pipeline --run 5
+pipr report --pipeline my-pipeline --run 0
 
 # Get details for a specific stage
-pipr report --pipeline my-pipeline --run 5 --stage build
+pipr report --pipeline my-pipeline --run 0 --stage build
 
 # Get details for a specific job
-pipr report --pipeline my-pipeline --run 5 --stage build --job compile
+pipr report --pipeline my-pipeline --run 0 --stage build --job compile
 ```
 
-#### View Execution Plan (Dry Run)
-```bash
-pipr dry-run --file path/to/pipeline.yaml
-```
 
 ### Global Options
 
